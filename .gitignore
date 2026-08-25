@@ -13,9 +13,11 @@ out/
 .project
 .settings/
 
-# Runtime / test server data (if a dev server is ever run from this repo)
-run/
-server/
+# Runtime / test server data (if a dev server is ever run from this repo).
+# Anchored to the repo root - unanchored "server/" would also match
+# src/main/java/dev/universaladmin/modules/server/, the built-in Server module.
+/run/
+/server/
 logs/
 *.log
 
