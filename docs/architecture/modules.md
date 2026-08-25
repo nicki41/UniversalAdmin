@@ -159,52 +159,52 @@ not have to repeat them.
 
 ## Built-in modules
 
-| Modul | Package | Status |
+| Module | Package | Status |
 |---|---|---|
-| Players | `dev.universaladmin.modules.players` | Vollständig: Player-Browser-GUI (online/offline/zuletzt gesehen/Suche), Profilseite, ~20 Actions (Teleport, Heilen, Effekte, Gamemode, Inventar/Enderchest-Editor), feingranulare Permissions, Audit - siehe [docs/user/modules/players.md](../user/modules/players.md) |
-| Moderation | `dev.universaladmin.modules.moderation` | Vollständig: Punishment-Repository/-Service (kick/ban/tempban/ipban/mute/tempmute/warn/freeze/unban/unmute/removewarn/unfreeze), Join-/Chat-Enforcement, GUI-Wizard, feingranulare Permissions, Audit, plus Vanish/Godmode/No-Collision/Staff-Mode (Crash-sicheres Snapshot/Recovery, `/admin staff recover`) - siehe [docs/user/modules/moderation.md](../user/modules/moderation.md) und [docs/user/modules/staff-tools.md](../user/modules/staff-tools.md) |
-| Server | `dev.universaladmin.modules.server` | Vollständig: Live-Dashboard (Version/Uptime/Spieler/Memory/CPU/DB-Status/Module), Broadcast (Message/Title/Actionbar), eigenes Maintenance-Mode-System (Repository/Service, Join-Enforcement, Allow-List), Shutdown/Restart mit Dangerous-Confirmation und konfigurierbarem Countdown + Cancel, `/admin server ...`, feingranulare Permissions, Audit - siehe [docs/user/modules/server.md](../user/modules/server.md) |
-| Worlds | `dev.universaladmin.modules.worlds` | Vollständig: World-Browser/-Profil (Environment/Seed*/Spawn/Border/Players/Chunks/Entities/Time/Weather/Difficulty), Teleport/Spawn/Time/Weather/Difficulty-Actions, World-Border-Verwaltung, dynamisches Gamerule-GUI (liest `World#getGameRules()` zur Laufzeit, kein Rule fest verdrahtet), feingranulare Permissions (Seed separat), Audit, keine eigene Datenbank (alles Bukkit-persistiert) - siehe [docs/user/modules/worlds.md](../user/modules/worlds.md) |
-| Whitelist | `dev.universaladmin.modules.whitelist` | Vollständig: natives Whitelist-Wrapping (enable/disable/list/add/remove) plus eigene Metadaten (added-by/at, reason, notes, Ablauf), befristete Einträge mit Join-Check und stündlichem Sweep, striktes Ownership-Modell (automatische Pfade fassen nie fremd gesetzte Einträge an), feingranulare Permissions, Audit - siehe [docs/user/modules/whitelist.md](../user/modules/whitelist.md) |
-| Performance | `dev.universaladmin.modules.performance` | Vollständig: gecachtes TPS/MSPT/Memory/World/Entity-Sampling auf konfigurierbarem Intervall (`PerformanceSamplingService`, nie pro GUI-Render neu berechnet), Dashboard, World-Performance-Ansicht, Entity-Overview (nach Typ/Welt gruppiert), kurze In-Memory-Historie, Staff-Alerts bei TPS/MSPT/Memory-Schwellenwerten (`NotificationService#notifyStaff`), eng gefasstes Entity Clear (nie Spieler, konfigurierbare geschützte Typen, Preview, Confirmation, Audit), feingranulare Permissions - siehe [docs/user/modules/performance.md](../user/modules/performance.md) |
-| Audit Log | `dev.universaladmin.modules.auditlog` | Skelett, GUI/Commands fehlen (der Service selbst existiert schon als Core-Service `dev.universaladmin.audit`) |
-| Settings | `dev.universaladmin.modules.settings` | Skelett, GUI/Commands fehlen (der Service existiert schon als Core-Service `dev.universaladmin.settings.SettingsService`) |
+| Players | `dev.universaladmin.modules.players` | Complete: player browser GUI (online/offline/last-seen/search), profile page, ~20 actions (teleport, heal, effects, gamemode, inventory/ender chest editor), fine-grained permissions, audit - see [docs/user/modules/players.md](../user/modules/players.md) |
+| Moderation | `dev.universaladmin.modules.moderation` | Complete: punishment repository/service (kick/ban/tempban/ipban/mute/tempmute/warn/freeze/unban/unmute/removewarn/unfreeze), join/chat enforcement, GUI wizard, fine-grained permissions, audit, plus vanish/godmode/no-collision/staff mode (crash-safe snapshot/recovery, `/admin staff recover`) - see [docs/user/modules/moderation.md](../user/modules/moderation.md) and [docs/user/modules/staff-tools.md](../user/modules/staff-tools.md) |
+| Server | `dev.universaladmin.modules.server` | Complete: live dashboard (version/uptime/players/memory/CPU/DB status/modules), broadcast (message/title/actionbar), its own maintenance-mode system (repository/service, join enforcement, allow-list), shutdown/restart with dangerous-action confirmation and a configurable countdown + cancel, `/admin server ...`, fine-grained permissions, audit - see [docs/user/modules/server.md](../user/modules/server.md) |
+| Worlds | `dev.universaladmin.modules.worlds` | Complete: world browser/profile (environment/seed*/spawn/border/players/chunks/entities/time/weather/difficulty), teleport/spawn/time/weather/difficulty actions, world border management, a dynamic gamerule GUI (reads `World#getGameRules()` at runtime, no rule hardcoded), fine-grained permissions (seed kept separate), audit, no database of its own (everything Bukkit-persisted) - see [docs/user/modules/worlds.md](../user/modules/worlds.md) |
+| Whitelist | `dev.universaladmin.modules.whitelist` | Complete: native whitelist wrapping (enable/disable/list/add/remove) plus its own metadata (added-by/at, reason, notes, expiration), time-limited entries with a join check and hourly sweep, a strict ownership model (automated paths never touch entries set by someone else), fine-grained permissions, audit - see [docs/user/modules/whitelist.md](../user/modules/whitelist.md) |
+| Performance | `dev.universaladmin.modules.performance` | Complete: cached TPS/MSPT/memory/world/entity sampling on a configurable interval (`PerformanceSamplingService`, never recomputed per GUI render), dashboard, per-world performance view, entity overview (grouped by type/world), short in-memory history, staff alerts on TPS/MSPT/memory thresholds (`NotificationService#notifyStaff`), a deliberately narrow Entity Clear (never players, configurable protected types, preview, confirmation, audit), fine-grained permissions - see [docs/user/modules/performance.md](../user/modules/performance.md) |
+| Audit Log | `dev.universaladmin.modules.auditlog` | Skeleton, GUI/commands missing (the service itself already exists as the core service `dev.universaladmin.audit`) |
+| Settings | `dev.universaladmin.modules.settings` | Skeleton, GUI/commands missing (the service already exists as the core service `dev.universaladmin.settings.SettingsService`) |
 
-"Skelett" heißt: implementiert `Module`, kompiliert, registriert eine
-Beispiel-Permission, hat aber noch keine Repository/Service/Action/GUI-
-Kette. Der Ausbau folgt [adding-module.md](../development/adding-module.md)
-mit `players` als Vorlage. Alle acht werden in
-`UniversalAdminPlugin#registerBuiltInModules` registriert - das ist die
-**einzige** Stelle, die built-in Module kennt; nichts sonst im Bootstrap
-hardcoded einzelne Module. Jedes wird nur registriert, wenn sein
-`modules.<name>`-Setting (siehe
-[docs/user/configuration.md](../user/configuration.md#modules)) auf `true`
-steht - ein per Config deaktiviertes Modul erreicht `ModuleRegistry` nie
-und taucht dementsprechend auch nicht als `FAILED` auf, es existiert für
-diesen Lauf schlicht nicht.
+"Skeleton" means: implements `Module`, compiles, registers an example
+permission, but has no repository/service/action/GUI chain yet. Building
+it out follows [adding-module.md](../development/adding-module.md) with
+`players` as the template. All eight are registered in
+`UniversalAdminPlugin#registerBuiltInModules` - that's the **only** place
+that knows about built-in modules; nothing else in bootstrap hardcodes
+individual modules. Each one is only registered if its `modules.<name>`
+setting (see
+[docs/user/configuration.md](../user/configuration.md#modules)) is `true`
+- a module disabled via config never reaches `ModuleRegistry` and
+accordingly never shows up as `FAILED` either; for that run it simply
+doesn't exist.
 
-### Warum Audit Log und Settings *auch* Module sind
+### Why Audit Log and Settings Are *Also* Modules
 
-Audit-Logging und Konfiguration sind Core-Services (`AuditService`,
-`SettingsService`), die von Anfang an existieren, weil andere Module sie
-brauchen (jede Action soll auditieren können; jedes Modul kann Settings lesen
-wollen). Die `AuditLogModule`/`SettingsModule` sind trotzdem eigene Module,
-weil sie eine eigene GUI-/Command-Oberfläche bekommen - "gibt es als
-Service" und "hat eine eigene Nutzeroberfläche" sind unterschiedliche
-Dinge, und die Modul-Registrierung ist, wie jede sichtbare Funktionalität,
-konsistent über `Module` modelliert statt als Sonderfall.
+Audit logging and configuration are core services (`AuditService`,
+`SettingsService`) that exist from the start because other modules need
+them (every action should be able to audit; every module may want to read
+settings). The `AuditLogModule`/`SettingsModule` are still their own
+modules because they get their own GUI/command surface - "exists as a
+service" and "has its own user interface" are different things, and module
+registration, like any visible functionality, is modeled consistently
+through `Module` instead of as a special case.
 
 ## Cross-module communication
 
-Ein Modul greift nie direkt auf eine interne Klasse eines anderen Moduls
-zu. Braucht Moderation z. B. `PlayerService` aus Players, schlägt es das
-über `context.platform().services().require(PlayerService.class)` nach -
-das funktioniert nur, wenn Players zuvor erfolgreich enabled hat. Ist das
-zwingend (nicht nur "praktisch, falls vorhanden"), gehört die Abhängigkeit
-zusätzlich in `ModuleDescriptor.dependencies()`, damit `ModuleManager` die
-Reihenfolge garantiert und ein fehlgeschlagenes Players-Modul das
-abhängige Modul sauber als `FAILED` markiert statt mit einer
-`NoSuchElementException` aus `ServiceRegistry.require` abzustürzen.
+A module never directly accesses another module's internal class. If
+Moderation needs, say, `PlayerService` from Players, it looks it up via
+`context.platform().services().require(PlayerService.class)` - which only
+works once Players has successfully enabled. If that's mandatory (not just
+"nice to have if present"), the dependency additionally belongs in
+`ModuleDescriptor.dependencies()`, so `ModuleManager` guarantees the
+ordering and a failed Players module cleanly marks the dependent module as
+`FAILED` instead of crashing with a `NoSuchElementException` from
+`ServiceRegistry.require`.
 
 ## Extension-ready, on purpose
 

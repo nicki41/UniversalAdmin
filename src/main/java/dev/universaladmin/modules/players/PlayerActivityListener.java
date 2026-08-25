@@ -8,7 +8,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 /**
  * Translates {@link PlayerJoinEvent}/{@link PlayerQuitEvent} into {@link
  * PlayerService}/{@link PlayerSessionTracker} calls - nothing else, per
- * docs/development/architecture-rules.md's "keine Bukkit-Event-Listener mit Logik" rule and ROADMAP.md's
+ * docs/development/architecture-rules.md's "no Bukkit event listeners with logic" rule and ROADMAP.md's
  * Phase 1 item for this exact listener.
  */
 public final class PlayerActivityListener implements Listener {

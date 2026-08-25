@@ -7,8 +7,8 @@ import java.util.OptionalDouble;
 
 /**
  * A short, bounded, in-memory-only trend window - deliberately not
- * persisted, see ROADMAP.md: "Core v1 muss noch keine lange Metric History
- * speichern... persistente Charts sind primär später Web-App Feature."
+ * persisted, see ROADMAP.md: "Core v1 doesn't need to store a long metric
+ * history yet... persistent charts are primarily a later web-app feature."
  * Capacity is a fixed sample count rather than a time span so memory use
  * stays predictable regardless of the configured refresh interval.
  *

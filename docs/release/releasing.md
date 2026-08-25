@@ -1,33 +1,32 @@
-# Release-Prozess
+# Release Process
 
-Wie ein UniversalAdmin-Release entsteht. Kurzfassung: **ein Version-Tag löst
-alles Weitere aus.** Es gibt keinen manuellen Upload-Schritt und keinen
-"Release-Button" - `.github/workflows/release.yml` baut, testet und
-veröffentlicht.
+How a UniversalAdmin release comes to be. Short version: **a version tag
+triggers everything else.** There is no manual upload step and no "release
+button" - `.github/workflows/release.yml` builds, tests, and publishes.
 
-## Versionsschema
+## Version Scheme
 
-[Semantic Versioning](https://semver.org/lang/de/), mit Vorab-Suffixen:
+[Semantic Versioning](https://semver.org/), with pre-release suffixes:
 
-| Version | Tag | GitHub-Release-Typ |
+| Version | Tag | GitHub release type |
 |---|---|---|
 | `0.1.0-alpha.1` | `v0.1.0-alpha.1` | Prerelease |
 | `0.2.0-beta.1` | `v0.2.0-beta.1` | Prerelease |
 | `1.0.0-rc.1` | `v1.0.0-rc.1` | Prerelease |
-| `1.0.0` | `v1.0.0` | normaler Release |
+| `1.0.0` | `v1.0.0` | normal release |
 
-Der Workflow erkennt `-alpha`, `-beta` und `-rc` im Versionsstring und
-markiert den Release automatisch als Prerelease. Alles andere ist ein
-normaler Release.
+The workflow detects `-alpha`, `-beta`, and `-rc` in the version string and
+marks the release as a prerelease automatically. Anything else is a normal
+release.
 
-Die Version steht an genau **einer** Stelle: `version = "..."` in
-`build.gradle.kts`. `plugin.yml` bekommt sie beim Build eingesetzt
-(`processResources`), und `./gradlew -q printVersion` gibt sie aus - das ist
-auch, was die CI liest.
+The version lives in exactly **one** place: `version = "..."` in
+`build.gradle.kts`. `plugin.yml` gets it substituted in at build time
+(`processResources`), and `./gradlew -q printVersion` prints it - which is
+also what CI reads.
 
-## Ablauf
+## Steps
 
-### 1. Version setzen
+### 1. Set the version
 
 In `build.gradle.kts`:
 
@@ -35,108 +34,107 @@ In `build.gradle.kts`:
 version = "0.1.0-alpha.1"
 ```
 
-### 2. CHANGELOG aktualisieren
+### 2. Update the changelog
 
-Den Inhalt aus `## [Unreleased]` in einen versionierten Abschnitt überführen:
+Move the content out of `## [Unreleased]` into a versioned section:
 
 ```markdown
 ## [0.1.0-alpha.1] - 2026-08-25
 ```
 
-Wenn ein Abschnitt mit exakt dieser Überschrift (`## [<version>]`) existiert,
-übernimmt der Release-Workflow seinen Inhalt zusätzlich in die Release Notes.
-Gibt es keinen, werden nur die von GitHub aus Commits/PRs generierten Notes
-verwendet - kein Fehler, nur weniger Kontext.
+If a section with exactly this heading (`## [<version>]`) exists, the release
+workflow additionally pulls its content into the release notes. If there
+isn't one, only GitHub's generated commit/PR notes are used - not an error,
+just less context.
 
-### 3. Lokal bauen und prüfen
+### 3. Build and check locally
 
 ```bash
 ./gradlew clean build
 ```
 
-Muss grün sein - inklusive Tests und `verifyShadedJarDrivers` (öffnet eine
-echte Datenbankverbindung durch die fertige jar). Ein roter lokaler Build wird
-in der CI genauso rot; der Release entsteht dann nicht.
+Must be green - including tests and `verifyShadedJarDrivers` (opens a real
+database connection through the finished jar). A red local build will be red
+in CI the same way; no release is produced then.
 
-Vor einem echten Release zusätzlich das, was kein Build prüfen kann: die jar
-auf einem tatsächlichen Paper-Server starten und die betroffenen GUI-Pfade
-durchklicken. Siehe [RELEASE_READINESS.md](../../RELEASE_READINESS.md) zu den
-bekannten Grenzen der automatisierten Prüfung.
+Before a real release, also do what no build can check: start the jar on an
+actual Paper server and click through the affected GUI paths. See
+[RELEASE_READINESS.md](../../RELEASE_READINESS.md) for the known limits of
+automated checking.
 
-### 4. Committen
+### 4. Commit
 
 ```bash
 git add -A
 git commit -m "chore: release 0.1.0-alpha.1"
 ```
 
-### 5. Taggen
+### 5. Tag
 
 ```bash
 git tag v0.1.0-alpha.1
 ```
 
-Der Tag muss exakt der Version aus `build.gradle.kts` mit vorangestelltem `v`
-entsprechen. Weicht er ab, **bricht der Release-Workflow ab**, bevor irgendetwas
-veröffentlicht wird - das ist Absicht, damit `v0.2.0` nie eine `0.1.0`-jar
-ausliefert.
+The tag must exactly match the version in `build.gradle.kts` with a leading
+`v`. If it doesn't, **the release workflow fails** before anything is
+published - that's intentional, so `v0.2.0` can never ship a `0.1.0` jar.
 
-### 6. Pushen
+### 6. Push
 
 ```bash
 git push origin main
 git push origin v0.1.0-alpha.1
 ```
 
-## Was danach automatisch passiert
+## What Happens Automatically After That
 
-`.github/workflows/release.yml` läuft und:
+`.github/workflows/release.yml` runs and:
 
-1. checkt den Tag aus,
-2. richtet Java ein (Gradle läuft auf 21, kompiliert mit der Java-25-Toolchain),
-3. **prüft Tag gegen Projektversion** - bei Abweichung: Abbruch, kein Release,
-4. führt `./gradlew clean build` inklusive aller Tests aus - schlägt etwas
-   fehl, entsteht **kein** Release,
-5. sucht `build/libs/universaladmin-core-<version>.jar` (die installierbare,
-   shaded jar - keine sources-, javadoc- oder unshaded jar),
-6. erzeugt daneben `<jar>.sha256`,
-7. legt den GitHub-Release an: Titel `UniversalAdmin <version>`, Notes aus
-   GitHub-Generierung (plus CHANGELOG-Abschnitt, falls vorhanden),
-   Prerelease-Flag je nach Versionssuffix,
-8. hängt jar und SHA-256-Datei an.
+1. checks out the tag,
+2. sets up Java (Gradle runs on 21, compiles with the Java 25 toolchain),
+3. **checks the tag against the project version** - on mismatch: abort, no
+   release,
+4. runs `./gradlew clean build` including every test - if anything fails,
+   **no** release is created,
+5. locates `build/libs/universaladmin-core-<version>.jar` (the installable,
+   shaded jar - no sources, javadoc, or unshaded jar),
+6. generates `<jar>.sha256` next to it,
+7. creates the GitHub release: title `UniversalAdmin <version>`, notes
+   generated by GitHub (plus the changelog section, if present), prerelease
+   flag based on the version suffix,
+8. attaches the jar and the SHA-256 file.
 
-Verwendet wird ausschließlich das automatische `GITHUB_TOKEN` mit
-`contents: write`. Es gibt keine zusätzlichen Secrets.
+Only the automatic `GITHUB_TOKEN` with `contents: write` is used. There are
+no additional secrets.
 
-## Wenn etwas schiefgeht
+## If Something Goes Wrong
 
-- **Tag/Version passen nicht zusammen:** Workflow schlägt fehl, nichts wurde
-  veröffentlicht. Version oder Tag korrigieren. Einen bereits gepushten
-  falschen Tag löscht man mit `git push origin :refs/tags/v0.2.0` und setzt ihn
-  neu - der Commit-Verlauf bleibt unangetastet.
-- **Build/Tests rot:** Ursache beheben, normal committen und pushen, danach
-  den Tag neu setzen. Kein Force-Push auf `main`.
-- **Release entstand mit falschem Inhalt:** neuen Patch-Release
-  (`0.1.0-alpha.2`) hinterherschieben statt einen veröffentlichten Release zu
-  überschreiben.
+- **Tag and version don't match:** the workflow fails, nothing was
+  published. Fix the version or the tag. Delete an already-pushed wrong tag
+  with `git push origin :refs/tags/v0.2.0` and set it again - commit history
+  is untouched.
+- **Build/tests fail:** fix the cause, commit and push normally, then set the
+  tag again. No force push to `main`.
+- **A release went out with the wrong content:** push a follow-up patch
+  release (`0.1.0-alpha.2`) rather than overwriting a published release.
 
 ## Modrinth
 
-Noch **keine** automatische Modrinth-Veröffentlichung: es gibt weder ein
-Modrinth-Projekt noch einen API-Token dafür. Die vorbereitete Projektseite und
-die Checkliste stehen in [modrinth.md](modrinth.md).
+**No** automatic Modrinth publishing yet: there's neither a Modrinth project
+nor an API token for it. The prepared project page and checklist are in
+[modrinth.md](modrinth.md).
 
-Der Release-Workflow ist so aufgebaut, dass das später ein zusätzlicher Schritt
-am Ende ist - Version, jar-Pfad und Prerelease-Flag stehen bereits als
-Step-Outputs zur Verfügung; ergänzt werden müssten nur ein Upload-Schritt und
-ein Repository-Secret mit dem Modrinth-Token.
+The release workflow is structured so this can later be an additional step at
+the end - version, jar path, and prerelease flag are already available as
+step outputs; only an upload step and a repository secret with the Modrinth
+token would need to be added.
 
-## Was dieser Prozess bewusst nicht tut
+## What This Process Deliberately Doesn't Do
 
-- **Keine automatischen Tags.** Ein Release ist eine bewusste Entscheidung; CI
-  erzeugt keine Versionen von selbst.
-- **Kein Publish aus `build.yml`.** Der Build-Workflow lädt die jar nur als
-  Actions-Artifact hoch (nachvollziehbar, temporär), veröffentlicht aber nie.
-- **Keine automatischen Dependency-Updates.** Kein Dependabot; Abhängigkeiten
-  werden bewusst manuell aktualisiert (siehe
-  [SECURITY.md](../../SECURITY.md#abhängigkeiten)).
+- **No automatic tags.** A release is a deliberate decision; CI doesn't
+  generate versions on its own.
+- **No publishing from `build.yml`.** The build workflow only uploads the
+  jar as an Actions artifact (traceable, temporary), never publishes.
+- **No automated dependency updates.** No Dependabot; dependencies are
+  updated manually and deliberately (see
+  [SECURITY.md](../../SECURITY.md#dependencies)).

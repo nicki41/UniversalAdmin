@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * PlayerSnapshot#sessionDuration()}. Deliberately not a {@link
  * dev.universaladmin.storage.Repository} - a current session's start time is
  * exactly the kind of ephemeral, process-lifetime-only state docs/development/architecture-rules.md's
- * "Repositories nur wenn persistente Daten nötig sind" rule says shouldn't
+ * "a repository only when data actually needs to persist" rule says shouldn't
  * be persisted; it's meaningless after a restart anyway (the player would
  * already be offline).
  */

@@ -1,86 +1,80 @@
 # Testing
 
-## Grundsatz
+## Principle
 
-Business-Logik (Services, Actions, nicht-triviale Migrationen) muss ohne
-laufenden Paper-Server testbar sein. Das ist der eigentliche Test dafür,
-ob die Schichtentrennung aus [ARCHITECTURE.md](../../ARCHITECTURE.md)
-eingehalten wurde - lässt sich ein Service nicht ohne Bukkit-Mocking
-testen, hängt vermutlich Business-Logik an einer Stelle, die eigentlich
-nur Frontend/Adapter sein sollte.
+Business logic (services, actions, non-trivial migrations) must be
+testable without a running Paper server. That's the real test of whether
+the layering from [ARCHITECTURE.md](../../ARCHITECTURE.md) was actually
+followed - if a service can't be tested without Bukkit mocking, business
+logic probably ended up somewhere that should have stayed frontend/adapter.
 
-## Werkzeuge
+## Tools
 
-- JUnit 5 (Jupiter) - Testframework.
-- Mockito - verfügbar (`testImplementation`), aber nicht die erste Wahl:
-  siehe unten.
-- Kein Paper-Server-Mocking-Framework (MockBukkit o. Ä.) aktuell
-  eingerichtet. Wird relevant, sobald `GuiPage`-Implementierungen oder
-  Bukkit-Event-Listener mit nennenswerter eigener Logik entstehen (siehe
-  [ROADMAP.md](../../ROADMAP.md) Phase 1) - bis dahin nicht vorzeitig
-  hinzufügen.
+- JUnit 5 (Jupiter) - test framework.
+- Mockito - available (`testImplementation`), but not the first choice:
+  see below.
+- No Paper server mocking framework (MockBukkit or similar) set up
+  currently. Becomes relevant once `GuiPage` implementations or Bukkit
+  event listeners with meaningful logic of their own show up (see
+  [ROADMAP.md](../../ROADMAP.md) Phase 1) - don't add it prematurely
+  before then.
 
-## Repositories: Fakes statt Mocks
+## Repositories: Fakes Instead of Mocks
 
-Ein Service hängt von einem `Repository`-*Interface* ab - das lässt sich
-mit einer einfachen In-Memory-Implementierung faken, statt jede Methode
-mit Mockito zu mocken. Ein Fake verhält sich wie eine echte
-Implementierung (konsistenter Zustand über mehrere Aufrufe), ein Mock
-antwortet nur auf das, was explizit programmiert wurde - für
-Repository-Tests ist ein Fake meist der Test, der tatsächlich das
-Service-Verhalten prüft statt nur die Aufrufreihenfolge.
+A service depends on a `Repository` *interface* - that can be faked with a
+simple in-memory implementation instead of mocking every method with
+Mockito. A fake behaves like a real implementation (consistent state
+across multiple calls), a mock only responds to what was explicitly
+programmed - for repository tests, a fake is usually the test that
+actually checks service behavior instead of just the call sequence.
 
-Beispiel:
+Example:
 [`PlayerServiceTest`](../../src/test/java/dev/universaladmin/modules/players/PlayerServiceTest.java)
-- ein `record`, das `PlayerProfileRepository` gegen eine
-`ConcurrentHashMap` implementiert, direkt in der Testklasse.
+- a `record` implementing `PlayerProfileRepository` against a
+`ConcurrentHashMap`, directly in the test class.
 
-Mockito ist die richtige Wahl, wenn eine Abhängigkeit *Verhalten*
-simulieren muss, das ein einfaches Fake nicht sinnvoll abbildet (z. B. ein
-Fehlerfall, der nur schwer über einen echten Zustand erzwingbar ist).
+Mockito is the right choice when a dependency needs to simulate *behavior*
+a simple fake can't reasonably represent (e.g. a failure case hard to force
+through real state).
 
-## Migrationen: echte SQLite-Datenbank, kein Mock
+## Migrations: a Real SQLite Database, No Mock
 
-`Migration`/`MigrationRunner` gegen eine echte temporäre SQLite-Datei
-testen (`@TempDir` + `DataSourceFactory`), nicht gegen eine gemockte
-`Connection` - SQL-Syntaxfehler fallen nur gegen eine echte Datenbank auf.
-Beispiel:
+Test `Migration`/`MigrationRunner` against a real, temporary SQLite file
+(`@TempDir` + `DataSourceFactory`), not against a mocked `Connection` - SQL
+syntax errors only show up against a real database. Example:
 [`MigrationRunnerTest`](../../src/test/java/dev/universaladmin/storage/MigrationRunnerTest.java).
 
-**Wichtig unter Windows:** die von `DataSourceFactory.create(...)`
-erzeugte `DataSource` (HikariCP) am Ende des Tests schließen
-(`((AutoCloseable) dataSource).close()`), sonst kann JUnits `@TempDir`
-die Datei nach dem Test nicht löschen, weil SQLite die Datei noch offen
-hält.
+**Important on Windows:** close the `DataSource` (HikariCP) created by
+`DataSourceFactory.create(...)` at the end of the test
+(`((AutoCloseable) dataSource).close()`), or JUnit's `@TempDir` can't
+delete the file after the test because SQLite is still holding it open.
 
-## Settings/Config: echte `YamlConfiguration`, kein Mock
+## Settings/Config: a Real `YamlConfiguration`, No Mock
 
-Wie bei Migrationen: `YamlSettingsService` gegen eine echte (in-memory)
-`org.bukkit.configuration.file.YamlConfiguration` testen
-(`config.loadFromString("gui:\n  page-size: 27\n")`), nicht gegen eine
-gemockte `FileConfiguration` - `YamlConfiguration` ist eine reine
-Datenstruktur-Klasse in `paper-api`, kein Server nötig. Für einen Reload
-zwischen zwei Werten reicht ein `AtomicReference<YamlConfiguration>`, den
-der `Supplier<FileConfiguration>` liest. Beispiel:
+Same as for migrations: test `YamlSettingsService` against a real
+(in-memory) `org.bukkit.configuration.file.YamlConfiguration`
+(`config.loadFromString("gui:\n  page-size: 27\n")`), not against a mocked
+`FileConfiguration` - `YamlConfiguration` is a plain data-structure class
+in `paper-api`, no server needed. For a reload between two values, an
+`AtomicReference<YamlConfiguration>` read by the `Supplier<FileConfiguration>`
+is enough. Example:
 [`YamlSettingsServiceTest`](../../src/test/java/dev/universaladmin/settings/YamlSettingsServiceTest.java).
 
-`YamlLocaleMessageService` entsprechend gegen echte, in einem `@TempDir`
-geschriebene `lang/*.yml`-Dateien testen, nicht gegen eine gemockte
-Message-Map - siehe
+Test `YamlLocaleMessageService` the same way, against real `lang/*.yml`
+files written into a `@TempDir`, not against a mocked message map - see
 [`YamlLocaleMessageServiceTest`](../../src/test/java/dev/universaladmin/localization/YamlLocaleMessageServiceTest.java).
-`SettingsService` selbst (nur für `general.language`) lässt sich hier
-mocken, weil dieser Test nicht das Settings-System prüft, sondern nur die
-Locale-Fallback-Logik.
+`SettingsService` itself (only for `general.language`) is fine to mock
+here, because this test isn't checking the settings system, only the
+locale fallback logic.
 
-## Was noch fehlt
+## What's Still Missing
 
-- Tests für die acht Modul-Skelette folgen, sobald sie über
-  `PlayersModule`/`PlayerService` hinaus echte Logik bekommen (siehe
+- Tests for the eight module skeletons follow once they get real logic
+  beyond `PlayersModule`/`PlayerService` (see
   [adding-module.md](adding-module.md)).
-- Permission-Tests bisher nur auf Validierungsebene
-  (`PermissionNodeTest`) - Tests für tatsächliche Berechtigungs-
-  *entscheidungen* folgen mit der ersten Action, die eine solche
-  Entscheidung trifft.
-- Kein Integrationstest, der `UniversalAdminPlugin#onEnable` end-to-end
-  durchläuft (bräuchte einen Paper-Testserver) - bewusst zurückgestellt,
-  bis dafür ein konkretes Bedürfnis besteht.
+- Permission tests so far only at the validation level
+  (`PermissionNodeTest`) - tests for actual authorization *decisions*
+  follow with the first action that makes one.
+- No integration test running `UniversalAdminPlugin#onEnable` end to end
+  (would need a Paper test server) - deliberately deferred until there's a
+  concrete need for it.

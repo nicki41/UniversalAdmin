@@ -1,17 +1,17 @@
 # Permissions
 
-UniversalAdmin registriert seine Permission-Nodes zur Laufzeit (nicht
-statisch in `plugin.yml`) - siehe
+UniversalAdmin registers its permission nodes at runtime (not statically in
+`plugin.yml`) - see
 [docs/architecture/decisions/0005-extension-ready-design.md](../architecture/decisions/0005-extension-ready-design.md)
-für die Begründung. Funktioniert mit jedem Standard-Permission-Plugin
-(LuckPerms und ähnliche), die kein Vault im Core voraussetzen.
+for the rationale. Works with any standard permission plugin (LuckPerms and
+similar) that doesn't require Vault in the core.
 
-## Aktuell registrierte Nodes
+## Currently Registered Nodes
 
-| Node | Modul | Standard | Beschreibung |
+| Node | Module | Default | Description |
 |---|---|---|---|
-| `universaladmin.reload` | Core (kein Modul) | op | Reload UniversalAdmin's configuration (`/admin reload`) |
-| `universaladmin.menu.open` | Core (kein Modul) | op | Open the `/admin` main menu (siehe [gui-framework.md](../development/gui-framework.md)) |
+| `universaladmin.reload` | Core (no module) | op | Reload UniversalAdmin's configuration (`/admin reload`) |
+| `universaladmin.menu.open` | Core (no module) | op | Open the `/admin` main menu (see [gui-framework.md](../development/gui-framework.md)) |
 | `universaladmin.players.view` | Players | op | View player profiles (browser, profile page) |
 | `universaladmin.players.ip` | Players | op | View a player's IP address |
 | `universaladmin.players.teleport` | Players | op | Teleport players (admin↔player, world spawn, bed, coordinates) |
@@ -82,52 +82,50 @@ für die Begründung. Funktioniert mit jedem Standard-Permission-Plugin
 | `universaladmin.audit.details` | Audit Log | op | View full detail (old/new values, metadata) of an audit entry |
 | `universaladmin.settings.manage` | Settings | op | Manage UniversalAdmin settings |
 
-Bis auf Players, Moderation, Server, Worlds, Whitelist und Performance ist
-diese Liste bewusst grob (ein Node pro Modul) - der aktuelle Stand der
-übrigen Module ist Skelett-Ebene (siehe
+Aside from Players, Moderation, Server, Worlds, Whitelist, and Performance,
+this list is deliberately coarse (one node per module) - the remaining
+modules are still at skeleton level (see
 [docs/architecture/modules.md](../architecture/modules.md)). Players,
-Moderation, Server, Worlds, Whitelist und Performance sind die Module, bei
-denen die feingranulareren Nodes tatsächlich angekommen sind (z. B.
-getrennte `.inventory.view`/`.inventory.edit` statt eines pauschalen
-`.manage`, getrennte `.kick`/`.ban`/`.tempban`/`.ipban`/`.mute`/`.tempmute`/
-`.warn`/`.unban`/`.unmute`/`.removewarn` statt eines pauschalen `.use`,
-getrennte `.broadcast`/`.maintenance`/`.restart`/`.shutdown` statt eines
-pauschalen `.manage`, ein separates `.view.seed` neben `.view`, ein
-separates `.temporary` neben `.add`, oder ein separates `.entity-clear`
-neben `.view`) - vollständig dokumentiert in
+Moderation, Server, Worlds, Whitelist, and Performance are the modules
+where the finer-grained nodes have actually landed (e.g. separate
+`.inventory.view`/`.inventory.edit` instead of a blanket `.manage`,
+separate `.kick`/`.ban`/`.tempban`/`.ipban`/`.mute`/`.tempmute`/`.warn`/
+`.unban`/`.unmute`/`.removewarn` instead of a blanket `.use`, separate
+`.broadcast`/`.maintenance`/`.restart`/`.shutdown` instead of a blanket
+`.manage`, a separate `.view.seed` next to `.view`, a separate
+`.temporary` next to `.add`, or a separate `.entity-clear` next to
+`.view`) - fully documented in
 [docs/user/modules/players.md](modules/players.md#permissions),
 [docs/user/modules/moderation.md](modules/moderation.md#permissions),
 [docs/user/modules/server.md](modules/server.md#permissions),
 [docs/user/modules/worlds.md](modules/worlds.md#permissions),
-[docs/user/modules/whitelist.md](modules/whitelist.md#permissions) und
-[docs/user/modules/performance.md](modules/performance.md#permissions). Mit
-zunehmendem Funktionsumfang je Modul werden weitere Module diesem Muster
-folgen.
+[docs/user/modules/whitelist.md](modules/whitelist.md#permissions), and
+[docs/user/modules/performance.md](modules/performance.md#permissions).
+More modules will follow this pattern as their feature scope grows.
 
-## Standard ("op")
+## Default ("op")
 
-Alle aktuellen Nodes stehen standardmäßig auf `op` - ohne Permission-
-Plugin haben nur Server-Operatoren Zugriff. Mit einem Permission-Plugin
-lassen sich Nodes gezielt an bestimmte Rollen vergeben, unabhängig vom
-Op-Status.
+Every current node defaults to `op` - without a permission plugin, only
+server operators have access. With a permission plugin, nodes can be
+granted to specific roles independent of op status.
 
-## Wie eine Permission tatsächlich geprüft wird
+## How a Permission Is Actually Checked
 
-Jede Action, die eine Permission braucht, deklariert sie über
-`ActionDefinition.Builder#permission(...)` bei der Registrierung (siehe
-[docs/architecture/actions.md](../architecture/actions.md)) - `ActionExecutor`
-prüft sie zentral, bevor die Action läuft. Es gibt bewusst keinen Code-Pfad,
-der `player.hasPermission("...")` mit einem rohen String-Literal verstreut
-im GUI-/Command-Code aufruft; jeder Check geht über den `PermissionEvaluator`,
-den der jeweilige `Actor` trägt.
+Every action that needs a permission declares it via
+`ActionDefinition.Builder#permission(...)` at registration time (see
+[docs/architecture/actions.md](../architecture/actions.md)) -
+`ActionExecutor` checks it centrally before the action runs. There is
+deliberately no code path that calls `player.hasPermission("...")` with a
+raw string literal scattered through GUI/command code; every check goes
+through the `PermissionEvaluator` the respective `Actor` carries.
 
-Wildcards (z. B. eine Rolle mit `universaladmin.*` in LuckPerms) brauchen
-keine eigene Logik - `PermissiblePermissionEvaluator` delegiert direkt an
-Bukkits `Permissible.hasPermission`, also funktionieren sie automatisch
-über jedes installierte Permission-Plugin.
+Wildcards (e.g. a role with `universaladmin.*` in LuckPerms) need no logic
+of their own - `PermissiblePermissionEvaluator` delegates directly to
+Bukkit's `Permissible.hasPermission`, so they work automatically through
+any installed permission plugin.
 
-## Neue Permission hinzufügen (für Contributor)
+## Adding a New Permission (for Contributors)
 
-Siehe [docs/development/adding-module.md](../development/adding-module.md)
-Schritt 7 - eine `PermissionDefinition` wird im jeweiligen Modul
-registriert, nicht in `plugin.yml` eingetragen.
+See [docs/development/adding-module.md](../development/adding-module.md)
+step 7 - a `PermissionDefinition` is registered in the respective module,
+not entered in `plugin.yml`.

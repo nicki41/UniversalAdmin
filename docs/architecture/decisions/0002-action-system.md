@@ -1,54 +1,53 @@
-# 0002 - Ein Action-System als einziger Ort für Business-Logik
+# 0002 - An Action System as the Single Place for Business Logic
 
 ## Status
 
-Angenommen
+Accepted
 
-## Kontext
+## Context
 
-Dieselbe Operation ("Spieler kicken", "Whitelist setzen") soll langfristig
-von mehreren Frontends auslösbar sein: Ingame-GUI, Commands, später eine
-REST-API. Ohne eine explizite Abstraktion dafür landet Logik erfahrungsgemäß
-direkt im GUI-Click-Handler oder im Command-Executor, wird dort bei Bedarf
-kopiert, und divergiert über Zeit (der GUI-Kick prüft eine andere
-Bedingung als der Command-Kick).
+The same operation ("kick a player", "set whitelist status") needs to be
+triggerable from multiple frontends in the long run: the in-game GUI,
+commands, later a REST API. Without an explicit abstraction for that, logic
+reliably ends up directly in the GUI click handler or the command executor,
+gets copied there when needed, and diverges over time (the GUI kick checks a
+different condition than the command kick).
 
-## Entscheidung
+## Decision
 
-Ein `Action<I, R>`-Interface mit `ActionId`-Identifikation, async
-(`CompletableFuture<ActionResult<R>>`), Fehler als sealed `ActionResult`
-(`Success`/`Failure` mit `FailureReason`) statt Exceptions. Wer eine Action
-ausführt, wird über `Actor`/`ActorType` beschrieben (`PLAYER`, `CONSOLE`,
-`WEB`, `SYSTEM`) statt über einen Bukkit-`CommandSender`, damit `action`
-nicht von Paper-Typen abhängt.
+An `Action<I, R>` interface identified by `ActionId`, async
+(`CompletableFuture<ActionResult<R>>`), errors as a sealed `ActionResult`
+(`Success`/`Failure` with `FailureReason`) instead of exceptions. Who
+executes an action is described via `Actor`/`ActorType` (`PLAYER`,
+`CONSOLE`, `WEB`, `SYSTEM`) instead of a Bukkit `CommandSender`, so `action`
+doesn't depend on Paper types.
 
-Frontends (GUI, Commands, später Web) rufen Actions über `ActionRegistry`
-per `ActionId` auf, nicht die konkrete Action-Klasse direkt - das hält die
-Kopplung lose genug, dass eine Extension später eine eigene Action
-registrieren kann, die ein Frontend genauso aufruft wie eine eingebaute.
+Frontends (GUI, commands, later web) call actions through `ActionRegistry`
+by `ActionId`, not the concrete action class directly - that keeps coupling
+loose enough that an extension can later register its own action, called by
+a frontend the same way as a built-in one.
 
-Details und Code-Beispiel: [../actions.md](../actions.md).
+Detail and code example: [../actions.md](../actions.md).
 
-## Konsequenzen
+## Consequences
 
-- Jede Operation, die von mehr als einem Frontend ausgelöst werden soll
-  oder auditiert/berechtigt werden muss, bekommt eine `Action`. Reine
-  interne Lesezugriffe innerhalb eines Moduls müssen keine sein.
-- `ActionResult` zwingt jeden Aufrufer, den Fehlerfall zu behandeln - es
-  gibt keinen impliziten "wird schon nicht fehlschlagen"-Pfad.
-- Mehr Typen (Input-Record, `ActionId`-Konstante, Action-Klasse) pro
-  Operation als ein einzeiliger Methodenaufruf. Akzeptiert als Preis für
-  Wiederverwendbarkeit über Frontends hinweg.
+- Every operation that needs to be triggerable from more than one frontend,
+  or that needs to be audited/authorized, gets an `Action`. Pure internal
+  reads within a module don't need to be one.
+- `ActionResult` forces every caller to handle the failure case - there's no
+  implicit "this won't fail" path.
+- More types (input record, `ActionId` constant, action class) per
+  operation than a one-line method call. Accepted as the price for reuse
+  across frontends.
 
-## Alternativen
+## Alternatives
 
-- **Command-Pattern ohne Registry**, Actions direkt injiziert: Würde die
-  Registry-Indirektion sparen, aber jedes Frontend müsste zur Compile-Zeit
-  jede Action kennen, die es aufrufen will - inkompatibel mit dem Ziel,
-  dass Extensions später eigene Actions beisteuern, die ein generisches
-  Frontend (z. B. eine dynamische Web-UI) aufrufen kann, ohne sie zu
-  kennen.
-- **Business-Logik direkt in Services, keine separate Action-Schicht:**
-  Für reine Ingame-only-Logik ausreichend, verliert aber den einheitlichen
-  Einstiegspunkt für Auditierung/Berechtigung/Web-Aufruf, den `Action`
-  bietet.
+- **Command pattern without a registry**, actions injected directly: would
+  save the registry indirection, but every frontend would need to know
+  every action it wants to call at compile time - incompatible with the
+  goal of extensions later contributing their own actions that a generic
+  frontend (e.g. a dynamic web UI) can call without knowing them in
+  advance.
+- **Business logic directly in services, no separate action layer:**
+  sufficient for purely in-game-only logic, but loses the single entry
+  point for auditing/authorization/web invocation that `Action` provides.

@@ -23,7 +23,7 @@ import org.bukkit.entity.Player;
  * (matching the {@code ModuleId.core(...)} each module class already
  * defines for itself), never by importing the concrete {@code modules.*}
  * class - this package is generic GUI framework and must not depend
- * upward on specific built-in modules; see docs/development/architecture-rules.md's "Package-Regeln"
+ * upward on specific built-in modules; see docs/development/architecture-rules.md's "Package Rules"
  * section (built-in modules live under {@code dev.universaladmin.modules.*},
  * separate from the platform-wide abstractions under {@code dev.universaladmin.*}
  * that this class belongs to).

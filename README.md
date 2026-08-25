@@ -3,30 +3,27 @@
 [![Build](https://github.com/nicki41/UniversalAdmin/actions/workflows/build.yml/badge.svg)](https://github.com/nicki41/UniversalAdmin/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-Eine universelle Admin-Plattform für Paper-Server - mit vollständigen
-Ingame-GUIs, ohne Pflicht-Abhängigkeiten, auf einer Architektur, die auf
-Erweiterbarkeit ausgelegt ist.
+A universal admin platform for Paper servers - full in-game GUIs, no
+mandatory dependencies, built on an architecture designed for extensibility.
 
-> **Status: Alpha (`0.1.0-alpha`).** Sechs der acht eingebauten Module
-> (Players, Moderation, Server, Worlds, Whitelist, Performance) sind
-> vollständig nutzbar - eigene GUI, Actions, Permissions, Audit-Einträge. Das
-> Audit-Log-Modul hat Service und GUI, Settings bisher nur den Kernservice.
-> Es gibt noch **keine** öffentliche Extension-API und keine Web-App - beides
-> ist geplant, siehe [Roadmap](#roadmap). Auf Modrinth ist noch nichts
-> veröffentlicht.
+> **Status: Alpha (`0.1.0-alpha`).** Six of the eight built-in modules
+> (Players, Moderation, Server, Worlds, Whitelist, Performance) are fully
+> usable - own GUI, actions, permissions, audit entries. The Audit Log module
+> has its service and GUI; Settings so far only has its core service. There is
+> **no** public extension API yet and no web app - both are planned, see
+> [Roadmap](#roadmap). Nothing has been published on Modrinth yet.
 
 ## Overview
 
-Die meisten Admin-Plugins wachsen zu einer Sammlung unabhängiger
-GUI-Listener und Commands, die jeweils ihre eigene Logik, ihr eigenes
-Berechtigungssystem und oft ihr eigenes bisschen SQL mitbringen. Das lässt
-sich weder testen noch später über eine Web-App oder eine Extension-API
-wiederverwenden.
+Most admin plugins grow into a pile of independent GUI listeners and
+commands, each bringing its own logic, its own permission handling, and often
+its own bit of SQL. That's neither testable nor reusable later from a web app
+or an extension API.
 
-UniversalAdmin trennt die Business-Logik von der Oberfläche, die sie aufruft:
+UniversalAdmin separates business logic from the interface that invokes it:
 
 ```
-Frontend (GUI / Commands / später Web)
+Frontend (GUI / Commands / later Web)
     ↓
 Application Services
     ↓
@@ -34,130 +31,122 @@ Actions / Domain Logic
     ↓
 Repositories / Server Adapters
     ↓
-Paper / Datenbank
+Paper / Database
 ```
 
-Jede mutierende Operation - einen Spieler kicken, eine Gamerule ändern, eine
-gefilterte Menge Entities entfernen - läuft durch dieselbe Pipeline mit
-Permission-Prüfung und automatischem Audit-Eintrag, egal ob sie aus der GUI,
-einem Command oder später aus einer REST-API kommt. Kein Feature bringt seine
-eigene Permission-Behandlung, sein eigenes SQL oder sein eigenes Audit-Logging
-mit. Details: [ARCHITECTURE.md](ARCHITECTURE.md).
+Every mutating operation - kicking a player, changing a gamerule, clearing a
+filtered set of entities - runs through the same permission-checked, audited
+pipeline, whether it's triggered from the GUI, a command, or later a REST
+API. No feature reimplements its own permission handling, its own SQL, or its
+own audit logging. Details: [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Features
 
-Alles hier Genannte ist implementiert und nutzbar - Geplantes steht unter
+Everything listed here is implemented and usable - planned work is under
 [Roadmap](#roadmap).
 
-- **Players** - Spieler-Browser (online/offline/zuletzt gesehen/Suche),
-  Profilseite, ~20 Actions (Teleport, Heilen, Effekte, Gamemode,
-  Inventar-/Enderchest-Editor).
-- **Moderation** - Kick, Ban, Tempban, IP-Ban, Mute, Tempmute, Warn, Unban,
-  Unmute, Removewarn; Join- und Chat-Enforcement, GUI-Wizard.
-- **Staff-Tools** - Vanish, Freeze, Godmode, No-Collision und ein Staff-Mode
-  mit crash-sicherem Snapshot/Recovery (`/admin staff recover`).
-- **Server** - Live-Dashboard, Broadcast (Chat/Title/Actionbar),
-  Maintenance-Mode mit Allow-List, Shutdown/Restart mit Bestätigung und
-  konfigurierbarem Countdown.
-- **Worlds** - World-Browser und -Profil, Teleport/Spawn/Zeit/Wetter/
-  Schwierigkeit, World-Border-Verwaltung, dynamisches Gamerule-GUI (liest die
-  Gamerules zur Laufzeit, keine feste Liste).
-- **Whitelist** - natives Whitelist-Wrapping plus eigene Metadaten (Grund,
-  Notizen, Ablaufdatum), Ownership-Modell, Join-Check mit stündlichem Sweep.
-- **Performance** - TPS/MSPT/Memory-Dashboard, Performance pro Welt,
-  Entity-Übersicht nach Typ und Welt, kurze In-Memory-Historie, Staff-Alerts
-  bei konfigurierbaren Schwellenwerten und ein bewusst eng gefasstes Entity
-  Clear (nie Spieler, geschützte Typen, Preview, Bestätigung, auditiert) -
-  ausdrücklich **kein** aggressiver Lag-Cleaner.
-- **Audit Log** - jede Action wird automatisch auditiert; filterbare,
-  paginierte Ingame-Ansicht mit Detailseite und konfigurierbarer Retention.
-- **Settings** - typisiertes, validiertes Settings-System für die gesamte
-  Plattform; ein ungültiger Wert in der `config.yml` fällt auf den Default
-  zurück, statt den Server zu crashen. Eigene GUI/Commands stehen noch aus.
-- **Datenbank** - SQLite (Standard, keine Einrichtung) oder MySQL/MariaDB;
-  beide Treiber sind mitgeliefert, alle Zugriffe laufen asynchron.
-- **Keine Pflicht-Abhängigkeiten** - kein Vault, kein LuckPerms, kein
-  PlaceholderAPI, kein ProtocolLib nötig.
-- **Zweisprachig** - `en_US` und `de_DE` von Haus aus; jeder sichtbare Text
-  kommt aus `lang/<locale>.yml`.
+- **Players** - browser (online/offline/last-seen/search), profile page, ~20
+  actions (teleport, heal, effects, gamemode, inventory/ender chest editor).
+- **Moderation** - kick, ban, tempban, IP ban, mute, tempmute, warn, unban,
+  unmute, remove-warn; join and chat enforcement, GUI wizard.
+- **Staff Tools** - vanish, freeze, godmode, no-collision, and a staff mode
+  with crash-safe snapshot/recovery (`/admin staff recover`).
+- **Server** - live dashboard, broadcast (chat/title/actionbar), maintenance
+  mode with an allow-list, shutdown/restart with confirmation and a
+  configurable countdown.
+- **Worlds** - world browser and profile, teleport/spawn/time/weather/
+  difficulty, world border management, a dynamic gamerule GUI (reads
+  gamerules at runtime, no hardcoded list).
+- **Whitelist** - native whitelist wrapping plus its own metadata (reason,
+  notes, expiration), ownership model, join check with an hourly sweep.
+- **Performance** - TPS/MSPT/memory dashboard, per-world performance, entity
+  overview by type and world, short in-memory history, staff alerts on
+  configurable thresholds, and a deliberately narrow Entity Clear (never
+  players, protected types, preview, confirmation, audited) - explicitly
+  **not** an aggressive lag cleaner.
+- **Audit Log** - every action is audited automatically; filterable,
+  paginated in-game view with a detail page and configurable retention.
+- **Settings** - typed, validated settings system for the whole platform; an
+  invalid value in `config.yml` falls back to the default instead of crashing
+  the server. Its own GUI/commands are still outstanding.
+- **Database** - SQLite (default, zero setup) or MySQL/MariaDB; both drivers
+  are bundled, all access is asynchronous.
+- **No mandatory dependencies** - no Vault, no LuckPerms, no PlaceholderAPI,
+  no ProtocolLib required.
+- **Bilingual** - `en_US` and `de_DE` out of the box; every visible string
+  comes from `lang/<locale>.yml`.
 
 ## Requirements
 
-- **Paper** in der Version, gegen die gebaut wird - aktuell Paper-API `26.2`
-  (exakte Version: `build.gradle.kts`). Spigot/CraftBukkit werden nicht
-  unterstützt.
-- **Java 25** auf dem Server (dieselbe Version wie die Build-Toolchain).
-- Optional: ein MySQL-/MariaDB-Server, wenn mehrere Server sich Daten teilen
-  sollen. Ohne das läuft SQLite ohne jede Einrichtung.
+- **Paper**, the version this is built against - currently Paper API `26.2`
+  (exact version: `build.gradle.kts`). Spigot/CraftBukkit are not supported.
+- **Java 25** on the server (same version as the build toolchain).
+- Optional: a MySQL/MariaDB server, if multiple servers should share data.
+  Without one, SQLite runs with zero setup.
 
 ## Installation
 
-Fertige jars gibt es unter
-[Releases](https://github.com/nicki41/UniversalAdmin/releases) (sobald der
-erste Release getaggt ist). Die jar in den `plugins/`-Ordner legen und den
-Server neu starten - fertig.
+Prebuilt jars are on
+[Releases](https://github.com/nicki41/UniversalAdmin/releases) (once the
+first release is tagged). Drop the jar into the `plugins/` folder and restart
+the server - done.
 
-Selbst bauen:
+Build it yourself:
 
 ```bash
 ./gradlew build
 ```
 
-Das Ergebnis liegt unter `build/libs/universaladmin-core-<version>.jar` und
-enthält die Datenbanktreiber bereits. Vollständige Anleitung inklusive
-Deinstallation: [docs/user/installation.md](docs/user/installation.md).
+The result is under `build/libs/universaladmin-core-<version>.jar` and
+already bundles the database drivers. Full instructions including
+uninstallation: [docs/user/installation.md](docs/user/installation.md).
 
 ## Quick Start
 
-1. jar nach `plugins/` legen, Server starten.
-2. Ingame `/admin` eingeben (Aliase: `/ua`, `/uadmin`). Das Hauptmenü zeigt
-   jede aktive Modulseite.
-3. Läuft sofort mit SQLite. Konfiguration danach in
-   `plugins/UniversalAdmin/config.yml`, Änderungen mit `/admin reload`
-   übernehmen.
+1. Drop the jar into `plugins/`, start the server.
+2. In-game, type `/admin` (aliases: `/ua`, `/uadmin`). The main menu shows
+   every active module page.
+3. Runs immediately on SQLite. Configure afterward in
+   `plugins/UniversalAdmin/config.yml`, apply changes with `/admin reload`.
 
-| Command | Zweck |
+| Command | Purpose |
 |---|---|
-| `/admin` | Hauptmenü (Konsole/Command-Block sehen stattdessen einen Statusreport) |
-| `/admin reload` | Lädt UniversalAdmins eigene `config.yml` neu (nie Bukkits globales `/reload`) |
-| `/admin server broadcast\|shutdown\|restart\|cancel ...` | Server-Steuerung von der Konsole aus |
-| `/admin staff recover` | Manuelle Wiederherstellung eines hängen gebliebenen Staff-Mode-Snapshots |
+| `/admin` | Main menu (console/command blocks get a status report instead) |
+| `/admin reload` | Reloads UniversalAdmin's own `config.yml` (never Bukkit's global `/reload`) |
+| `/admin server broadcast\|shutdown\|restart\|cancel ...` | Server control from the console |
+| `/admin staff recover` | Manually restores a stuck staff-mode snapshot |
 
-Der überwiegende Teil der Funktionalität wird aktuell über die GUI bedient.
-Die zugehörigen Actions laufen bereits über `ActionExecutor` und sind damit
-command-fähig - nur die Command-Frontends fehlen noch (siehe
-[ROADMAP.md](ROADMAP.md)).
+Most functionality is currently GUI-driven. The underlying actions already
+run through `ActionExecutor` and are command-ready - only the command
+frontends themselves are missing (see [ROADMAP.md](ROADMAP.md)).
 
 ## Database
 
-SQLite ist der Standard und braucht keine Einrichtung; die Datei liegt im
-Plugin-Ordner. MySQL/MariaDB ist optional und in `config.yml` unter
-`database:` konfigurierbar. Alle Zugriffe laufen über `PreparedStatement`s
-und asynchron, nie blockierend auf dem Paper-Main-Thread. Schemaänderungen
-laufen über versionierte Migrationen. Details, Backup-Hinweise und
-Sicherheitsaspekte: [docs/user/database.md](docs/user/database.md).
+SQLite is the default and needs no setup; the file lives in the plugin
+folder. MySQL/MariaDB is optional and configurable in `config.yml` under
+`database:`. All access goes through `PreparedStatement`s and runs
+asynchronously, never blocking the Paper main thread. Schema changes go
+through versioned migrations. Details, backup guidance, and security notes:
+[docs/user/database.md](docs/user/database.md).
 
 ## Permissions
 
-Jede geschützte Aktion hat einen eigenen Node der Form
-`universaladmin.<modul>.<node>`, zur Laufzeit registriert (nicht statisch in
-`plugin.yml`), kompatibel mit jedem Standard-Permission-Plugin. Alle Nodes
-stehen standardmäßig auf `op`. Vollständige Liste:
-[docs/user/permissions.md](docs/user/permissions.md).
+Every protected action has its own node of the form
+`universaladmin.<module>.<node>`, registered at runtime (not statically in
+`plugin.yml`), compatible with any standard permission plugin. All nodes
+default to `op`. Full list: [docs/user/permissions.md](docs/user/permissions.md).
 
 ## Anonymous Statistics
 
-UniversalAdmin kann eine anonyme Nutzungsstatistik senden, um drei Fragen
-beantworten zu können: **wie viele Installationen aktiv sind**, **wie viele
-Spieler insgesamt online sind**, und **wie sich die Versionen verteilen**.
+UniversalAdmin can send anonymous usage statistics to answer three
+questions: **how many installations are active**, **how many players are
+online across all of them**, and **how versions are distributed**.
 
-**Aktuell wird nichts gesendet.** Es gibt noch keinen offiziellen Endpunkt,
-und es ist keiner voreingestellt (`telemetry.endpoint` ist leer) - ohne
-Endpunkt wird kein Request gemacht, keine Installation-ID erzeugt und kein
-Timer gestartet.
+**Currently nothing is sent.** There is no official endpoint yet, and none is
+preconfigured (`telemetry.endpoint` is empty) - without an endpoint, no
+request is made, no installation id is generated, and no timer starts.
 
-Wenn ein Endpunkt konfiguriert ist, besteht ein Heartbeat aus genau sechs
-Feldern:
+When an endpoint is configured, a heartbeat consists of exactly six fields:
 
 ```json
 {
@@ -170,45 +159,45 @@ Feldern:
 }
 ```
 
-Ausdrücklich **nie** übertragen werden: Server-IP, Hostname, Domain, Port,
-Spielernamen, Spieler-UUIDs, Spieler-IPs, Chat, Commands, Weltnamen,
-Koordinaten, andere installierte Plugins, Datei- oder Datenbankinhalte,
-Hardware-Merkmale, MAC-Adressen, OS-Benutzername oder Dateipfade. Die
-Installation-ID ist reiner Zufall (128 Bit) und aus nichts abgeleitet - kein
-Hardware-Fingerprint. Die Spielerzahl ist ausschließlich eine Zahl.
+Explicitly **never** transmitted: server IP, hostname, domain, port, player
+names, player UUIDs, player IPs, chat, commands, world names, coordinates,
+other installed plugins, file or database contents, hardware identifiers, MAC
+addresses, OS username, or file paths. The installation id is pure random
+(128 bits) and derived from nothing - not a hardware fingerprint. The player
+count is nothing but a number.
 
-Vollständig abschalten:
+Switch it off completely:
 
 ```yaml
 telemetry:
   enabled: false
 ```
 
-Dann wird gar kein Request ausgeführt - es gibt keinen versteckten Fallback
-und keine "essenzielle" zweite Übertragung. Die vollständige Dokumentation
-(jedes Feld, Intervall, Fehlerverhalten, offene Punkte) steht in
-[docs/user/telemetry.md](docs/user/telemetry.md). Es wird nichts erhoben, was
-dort nicht dokumentiert ist.
+Then no request is made at all - there is no hidden fallback and no
+"essential" second channel. Full documentation (every field, interval,
+failure behavior, open items):
+[docs/user/telemetry.md](docs/user/telemetry.md). Nothing is collected that
+isn't documented there.
 
 ## Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Architekturüberblick und -prinzipien
-- [ROADMAP.md](ROADMAP.md) - was existiert, was als Nächstes kommt
-- [CHANGELOG.md](CHANGELOG.md) - Änderungshistorie
-- [docs/user/](docs/user/) - Installation, Konfiguration, Permissions,
-  Datenbank, Audit-Log, [Telemetrie](docs/user/telemetry.md), Module
-- [docs/development/](docs/development/) - Setup, Konventionen, Tests, neues
-  Modul hinzufügen, GUI-Framework, Settings-System und die verbindlichen
-  [Entwicklungsregeln](docs/development/architecture-rules.md)
-- [docs/architecture/](docs/architecture/) - vertiefende Architekturdokus und
+- [ARCHITECTURE.md](ARCHITECTURE.md) - architecture overview and principles
+- [ROADMAP.md](ROADMAP.md) - what exists, what's next
+- [CHANGELOG.md](CHANGELOG.md) - change history
+- [docs/user/](docs/user/) - installation, configuration, permissions,
+  database, audit log, [telemetry](docs/user/telemetry.md), modules
+- [docs/development/](docs/development/) - setup, conventions, testing,
+  adding a module, the GUI framework, the settings system, and the binding
+  [development rules](docs/development/architecture-rules.md)
+- [docs/architecture/](docs/architecture/) - deeper architecture docs and
   [ADRs](docs/architecture/decisions/)
-- [docs/release/](docs/release/) - [Release-Prozess](docs/release/releasing.md),
-  [Lizenzierung](docs/release/licensing.md), Modrinth-Vorbereitung
+- [docs/release/](docs/release/) - [release process](docs/release/releasing.md),
+  [licensing](docs/release/licensing.md), Modrinth preparation
 
-Modul-Dokumentation:
+Module documentation:
 [Players](docs/user/modules/players.md) ·
 [Moderation](docs/user/modules/moderation.md) ·
-[Staff-Tools](docs/user/modules/staff-tools.md) ·
+[Staff Tools](docs/user/modules/staff-tools.md) ·
 [Server](docs/user/modules/server.md) ·
 [Worlds](docs/user/modules/worlds.md) ·
 [Whitelist](docs/user/modules/whitelist.md) ·
@@ -217,59 +206,57 @@ Modul-Dokumentation:
 
 ## Extensions
 
-**Geplant, noch nicht verfügbar.** Es gibt heute keine öffentliche,
-versionierte Extension-API - Extensions von Dritten lassen sich also noch
-nicht installieren.
+**Planned, not yet available.** There is no public, versioned extension API
+today - third-party extensions can't be installed yet.
 
-Der Core ist aber darauf ausgelegt: Alle eingebauten Module nutzen exakt
-dieselben Abstraktionen (`Module`, `Action`, `GuiPage`, `Repository`,
-`Migration`, `PermissionRegistry`), die später auch externen Extensions
-offenstehen sollen. Es gibt bewusst keinen "Schnellweg" für Built-ins, den
-eine Extension nicht auch gehen könnte - siehe
-[ADR 0005](docs/architecture/decisions/0005-extension-ready-design.md) und
+The core is built for it, though: every built-in module uses exactly the
+same abstractions (`Module`, `Action`, `GuiPage`, `Repository`, `Migration`,
+`PermissionRegistry`) that will later be open to extensions too. There is
+deliberately no "shortcut" for built-ins that an extension couldn't also
+take - see
+[ADR 0005](docs/architecture/decisions/0005-extension-ready-design.md) and
 [docs/architecture/extensions-future.md](docs/architecture/extensions-future.md).
 
-Die öffentliche Extension-API ist der **nächste große Meilenstein**.
+The public extension API is the **next major milestone**.
 
 ## Web App
 
-**Geplant, noch nicht verfügbar.** Eine optionale Web-App mit REST-API über
-denselben Services/Actions wie GUI und Commands ist vorgesehen, aber bewusst
-zurückgestellt, bis der Core stabil ist - siehe
-[docs/architecture/web-future.md](docs/architecture/web-future.md). Der
-Schlüssel `web.enabled` existiert bereits als reservierte, aktuell
-wirkungslose Einstellung.
+**Planned, not yet available.** An optional web app with a REST API over the
+same services/actions as the GUI and commands is planned, but deliberately
+deferred until the core is stable - see
+[docs/architecture/web-future.md](docs/architecture/web-future.md). The
+`web.enabled` key already exists as a reserved, currently no-op setting.
 
 ## Roadmap
 
-| Phase | Inhalt | Status |
+| Phase | Contents | Status |
 |---|---|---|
-| Core | Architektur, Module, GUI, Actions, Audit, Settings, Storage | weitgehend fertig |
-| Command-Frontends | `/admin players`, `/admin moderation`, ... | offen |
-| **Extension API** | `universaladmin-api`, Extension-Loader, SDK | **nächster Meilenstein** |
-| Offizielle Extensions | z. B. Vault-, Discord-Integration | offen |
-| Marketplace | Verteilung von Extensions | offen, Format noch nicht entschieden |
-| Web-App | REST-API, WebSockets, Dashboard | offen |
-| Multi-Server | Proxy-Support (BungeeCord/Velocity) | offen |
+| Core | Architecture, modules, GUI, actions, audit, settings, storage | largely done |
+| Command frontends | `/admin players`, `/admin moderation`, ... | outstanding |
+| **Extension API** | `universaladmin-api`, extension loader, SDK | **next milestone** |
+| Official extensions | e.g. Vault, Discord integration | outstanding |
+| Marketplace | extension distribution | outstanding, format not yet decided |
+| Web app | REST API, WebSockets, dashboard | outstanding |
+| Multi-server | proxy support (BungeeCord/Velocity) | outstanding |
 
-Ausführlich mit allen Einzelpunkten: [ROADMAP.md](ROADMAP.md).
+Full detail: [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 
-Beiträge sind willkommen. Ablauf, Setup, Architekturregeln und
-Test-Erwartungen: [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are welcome. Setup, architecture rules, and test expectations:
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
-Bug-Reports und Feature-Requests bitte als
-[GitHub Issue](https://github.com/nicki41/UniversalAdmin/issues).
+Bug reports and feature requests as a
+[GitHub Issue](https://github.com/nicki41/UniversalAdmin/issues), please.
 
 ## Security
 
-Sicherheitslücken **nicht** als öffentliches Issue melden - siehe
-[SECURITY.md](SECURITY.md) für den Meldeweg.
+Please do **not** report security vulnerabilities as a public issue - see
+[SECURITY.md](SECURITY.md) for the reporting path.
 
 ## License
 
-Apache License 2.0 - siehe [LICENSE](LICENSE). Kommerzielle Nutzung ist
-erlaubt. Was das für die geplante Extension-API, Community-Extensions und ein
-mögliches Marketplace-Backend bedeutet, steht in
-[docs/release/licensing.md](docs/release/licensing.md) (kein Rechtsrat).
+Apache License 2.0 - see [LICENSE](LICENSE). Commercial use is permitted.
+What this means for the planned extension API, community extensions, and a
+possible marketplace backend is covered in
+[docs/release/licensing.md](docs/release/licensing.md) (not legal advice).

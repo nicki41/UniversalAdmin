@@ -1,34 +1,32 @@
-# Verbindliche Entwicklungsregeln
+# Binding Development Rules
 
-Diese Datei ist die verbindliche Kurzfassung der Regeln, nach denen in
-diesem Repository entwickelt wird. Sie beschreibt Entscheidungen, die
-**bereits getroffen wurden** - nicht bei jeder Änderung neu verhandeln,
-sondern darauf aufbauen. Wenn eine Aufgabe diesen Regeln widerspricht,
-gehört das explizit benannt (siehe "Bestehende Architektur respektieren"
-am Ende), bevor davon abgewichen wird.
+This file is the binding short version of the rules this repository is
+developed by. It describes decisions that **have already been made** - don't
+renegotiate them on every change, build on them instead. If a task
+contradicts these rules, that needs to be named explicitly (see "Respecting
+the Existing Architecture" at the end) before deviating from them.
 
-Ausführliche Begründungen stehen in [ARCHITECTURE.md](../../ARCHITECTURE.md), den
-[ADRs](../architecture/decisions/) und im übrigen `docs/`-Baum. Diese Datei
-ist die Kurzfassung zum Nachschlagen während der Arbeit; sie ersetzt keine
-davon.
+Detailed rationale lives in [ARCHITECTURE.md](../../ARCHITECTURE.md), the
+[ADRs](../architecture/decisions/), and the rest of the `docs/` tree. This
+file is the short version to consult while working; it doesn't replace any
+of those.
 
-## Projektziel
+## Project Goal
 
-UniversalAdmin ist eine universelle Admin-Plattform für Paper-Server -
-**keine** Sammlung von GUI-Commands. Langfristig geplant: Core-Plugin,
-eingebaute Module, öffentliche Extension-API, Community-Extensions, optionale
-Web-App, REST-API, WebSockets. Aktuell (siehe [ROADMAP.md](../../ROADMAP.md))
-existiert der Core mit acht eingebauten Modulen und noch keine öffentliche
-API, kein Webserver.
+UniversalAdmin is a universal admin platform for Paper servers - **not** a
+collection of GUI commands. Long-term plan: core plugin, built-in modules, a
+public extension API, community extensions, an optional web app, REST API,
+WebSockets. Currently (see [ROADMAP.md](../../ROADMAP.md)) the core exists
+with eight built-in modules and no public API and no web server yet.
 
-Jede Architekturentscheidung muss so getroffen werden, dass sie diesen
-späteren Ausbau nicht durch einen Rewrite erzwingt. Siehe
+Every architecture decision must be made so it doesn't force a rewrite when
+that later expansion happens. See
 [docs/architecture/decisions/0005-extension-ready-design.md](../architecture/decisions/0005-extension-ready-design.md).
 
-## Die eine Architekturregel, die alles andere erklärt
+## The One Architecture Rule That Explains Everything Else
 
 ```
-Frontend (GUI / Command / später Web)
+Frontend (GUI / Command / later Web)
     ↓
 Application Services
     ↓
@@ -36,260 +34,255 @@ Actions / Domain Logic
     ↓
 Repositories / Server Adapters
     ↓
-Paper / Datenbank
+Paper / Database
 ```
 
-Business-Logik lebt **ausschließlich** in Services und Actions. Frontends
-(GUI-Click-Handler, Commands, später Web-Endpunkte) rufen Services/Actions
-auf - sie enthalten selbst keine Logik. Das ist der Grund, warum die gleiche
-"Spieler kicken"-Logik später von einem GUI-Button, einem `/admin kick` und
-einem REST-Endpunkt genutzt werden kann, ohne Code zu duplizieren.
+Business logic lives **exclusively** in services and actions. Frontends (GUI
+click handlers, commands, later web endpoints) call services/actions - they
+contain no logic themselves. That's why the same "kick a player" logic can
+later be used by a GUI button, an `/admin kick` command, and a REST endpoint
+without duplicating code.
 
-Konkret:
+Concretely:
 
-- **Kein Business-Logic-Code** in `dev.universaladmin.gui.*` Click-Handlern
-  oder `dev.universaladmin.command.*` Executors - nur Aufrufe von Services
-  oder `Action`s.
-- **Kein SQL** außerhalb von `*Repository`-Implementierungen (typischerweise
-  in einem `jdbc`-Subpackage). Services und Actions kennen nur das
-  `Repository<T, ID>`-Interface, nie `Connection`/`Statement`/`DataSource`.
-- **Keine Bukkit-Event-Listener mit Logik.** Ein Listener übersetzt ein
-  Bukkit-Event in einen Aufruf an einen Service/eine Action und sonst nichts.
+- **No business-logic code** in `dev.universaladmin.gui.*` click handlers or
+  `dev.universaladmin.command.*` executors - only calls to services or
+  `Action`s.
+- **No SQL** outside `*Repository` implementations (typically in a `jdbc`
+  subpackage). Services and actions only know the `Repository<T, ID>`
+  interface, never `Connection`/`Statement`/`DataSource`.
+- **No Bukkit event listeners with logic.** A listener translates a Bukkit
+  event into a call to a service/action and nothing else.
 
-Referenzimplementierung für dieses Muster:
+Reference implementation for this pattern:
 [`dev.universaladmin.modules.players`](../../src/main/java/dev/universaladmin/modules/players)
-(Model → Repository → Service → Action → Module). Neue Module orientieren
-sich daran, siehe [docs/development/adding-module.md](../development/adding-module.md).
+(model → repository → service → action → module). New modules follow this
+template - see
+[docs/development/adding-module.md](../development/adding-module.md).
 
-## Action-Ausführung und Autorisierung
+## Action Execution and Authorization
 
-- **Frontends rufen nie `Action.execute(...)` direkt auf.** Der einzige Weg,
-  eine Action laufen zu lassen, ist `ActionExecutor.execute(ActionRequest)`
-  (bzw. die `(ActionId, ActionContext, I)`-Überladung) - siehe
-  [docs/architecture/actions.md](../architecture/actions.md). Der Executor
-  übernimmt Permission-/Feature-enabled-/Self-Target-/Input-Validierung und
-  den Audit-Hook; ein direkter `Action.execute(...)`-Aufruf umgeht das
-  komplett.
-- **Keine verstreuten `player.hasPermission("...")`-Aufrufe mit rohem
-  String-Literal** für alles, was eine Action ist. Permission-Nodes werden
-  bei der Action-Registrierung über `ActionDefinition.Builder#permission(...)`
-  deklariert; geprüft wird über den `PermissionEvaluator`, den jeder `Actor`
-  trägt (`Actor.hasPermission(node)`), nie direkt gegen ein Bukkit-`Permissible`.
-- **Kein Modul baut eigenes Audit-Logging.** `ActionExecutor` erzeugt den
-  `AuditEvent` für jede Action automatisch aus `ActionDefinition`/
-  `ActionContext`/`ActionResult`; ein Modul liefert höchstens optionale
-  `AuditDetails` (Grund, Alt-/Neuwert, Metadata, ...) über
-  `ActionDefinition.Builder#auditDetails(...)` - nie einen eigenen Aufruf an
-  `AuditService`/`AuditEventRepository` außerhalb dieses Hooks. Siehe
+- **Frontends never call `Action.execute(...)` directly.** The only way to
+  run an action is `ActionExecutor.execute(ActionRequest)` (or the
+  `(ActionId, ActionContext, I)` overload) - see
+  [docs/architecture/actions.md](../architecture/actions.md). The executor
+  handles permission/feature-enabled/self-target/input validation and the
+  audit hook; a direct `Action.execute(...)` call bypasses all of that.
+- **No scattered `player.hasPermission("...")` calls with a raw string
+  literal** for anything that is an action. Permission nodes are declared at
+  action-registration time via
+  `ActionDefinition.Builder#permission(...)`; checks go through the
+  `PermissionEvaluator` every `Actor` carries (`Actor.hasPermission(node)`),
+  never directly against a Bukkit `Permissible`.
+- **No module builds its own audit logging.** `ActionExecutor` produces the
+  `AuditEvent` for every action automatically from
+  `ActionDefinition`/`ActionContext`/`ActionResult`; a module supplies at
+  most optional `AuditDetails` (reason, old/new value, metadata, ...) via
+  `ActionDefinition.Builder#auditDetails(...)` - never its own call to
+  `AuditService`/`AuditEventRepository` outside this hook. See
   [docs/user/audit-log.md](../user/audit-log.md).
 
-## Package-Regeln
+## Package Rules
 
-- Root-Package: `dev.universaladmin`.
-- Architektur-Pakete (`core`, `module`, `action`, `gui`, `command`,
+- Root package: `dev.universaladmin`.
+- Architecture packages (`core`, `module`, `action`, `gui`, `command`,
   `permission`, `storage`, `audit`, `config`, `settings`, `localization`,
-  `notification`, `scheduler`) enthalten die plattformweiten Abstraktionen.
-  Ein Modul implementiert diese Interfaces, es erweitert sie nicht.
-  `settings` ist das typisierte Settings-System (`SettingKey`/`SettingDefinition`/
-  `SettingRegistry`/`SettingsService`); `config` ist bewusst kleiner
-  gehalten und nur noch für die `config.yml`-Versionierung
-  (`ConfigMigration`/`ConfigMigrationRunner`) zuständig - siehe
+  `notification`, `scheduler`) hold the platform-wide abstractions. A module
+  implements these interfaces, it doesn't extend them. `settings` is the
+  typed settings system (`SettingKey`/`SettingDefinition`/`SettingRegistry`/
+  `SettingsService`); `config` is deliberately kept smaller and is only
+  responsible for `config.yml` versioning
+  (`ConfigMigration`/`ConfigMigrationRunner`) - see
   [docs/development/settings.md](../development/settings.md).
-- Eingebaute Module leben unter `dev.universaladmin.modules.<name>` (Plural
-  `modules`, damit klar ist: das ist eine Sammlung von Modulen, keine
-  Kernklasse). Jedes Modul ist in sich geschlossen; Cross-Module-Zugriff läuft
-  über `ServiceRegistry`, nie über einen direkten Import einer
-  Modul-internen Klasse eines anderen Moduls.
-- Konkrete Adapter (JDBC-Implementierungen, Bukkit-spezifischer Code) liegen
-  in einem `jdbc`- bzw. dem jeweiligen Adapter-Subpackage, nicht im
-  Interface-Package selbst. Siehe z. B. `storage/` (Interfaces) vs.
-  `storage/jdbc/` (Hikari/JDBC).
-- Es gibt aktuell **ein** Gradle-Projekt (`universaladmin-core`). Ein Split in
-  `universaladmin-api`/`-sdk`/`-web` ist geplant, aber nicht jetzt -
-  Begründung in
+- Built-in modules live under `dev.universaladmin.modules.<name>` (plural
+  `modules`, so it's clear: this is a collection of modules, not a core
+  class). Each module is self-contained; cross-module access goes through
+  `ServiceRegistry`, never a direct import of another module's internal
+  class.
+- Concrete adapters (JDBC implementations, Bukkit-specific code) live in a
+  `jdbc` or the respective adapter subpackage, not in the interface package
+  itself. See e.g. `storage/` (interfaces) vs. `storage/jdbc/`
+  (Hikari/JDBC).
+- There is currently **one** Gradle project (`universaladmin-core`). A split
+  into `universaladmin-api`/`-sdk`/`-web` is planned, but not now - rationale
+  in
   [docs/architecture/decisions/0006-optional-web-architecture.md](../architecture/decisions/0006-optional-web-architecture.md).
-  Baue keine leeren Multi-Module-Gerüste dafür vor.
+  Don't build empty multi-module scaffolding for it ahead of time.
 
 ## Naming Conventions
 
-- Typed IDs statt roher Strings: `ModuleId`, `ActionId`, `GuiPageId`,
-  `AuditEventType` sind `record`s um `dev.universaladmin.core.id.Key`
-  (`namespace:name`, z. B. `core:players`). `PermissionNode` und `MessageKey`
-  sind eigene, einfache dotted-String-Records (siehe deren Javadoc, warum sie
-  keinen `Key` verwenden - sie folgen externen Konventionen wie LuckPerms).
-- Interfaces ohne Präfix/Suffix (`Repository`, `Module`, `Action`), konkrete
-  Implementierungen mit sprechendem Präfix (`JdbcPlayerProfileRepository`,
-  `YamlSettingsService`, `InGameNotificationService`).
-- Domain-Modelle sind `record`s, nicht Klassen mit Settern. Wo ein Zustand
-  sich ändert, entsteht ein neuer Record (siehe `PlayerProfile.withLastSeen`).
-- Ergebnisse von `Action`s sind `ActionResult<R>` (sealed: `Success`/
-  `Failure`), keine `null`-Rückgaben, keine geschluckten Exceptions.
+- Typed IDs instead of raw strings: `ModuleId`, `ActionId`, `GuiPageId`,
+  `AuditEventType` are `record`s wrapping `dev.universaladmin.core.id.Key`
+  (`namespace:name`, e.g. `core:players`). `PermissionNode` and `MessageKey`
+  are their own, simple dotted-string records (see their Javadoc for why
+  they don't use `Key` - they follow external conventions like LuckPerms).
+- Interfaces without a prefix/suffix (`Repository`, `Module`, `Action`),
+  concrete implementations with a descriptive prefix
+  (`JdbcPlayerProfileRepository`, `YamlSettingsService`,
+  `InGameNotificationService`).
+- Domain models are `record`s, not classes with setters. Where state
+  changes, a new record is created instead (see
+  `PlayerProfile.withLastSeen`).
+- `Action` results are `ActionResult<R>` (sealed: `Success`/`Failure`), no
+  `null` returns, no swallowed exceptions.
 
-## Threading-Regeln
+## Threading Rules
 
-Ausführlich: [docs/architecture/threading.md](../architecture/threading.md).
+Full detail: [docs/architecture/threading.md](../architecture/threading.md).
 
-- **Niemals blockierende DB-Calls auf dem Paper-Main-Thread.** Jede
-  `Repository`-Methode läuft über `TaskScheduler.supplyAsync`/`runAsync`
-  (virtuelle Threads, siehe `PaperTaskScheduler`).
-- Alles, was Bukkit-API anfasst (Inventories, Entities, World), läuft über
-  `TaskScheduler.runOnMainThread`.
-- Die dokumentierte Ausnahme: `MigrationRunner.runPending()` beim
-  Plugin-Start in `UniversalAdminPlugin#onEnable`, bevor Spieler joinen
-  können - läuft bewusst **zweimal** (einmal vor, einmal nach
-  `ModuleManager.enableAll()`, da jedes Modul seine eigene Migration erst
-  in seinem eigenen `onEnable` registriert; siehe
-  [docs/architecture/threading.md](../architecture/threading.md)), nie
-  öfter und kein Vorbild für sonstigen Code.
-- **Niemals globale Bukkit-Reloads** (`Bukkit.reload()` o. Ä.) auslösen oder
-  dazu anleiten - das umgeht Plugin-Lifecycle und Server-State auf Wegen, die
-  UniversalAdmin nicht kontrollieren kann. Der einzige sanktionierte Reload
-  ist `/admin reload` (siehe [ReloadConfigAction](../../src/main/java/dev/universaladmin/settings/ReloadConfigAction.java)) -
-  liest ausschließlich UniversalAdmins eigene `config.yml` neu.
+- **Never make blocking DB calls on the Paper main thread.** Every
+  `Repository` method runs through `TaskScheduler.supplyAsync`/`runAsync`
+  (virtual threads, see `PaperTaskScheduler`).
+- Anything touching the Bukkit API (inventories, entities, world) runs
+  through `TaskScheduler.runOnMainThread`.
+- The documented exception: `MigrationRunner.runPending()` at plugin start
+  in `UniversalAdminPlugin#onEnable`, before players can join - deliberately
+  runs **twice** (once before, once after `ModuleManager.enableAll()`, since
+  each module only registers its own migration in its own `onEnable`; see
+  [docs/architecture/threading.md](../architecture/threading.md)), never
+  more often, and not a template for other code.
+- **Never trigger or advise a global Bukkit reload** (`Bukkit.reload()` or
+  similar) - that bypasses plugin lifecycle and server state in ways
+  UniversalAdmin can't control. The only sanctioned reload is
+  `/admin reload` (see
+  [ReloadConfigAction](../../src/main/java/dev/universaladmin/settings/ReloadConfigAction.java))
+  - which only reloads UniversalAdmin's own `config.yml`.
 
 ## Configuration & Localization
 
-Ausführlich: [docs/development/settings.md](../development/settings.md).
+Full detail: [docs/development/settings.md](../development/settings.md).
 
-- **Kein `config.getString(...)`/`getInt(...)`/... verstreut im Code.**
-  Jeder Config-Wert ist ein registriertes, typisiertes
-  `SettingDefinition<T>` (`SettingKey<T>`, `SettingType<T>`, Default,
-  Validator, `requiresRestart`-Flag), gelesen über `SettingsService.get(key)`.
-  Core-Settings stehen in `dev.universaladmin.settings.CoreSettings`; ein
-  Modul registriert eigene Settings unter seinem eigenen
-  `ModuleDescriptor.settingsNamespace()`, nie unter `core`.
-- **Ein ungültiger Config-Wert crasht nie den Server.** `YamlSettingsService`
-  fällt bei einem Parse- oder Validierungsfehler auf den Default zurück und
-  loggt eine klare Warnung - das gilt für den initialen Start genauso wie
-  für `/admin reload`.
-- **Restart-required-Settings ändern sich nie live.** Ändert sich beim
-  Reload ein Wert, dessen `SettingDefinition.requiresRestart()` `true` ist,
-  bleibt der alte Wert aktiv und die Änderung wird als "pending restart"
-  gemeldet - nicht versuchen, das live nachzuziehen (z. B. Datenbank-
-  Verbindungsparameter).
-- **Keine sichtbaren Texte im Code.** Jeder Nutzertext ist ein
-  `MessageKey`, aufgelöst über `MessageService.get(key, args...)` aus
-  `lang/<locale>.yml`. Fallback-Kette: aktive Locale → `en_US` → sichtbarer
-  `[missing: ...]`-Marker (mit einmaligem Debug-Log pro Key, kein Spam).
-  Rendering als Adventure-`Component` (MiniMessage) passiert erst in der
-  GUI-/Command-Schicht (`ComponentMessages.render(...)`) - `MessageService`
-  selbst liefert nur den aufgelösten String, damit dieselbe Auflösung später
-  von einer Web-Ansicht wiederverwendet werden kann.
-- **`config-version` nicht von Hand ändern.** Schema-Änderungen an
-  `config.yml` bekommen eine neue `ConfigMigration`
-  (`dev.universaladmin.config`), analog zu `storage.Migration` für die
-  Datenbank - eine bestehende Nutzer-Config wird nie stillschweigend
-  überschrieben.
+- **No `config.getString(...)`/`getInt(...)`/... scattered through the
+  code.** Every config value is a registered, typed `SettingDefinition<T>`
+  (`SettingKey<T>`, `SettingType<T>`, default, validator,
+  `requiresRestart` flag), read via `SettingsService.get(key)`. Core
+  settings live in `dev.universaladmin.settings.CoreSettings`; a module
+  registers its own settings under its own
+  `ModuleDescriptor.settingsNamespace()`, never under `core`.
+- **An invalid config value never crashes the server.** `YamlSettingsService`
+  falls back to the default on a parse or validation error and logs a clear
+  warning - true for the initial start as much as for `/admin reload`.
+- **Restart-required settings never change live.** If a value whose
+  `SettingDefinition.requiresRestart()` is `true` changes on reload, the old
+  value stays active and the change is reported as "pending restart" - don't
+  try to apply it live (e.g. database connection parameters).
+- **No visible text in code.** Every user-facing string is a `MessageKey`,
+  resolved via `MessageService.get(key, args...)` from `lang/<locale>.yml`.
+  Fallback chain: active locale → `en_US` → a visible `[missing: ...]`
+  marker (with a one-time debug log per key, no spam). Rendering as an
+  Adventure `Component` (MiniMessage) only happens in the GUI/command layer
+  (`ComponentMessages.render(...)`) - `MessageService` itself only returns
+  the resolved string, so the same resolution can later be reused by a web
+  view.
+- **Never change `config-version` by hand.** Schema changes to
+  `config.yml` get a new `ConfigMigration` (`dev.universaladmin.config`),
+  analogous to `storage.Migration` for the database - an existing user's
+  config is never silently overwritten.
 
-## Module-Lifecycle
+## Module Lifecycle
 
-Ausführlich: [docs/architecture/modules.md](../architecture/modules.md).
+Full detail: [docs/architecture/modules.md](../architecture/modules.md).
 
-- Jedes Modul durchläuft `DISCOVERED → LOADED → ENABLED` (via
-  `ModuleManager.loadAll()`/`enableAll()`) und zurück zu `DISABLED` (via
-  `disableAll()`). `ModuleRegistry` speichert nur den Zustand;
-  `ModuleManager` ist die einzige Stelle, die Übergänge auslöst.
-- **Ein Modul ist nie kritisch, Core-Bootstrap-Komponenten sind es immer.**
-  Wirft `Module#onLoad`/`onEnable`, wird **nur dieses Modul** `FAILED`
-  markiert (mit vollständig geloggtem Stacktrace) - der Rest startet normal
-  weiter. Wirft dagegen etwas während der kritischen Bootstrap-Phase in
-  `UniversalAdminPlugin#bootstrapCore` (Config, Scheduler, Storage +
-  Migrationen, die geteilten Registries), bricht der gesamte Plugin-Start
-  ab und das Plugin deaktiviert sich selbst - dafür gibt es keine
-  Modul-Ebene, auf der man das isolieren könnte.
-- Modul-Abhängigkeiten werden über `ModuleDescriptor.dependencies()`
-  deklariert, nicht über direkte Imports. `ModuleManager` bringt Module
-  per topologischer Sortierung in eine Reihenfolge, in der Abhängigkeiten
-  zuerst laden/enablen. Eine Abhängigkeitszyklus ist ein Programmierfehler
-  im deklarierten Graphen, kein isolierbarer Laufzeitfehler - `loadAll()`
-  wirft in diesem Fall statt weiterzumachen.
-- Ressourcen, die ein Modul in `onEnable` registriert (Listener,
-  Scheduler-Tasks, Registry-Einträge, die beim Disable wieder verschwinden
-  sollen), gehören über `context.resources().listener(...)`/`task(...)`/
-  `closeable(...)` - nicht manuell in `onDisable` nachgebaut. Sie werden
-  automatisch freigegeben, auch wenn `onEnable` selbst wirft oder
-  `onDisable` eine Exception wirft.
-- Keine Fehler still verschlucken: jeder `FAILED`-Übergang wird mit
-  Modul-ID und vollem Stacktrace geloggt (`Level.SEVERE`), nie nur als
-  Zustand vermerkt.
+- Every module goes through `DISCOVERED → LOADED → ENABLED` (via
+  `ModuleManager.loadAll()`/`enableAll()`) and back to `DISABLED` (via
+  `disableAll()`). `ModuleRegistry` only stores state; `ModuleManager` is
+  the only place that triggers transitions.
+- **A module is never critical, core bootstrap components always are.** If
+  `Module#onLoad`/`onEnable` throws, **only that module** is marked
+  `FAILED` (with a fully logged stack trace) - everything else starts up
+  normally. If something throws during the critical bootstrap phase in
+  `UniversalAdminPlugin#bootstrapCore` (config, scheduler, storage +
+  migrations, the shared registries), the entire plugin start aborts and
+  the plugin disables itself - there is no module-level isolation for that.
+- Module dependencies are declared via `ModuleDescriptor.dependencies()`,
+  not via direct imports. `ModuleManager` topologically sorts modules so
+  dependencies load/enable first. A dependency cycle is a programming error
+  in the declared graph, not an isolatable runtime error -
+  `loadAll()` throws in that case instead of continuing.
+- Resources a module registers in `onEnable` (listeners, scheduler tasks,
+  registry entries that should disappear again on disable) belong through
+  `context.resources().listener(...)`/`task(...)`/`closeable(...)` - not
+  manually rebuilt in `onDisable`. They're released automatically, even if
+  `onEnable` itself throws or `onDisable` throws an exception.
+- Never swallow errors silently: every `FAILED` transition is logged with
+  the module id and the full stack trace (`Level.SEVERE`), never just
+  recorded as a state.
 
-## Sicherheit
+## Security
 
-- **Keine Secrets loggen** (DB-Passwörter, Tokens, später API-Keys) - auch
-  nicht auf `FINE`/Debug-Level.
-- **Keine unsicheren Packet-Hacks im Core** (kein ProtocolLib, kein rohes
-  Packet-Injection). Wenn low-level Netzwerkzugriff für eine Extension
-  nötig wird, ist das explizit außerhalb des Cores zu lösen, nicht im Core
-  nachzurüsten.
-- Business-Logik-Fehler werden über `ActionResult.Failure` mit
-  `FailureReason` transportiert, nicht über verschluckte Exceptions oder
-  generische `RuntimeException`s ohne Kontext.
+- **Never log secrets** (DB passwords, tokens, future API keys) - not even
+  at `FINE`/debug level.
+- **No unsafe packet hacks in the core** (no ProtocolLib, no raw packet
+  injection). If low-level network access is ever needed for an extension,
+  that's solved explicitly outside the core, not retrofitted into it.
+- Business-logic errors are carried via `ActionResult.Failure` with a
+  `FailureReason`, not via swallowed exceptions or a generic
+  `RuntimeException` without context.
 
 ## Dependencies
 
-- **Keine neuen Dependencies ohne klaren Grund**, der in einem Kommentar
-  oder Commit/PR nachvollziehbar ist. Aktuell bewusst **keine** Pflicht-
-  Dependencies auf Vault, LuckPerms, PlaceholderAPI oder ProtocolLib im Core.
-- Datenbank-Treiber (`sqlite-jdbc`, `mariadb-java-client`) und `HikariCP` sind
-  die einzigen Runtime-Libraries; sie werden per Shadow-Plugin gebündelt,
-  damit sie nicht mit anderen Plugins auf demselben Server kollidieren.
-  `mariadb-java-client` und `HikariCP` werden dabei zusätzlich unter
-  `dev.universaladmin.libs.*` relociert (siehe `build.gradle.kts`).
-  `sqlite-jdbc` bewusst **nicht** relociert - es bündelt eine native
-  (JNI-)Bibliothek, deren kompiliertes Binary den Klassennamen
-  `org/sqlite/core/NativeDB` fest verdrahtet für das native
-  Methoden-Linking; eine Relocation dieser Java-Klasse bricht das JNI-
-  Linking beim ersten echten Connection-Aufbau (`ClassNotFoundException:
-  org/sqlite/core/NativeDB`), obwohl Build und jeder andere Check dabei
-  grün bleiben. Bleibt trotzdem gebündelt (geshadet), nur unter seinem
-  Original-Package-Namen - ein Kollisionsrisiko mit einer fremden
-  sqlite-jdbc-Kopie auf demselben Server ist der akzeptierte Kompromiss,
-  wie bei jedem anderen Bukkit-Plugin, das diesen Treiber bündelt.
+- **No new dependencies without a clear reason**, traceable in a comment or
+  a commit/PR. Currently deliberately **no** mandatory dependency on Vault,
+  LuckPerms, PlaceholderAPI, or ProtocolLib in the core.
+- Database drivers (`sqlite-jdbc`, `mariadb-java-client`) and `HikariCP` are
+  the only runtime libraries; they're bundled via the Shadow plugin so they
+  don't collide with other plugins on the same server. `mariadb-java-client`
+  and `HikariCP` are additionally relocated under `dev.universaladmin.libs.*`
+  (see `build.gradle.kts`). `sqlite-jdbc` is deliberately **not** relocated
+  - it bundles a native (JNI) library whose compiled binary hardcodes the
+  class name `org/sqlite/core/NativeDB` for native method linking;
+  relocating that Java class breaks the JNI linking on the first real
+  connection attempt (`ClassNotFoundException: org/sqlite/core/NativeDB`),
+  even though the build and every other check stay green. It still ships
+  bundled (shaded), just under its original package name - a collision risk
+  with a different plugin's own sqlite-jdbc copy on the same server is the
+  accepted trade-off, same as for any other Bukkit plugin bundling this
+  driver.
 
-## Built-in Modules bleiben Extension-freundlich
+## Built-in Modules Stay Extension-Friendly
 
-Eingebaute Module verwenden exakt dieselben Abstraktionen
-(`Module`/`Action`/`GuiPage`/`Repository`/`Migration`/`PermissionRegistry`),
-die später auch externen Extensions offenstehen sollen. Baue kein
-"Schnellweg"-Verhalten für Built-ins, das eine Extension nicht auch könnte -
-siehe [docs/architecture/extensions-future.md](../architecture/extensions-future.md).
-Es gibt noch keine öffentliche `api`/`sdk`-Modulgrenze; diese Regel ist der
-Ersatz dafür, bis es sie gibt.
+Built-in modules use exactly the same abstractions
+(`Module`/`Action`/`GuiPage`/`Repository`/`Migration`/`PermissionRegistry`)
+that will later be open to external extensions too. Don't build "shortcut"
+behavior for built-ins that an extension couldn't also take - see
+[docs/architecture/extensions-future.md](../architecture/extensions-future.md).
+There's no public `api`/`sdk` module boundary yet; this rule is the
+substitute until there is one.
 
 ## Tests
 
-- Jede neue Business-Logik (Service, Action, Migration mit nicht-trivialer
-  Logik) braucht einen Unit-Test, der **ohne** laufenden Paper-Server läuft.
-  Repositories werden über ein In-Memory-Fake des jeweiligen Interfaces
-  getestet, nicht gemockt, wo ein Fake einfacher ist (siehe
+- Every new piece of business logic (service, action, migration with
+  non-trivial logic) needs a unit test that runs **without** a live Paper
+  server. Repositories are tested against an in-memory fake of the
+  respective interface, not mocked, wherever a fake is simpler (see
   `PlayerServiceTest`).
-- Migrationen werden gegen eine echte (temporäre) SQLite-Datenbank getestet,
-  nicht gegen Mocks (siehe `MigrationRunnerTest`).
-- Details und Konventionen: [docs/development/testing.md](../development/testing.md).
+- Migrations are tested against a real (temporary) SQLite database, not
+  mocks (see `MigrationRunnerTest`).
+- Details and conventions: [docs/development/testing.md](../development/testing.md).
 
-## Dokumentation aktuell halten
+## Keeping Documentation Current
 
-Code-Änderungen, die eine Architekturentscheidung, ein Modul-Verhalten oder
-eine Konfigurationsoption betreffen, aktualisieren die passende Datei in
-`docs/` bzw. diese Datei im selben Change - nicht "später". Eine neue,
-bewusste Architekturentscheidung bekommt eine neue ADR-Datei unter
-`docs/architecture/decisions/`, keine Diskussion nur im Commit-Message.
+Code changes that touch an architecture decision, module behavior, or a
+configuration option update the corresponding file in `docs/` or this file
+in the same change - not "later". A new, deliberate architecture decision
+gets a new ADR file under `docs/architecture/decisions/`, not just a
+discussion in a commit message.
 
-## Bestehende Architektur respektieren
+## Respecting the Existing Architecture
 
-Diese Struktur wurde bewusst geplant (siehe ADRs). Ein Task, der ein neues
-Feature will, baut **auf** dieser Architektur auf - er baut sie nicht bei
-jeder Gelegenheit um. Wenn die Architektur für einen konkreten Fall
-nachweislich nicht passt, wird das als eigener Vorschlag (neue ADR) benannt,
-nicht stillschweigend im Feature-PR mitgeändert.
+This structure was deliberately designed (see the ADRs). A task that wants a
+new feature builds **on top of** this architecture - it doesn't rework it at
+every opportunity. If the architecture demonstrably doesn't fit a specific
+case, that gets named as its own proposal (a new ADR), not silently changed
+along with a feature PR.
 
 ## Build & Test
 
 ```bash
-./gradlew build   # kompiliert, testet, baut die shaded jar (build/libs/universaladmin-core-*.jar)
-./gradlew test    # nur Tests
+./gradlew build   # compiles, tests, builds the shaded jar (build/libs/universaladmin-core-*.jar)
+./gradlew test    # tests only
 ```
 
-Java-Toolchain ist 25 (per `foojay-resolver-convention` automatisch
-beschafft, falls lokal nicht vorhanden). Ziel-Server: aktuelle stabile Paper
-API (siehe `build.gradle.kts` für die exakte Version).
+The Java toolchain is 25 (auto-provisioned via `foojay-resolver-convention`
+if not present locally). Target server: current stable Paper API (see
+`build.gradle.kts` for the exact version).

@@ -15,7 +15,7 @@ import org.bukkit.entity.Player;
  * Toggles the acting player's own godmode status via {@link
  * org.bukkit.entity.Entity#setInvulnerable(boolean)} - no {@code
  * EntityDamageEvent} listener anywhere, avoiding the cancellation side
- * effects ("keine unnötigen Seiteneffekte") that approach would carry.
+ * effects ("no unnecessary side effects") that approach would carry.
  */
 public final class GodmodeAction implements Action<Void, Boolean> {
 

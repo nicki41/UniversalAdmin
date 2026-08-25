@@ -1,8 +1,8 @@
 # Storage
 
-## Repository-Pattern
+## Repository Pattern
 
-Jede Persistenz läuft über ein `Repository<T, ID>`
+Every bit of persistence goes through a `Repository<T, ID>`
 ([`src/main/java/dev/universaladmin/storage/Repository.java`](../../src/main/java/dev/universaladmin/storage/Repository.java)):
 
 ```java
@@ -14,23 +14,23 @@ public interface Repository<T, ID> {
 }
 ```
 
-Services und Actions kennen nur dieses Interface (oder eine modulspezifische
-Erweiterung davon, z. B. `AuditEventRepository.recent(int)`). SQL,
-`Connection`, `PreparedStatement` existieren ausschließlich in
-`*Repository`-Implementierungen, üblicherweise in einem `jdbc`-Subpackage
-neben dem Interface (`storage.jdbc`, `audit.jdbc`, `modules.players.jdbc`).
+Services and actions only know this interface (or a module-specific
+extension of it, e.g. `AuditEventRepository.recent(int)`). SQL,
+`Connection`, `PreparedStatement` exist exclusively in `*Repository`
+implementations, usually in a `jdbc` subpackage next to the interface
+(`storage.jdbc`, `audit.jdbc`, `modules.players.jdbc`).
 
-Alle Methoden sind async (`CompletableFuture`) - siehe
-[threading.md](threading.md) für die Regel, warum.
+Every method is async (`CompletableFuture`) - see
+[threading.md](threading.md) for why.
 
-## Datenbank-Konfiguration
+## Database Configuration
 
-Standard ist SQLite (`plugins/UniversalAdmin/data.db`), MySQL/MariaDB ist
-über `config.yml` aktivierbar:
+The default is SQLite (`plugins/UniversalAdmin/data.db`), MySQL/MariaDB can
+be enabled via `config.yml`:
 
 ```yaml
 database:
-  type: sqlite   # oder: mysql
+  type: sqlite   # or: mysql
   file: data.db
   host: localhost
   port: 3306
@@ -41,84 +41,81 @@ database:
   pool-size: 10
 ```
 
-`CoreSettings.readDatabaseConfig(settingsService)` liest die einzelnen
-typisierten `database.*`-Settings (siehe
-[docs/development/settings.md](../development/settings.md)) und baut daraus
-ein `DatabaseConfig`-Record (siehe
+`CoreSettings.readDatabaseConfig(settingsService)` reads the individual
+typed `database.*` settings (see
+[docs/development/settings.md](../development/settings.md)) and builds a
+`DatabaseConfig` record from them (see
 [`src/main/java/dev/universaladmin/storage/DatabaseConfig.java`](../../src/main/java/dev/universaladmin/storage/DatabaseConfig.java)).
-`storage.jdbc.DataSourceFactory` ist die einzige Stelle, die daraus eine
-gepoolte `javax.sql.DataSource` (HikariCP) baut - SQLite bekommt einen
-Pool mit Größe 1 (SQLite kennt keine echte nebenläufige Schreib-
-Nebenläufigkeit), MySQL/MariaDB die konfigurierte Poolgröße. Der
-MariaDB-JDBC-Treiber wird auch für "echtes" MySQL verwendet - er spricht
-das MySQL-Protokoll, ein zweiter Treiber nur für MySQL wäre eine
-zusätzliche Abhängigkeit ohne Mehrwert. Nutzerdokumentation (SQLite vs.
-MySQL, wann welches sinnvoll ist) steht in
+`storage.jdbc.DataSourceFactory` is the only place that builds a pooled
+`javax.sql.DataSource` (HikariCP) from it - SQLite gets a pool of size 1
+(SQLite has no real concurrent write concurrency), MySQL/MariaDB gets the
+configured pool size. The MariaDB JDBC driver is also used for "real" MySQL
+- it speaks the MySQL protocol, and a second driver just for MySQL would be
+an additional dependency without benefit. User documentation (SQLite vs.
+MySQL, when which makes sense) is in
 [docs/user/database.md](../user/database.md).
 
-`StorageService` ist der "Database Manager" dieses Systems - ein Name, den
-der Code bewusst nicht trägt, um keine zweite Abstraktion neben
-`DataSourceFactory`/`MigrationRunner` einzuführen, die dasselbe täte.
+`StorageService` is this system's "database manager" - a name the code
+deliberately doesn't carry, to avoid introducing a second abstraction next
+to `DataSourceFactory`/`MigrationRunner` doing the same thing.
 
-### HikariCP als Connection-Pool
+### HikariCP as the Connection Pool
 
-HikariCP ist die einzige Connection-Pool-Bibliothek im Projekt (siehe
+HikariCP is the only connection-pool library in the project (see
 [decisions/0003-repository-storage.md](decisions/0003-repository-storage.md))
-- keine eigene Pool-Implementierung. Für SQLite ist der Pool bewusst auf
-Größe 1 begrenzt (siehe oben); für MySQL/MariaDB nutzt er die konfigurierte
-`database.pool-size`. HikariCP setzt außerdem den Zustand jeder Connection
-(Autocommit, Read-Only, Catalog) zurück, bevor sie an den Pool
-zurückgegeben wird - `Transactions` (siehe unten) verlässt sich bewusst
-darauf, statt `setAutoCommit(true)` selbst wiederherzustellen.
+- no pool implementation of our own. For SQLite the pool is deliberately
+limited to size 1 (see above); for MySQL/MariaDB it uses the configured
+`database.pool-size`. HikariCP also resets the state of every connection
+(autocommit, read-only, catalog) before returning it to the pool -
+`Transactions` (see below) deliberately relies on that instead of
+restoring `setAutoCommit(true)` itself.
 
-### SQLite-Pragmas
+### SQLite Pragmas
 
-`DataSourceFactory` setzt für SQLite vier Pragmas über die JDBC-URL
+`DataSourceFactory` sets four pragmas for SQLite via the JDBC URL
 (`?journal_mode=WAL&synchronous=NORMAL&foreign_keys=on&busy_timeout=5000`):
 
-- `journal_mode=WAL` - lässt künftige Leser laufen, ohne auf den einzigen
-  Schreiber zu warten, statt des Standard-Rollback-Journals. Legt zwei
-  zusätzliche Dateien neben der `.db`-Datei an (`-wal`, `-shm`).
-- `synchronous=NORMAL` - die für WAL dokumentierte sichere Kombination
-  (fsync bei Checkpoints, nicht bei jedem Commit).
-- `foreign_keys=on` - SQLite erzwingt Fremdschlüssel nicht standardmäßig
-  pro Connection; explizit eingeschaltet, damit `REFERENCES`-Constraints in
-  Migrationen tatsächlich wirken.
-- `busy_timeout=5000` - vermeidet ein sofortiges "database is locked",
-  falls etwas außerhalb des Pools (z. B. ein Backup-Tool) die Datei kurz
-  sperrt.
+- `journal_mode=WAL` - lets future readers proceed without waiting on the
+  single writer, instead of the default rollback journal. Creates two
+  additional files next to the `.db` file (`-wal`, `-shm`).
+- `synchronous=NORMAL` - the documented safe combination for WAL (fsync at
+  checkpoints, not on every commit).
+- `foreign_keys=on` - SQLite doesn't enforce foreign keys per connection by
+  default; explicitly enabled so `REFERENCES` constraints in migrations
+  actually take effect.
+- `busy_timeout=5000` - avoids an immediate "database is locked" if
+  something outside the pool (e.g. a backup tool) briefly locks the file.
 
-Kein automatisches Backup: siehe [docs/user/database.md](../user/database.md)
-für die bewusste Entscheidung, dafür kein eigenes Feature zu bauen.
+No automatic backup: see [docs/user/database.md](../user/database.md) for
+the deliberate decision not to build a dedicated feature for that.
 
-## Dialekt-Unterschiede
+## Dialect Differences
 
-SQLite und MySQL/MariaDB sind nicht syntaktisch kompatibel, insbesondere:
+SQLite and MySQL/MariaDB aren't syntactically compatible, in particular:
 
 - Auto-increment: SQLite `INTEGER PRIMARY KEY AUTOINCREMENT` vs. MySQL
   `BIGINT AUTO_INCREMENT PRIMARY KEY`.
 - Upsert: SQLite `INSERT ... ON CONFLICT (id) DO UPDATE SET ...` vs. MySQL
   `INSERT ... ON DUPLICATE KEY UPDATE ...`.
-- `CREATE INDEX IF NOT EXISTS`: SQLite und MariaDB akzeptieren das, echtes
-  MySQL (kein MariaDB) nicht - `CREATE INDEX` kennt dort kein
-  `IF NOT EXISTS` (im Gegensatz zu `CREATE TABLE IF NOT EXISTS`, das überall
-  funktioniert). Braucht ohnehin keine eigene Prüfung: `MigrationRunner`
-  garantiert bereits, dass jede Migration höchstens einmal läuft - ein
-  Index-erstellender `Statement#execute(...)` lässt das `IF NOT EXISTS`
-  deshalb einfach weg, siehe `PlayerProfileIndexMigration`/
-  `ModerationPunishmentIndexMigration`.
+- `CREATE INDEX IF NOT EXISTS`: SQLite and MariaDB accept it, real MySQL
+  (not MariaDB) doesn't - `CREATE INDEX` there has no `IF NOT EXISTS`
+  (unlike `CREATE TABLE IF NOT EXISTS`, which works everywhere). Doesn't
+  need its own check anyway: `MigrationRunner` already guarantees every
+  migration runs at most once - an index-creating
+  `Statement#execute(...)` simply drops the `IF NOT EXISTS`, see
+  `PlayerProfileIndexMigration`/`ModerationPunishmentIndexMigration`.
 
-Jede Migration/Repository, die davon betroffen ist, prüft
-`connection.getMetaData().getDatabaseProductName()` und wählt die passende
-SQL-Variante - siehe `AuditSchemaMigration` und
-`JdbcPlayerProfileRepository` als Beispiele. Es gibt bewusst keine
-SQL-Abstraktionsschicht (kein JPA/Hibernate) darüber; bei der aktuellen
-Anzahl Tabellen ist das mehr Overhead als Nutzen, siehe
+Every migration/repository affected by this checks
+`connection.getMetaData().getDatabaseProductName()` and picks the matching
+SQL variant - see `AuditSchemaMigration` and `JdbcPlayerProfileRepository`
+as examples. There is deliberately no SQL abstraction layer (no
+JPA/Hibernate) on top; at the current number of tables that's more
+overhead than benefit, see
 [decisions/0003-repository-storage.md](decisions/0003-repository-storage.md).
 
-## Migrationen
+## Migrations
 
-`Migration` ist ein Forward-only-Schema-Change:
+`Migration` is a forward-only schema change:
 
 ```java
 public interface Migration {
@@ -128,33 +125,35 @@ public interface Migration {
 }
 ```
 
-`MigrationRunner` führt alle registrierten Migrationen in Versionsreihen-
-folge aus und trackt den Stand in einer `schema_version`-Tabelle. Versionen
-sind global eindeutig über die ganze Datenbank, nicht pro Modul:
+`MigrationRunner` runs every registered migration in version order and
+tracks progress in a `schema_version` table. Versions are globally unique
+across the whole database, not per module:
 
-- **1-999**: Core-Migrationen (z. B. `AuditSchemaMigration`, Version 1),
-  direkt in `UniversalAdminPlugin` registriert.
-- **1000+**: Modul-Migrationen, vom jeweiligen Modul in `onEnable`
-  registriert (z. B. `PlayerProfileMigration`, Version 1000).
+- **1-999**: core migrations (e.g. `AuditSchemaMigration`, version 1),
+  registered directly in `UniversalAdminPlugin`.
+- **1000+**: module migrations, registered by the respective module in
+  `onEnable` (e.g. `PlayerProfileMigration`, version 1000).
 
-Migrationen laufen einmal beim Plugin-Start (`storage.migrations().runPending()`
-in `UniversalAdminPlugin#onEnable`), bevor Module enabled werden - siehe
-[threading.md](threading.md) für die Ausnahme vom "kein Blocking auf dem
-Main-Thread"-Prinzip, die das darstellt.
+Migrations run once at plugin start
+(`storage.migrations().runPending()` in `UniversalAdminPlugin#onEnable`),
+before modules are enabled - see [threading.md](threading.md) for the
+exception to the "no blocking on the main thread" principle this
+represents.
 
-## Neue Migration hinzufügen
+## Adding a New Migration
 
-1. `Migration`-Implementierung im Modul-Package schreiben, Version nach dem
-   letzten vergebenen Wert für dieses Modul (siehe existierende Migrationen
-   für die aktuell höchste Version).
-2. In `Module#onEnable` registrieren: `context.platform().storage().migrations().register(...)`.
-3. Migration ist forward-only - keine nachträgliche Änderung einer bereits
-   released Migration, stattdessen eine neue mit höherer Version.
+1. Write a `Migration` implementation in the module's package, versioned
+   after the last value used by this module (see existing migrations for
+   the current highest version).
+2. Register it in `Module#onEnable`:
+   `context.platform().storage().migrations().register(...)`.
+3. A migration is forward-only - never modify an already-released
+   migration after the fact; add a new one with a higher version instead.
 
 ## Health
 
-`StorageService` trackt einen `DatabaseHealth` (`DISCONNECTED`,
-`CONNECTING`, `READY`, `FAILED`):
+`StorageService` tracks a `DatabaseHealth` (`DISCONNECTED`, `CONNECTING`,
+`READY`, `FAILED`):
 
 ```java
 public enum DatabaseHealth {
@@ -162,49 +161,47 @@ public enum DatabaseHealth {
 }
 ```
 
-Der Konstruktor setzt `CONNECTING`, baut den Pool über `DataSourceFactory`
-und validiert eine Connection (`Connection#isValid`); Erfolg setzt `READY`,
-jeder Fehler setzt `FAILED` und wirft die Exception weiter. `close()` setzt
-`DISCONNECTED`. `UniversalAdmin#status()` bildet das auf das gröbere
-`ComponentStatus` ab (`READY→ONLINE`, `CONNECTING→DEGRADED`,
-`FAILED`/`DISCONNECTED→OFFLINE`), das `/admin` anzeigt.
+The constructor sets `CONNECTING`, builds the pool via
+`DataSourceFactory`, and validates a connection (`Connection#isValid`);
+success sets `READY`, any error sets `FAILED` and rethrows the exception.
+`close()` sets `DISCONNECTED`. `UniversalAdmin#status()` maps that onto the
+coarser `ComponentStatus` (`READY→ONLINE`, `CONNECTING→DEGRADED`,
+`FAILED`/`DISCONNECTED→OFFLINE`) that `/admin` displays.
 
-**Das ist ein Start-/Stop-Snapshot, keine laufende Live-Prüfung** - ein
-Ausfall der Remote-Datenbank mitten im Betrieb (z. B. MySQL-Server stürzt
-ab) ändert diesen Wert nicht rückwirkend. Ein periodischer Health-Check
-wäre möglich, ist aber bewusst zurückgestellt: er bräuchte einen
-wiederkehrenden Task (den `TaskScheduler` heute nicht anbietet, siehe
-[threading.md](threading.md)) und der praktische Nutzen ohne eine
-Auto-Reconnect- oder Auto-Restart-Strategie dahinter ist begrenzt.
+**This is a start/stop snapshot, not a running live check** - a remote
+database going down mid-operation (e.g. the MySQL server crashes) doesn't
+retroactively change this value. A periodic health check would be
+possible, but is deliberately deferred: it would need a recurring task
+(`TaskScheduler` doesn't offer one today, see [threading.md](threading.md))
+and the practical benefit without an auto-reconnect or auto-restart
+strategy behind it is limited.
 
-**Entscheidung: kompletter DB-Ausfall beim Start deaktiviert das ganze
-Plugin, kein eingeschränkter Betrieb.** `StorageService` ist eine
-*kritische* Bootstrap-Komponente (siehe
-[modules.md](modules.md#failure-isolation-whats-critical-whats-isnt)) - wirft der Konstruktor, bricht
-`UniversalAdminPlugin#bootstrapCore` ab und das Plugin deaktiviert sich
-selbst, bevor irgendein Modul lädt. Es gibt bewusst keinen
-"Storage-loses"-Modus: jedes eingebaute Modul geht von einer
-funktionierenden Datenbank aus, und ein Plugin, das scheinbar normal
-startet, aber nichts persistieren kann, ist ein schlechteres
-Fehlerverhalten als ein Plugin, das gar nicht erst startet.
+**Decision: a complete DB failure at startup disables the whole plugin, no
+degraded operation.** `StorageService` is a *critical* bootstrap component
+(see
+[modules.md](modules.md#failure-isolation-whats-critical-whats-isnt)) - if
+the constructor throws, `UniversalAdminPlugin#bootstrapCore` aborts and the
+plugin disables itself before any module loads. There's deliberately no
+"storage-less" mode: every built-in module assumes a working database, and
+a plugin that appears to start normally but can't persist anything is
+worse failure behavior than a plugin that doesn't start at all.
 
 ## Transactions
 
-Für Repository-Methoden, die mehrere Statements atomar ausführen müssen
-(z. B. zwei Tabellen für eine logische Änderung), gibt es
+For repository methods that need to run multiple statements atomically
+(e.g. two tables for one logical change), there's
 `dev.universaladmin.storage.Transactions`:
 
 ```java
 Transactions.run(dataSource, scheduler, connection -> {
-    // mehrere PreparedStatements über dieselbe connection
+    // multiple PreparedStatements over the same connection
     return result;
 });
 ```
 
-Läuft wie jeder andere JDBC-Aufruf über den übergebenen `TaskScheduler`
-(nie den Main-Thread, siehe [threading.md](threading.md)), setzt
-`autoCommit=false`, committet bei Erfolg, rollt bei jeder Exception
-vollständig zurück und wirft sie weiter (unchecked-Exceptions unverändert,
-`SQLException` gewrappt in `StorageException`). Eine Repository-Methode mit
-nur einem Statement braucht das nicht - Statements sind für sich schon
-atomar.
+Runs like any other JDBC call through the given `TaskScheduler` (never the
+main thread, see [threading.md](threading.md)), sets `autoCommit=false`,
+commits on success, fully rolls back on any exception and rethrows it
+(unchecked exceptions unchanged, `SQLException` wrapped in
+`StorageException`). A repository method with only one statement doesn't
+need this - a single statement is already atomic on its own.

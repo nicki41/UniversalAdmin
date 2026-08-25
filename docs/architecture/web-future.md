@@ -1,58 +1,57 @@
 # Web App (Future)
 
-Auch dieses Dokument beschreibt eine **geplante**, noch nicht gebaute
-Fähigkeit - siehe
+This document also describes a **planned**, not-yet-built capability - see
 [decisions/0006-optional-web-architecture.md](decisions/0006-optional-web-architecture.md)
-für die Begründung, warum dafür heute kein Gradle-Modul existiert.
+for why no Gradle module exists for it today.
 
-## Kernanforderung: der Core läuft vollständig ohne Web
+## Core Requirement: the Core Runs Fully Without the Web
 
-Die Web-App ist optional und obendrauf, nicht Voraussetzung. Ein Server-
-Betreiber, der nur die Ingame-GUI/Commands nutzt, installiert nie einen
-Webserver-Teil. Das ist bereits strukturell erzwungen: nichts in
-`dev.universaladmin.core`, `.module`, `.action`, `.storage` etc. hat eine
-Abhängigkeit in Richtung "Web" - die Abhängigkeit zeigt nur in die andere
-Richtung (eine künftige Web-Schicht hängt vom Core ab, nicht umgekehrt).
+The web app is optional and additive, not a prerequisite. A server operator
+who only uses the in-game GUI/commands never installs a web-server part.
+That's already structurally enforced: nothing in `dev.universaladmin.core`,
+`.module`, `.action`, `.storage`, etc. has a dependency pointing toward
+"web" - the dependency only points the other way (a future web layer
+depends on the core, not the reverse).
 
-## Dieselben Services, dieselben Actions
+## Same Services, Same Actions
 
-Die Web-App soll dieselben Application-Services und `Action`s aufrufen wie
-GUI und Commands - kein separater "Web-Businesslogik"-Pfad. Das ist der
-Grund, warum `Actor`/`ActorType` bereits einen `WEB`-Fall kennt (siehe
-[actions.md](actions.md)) und warum GUI-Click-Handler keine Logik enthalten
-dürfen (siehe [gui.md](gui.md)): jede Logik, die nur im Click-Handler
-steckt, müsste für die Web-App neu geschrieben werden.
+The web app is meant to call the same application services and `Action`s as
+the GUI and commands - no separate "web business logic" path. That's why
+`Actor`/`ActorType` already has a `WEB` case (see [actions.md](actions.md))
+and why GUI click handlers may not contain logic (see [gui.md](gui.md)):
+any logic stuck only in a click handler would have to be rewritten for the
+web app.
 
-## Geplante Bausteine (nicht gebaut)
+## Planned Building Blocks (Not Built)
 
-- **`universaladmin-web`-Gradle-Modul** - separater Prozess oder embedded
-  Server (Entscheidung offen), hängt von `universaladmin-api` ab (siehe
-  extensions-future.md), nicht vom Core-Internals direkt.
-- **REST-API** über dieselben Actions/Services.
-- **WebSockets/Live-Updates** für Dashboard-Widgets und Live-Ansichten
-  (z. B. Online-Spieler, Performance-Graphen).
-- **Web-Authentifizierung**, getrennt vom Minecraft-Account (ein
-  Server-Admin hat nicht zwingend einen Minecraft-Account für den
-  Web-Zugriff) - Mechanismus offen.
-- **Dashboard Widgets** als eigener Erweiterungspunkt (siehe
-  extensions-future.md), damit Extensions eigene Web-Ansichten beisteuern
-  können, ohne den Core-Web-Code zu ändern.
+- **`universaladmin-web` Gradle module** - separate process or embedded
+  server (decision open), depends on `universaladmin-api` (see
+  extensions-future.md), not directly on core internals.
+- **REST API** over the same actions/services.
+- **WebSockets/live updates** for dashboard widgets and live views (e.g.
+  online players, performance graphs).
+- **Web authentication**, separate from the Minecraft account (a server
+  admin doesn't necessarily have a Minecraft account for web access) -
+  mechanism open.
+- **Dashboard widgets** as their own extension point (see
+  extensions-future.md), so extensions can contribute their own web views
+  without changing the core web code.
 
-## Was das für heutigen Code bedeutet
+## What This Means for Today's Code
 
-- Kein Service/keine Action darf etwas annehmen, das nur in einem
-  Ingame-Kontext existiert (z. B. direkt einen `org.bukkit.entity.Player`
-  als Parameter verlangen, wo eine `UUID`/ein `Actor` reichen würde) - das
-  würde die Web-App später zwingen, einen Fake-`Player` zu bauen. Siehe
-  `Action`/`Actor` in [actions.md](actions.md) für das bestehende Muster.
-- `MessageService`/`MessageKey` existieren bereits getrennt von der GUI,
-  damit dieselben Übersetzungen später von einer Web-Ansicht wiederverwendet
-  werden können. Konkret: `MessageService.get(key, args...)` liefert einen
-  reinen, parametersubstituierten `String` (kann noch MiniMessage-Markup
-  wie `<red>` enthalten, aber keine Adventure-`Component`-Instanz). Die
-  Ingame-Schicht wandelt das über `dev.universaladmin.localization.ComponentMessages`
-  in eine `Component` um; eine Web-Ansicht würde denselben String
-  stattdessen in HTML/CSS übersetzen (MiniMessage-Tags → CSS-Klassen o. Ä.)
-  - ein eigener, noch nicht existierender Renderer, kein Teil von
-  `MessageService` selbst. Siehe
+- No service/action may accept anything that only exists in an in-game
+  context (e.g. requiring an `org.bukkit.entity.Player` directly as a
+  parameter where a `UUID`/an `Actor` would do) - that would later force
+  the web app to build a fake `Player`. See `Action`/`Actor` in
+  [actions.md](actions.md) for the existing pattern.
+- `MessageService`/`MessageKey` already exist separate from the GUI, so the
+  same translations can later be reused by a web view. Concretely:
+  `MessageService.get(key, args...)` returns a plain,
+  parameter-substituted `String` (may still contain MiniMessage markup like
+  `<red>`, but never an Adventure `Component` instance). The in-game layer
+  converts that into a `Component` via
+  `dev.universaladmin.localization.ComponentMessages`; a web view would
+  instead translate the same string into HTML/CSS (MiniMessage tags → CSS
+  classes or similar) - its own, not-yet-existing renderer, not part of
+  `MessageService` itself. See
   [docs/development/settings.md](../development/settings.md#localization).

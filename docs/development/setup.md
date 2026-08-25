@@ -1,54 +1,54 @@
 # Development Setup
 
-## Voraussetzungen
+## Prerequisites
 
-- JDK 25 (wird bei Bedarf automatisch über den
-  `foojay-resolver-convention`-Gradle-Plugin beschafft, falls lokal keine
-  Java-25-Installation gefunden wird - kein manuelles JDK-Management nötig).
-- Kein lokal installiertes Gradle nötig, der Wrapper (`gradlew`/`gradlew.bat`)
-  reicht.
+- JDK 25 (auto-provisioned via the `foojay-resolver-convention` Gradle
+  plugin if no local Java 25 installation is found - no manual JDK
+  management needed).
+- No locally installed Gradle needed, the wrapper (`gradlew`/`gradlew.bat`)
+  is enough.
 
-## Bauen
+## Building
 
 ```bash
 ./gradlew build
 ```
 
-Baut, testet und erzeugt `build/libs/universaladmin-core-<version>.jar` -
-bereits mit `sqlite-jdbc`, `mariadb-java-client` und `HikariCP` shaded
-(relociert unter `dev.universaladmin.libs.*`, siehe `build.gradle.kts`).
+Compiles, tests, and produces `build/libs/universaladmin-core-<version>.jar`
+- already shaded with `sqlite-jdbc`, `mariadb-java-client`, and `HikariCP`
+(relocated under `dev.universaladmin.libs.*`, see `build.gradle.kts`).
 
-Nur kompilieren, ohne Tests/Jar:
+Compile only, no tests/jar:
 
 ```bash
 ./gradlew compileJava
 ```
 
-Nur Tests:
+Tests only:
 
 ```bash
 ./gradlew test
 ```
 
-## Lokal gegen einen Paper-Server testen
+## Testing Locally Against a Paper Server
 
-Es gibt aktuell kein automatisiertes Dev-Server-Setup in diesem Repository.
-Manuell:
+There is currently no automated dev-server setup in this repository.
+Manually:
 
 1. `./gradlew build`
-2. Ein aktuelles Paper-Server-Jar (passend zur in `build.gradle.kts`
-   referenzierten Paper-API-Version) in einem separaten Ordner aufsetzen.
-3. `build/libs/universaladmin-core-<version>.jar` nach `plugins/` kopieren.
-4. Server starten, `eula.txt` akzeptieren, `config.yml` unter
-   `plugins/UniversalAdmin/` prüfen (siehe
+2. Set up a current Paper server jar (matching the Paper API version
+   referenced in `build.gradle.kts`) in a separate folder.
+3. Copy `build/libs/universaladmin-core-<version>.jar` to `plugins/`.
+4. Start the server, accept `eula.txt`, check `config.yml` under
+   `plugins/UniversalAdmin/` (see
    [docs/user/configuration.md](../user/configuration.md)).
 
-Ein `run/`-Ordner für einen lokalen Testserver ist in `.gitignore`
-vorgesehen, falls das später automatisiert wird (z. B. über das
-`xyz.jpenilla.run-paper`-Gradle-Plugin) - das ist noch nicht eingerichtet.
+A `run/` folder for a local test server is anticipated in `.gitignore`, in
+case this gets automated later (e.g. via the
+`xyz.jpenilla.run-paper` Gradle plugin) - not set up yet.
 
 ## IDE
 
-Jedes IDE mit Gradle-Unterstützung (IntelliJ IDEA, VS Code mit Java-
-Extensions) funktioniert - `settings.gradle.kts`/`build.gradle.kts`
-importieren lassen, Java-Toolchain-Erkennung übernimmt den Rest.
+Any IDE with Gradle support (IntelliJ IDEA, VS Code with Java extensions)
+works - import `settings.gradle.kts`/`build.gradle.kts`, Java toolchain
+detection handles the rest.

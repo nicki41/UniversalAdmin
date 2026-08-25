@@ -1,10 +1,9 @@
 # GUI
 
-## Der Rahmen
+## The Frame
 
 `GuiPage` ([`src/main/java/dev/universaladmin/gui/GuiPage.java`](../../src/main/java/dev/universaladmin/gui/GuiPage.java))
-ist nach wie vor die einzige *Schnittstelle*, über die eine Seite geöffnet
-wird:
+is still the only *interface* a page is opened through:
 
 ```java
 public interface GuiPage {
@@ -13,40 +12,39 @@ public interface GuiPage {
 }
 ```
 
-`GuiRegistry` verwaltet registrierte Seiten unter ihrer `GuiPageId`. Direkt
-mit Bukkit-Inventory-APIs/Klick-Events arbeiten heute nur noch die Klassen
-des GUI-Frameworks selbst (`GuiView`, `GuiListener`, `AbstractGuiPage`) -
-eine Feature-Seite implementiert `GuiPage` nicht mehr von Hand, sondern
-erweitert `AbstractGuiPage`/`AbstractListGuiPage` und bekommt Navigation,
-Permission-Filterung, Pagination und async Laden fertig mit. Das
-vollständige Framework (Bausteine, Beispiel, Design-Entscheidungen wie die
-Wahl der Paper-Dialog-API für Texteingabe) steht in
+`GuiRegistry` manages registered pages under their `GuiPageId`. Only the
+GUI framework's own classes (`GuiView`, `GuiListener`, `AbstractGuiPage`)
+work directly with Bukkit inventory APIs/click events today - a feature
+page no longer implements `GuiPage` by hand, it extends
+`AbstractGuiPage`/`AbstractListGuiPage` and gets navigation, permission
+filtering, pagination, and async loading for free. The complete framework
+(building blocks, an example, design decisions like choosing the Paper
+dialog API for text input) is in
 [docs/development/gui-framework.md](../development/gui-framework.md).
 
-## Die eine Regel
+## The One Rule
 
-Ein Klick-Handler in einer `GuiPage`-Implementierung ruft einen Service
-oder eine `Action` auf - er enthält selbst keine Logik. Konkret heißt das:
-kein direkter Datenbankzugriff, keine Berechnungen, keine
-Berechtigungsprüfung mit eigener Logik (die gehört in den Service/die
-Action, nicht doppelt in die GUI). Verstöße dagegen sind der häufigste Weg,
-wie ein Admin-Plugin zu einer unwartbaren Sammlung von Klick-Handlern wird
-- siehe [Entwicklungsregeln](../development/architecture-rules.md).
+A click handler in a `GuiPage` implementation calls a service or an
+`Action` - it contains no logic itself. Concretely that means: no direct
+database access, no computation, no authorization check with its own logic
+(that belongs in the service/action, not duplicated in the GUI). Violating
+this is the most common way an admin plugin turns into an unmaintainable
+pile of click handlers - see the
+[development rules](../development/architecture-rules.md).
 
-## Dependency Injection statt globalem Kontext
+## Dependency Injection Instead of a Global Context
 
-Eine Seite bekommt die Services/Actions, die sie braucht, über ihren
-Konstruktor - nicht durch Zugriff auf `UniversalAdmin` zur Öffnungszeit.
-Das hält eine Seite testbar (die Services lassen sich faken) und macht die
-tatsächlichen Abhängigkeiten einer Seite explizit sichtbar, statt sie
-hinter einem "hat Zugriff auf alles"-Objekt zu verstecken. `GuiFramework`
-(Sessions/Icons, siehe gui-framework.md) ist die eine akzeptierte Ausnahme
-- ein schmales, GUI-Framework-scoped Bündel, kein Zugriff auf die ganze
-Plattform.
+A page gets the services/actions it needs through its constructor - not by
+accessing `UniversalAdmin` at open time. That keeps a page testable (the
+services can be faked) and makes a page's actual dependencies explicit
+instead of hiding them behind a "has access to everything" object.
+`GuiFramework` (sessions/icons, see gui-framework.md) is the one accepted
+exception - a narrow, GUI-framework-scoped bundle, not access to the whole
+platform.
 
 ```java
 public final class PlayerListPage extends AbstractListGuiPage<PlayerProfile> {
-    private final PlayerService playerService; // nicht: UniversalAdmin platform
+    private final PlayerService playerService; // not: UniversalAdmin platform
 
     public PlayerListPage(
             GuiFramework framework, MessageService messages, TaskScheduler scheduler, PlayerService playerService) {
@@ -57,24 +55,24 @@ public final class PlayerListPage extends AbstractListGuiPage<PlayerProfile> {
 }
 ```
 
-Vollständiges, lauffähiges Beispiel (inkl. Rendering, Navigation,
-Registrierung im Modul) in
-[docs/development/gui-framework.md](../development/gui-framework.md#ein-modul-baut-eine-seite-beispiel).
+A complete, runnable example (including rendering, navigation,
+registration in the module) is in
+[docs/development/gui-framework.md](../development/gui-framework.md#a-module-builds-a-page-example).
 
-## Aktueller Stand
+## Current State
 
-Das Framework existiert (eigenes, minimales Menü-System - keine externe
-Inventory-GUI-Library, siehe [gui-framework.md](../development/gui-framework.md))
-und wird vom Hauptmenü (`MainMenuPage`), einer Platzhalterseite pro noch
-nicht ausgebautem Modul, und der `players`-Feature-GUI (Player-Browser,
-Profil, Actions, editierbares Inventar/Enderchest - siehe
-[docs/user/modules/players.md](../user/modules/players.md)) genutzt. Die
-übrigen sieben Module bleiben [ROADMAP.md](../../ROADMAP.md) Phase 1/2.
+The framework exists (its own, minimal menu system - no external inventory
+GUI library, see
+[gui-framework.md](../development/gui-framework.md)) and is used by the
+main menu (`MainMenuPage`), a placeholder page per not-yet-built-out
+module, and the `players` feature GUI (player browser, profile, actions,
+editable inventory/ender chest - see
+[docs/user/modules/players.md](../user/modules/players.md)). The remaining
+seven modules are [ROADMAP.md](../../ROADMAP.md) Phase 1/2.
 
-## Web-App-Bezug
+## Relationship to the Web App
 
-Eine `GuiPage` und eine künftige Web-Seite für dieselbe Funktion (siehe
-[web-future.md](web-future.md)) rufen idealerweise denselben Service/dieselbe
-Action auf und unterscheiden sich nur in der Darstellung. Das ist der
-Grund, warum GUI-Click-Handler keine Logik enthalten dürfen: jede Logik in
-der GUI ist Logik, die die Web-App nicht wiederverwenden kann.
+A `GuiPage` and a future web page for the same feature (see
+[web-future.md](web-future.md)) ideally call the same service/action and
+only differ in presentation. That's the reason GUI click handlers may not
+contain logic: any logic in the GUI is logic the web app can't reuse.

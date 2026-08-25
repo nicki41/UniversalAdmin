@@ -1,169 +1,171 @@
 # Roadmap
 
-Grober Ausbauplan, kein Sprint-Plan mit Datum. Reihenfolge innerhalb einer
-Phase ist eine Empfehlung, keine harte Vorgabe. Jede Phase baut auf der in
-[ARCHITECTURE.md](ARCHITECTURE.md) festgelegten Struktur auf - nicht um sie
-herum.
+A rough build-out plan, not a dated sprint plan. Order within a phase is a
+recommendation, not a hard requirement. Every phase builds on the structure
+laid out in [ARCHITECTURE.md](ARCHITECTURE.md) - not around it.
 
-## Phase 0 - Architektur & Scaffolding
+## Phase 0 - Architecture & Scaffolding
 
-- [x] Package-Struktur, Kernabstraktionen (`Module`, `Action`, `GuiPage`,
-      `Repository`, `Migration`, Registries)
-- [x] Gradle-Setup (Java-25-Toolchain, Shadow-Plugin, SQLite/MySQL-Treiber)
-- [x] Plugin-Bootstrap, das kompiliert und startet
-- [x] Acht Modul-Skelette, `Players` als vollständige Referenzimplementierung
-- [x] Test-Infrastruktur (JUnit 5, In-Memory-Fakes, echte SQLite-Migrationstests)
-- [x] Grunddokumentation (dieses Dokument, ARCHITECTURE.md,
+- [x] Package structure, core abstractions (`Module`, `Action`, `GuiPage`,
+      `Repository`, `Migration`, registries)
+- [x] Gradle setup (Java 25 toolchain, Shadow plugin, SQLite/MySQL drivers)
+- [x] Plugin bootstrap that compiles and starts
+- [x] Eight module skeletons, `Players` as the complete reference implementation
+- [x] Test infrastructure (JUnit 5, in-memory fakes, real SQLite migration tests)
+- [x] Baseline documentation (this document, ARCHITECTURE.md,
       docs/development/architecture-rules.md, ADRs)
-- [x] Core-Bootstrap-Lifecycle (`onLoad`/`onEnable`/`onDisable`, kritische
-      vs. isolierte Fehlerbehandlung) und internes Modul-System
-      (`ModuleRegistry`/`ModuleManager`, Lifecycle-States, Abhängigkeits-
-      auflösung, `ModuleResources`-Cleanup) - siehe
+- [x] Core bootstrap lifecycle (`onLoad`/`onEnable`/`onDisable`, critical
+      vs. isolated failure handling) and the internal module system
+      (`ModuleRegistry`/`ModuleManager`, lifecycle states, dependency
+      resolution, `ModuleResources` cleanup) - see
       [docs/architecture/modules.md](docs/architecture/modules.md)
-- [x] `/admin`-Statuscommand (Aliase `/ua`, `/uadmin`), `PluginStatus`-Snapshot
-- [x] Zentrale Action-Autorisierung (`ActionDefinition`/`ActionExecutor`):
-      Permission-/Feature-enabled-/Self-Target-/Input-Validierung vor jeder
-      Action, `PermissionEvaluator` als zentraler Permission-Resolver
-      (`Actor`-getragen statt verstreutem `hasPermission(...)`),
-      `ActionEvent`s (`Executing`/`Executed`/`Failed`), Undo-Vertrag
-      (`ReversibleAction`), Audit-Hook - siehe
+- [x] `/admin` status command (aliases `/ua`, `/uadmin`), `PluginStatus` snapshot
+- [x] Central action authorization (`ActionDefinition`/`ActionExecutor`):
+      permission/feature-enabled/self-target/input validation before every
+      action, `PermissionEvaluator` as the central permission resolver
+      (`Actor`-carried instead of scattered `hasPermission(...)`),
+      `ActionEvent`s (`Executing`/`Executed`/`Failed`), the undo contract
+      (`ReversibleAction`), the audit hook - see
       [docs/architecture/actions.md](docs/architecture/actions.md)
-- [x] Typisiertes Settings-System (`SettingKey`/`SettingDefinition`/
-      `SettingRegistry`/`SettingsService`, Namespacing für Core/Module/
-      künftige Extensions, Validierung mit Fallback statt Crash), voller
-      `config.yml` (general/database/gui/audit/modules/performance/
-      maintenance/web), Config-Versionierung (`config-version` +
-      `ConfigMigrationRunner`), sicherer `/admin reload` - siehe
+- [x] Typed settings system (`SettingKey`/`SettingDefinition`/
+      `SettingRegistry`/`SettingsService`, namespacing for core/module/
+      future extensions, validation with a fallback instead of a crash), a
+      full `config.yml` (general/database/gui/audit/modules/performance/
+      maintenance/web), config versioning (`config-version` +
+      `ConfigMigrationRunner`), a safe `/admin reload` - see
       [docs/development/settings.md](docs/development/settings.md)
-- [x] Mehrsprachiges Message-System (`en_US`/`de_DE`, Fallback-Kette,
-      Parameter-Substitution, MiniMessage-Rendering für Ingame-Ausgabe) -
-      siehe [docs/user/configuration.md](docs/user/configuration.md#localization)
+- [x] Multi-language message system (`en_US`/`de_DE`, a fallback chain,
+      parameter substitution, MiniMessage rendering for in-game output) -
+      see [docs/user/configuration.md](docs/user/configuration.md#localization)
 
-- [x] Wiederverwendbares Ingame-GUI-Framework (`AbstractGuiPage`/
-      `AbstractListGuiPage`, Sessions, Pagination, Permission-gesteuerte
-      Sichtbarkeit, async Laden, Confirmation-/Selection-Dialoge,
-      Texteingabe über die Paper-Dialog-API) plus Hauptmenü-Skelett mit
-      einer Platzhalterseite pro eingebautem Modul - siehe
+- [x] Reusable in-game GUI framework (`AbstractGuiPage`/
+      `AbstractListGuiPage`, sessions, pagination, permission-driven
+      visibility, async loading, confirmation/selection dialogs, text
+      input via the Paper dialog API) plus a main-menu skeleton with a
+      placeholder page per built-in module - see
       [docs/development/gui-framework.md](docs/development/gui-framework.md)
-- [x] Zentrales Audit-System: volles `AuditEvent` (Actor/Action/Modul/
-      Target/Source/Erfolg/Grund/Alt-Neuwert/Welt-Position/Metadata/
-      Correlation-ID), automatisch von `ActionExecutor` befüllt statt
-      Feature-spezifischem Logging; `AuditSchemaMigrationV2` + gefiltertes,
-      paginiertes `AuditService#query`; funktionierende Audit-Log-GUI
-      (Liste mit Erfolg/Fehlschlag-Filter, Detailseite); stündliche,
-      konfigurierbare Retention (`audit.retention-days`) - siehe
-      [docs/user/audit-log.md](docs/user/audit-log.md). Damit ist der
-      "Audit-Log-GUI/-Commands"-Punkt aus Phase 2 unten für die GUI-Seite
-      bereits erledigt; Commands folgen bei Bedarf später.
+- [x] Central audit system: a full `AuditEvent` (actor/action/module/
+      target/source/success/reason/old-new value/world position/metadata/
+      correlation id), automatically populated by `ActionExecutor` instead
+      of feature-specific logging; `AuditSchemaMigrationV2` + a filtered,
+      paginated `AuditService#query`; a working audit log GUI (a list with
+      a success/failure filter, a detail page); hourly, configurable
+      retention (`audit.retention-days`) - see
+      [docs/user/audit-log.md](docs/user/audit-log.md). That already
+      covers the "audit log GUI/commands" item from Phase 2 below for the
+      GUI side; commands follow later if needed.
 
-## Phase 1 - Players & Moderation nutzbar machen
+## Phase 1 - Making Players & Moderation Usable
 
-- [x] `PlayerJoinEvent`/`PlayerQuitEvent`-Listener, der nur
-      `PlayerService.getOrCreateProfile` aufruft (kein Logic-Leck in den
-      Listener) - siehe `PlayerActivityListener`
-- [x] Punishment-Repository + -Service für Moderation
+- [x] A `PlayerJoinEvent`/`PlayerQuitEvent` listener that only calls
+      `PlayerService.getOrCreateProfile` (no logic leaking into the
+      listener) - see `PlayerActivityListener`
+- [x] A punishment repository + service for Moderation
       (kick/ban/tempban/ipban/mute/tempmute/warn/unban/unmute/removewarn),
-      inklusive Migration, Join-/Chat-Enforcement und GUI-Wizard, siehe
+      including a migration, join/chat enforcement, and a GUI wizard, see
       [docs/user/modules/moderation.md](docs/user/modules/moderation.md)
-- [x] Erste echte GUI-Page (Player-Liste), die die
-      `core:players.home`-Platzhalterseite ersetzt - ausgebaut zum vollen
-      Player-Browser/Profil/Actions/Inventar-Editor, siehe
+- [x] The first real GUI page (a player list) replacing the
+      `core:players.home` placeholder page - built out into a full player
+      browser/profile/actions/inventory editor, see
       [docs/user/modules/players.md](docs/user/modules/players.md)
-- [ ] Erste echte Subcommands unter `/admin players`, `/admin moderation`
-      (die Players- und Moderation-Actions aus diesem Release sind bereits
-      command-fähig, da sie über `ActionExecutor` laufen - nur der
-      Command-Frontend-Teil fehlt noch)
-- [x] `/admin server broadcast|shutdown|restart|cancel` (Console-Pfad zu den
-      Server-Permissions, da Console kein GUI hat - siehe
+- [ ] The first real subcommands under `/admin players`, `/admin moderation`
+      (the Players and Moderation actions from this release are already
+      command-ready, since they run through `ActionExecutor` - only the
+      command frontend itself is still missing)
+- [x] `/admin server broadcast|shutdown|restart|cancel` (a console path to
+      the server permissions, since the console has no GUI - see
       [docs/user/modules/server.md](docs/user/modules/server.md))
-- [x] Audit-Log-Einträge für jede Moderationsaktion über `AuditService`
-      (wie bei Players: jede mutierende Action auditiert automatisch über
-      `ActionExecutor`)
+- [x] Audit log entries for every moderation action via `AuditService`
+      (like Players: every mutating action is automatically audited
+      through `ActionExecutor`)
 
-## Phase 2 - Restliche Built-in-Module
+## Phase 2 - Remaining Built-in Modules
 
-- [x] Server (Dashboard, Broadcasts, Maintenance-Mode, Shutdown/Restart mit
-      Confirmation/Countdown - siehe
+- [x] Server (dashboard, broadcasts, maintenance mode, shutdown/restart
+      with confirmation/countdown - see
       [docs/user/modules/server.md](docs/user/modules/server.md); TPS/MSPT
-      bleibt Aufgabe des Performance-Moduls weiter unten)
-- [x] Worlds (Browser/Profil, Spawn/Time/Weather/Difficulty, Border,
-      dynamisches Gamerule-GUI - siehe
-      [docs/user/modules/worlds.md](docs/user/modules/worlds.md)). Welt
-      laden/entladen war nicht Teil des aktuellen Auftrags und ist noch
-      offen; delete/clone/reset bleiben bewusst außerhalb des Cores, siehe
-      dessen "Dangerous Features"-Abschnitt.
-- [x] Whitelist (natives Whitelist-Wrapping plus eigene Tabelle mit
-      Grund/Notizen/Ablauf, Ownership-Modell, Join-Check + stündlicher
-      Sweep - siehe [docs/user/modules/whitelist.md](docs/user/modules/whitelist.md))
-- [x] Performance (gecachtes TPS/MSPT/Memory/World/Entity-Sampling, Dashboard,
-      World-Performance, Entity-Overview nach Typ/Welt, kurze In-Memory-
-      Historie, Staff-Alerts bei Schwellenwerten, eng gefasstes Entity Clear
-      mit Preview/Confirmation/Audit - siehe
+      remains the Performance module's job further below)
+- [x] Worlds (browser/profile, spawn/time/weather/difficulty, border, a
+      dynamic gamerule GUI - see
+      [docs/user/modules/worlds.md](docs/user/modules/worlds.md)). Loading/
+      unloading a world was not part of the current scope and is still
+      open; delete/clone/reset deliberately stay out of the core, see its
+      "Dangerous Features" section.
+- [x] Whitelist (native whitelist wrapping plus its own table with
+      reason/notes/expiration, an ownership model, a join check + an
+      hourly sweep - see
+      [docs/user/modules/whitelist.md](docs/user/modules/whitelist.md))
+- [x] Performance (cached TPS/MSPT/memory/world/entity sampling,
+      dashboard, per-world performance, an entity overview by type/world,
+      a short in-memory history, staff alerts on thresholds, a narrowly
+      scoped Entity Clear with preview/confirmation/audit - see
       [docs/user/modules/performance.md](docs/user/modules/performance.md))
-- [ ] Settings-GUI/-Commands über `SettingsService` (siehe
-      [docs/development/settings.md](docs/development/settings.md) - das
-      typisierte System existiert bereits, nur die GUI/Command-Oberfläche
-      dafür fehlt noch)
-- [x] Audit-Log-GUI über `AuditService` (siehe Phase 0) - `/admin audit`-Commands noch offen
+- [ ] A settings GUI/commands over `SettingsService` (see
+      [docs/development/settings.md](docs/development/settings.md) - the
+      typed system already exists, only the GUI/command surface for it is
+      still missing)
+- [x] An audit log GUI via `AuditService` (see Phase 0) - `/admin audit`
+      commands are still open
 
-## Phase 2.5 - Öffentliche Veröffentlichung
+## Phase 2.5 - Public Release
 
-- [x] Öffentliches GitHub-Repository, Apache-2.0-Lizenz (`LICENSE`), siehe
+- [x] Public GitHub repository, Apache-2.0 license (`LICENSE`), see
       [docs/release/licensing.md](docs/release/licensing.md)
-- [x] CI: Build und Tests auf jedem Push/PR gegen `main`
-- [x] Automatisierte Releases: ein `v*`-Tag erzeugt Build, Tests,
-      GitHub-Release, jar und SHA-256 - siehe
+- [x] CI: build and tests on every push/PR against `main`
+- [x] Automated releases: a `v*` tag produces a build, tests, a GitHub
+      release, the jar, and its SHA-256 - see
       [docs/release/releasing.md](docs/release/releasing.md)
-- [x] Anonyme Nutzungsstatistik mit vollständiger Dokumentation und Opt-out
-      (siehe [docs/user/telemetry.md](docs/user/telemetry.md)); es gibt noch
-      keinen offiziellen Endpunkt, standardmäßig wird nichts gesendet
-- [ ] Offizieller Telemetrie-Endpunkt (Backend) inklusive
-      Datenschutzerklärung und Retention-Entscheidung
-- [ ] Screenshots und erster Modrinth-Upload (Checkliste in
+- [x] Anonymous usage statistics with full documentation and an opt-out
+      (see [docs/user/telemetry.md](docs/user/telemetry.md)); there is no
+      official endpoint yet, so nothing is sent by default
+- [ ] An official telemetry endpoint (backend), including a privacy policy
+      and a retention decision
+- [ ] Screenshots and a first Modrinth upload (checklist in
       [docs/release/modrinth.md](docs/release/modrinth.md))
-- [ ] Erster getaggter Alpha-Release
+- [ ] The first tagged alpha release
 
-## Phase 3 - Proxy-Support
+## Phase 3 - Proxy Support
 
-- [ ] BungeeCord-/Velocity-Messaging-Kanal für serverübergreifende Aktionen
-      (z. B. globaler Kick, geteilter Whitelist-Status)
-- [ ] Klarziehen, was proxy-weit vs. pro Server konfiguriert wird
+- [ ] A BungeeCord/Velocity messaging channel for cross-server actions
+      (e.g. a global kick, shared whitelist status)
+- [ ] Clarify what's configured proxy-wide vs. per server
 
-## Phase 4 - Öffentliche Extension-API (nächster Meilenstein)
+## Phase 4 - Public Extension API (Next Milestone)
 
-- [ ] `universaladmin-api`-Gradle-Modul extrahieren (siehe
+- [ ] Extract a `universaladmin-api` Gradle module (see
       [docs/architecture/decisions/0006-optional-web-architecture.md](docs/architecture/decisions/0006-optional-web-architecture.md))
-- [ ] Stabiles, versioniertes Interface für alles, was in
+- [ ] A stable, versioned interface for everything listed in
       [docs/architecture/extensions-future.md](docs/architecture/extensions-future.md)
-      aufgelistet ist (Module, GUI-Pages, Actions, Permissions, Migrationen, ...)
-- [ ] Extension-Loader (eigene jars in `plugins/UniversalAdmin/extensions/`
-      oder als Bukkit-Plugins mit `depend: [UniversalAdmin]` - Entscheidung
-      offen, siehe extensions-future.md)
-- [ ] `universaladmin-sdk` mit Beispiel-Extension und Doku
+      (modules, GUI pages, actions, permissions, migrations, ...)
+- [ ] An extension loader (own jars in `plugins/UniversalAdmin/extensions/`
+      or standalone Bukkit plugins with `depend: [UniversalAdmin]` -
+      decision open, see extensions-future.md)
+- [ ] `universaladmin-sdk` with an example extension and documentation
 
-## Phase 5 - Community-/offizielle Extensions und Marketplace
+## Phase 5 - Community/Official Extensions and Marketplace
 
-- [ ] Erste offizielle Extensions als Machbarkeitsnachweis der API (z. B.
-      Vault-Integration, Discord-Integration - siehe Aufgabenstellung für
-      die volle Liste möglicher Extensions)
-- [ ] Extension-Registry/-Verzeichnis (Format offen: einfache Liste vs.
-      eigener Service)
+- [ ] First official extensions as a proof of concept for the API (e.g. a
+      Vault integration, a Discord integration - see the project brief for
+      the full list of possible extensions)
+- [ ] An extension registry/directory (format open: a simple list vs. a
+      dedicated service)
 
-## Phase 6 - Optionale Web-App
+## Phase 6 - Optional Web App
 
-- [ ] `universaladmin-web`-Modul (siehe
+- [ ] A `universaladmin-web` module (see
       [docs/architecture/web-future.md](docs/architecture/web-future.md))
-- [ ] REST-API über dieselben Services/Actions wie GUI und Commands
-- [ ] WebSockets/Live-Updates für Dashboard-Widgets
-- [ ] Web-seitige Authentifizierung (getrennt vom Minecraft-Account-System,
-      Details offen)
+- [ ] A REST API over the same services/actions as the GUI and commands
+- [ ] WebSockets/live updates for dashboard widgets
+- [ ] Web-side authentication (separate from the Minecraft account
+      system, details open)
 
-## Bewusst zurückgestellt
+## Deliberately Deferred
 
-Diese Punkte sind nicht vergessen, sondern bewusst nicht Teil der aktuellen
-Phasen, weil sie erst mit realem Nutzungsdruck sinnvoll entschieden werden
-können:
+These items aren't forgotten, they're deliberately not part of the current
+phases because they can only be meaningfully decided once there's real
+usage pressure:
 
-- Konkretes Extension-Verteilungsformat (Marktplatz? Reines GitHub-Listing?)
-- Web-App-Framework-Wahl
-- Ob/wie Folia-Unterstützung nötig wird
+- The concrete extension distribution format (a marketplace? a plain
+  GitHub listing?)
+- The web app framework choice
+- Whether/how Folia support becomes necessary

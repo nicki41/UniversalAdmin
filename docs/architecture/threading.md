@@ -1,11 +1,11 @@
 # Threading
 
-## Die Regel
+## The Rule
 
-Datenbankzugriffe und andere blockierende IO laufen **niemals** auf dem
-Paper-Main-Thread. Alles, was Bukkit-API anfasst (Inventories, Entities,
-World-Zugriff), läuft **nur** auf dem Main-Thread. Der Übergang zwischen
-beidem läuft ausschließlich über
+Database access and other blocking IO **never** run on the Paper main
+thread. Anything touching the Bukkit API (inventories, entities, world
+access) runs **only** on the main thread. The crossover between the two
+goes exclusively through
 [`TaskScheduler`](../../src/main/java/dev/universaladmin/scheduler/TaskScheduler.java):
 
 ```java
@@ -17,71 +17,66 @@ public interface TaskScheduler {
 }
 ```
 
-Repositories und Services rufen `Bukkit.getScheduler()` nie direkt auf -
-immer über `TaskScheduler`.
+Repositories and services never call `Bukkit.getScheduler()` directly -
+always through `TaskScheduler`.
 
-## Warum virtuelle Threads
+## Why Virtual Threads
 
-`PaperTaskScheduler` (die Standardimplementierung) nutzt
-`Executors.newVirtualThreadPerTaskExecutor()` (virtuelle Threads, seit
-Java 21 stabil; das Projekt läuft auf Java 25) für den
-Hintergrundpfad. Blockierende JDBC-Aufrufe sind das klassische Beispiel,
-für das virtuelle Threads gebaut wurden: jeder Datenbankaufruf bekommt
-seinen eigenen billigen Thread, statt sich einen kleinen festen Pool zu
-teilen - ohne dass Repository-Code irgendetwas Async-Spezifisches tun
-muss außer eine blockierende JDBC-Methode in einer Lambda aufzurufen.
+`PaperTaskScheduler` (the default implementation) uses
+`Executors.newVirtualThreadPerTaskExecutor()` (virtual threads, stable
+since Java 21; the project runs on Java 25) for the background path.
+Blocking JDBC calls are the textbook example virtual threads were built
+for: every database call gets its own cheap thread instead of sharing a
+small fixed pool - without any repository code having to do anything
+async-specific beyond calling a blocking JDBC method inside a lambda.
 
-## Der Rückweg zum Main-Thread
+## The Way Back to the Main Thread
 
-`runOnMainThread` nutzt Bukkits eigenen Scheduler
-(`Bukkit.getScheduler().runTask`). Jede GUI-Aktualisierung, jeder
-Inventory-Zugriff, der aus einem async-Callback heraus passiert (z. B.
-"Datenbank-Ergebnis da, jetzt Item im Inventory setzen"), muss über diesen
-Weg zurück auf den Main-Thread.
+`runOnMainThread` uses Bukkit's own scheduler
+(`Bukkit.getScheduler().runTask`). Every GUI update, every inventory
+access happening from inside an async callback (e.g. "database result is
+in, now set the item in the inventory") has to go back to the main thread
+this way.
 
-## Die dokumentierte Ausnahme
+## The Documented Exception
 
-`UniversalAdminPlugin#onEnable` ruft `storage.migrations().runPending()`
-synchron auf dem Main-Thread auf - zweimal, nicht einmal, weil Migrationen
-von zwei verschiedenen Stellen registriert werden:
+`UniversalAdminPlugin#onEnable` calls `storage.migrations().runPending()`
+synchronously on the main thread - twice, not once, because migrations get
+registered from two different places:
 
-1. Einmal in `bootstrapCore`, direkt nachdem die beiden Core-Audit-
-   Migrationen registriert wurden - vor `ModuleManager.loadAll()`/
-   `enableAll()`.
-2. Ein zweites Mal in `onEnable`, direkt nach `moduleManager.enableAll()` -
-   denn jedes Modul registriert seine eigene(n) `Migration`(en) erst
-   *während* seines eigenen `onEnable` (siehe
-   [adding-module.md](../development/adding-module.md) Schritt 3), also
-   zwangsläufig *nach* dem ersten Aufruf. Ohne diesen zweiten Aufruf würde
-   jede Modul-eigene Tabelle (`player_profiles`, `punishments`,
+1. Once in `bootstrapCore`, right after the two core audit migrations are
+   registered - before `ModuleManager.loadAll()`/`enableAll()`.
+2. A second time in `onEnable`, right after `moduleManager.enableAll()` -
+   because every module only registers its own `Migration`(s) *during* its
+   own `onEnable` (see
+   [adding-module.md](../development/adding-module.md) step 3), so
+   necessarily *after* the first call. Without this second call, every
+   module-owned table (`player_profiles`, `punishments`,
    `server_maintenance_state`, `whitelist_entries`, `vanish_state`, ...)
-   nie angelegt - genau das war ein realer Bug, bis dieser zweite Aufruf
-   ergänzt wurde. `MigrationRunner.runPending()` ist idempotent (siehe
-   `MigrationRunnerTest`), der zweite Aufruf wendet also nur an, was seit
-   dem ersten neu registriert wurde, nie etwas doppelt.
+   would never get created - that was a real bug until this second call
+   was added. `MigrationRunner.runPending()` is idempotent (see
+   `MigrationRunnerTest`), so the second call only applies whatever was
+   newly registered since the first, never anything twice.
 
-Beide Aufrufe laufen vor Spieler joinen können. Das ist eine bewusste
-Ausnahme:
+Both calls run before players can join. That's a deliberate exception:
 
-- Paper bietet keinen asynchronen `onEnable`-Lifecycle-Hook.
-- Migrationen laufen beim Start, nicht im laufenden Betrieb.
-- Kein Modul darf sich auf eine Datenbank verlassen, deren Schema noch
-  nicht auf dem aktuellen Stand ist - jede Migration muss also fertig sein,
-  bevor ein Spieler joinen kann (nicht zwingend vor *jedem* einzelnen
-  Modul-`onEnable`, da ein Modul seine eigene Migration selbst erst dort
-  registriert).
+- Paper offers no asynchronous `onEnable` lifecycle hook.
+- Migrations run at startup, not during live operation.
+- No module may rely on a database whose schema isn't current yet - so
+  every migration has to be finished before a player can join (not
+  necessarily before *every single* module's `onEnable`, since a module
+  only registers its own migration there in the first place).
 
-Das ist **kein Vorbild** für sonstigen Code. Jede weitere blockierende
-Operation gehört hinter `TaskScheduler`.
+This is **not a template** for other code. Any other blocking operation
+belongs behind `TaskScheduler`.
 
-## Kein `Bukkit.reload()`
+## No `Bukkit.reload()`
 
-UniversalAdmin löst niemals einen globalen Bukkit-Reload aus und leitet
-Nutzer nicht dazu an, einen zu verwenden, um Plugin-Zustand
-zurückzusetzen. Ein globaler Reload umgeht den Plugin-Lifecycle auf eine
-Weise, die UniversalAdmin (und andere Plugins auf demselben Server) nicht
-kontrollieren können - Zustand in `UniversalAdmin`/`ModuleManager` würde
-inkonsistent mit dem werden, was Bukkit danach glaubt geladen zu haben.
-Ein "Neu laden"-Feature, falls gewünscht, ist ein eigenes, explizit
-implementiertes `onDisable`/`onEnable`-Paar für UniversalAdmin selbst, kein
-serverweiter Reload.
+UniversalAdmin never triggers a global Bukkit reload and doesn't direct
+users to use one to reset plugin state. A global reload bypasses the
+plugin lifecycle in ways UniversalAdmin (and other plugins on the same
+server) can't control - state in `UniversalAdmin`/`ModuleManager` would
+become inconsistent with what Bukkit believes is loaded afterward. A
+"reload" feature, if wanted, is its own explicitly implemented
+`onDisable`/`onEnable` pair for UniversalAdmin itself, not a server-wide
+reload.

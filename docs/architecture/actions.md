@@ -1,11 +1,11 @@
 # Actions
 
-## Zweck
+## Purpose
 
-Ein `Action<I, R>` ([`src/main/java/dev/universaladmin/action/Action.java`](../../src/main/java/dev/universaladmin/action/Action.java))
-ist eine einzelne Business-Operation - "Spieler kicken", "Whitelist-Eintrag
-setzen", "Backup erstellen" - die von jedem Frontend gleich aufgerufen
-werden kann: einem GUI-Button, einem Command, später einem REST-Endpunkt.
+An `Action<I, R>` ([`src/main/java/dev/universaladmin/action/Action.java`](../../src/main/java/dev/universaladmin/action/Action.java))
+is a single business operation - "kick a player", "set a whitelist entry",
+"create a backup" - callable the same way from any frontend: a GUI button, a
+command, later a REST endpoint.
 
 ```java
 public interface Action<I, R> {
@@ -14,39 +14,40 @@ public interface Action<I, R> {
 }
 ```
 
-- `I` ist die Eingabe, typischerweise ein kleiner Record.
-- `R` ist das Erfolgsergebnis.
-- `ActionContext` trägt `Actor` (wer) und `Source` (wie/wovon aus - siehe
-  unten). Wird später mehr gebraucht (Locale, Request-ID für Web-Tracing),
-  kommt das hierher, nicht in die `execute`-Signatur.
+- `I` is the input, typically a small record.
+- `R` is the success result.
+- `ActionContext` carries `Actor` (who) and `Source` (how/from where - see
+  below). If more is needed later (locale, a request id for web tracing),
+  it goes here, not into the `execute` signature.
 
-`Action` selbst enthält **keine** Autorisierung, Validierung oder Audit-Logik -
-das ist bewusst so. Diese Belange leben zentral in `ActionExecutor` (siehe
-unten), nicht dupliziert in jeder Action-Implementierung.
+`Action` itself contains **no** authorization, validation, or audit logic -
+deliberately. Those concerns live centrally in `ActionExecutor` (see
+below), not duplicated in every action implementation.
 
-## Die Pipeline: `ActionExecutor`
+## The Pipeline: `ActionExecutor`
 
-**Kein Frontend ruft `Action.execute(...)` direkt auf.** GUI, Commands, die
-künftige Web-API und Extensions rufen ausschließlich `ActionExecutor.execute(...)`
-auf - das ist die eine Stelle, an der Autorisierung, Validierung, das
-Action selbst und Auditierung zusammenlaufen:
+**No frontend calls `Action.execute(...)` directly.** The GUI, commands,
+the future web API, and extensions exclusively call
+`ActionExecutor.execute(...)` - the one place where authorization,
+validation, the action itself, and auditing come together:
 
 ```
 Frontend (GUI / Command / Web / Extension)
                 ↓
         ActionExecutor.execute(ActionRequest)
                 ↓
-   Permission-Check → Feature-enabled-Check → Self-Target-Check → Validation
+   Permission check → feature-enabled check → self-target check → validation
                 ↓
            Action.execute(...)
                 ↓
-        AuditService.record(...)  (bei Erfolg, falls audited)
+        AuditService.record(...)  (on success, if audited)
                 ↓
            ActionResult
 ```
 
-Vor und nach jedem Schritt feuert der Executor ein [`ActionEvent`](../../src/main/java/dev/universaladmin/action/ActionEvent.java)
-(`Executing` → `Executed`/`Failed`) - siehe [Events](#events).
+Before and after every step, the executor fires an
+[`ActionEvent`](../../src/main/java/dev/universaladmin/action/ActionEvent.java)
+(`Executing` → `Executed`/`Failed`) - see [Events](#events).
 
 ```java
 ActionRequest<Void> request = ActionRequest.of(SomeAction.ID, actor, Source.COMMAND, null);
@@ -54,16 +55,16 @@ platform.actionExecutor().<Void, SomeResult>execute(request)
         .thenAccept(result -> /* render result */);
 ```
 
-`UniversalAdminCommand#handleReload` ist das Referenzbeispiel: es baut einen
-`Actor` aus dem Bukkit-`CommandSender`, einen `ActionRequest` mit
-`Source.COMMAND`, und rendert danach ausschließlich das zurückkommende
-`ActionResult` - keine eigene Berechtigungsprüfung mehr im Command selbst.
+`UniversalAdminCommand#handleReload` is the reference example: it builds an
+`Actor` from the Bukkit `CommandSender`, an `ActionRequest` with
+`Source.COMMAND`, and afterward only renders the returned `ActionResult` -
+no permission check of its own left in the command itself.
 
-## `ActionDefinition` - was registriert wird
+## `ActionDefinition` - What Gets Registered
 
-Module registrieren nicht die rohe `Action`, sondern eine `ActionDefinition<I, R>`,
-die die Action mit allem umwickelt, was der Executor für Autorisierung/
-Validierung/Audit braucht:
+Modules don't register the raw `Action`, but an `ActionDefinition<I, R>`
+that wraps the action with everything the executor needs for
+authorization/validation/audit:
 
 ```java
 context.platform().actions().register(ActionDefinition.builder(new KickPlayerAction(service))
@@ -76,47 +77,48 @@ context.platform().actions().register(ActionDefinition.builder(new KickPlayerAct
         .build());
 ```
 
-Alle Felder außer der Action selbst sind optional mit sinnvollen Defaults
-(kein Permission-Zwang, kein Target, `SelfTargetPolicy.ALLOWED`, immer
-enabled, immer auditiert). `GetPlayerProfileAction`s Registrierung in
-`PlayersModule` ist das minimale Beispiel (nur Permission, `.notAudited()`
-weil ein reiner Lesezugriff nicht jedes Mal einen Audit-Eintrag braucht),
-`ReloadConfigAction`s Registrierung in `UniversalAdminPlugin` das
-Permission-only-Beispiel.
+Every field except the action itself is optional with sensible defaults (no
+permission required, no target, `SelfTargetPolicy.ALLOWED`, always
+enabled, always audited). `GetPlayerProfileAction`'s registration in
+`PlayersModule` is the minimal example (only a permission, `.notAudited()`
+because a pure read doesn't need an audit entry every time),
+`ReloadConfigAction`'s registration in `UniversalAdminPlugin` the
+permission-only example.
 
-| Feld | Zweck |
+| Field | Purpose |
 |---|---|
-| `permission` | `PermissionNode`, das der `Actor` haben muss, oder `null` |
-| `validator` | synchrone `ActionValidator<I>` für billige Eingabe-Checks (siehe unten) |
-| `targetExtractor` | liefert ein generisches `ActionTarget` (Typ/ID/Anzeigename) aus dem Input, für Self-Target-Check und Audit-`targetId` |
-| `selfTargetPolicy` | `ALLOWED` (Default) oder `FORBIDDEN` |
-| `enabledCheck` | feingranulares "ist dieses Feature gerade aktiv", unabhängig vom Modul-Enable-Zustand |
-| `audited` | ob ein Erfolg einen Audit-Eintrag erzeugt (Default `true`) |
-| `auditSummary` | baut den Audit-Summary-Text aus dem Input |
+| `permission` | `PermissionNode` the `Actor` must have, or `null` |
+| `validator` | synchronous `ActionValidator<I>` for cheap input checks (see below) |
+| `targetExtractor` | returns a generic `ActionTarget` (type/id/display name) from the input, for the self-target check and the audit `targetId` |
+| `selfTargetPolicy` | `ALLOWED` (default) or `FORBIDDEN` |
+| `enabledCheck` | fine-grained "is this feature currently active", independent of the module's enabled state |
+| `audited` | whether a success produces an audit entry (default `true`) |
+| `auditSummary` | builds the audit summary text from the input |
 
-## Validierung
+## Validation
 
-`ActionExecutor` prüft, in dieser Reihenfolge, **bevor** die Action läuft:
+`ActionExecutor` checks, in this order, **before** the action runs:
 
 1. **Permission** - `Actor.hasPermission(definition.permission())`.
 2. **Feature enabled** - `definition.enabledCheck()`.
-3. **Self-Target** - nur falls `selfTargetPolicy() == FORBIDDEN`: der aus
-   dem Input extrahierte `ActionTarget` darf nicht auf den ausführenden
-   `PLAYER`-Actor zeigen.
-4. **Input-Validierung** - `definition.validator()`, eine synchrone
-   `ActionValidator<I>` für billige, statische Checks (leerer String,
-   ungültiges Format).
+3. **Self-target** - only if `selfTargetPolicy() == FORBIDDEN`: the
+   `ActionTarget` extracted from the input must not point at the executing
+   `PLAYER` actor.
+4. **Input validation** - `definition.validator()`, a synchronous
+   `ActionValidator<I>` for cheap, static checks (empty string, invalid
+   format).
 
-Alle vier Fehlerfälle werden als strukturiertes `ActionResult.Failure`
-zurückgegeben, nie als Exception - siehe [`ActionResult`](#actionresult-statt-exceptions).
+All four failure cases are returned as a structured `ActionResult.Failure`,
+never as an exception - see
+[`ActionResult`](#actionresult-instead-of-exceptions).
 
-**"Target Zustand"** (existiert das Ziel noch, ist der Spieler online, ...)
-prüft der Executor bewusst **nicht** generisch - das braucht Domain-Wissen
-(einen Repository-Lookup), das nur die Action selbst hat. Solche Checks
-laufen in der Action's eigenem `execute(...)` und kommen als ganz normales
-`ActionResult.Failure` zurück, genau wie jeder andere Business-Rule-Fehler.
+**"Target state"** (does the target still exist, is the player online, ...)
+is deliberately **not** checked generically by the executor - that needs
+domain knowledge (a repository lookup) only the action itself has. Such
+checks run in the action's own `execute(...)` and come back as an ordinary
+`ActionResult.Failure`, just like any other business-rule error.
 
-## `ActionResult` statt Exceptions
+## `ActionResult` Instead of Exceptions
 
 ```java
 sealed interface ActionResult<R> {
@@ -127,28 +129,28 @@ sealed interface ActionResult<R> {
 ```
 
 `FailureReason` (`VALIDATION`, `NOT_FOUND`, `NOT_PERMITTED`, `CONFLICT`,
-`FEATURE_DISABLED`, `INTERNAL_ERROR`) gibt jedem Frontend genug Information,
-um eine sinnvolle Fehlermeldung zu rendern, ohne die Action-Internals zu
-kennen. Frontends müssen den Failure-Fall behandeln - es gibt keinen
-impliziten "wirf einfach eine Exception"-Pfad.
+`FEATURE_DISABLED`, `INTERNAL_ERROR`) gives every frontend enough
+information to render a meaningful error message without knowing the
+action's internals. Frontends must handle the failure case - there's no
+implicit "just throw an exception" path.
 
-`messageKey`/`messageArgs` lassen einen Failure (oder Success, über
-`metadata`) über `MessageService` lokalisiert rendern, statt einen rohen
-englischen String hart zu codieren - siehe `GetPlayerProfileAction`, die
-`MessageKey.of("players.not-found")` statt eines String-Literals
-zurückgibt. `message` bleibt für nicht-lokalisierte Debug-/Log-Zwecke
-verfügbar. `metadata` ist eine kleine, action-definierte Bag für alles
-Weitere (z. B. eine betroffene Anzahl), ohne für jede Action einen neuen
-Result-Typ zu erfinden.
+`messageKey`/`messageArgs` let a failure (or success, via `metadata`) be
+rendered localized through `MessageService`, instead of hardcoding a raw
+English string - see `GetPlayerProfileAction`, which returns
+`MessageKey.of("players.not-found")` instead of a string literal. `message`
+stays available for non-localized debug/log purposes. `metadata` is a
+small, action-defined bag for anything else (e.g. an affected count),
+without inventing a new result type for every action.
 
-## `Actor` statt Bukkit-`CommandSender`
+## `Actor` Instead of Bukkit `CommandSender`
 
-`Actor`/`ActorType` (`PLAYER`, `CONSOLE`, `WEB`, `SYSTEM`) beschreiben, wer
-handelt, ohne dass das `action`-Package von Bukkit-Typen abhängt - absichtlich
-mit Blick auf die künftige Web-App: eine Web-Session ist kein
-`CommandSender`, soll aber genauso eine `Action` auslösen können.
+`Actor`/`ActorType` (`PLAYER`, `CONSOLE`, `WEB`, `SYSTEM`) describe who is
+acting, without the `action` package depending on Bukkit types -
+deliberately, with the future web app in mind: a web session isn't a
+`CommandSender`, but should still be able to trigger an `Action` the same
+way.
 
-Jeder `Actor` trägt einen `PermissionEvaluator` ([`dev.universaladmin.permission.PermissionEvaluator`](../../src/main/java/dev/universaladmin/permission/PermissionEvaluator.java)):
+Every `Actor` carries a `PermissionEvaluator` ([`dev.universaladmin.permission.PermissionEvaluator`](../../src/main/java/dev/universaladmin/permission/PermissionEvaluator.java)):
 
 ```java
 public interface PermissionEvaluator {
@@ -156,36 +158,36 @@ public interface PermissionEvaluator {
 }
 ```
 
-Das ist der zentral gekapselte "Permission Resolver" - Code fragt
-`actor.hasPermission(node)`, nie `player.hasPermission(...)` verstreut im
-GUI-/Command-Code. Für einen echten Bukkit-`Permissible`
-(`Player`/`ConsoleCommandSender`) liefert
+That's the centrally encapsulated "permission resolver" - code asks
+`actor.hasPermission(node)`, never `player.hasPermission(...)` scattered
+through GUI/command code. For a real Bukkit `Permissible`
+(`Player`/`ConsoleCommandSender`),
 [`PermissiblePermissionEvaluator`](../../src/main/java/dev/universaladmin/permission/bukkit/PermissiblePermissionEvaluator.java)
-(im `.bukkit`-Adapter-Subpackage, damit `permission` selbst frei von
-Paper-Imports bleibt) genau das Verhalten, das ein Permission-Plugin
-(LuckPerms und ähnliche) sowieso liefert - **Wildcards funktionieren dadurch
-automatisch**, ohne eigene Wildcard-Logik: `PermissiblePermissionEvaluator`
-delegiert nur an `Permissible.hasPermission`.
+(in the `.bukkit` adapter subpackage, so `permission` itself stays free of
+Paper imports) delivers exactly the behavior a permission plugin (LuckPerms
+and similar) already provides - **wildcards work automatically as a
+result**, with no wildcard logic of our own:
+`PermissiblePermissionEvaluator` just delegates to
+`Permissible.hasPermission`.
 
-- `Actor.player(UUID, String, PermissionEvaluator)` - ein echter Spieler.
-- `Actor.console()` / `Actor.system(String)` - immer autorisiert
-  (`PermissionEvaluator.allowAll()`), da Konsole und interne Systemaufgaben
-  grundsätzlich vertraut sind.
-- `Actor.web(String, PermissionEvaluator)` - Platzhalter für eine künftige
-  Web-Session (siehe ROADMAP.md Phase 6); es existiert noch keine
-  Web-Schicht, aber die Stelle für einen eigenen, session-basierten
-  `PermissionEvaluator` ist schon da.
+- `Actor.player(UUID, String, PermissionEvaluator)` - a real player.
+- `Actor.console()` / `Actor.system(String)` - always authorized
+  (`PermissionEvaluator.allowAll()`), since the console and internal system
+  tasks are inherently trusted.
+- `Actor.web(String, PermissionEvaluator)` - a placeholder for a future web
+  session (see ROADMAP.md Phase 6); there's no web layer yet, but the spot
+  for its own session-based `PermissionEvaluator` is already there.
 
-## `Source` - wie die Action ausgelöst wurde
+## `Source` - How the Action Was Triggered
 
 ```java
 public enum Source { GUI, COMMAND, WEB, API, EXTENSION, SYSTEM }
 ```
 
-Bewusst getrennt vom `Actor`: derselbe Spieler kann in derselben Sitzung
-sowohl über die GUI als auch über `/admin` Actions auslösen - `Source` ist
-eine Eigenschaft der einzelnen Anfrage (`ActionContext`), nicht der
-Actor-Identität selbst.
+Deliberately separate from `Actor`: the same player can trigger actions
+both via the GUI and via `/admin` in the same session - `Source` is a
+property of the individual request (`ActionContext`), not of the actor
+identity itself.
 
 ## `ActionRequest`
 
@@ -195,17 +197,17 @@ public record ActionRequest<I>(ActionId id, ActionContext context, I input) {
 }
 ```
 
-Bündelt eine einzelne Anfrage an `ActionExecutor` - nützlich, wenn ein
-Frontend die Anfrage bauen und erst später (z. B. nach einer
-Bestätigungs-Dialog-Interaktion) tatsächlich ausführen will.
+Bundles a single request to `ActionExecutor` - useful when a frontend wants
+to build the request and only actually execute it later (e.g. after a
+confirmation-dialog interaction).
 
 ## Events
 
-`ActionExecutor` feuert `ActionEvent`s (`Executing` vor jeder Prüfung,
-danach genau eines von `Executed`/`Failed`) an registrierte
-`ActionEventListener`. Kein Bukkit-Event-Typ - bewusst, damit eine künftige
-Web-Session oder Extension ohne laufenden Paper-Event-Bus zuhören kann und
-`action` frei von Bukkit-Imports bleibt:
+`ActionExecutor` fires `ActionEvent`s (`Executing` before every check,
+after that exactly one of `Executed`/`Failed`) to registered
+`ActionEventListener`s. Not a Bukkit event type - deliberately, so a future
+web session or extension can listen without a running Paper event bus, and
+`action` stays free of Bukkit imports:
 
 ```java
 platform.actionExecutor().subscribe(event -> switch (event) {
@@ -215,9 +217,9 @@ platform.actionExecutor().subscribe(event -> switch (event) {
 });
 ```
 
-Ein werfender Listener bricht die Pipeline nicht ab - der Executor fängt
-und loggt. Gedacht als Anschlusspunkt für eine spätere Extension-API/
-WebSocket-Live-Ansicht, nicht als vollständiges Event-System heute.
+A throwing listener doesn't abort the pipeline - the executor catches and
+logs it. Meant as an attachment point for a future extension API/WebSocket
+live view, not a complete event system today.
 
 ## Undo (`ReversibleAction`)
 
@@ -227,39 +229,37 @@ public interface ReversibleAction<I, R> extends Action<I, R> {
 }
 ```
 
-Opt-in: eine Action, die ihren eigenen Effekt rückgängig machen kann,
-implementiert zusätzlich dieses Interface. `ActionExecutor.undo(id, context,
-input, result)` prüft dieselbe `permission()` wie die Vorwärts-Action und
-ruft `undo(...)`, falls die registrierte Action tatsächlich reversibel ist -
-sonst `ActionResult.Failure(VALIDATION, "... is not reversible")`.
+Opt-in: an action that can reverse its own effect additionally implements
+this interface. `ActionExecutor.undo(id, context, input, result)` checks
+the same `permission()` as the forward action and calls `undo(...)` if the
+registered action is actually reversible - otherwise
+`ActionResult.Failure(VALIDATION, "... is not reversible")`.
 
-**Es gibt noch keine Undo-*Historie*** (Stack vergangener Aufrufe, ein
-"letzte Aktion rückgängig machen"-GUI-Button) - das ist bewusst
-zurückgestellt; dies ist nur der Vertrag, auf dem ein späteres
-Undo-System aufbaut.
+**There is no undo *history* yet** (a stack of past calls, an "undo last
+action" GUI button) - that's deliberately deferred; this is only the
+contract a later undo system builds on.
 
-## Audit-Hook
+## Audit Hook
 
-`ActionExecutor` bekommt einen `AuditService` injiziert und baut nach jedem
-Lauf automatisch einen vollständigen `AuditEvent`
-([docs/user/audit-log.md](../user/audit-log.md) für die volle Feldliste):
-`type` spiegelt die `ActionId` (`namespace:name`), `module`/`target`/
-`source` kommen aus `ActionDefinition`/`ActionContext`/`targetExtractor`,
-`success` aus dem `ActionResult`. Ein Erfolg wird immer auditiert, außer die
-Action hat `.notAudited()` gesetzt (z. B. `GetPlayerProfileAction` - ein
-reiner Lesezugriff, bei dem jeder Aufruf sonst nur Log-Rauschen wäre); ein
-Fehlschlag (Permission verweigert, ungültige Eingabe, unerwarteter Fehler)
-wird nur auditiert, wenn die Action das explizit über
-`.auditFailures()` angefordert hat - gedacht für sicherheitsrelevante
-Actions, bei denen "jemand hat es versucht und wurde abgelehnt" selbst
-protokollierenswert ist.
+`ActionExecutor` gets an `AuditService` injected and automatically builds a
+complete `AuditEvent` after every run
+([docs/user/audit-log.md](../user/audit-log.md) for the full field list):
+`type` mirrors the `ActionId` (`namespace:name`), `module`/`target`/
+`source` come from `ActionDefinition`/`ActionContext`/`targetExtractor`,
+`success` from the `ActionResult`. A success is always audited unless the
+action set `.notAudited()` (e.g. `GetPlayerProfileAction` - a pure read
+where every call would otherwise just be log noise); a failure (permission
+denied, invalid input, unexpected error) is only audited if the action
+explicitly requested that via `.auditFailures()` - meant for
+security-relevant actions where "someone tried and was denied" is itself
+worth logging.
 
-Für alles, was über die generischen Felder hinausgeht (Grund, Alt-/Neuwert,
-Welt/Position, Metadata, Correlation-ID), liefert eine Action optional eine
-`AuditDetails`-Instanz über `ActionDefinition.Builder#auditDetails(BiFunction<I, ActionResult<R>, AuditDetails>)` -
-so füllt ein Feature-Entwickler nur die Felder, die für seine Action
-tatsächlich Sinn ergeben, statt jedes Mal ein vollständiges `AuditEvent` von
-Hand zu bauen:
+For anything beyond the generic fields (reason, old/new value, world/
+position, metadata, correlation id), an action optionally supplies an
+`AuditDetails` instance via
+`ActionDefinition.Builder#auditDetails(BiFunction<I, ActionResult<R>, AuditDetails>)`
+- so a feature developer only fills in the fields that actually make sense
+for their action, instead of hand-building a full `AuditEvent` every time:
 
 ```java
 ActionDefinition.builder(new SetGamemodeAction(playerService))
@@ -273,18 +273,17 @@ ActionDefinition.builder(new SetGamemodeAction(playerService))
         .build();
 ```
 
-Fehlgeschlagene Audit-Schreibvorgänge brechen die Pipeline nicht ab (nur
-geloggt) - ein Frontend soll nie an einem Audit-Fehler scheitern.
+A failed audit write doesn't abort the pipeline (only logged) - a frontend
+should never fail because of an audit error.
 
-Das ist bewusst der einzige Ort, an dem `action` auf `audit` trifft - siehe
-[docs/user/audit-log.md](../user/audit-log.md) für das eigentliche
-Audit-System (Repository, Query-Service, GUI), das auf dieser Grundlage
-aufbaut.
+This is deliberately the only place where `action` meets `audit` - see
+[docs/user/audit-log.md](../user/audit-log.md) for the actual audit system
+(repository, query service, GUI) built on this foundation.
 
-## Wo Actions registriert werden
+## Where Actions Get Registered
 
-`ActionRegistry` ist eine typisierte Registry (`ActionId → ActionDefinition<?,?>`).
-Module registrieren ihre Actions in `onEnable`:
+`ActionRegistry` is a typed registry (`ActionId → ActionDefinition<?,?>`).
+Modules register their actions in `onEnable`:
 
 ```java
 context.platform().actions().register(ActionDefinition.builder(new GetPlayerProfileAction(playerService))
@@ -293,13 +292,13 @@ context.platform().actions().register(ActionDefinition.builder(new GetPlayerProf
         .build());
 ```
 
-Ein Frontend baut einen `ActionRequest` mit der `ActionId` und ruft
-`platform.actionExecutor().execute(request)` - nie `Action.execute(...)`
-und nie eine konkrete Action-Klasse direkt.
+A frontend builds an `ActionRequest` with the `ActionId` and calls
+`platform.actionExecutor().execute(request)` - never `Action.execute(...)`
+and never a concrete action class directly.
 
-## Wann eine Action statt direktem Service-Aufruf?
+## When an Action Instead of a Direct Service Call?
 
-Nicht jeder Service-Aufruf muss eine `Action` sein. Eine `Action` lohnt
-sich, sobald eine Operation von mehr als einer Frontend-Art ausgelöst
-werden soll oder auditiert/berechtigt werden muss. Rein interne
-Lesezugriffe innerhalb eines Moduls können direkt über den Service laufen.
+Not every service call has to be an `Action`. An `Action` is worth it once
+an operation needs to be triggerable from more than one kind of frontend,
+or needs to be audited/authorized. Purely internal reads within a module
+can go straight through the service.

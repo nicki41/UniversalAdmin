@@ -1,47 +1,45 @@
-# 0004 - Strikte Trennung von GUI/Command-Frontend und Application Service
+# 0004 - Strict Separation of GUI/Command Frontend and Application Service
 
 ## Status
 
-Angenommen
+Accepted
 
-## Kontext
+## Context
 
-GUI-Klick-Handler und Command-Executors sind der Ort, an dem Business-
-Logik in Admin-Plugins erfahrungsgemäß landet, weil es der kürzeste Weg
-zum sichtbaren Ergebnis ist. Das macht die Logik weder testbar (sie hängt
-an einem Bukkit-`InventoryClickEvent`) noch wiederverwendbar (eine
-künftige Web-App oder ein Command für dieselbe Aktion müsste sie
-duplizieren).
+GUI click handlers and command executors are reliably where business logic
+ends up in admin plugins, because it's the shortest path to a visible
+result. That makes the logic neither testable (it's tied to a Bukkit
+`InventoryClickEvent`) nor reusable (a future web app or a command for the
+same action would have to duplicate it).
 
-## Entscheidung
+## Decision
 
-- `GuiPage` und Command-`Executor`-Implementierungen dürfen ausschließlich
-  Services oder `Action`s aufrufen. Keine Berechnung, keine Persistenz,
-  keine eigenständige Berechtigungslogik (Permission-*Checks* ja,
-  Permission-*Entscheidungen mit eigener Logik* nein) direkt im Handler.
-- Eine `GuiPage`-Implementierung bekommt ihre Abhängigkeiten (Services/
-  Actions) über den Konstruktor, nicht über Laufzeitzugriff auf ein
-  globales `UniversalAdmin`-Objekt beim Öffnen der Seite. Das erzwingt,
-  dass eine Seite ihre tatsächlichen Abhängigkeiten explizit deklariert
-  und macht sie ohne laufenden Server testbar (Service faken, Klick-
-  Handler-Methode direkt aufrufen).
-- Details und Code-Beispiel: [../gui.md](../gui.md).
+- `GuiPage` and command `Executor` implementations may only call services or
+  `Action`s. No computation, no persistence, no independent authorization
+  logic (permission *checks* yes, permission *decisions with their own
+  logic* no) directly in the handler.
+- A `GuiPage` implementation gets its dependencies (services/actions) via
+  the constructor, not through runtime access to a global `UniversalAdmin`
+  object when the page opens. That forces a page to explicitly declare its
+  actual dependencies and makes it testable without a running server (fake
+  the service, call the click-handler method directly).
+- Detail and code example: [../gui.md](../gui.md).
 
-## Konsequenzen
+## Consequences
 
-- Jede neue GUI-Funktion braucht (mindestens) einen Service/eine Action
-  darunter, auch wenn "es wäre einfacher, das hier direkt reinzuschreiben"
-  stimmt. Das ist der bewusste Trade-off.
-- Reviews können diese Regel mechanisch prüfen: taucht `Connection`,
-  `PreparedStatement` oder eine mehrzeilige Berechnung in einer
-  `GuiPage`-/Command-Klasse auf, ist das ein Regelverstoß.
-- Die Web-App (siehe [../web-future.md](../web-future.md)) kann später
-  dieselben Services/Actions nutzen, weil GUI/Commands sie nie mit
-  Logik "verunreinigt" haben.
+- Every new GUI feature needs (at least) a service/action underneath it,
+  even when "it would be simpler to just write it here" is true. That's the
+  deliberate trade-off.
+- Reviews can check this rule mechanically: if `Connection`,
+  `PreparedStatement`, or a multi-line computation shows up in a
+  `GuiPage`/command class, that's a rule violation.
+- The web app (see [../web-future.md](../web-future.md)) can later reuse the
+  same services/actions, because GUI/commands never "contaminated" them
+  with logic.
 
-## Alternativen
+## Alternatives
 
-- **Logik direkt im Click-Handler, "wird schon refactored, wenn nötig":**
-  Ist der Ausgangszustand, den dieses Projekt explizit vermeiden soll
-  (siehe Projektphilosophie). Refactoring nach der Tatsache passiert in
-  der Praxis selten, solange das Plugin funktioniert.
+- **Logic directly in the click handler, "it'll get refactored when
+  needed":** the starting state this project is explicitly meant to avoid
+  (see the project philosophy). Refactoring after the fact rarely happens
+  in practice once a plugin already works.

@@ -1,318 +1,315 @@
-# GUI-Framework
+# GUI Framework
 
-Dieses Dokument beschreibt das wiederverwendbare Ingame-GUI-Framework unter
-[`dev.universaladmin.gui`](../../src/main/java/dev/universaladmin/gui) und,
-am Ende, wie ein Modul darauf eine eigene Seite baut. Es ersetzt den
-"es gibt noch keine Framework-Entscheidung"-Stand aus
-[docs/architecture/gui.md](../architecture/gui.md) - dieses Dokument bleibt
-die Kurzfassung der Architekturregel (Frontend ruft nur Service/Action auf),
-hier steht das *Wie*.
+This document describes the reusable in-game GUI framework under
+[`dev.universaladmin.gui`](../../src/main/java/dev/universaladmin/gui) and,
+at the end, how a module builds its own page on top of it. It replaces the
+"no framework decision yet" state from
+[docs/architecture/gui.md](../architecture/gui.md) - that document remains
+the short version of the architecture rule (a frontend only calls a
+service/action), this one covers the *how*.
 
-Aktuell existieren zwei konkrete Seiten aus dem Framework selbst: das
-Hauptmenü (`MainMenuPage`) und eine Platzhalterseite pro eingebautem Modul
-(`PlaceholderGuiPage`) - siehe "Main Menu Skeleton" unten. Kein Modul hat
-heute eine echte Feature-GUI; das ist bewusst außerhalb dieses Tasks (siehe
-ROADMAP.md Phase 1).
+Currently two concrete pages from the framework itself exist: the main
+menu (`MainMenuPage`) and a placeholder page per built-in module
+(`PlaceholderGuiPage`) - see "Main Menu Skeleton" below. No module has a
+real feature GUI today; that's deliberately out of scope for this task
+(see ROADMAP.md Phase 1).
 
-## Die eine Architekturregel bleibt bestehen
+## The One Architecture Rule Still Holds
 
 ```
-GUI → Application Service / Action → Domain
+GUI → application service / action → domain
 ```
 
-Ein Klick-Handler (`GuiButton.ClickHandler`) ruft einen Service oder eine
-`Action` auf, nie SQL, nie mehrzeilige Berechnungen. Das Framework ändert
-daran nichts - es gibt dieser Regel nur eine gemeinsame, getestete
-Grundlage statt dass jede Seite ihren eigenen `InventoryClickListener`
-mitbringt. Siehe [docs/architecture/decisions/0004-gui-service-separation.md](../architecture/decisions/0004-gui-service-separation.md).
+A click handler (`GuiButton.ClickHandler`) calls a service or an `Action`,
+never SQL, never multi-line computation. The framework doesn't change
+that - it just gives this rule a shared, tested foundation instead of
+every page bringing its own `InventoryClickListener`. See
+[docs/architecture/decisions/0004-gui-service-separation.md](../architecture/decisions/0004-gui-service-separation.md).
 
-## Bausteine im Überblick
+## Building Blocks at a Glance
 
-| Baustein | Klasse | Zweck |
+| Building block | Class | Purpose |
 |---|---|---|
-| Seite | [`GuiPage`](../../src/main/java/dev/universaladmin/gui/GuiPage.java) | Das minimale, seit ADR-0004 bestehende Interface (`id()`, `open(Player)`). Jede Framework-Seite implementiert es über `AbstractGuiPage`. |
-| Basisklasse | [`AbstractGuiPage`](../../src/main/java/dev/universaladmin/gui/AbstractGuiPage.java) | Rendert Navigationsleiste (Back/Refresh/Close), Rest ist `renderContent(...)`. |
-| Listen-Basisklasse | [`AbstractListGuiPage<T>`](../../src/main/java/dev/universaladmin/gui/AbstractListGuiPage.java) | Async laden + paginieren + Loading/Empty/Error-Zustand, einmal implementiert. |
-| Session | [`GuiSession`](../../src/main/java/dev/universaladmin/gui/GuiSession.java) / [`GuiSessionManager`](../../src/main/java/dev/universaladmin/gui/GuiSessionManager.java) | Pro-Spieler-Zustand (Navigationshistorie, Attribute) - siehe "Player Session". |
-| Sichtbares Element | [`GuiItem`](../../src/main/java/dev/universaladmin/gui/GuiItem.java) / [`GuiButton`](../../src/main/java/dev/universaladmin/gui/GuiButton.java) | `GuiItem` ist rein optisch, `GuiButton` hat zusätzlich Klick-Handler + optionale Permission. |
-| Rendering | [`GuiView`](../../src/main/java/dev/universaladmin/gui/GuiView.java) | Ein gerendertes Inventory für einen Spieler; einziger Ort, der `Bukkit.createInventory` aufruft. |
-| Layout | [`GuiLayout`](../../src/main/java/dev/universaladmin/gui/GuiLayout.java) | Die eine Slot-Tabelle - siehe "Slots". |
-| Pagination | [`Pagination<T>`](../../src/main/java/dev/universaladmin/gui/Pagination.java) | Reine Logik (kein Bukkit), von `AbstractListGuiPage` genutzt. |
-| Klick-Routing | [`GuiListener`](../../src/main/java/dev/universaladmin/gui/GuiListener.java) | Der eine Bukkit-Listener für alle GUIs. |
-| Icons | [`IconProvider`](../../src/main/java/dev/universaladmin/gui/IconProvider.java) / [`MaterialIconProvider`](../../src/main/java/dev/universaladmin/gui/MaterialIconProvider.java) | Siehe "Icons". |
-| Bestätigung | [`ConfirmationDialog`](../../src/main/java/dev/universaladmin/gui/ConfirmationDialog.java) | Ja/Nein mit Danger-Level. |
-| Auswahl | [`SelectionDialog`](../../src/main/java/dev/universaladmin/gui/SelectionDialog.java) | Pick-one aus einer Liste, baut auf `AbstractListGuiPage` auf. |
-| Texteingabe | [`GuiTextInput`](../../src/main/java/dev/universaladmin/gui/GuiTextInput.java) | Freitext über die Paper-Dialog-API - siehe "Search". |
-| Bündel | [`GuiFramework`](../../src/main/java/dev/universaladmin/gui/GuiFramework.java) | `GuiSessionManager` + `IconProvider`, per Konstruktor an jede Seite gereicht (`UniversalAdmin#guiFramework()`). |
+| Page | [`GuiPage`](../../src/main/java/dev/universaladmin/gui/GuiPage.java) | The minimal interface from ADR-0004 (`id()`, `open(Player)`). Every framework page implements it via `AbstractGuiPage`. |
+| Base class | [`AbstractGuiPage`](../../src/main/java/dev/universaladmin/gui/AbstractGuiPage.java) | Renders the navigation bar (back/refresh/close), the rest is `renderContent(...)`. |
+| List base class | [`AbstractListGuiPage<T>`](../../src/main/java/dev/universaladmin/gui/AbstractListGuiPage.java) | Async loading + pagination + loading/empty/error state, implemented once. |
+| Session | [`GuiSession`](../../src/main/java/dev/universaladmin/gui/GuiSession.java) / [`GuiSessionManager`](../../src/main/java/dev/universaladmin/gui/GuiSessionManager.java) | Per-player state (navigation history, attributes) - see "Player Session". |
+| Visible element | [`GuiItem`](../../src/main/java/dev/universaladmin/gui/GuiItem.java) / [`GuiButton`](../../src/main/java/dev/universaladmin/gui/GuiButton.java) | `GuiItem` is purely visual, `GuiButton` additionally has a click handler + optional permission. |
+| Rendering | [`GuiView`](../../src/main/java/dev/universaladmin/gui/GuiView.java) | A rendered inventory for one player; the only place that calls `Bukkit.createInventory`. |
+| Layout | [`GuiLayout`](../../src/main/java/dev/universaladmin/gui/GuiLayout.java) | The one slot table - see "Slots". |
+| Pagination | [`Pagination<T>`](../../src/main/java/dev/universaladmin/gui/Pagination.java) | Pure logic (no Bukkit), used by `AbstractListGuiPage`. |
+| Click routing | [`GuiListener`](../../src/main/java/dev/universaladmin/gui/GuiListener.java) | The one Bukkit listener for every GUI. |
+| Icons | [`IconProvider`](../../src/main/java/dev/universaladmin/gui/IconProvider.java) / [`MaterialIconProvider`](../../src/main/java/dev/universaladmin/gui/MaterialIconProvider.java) | See "Icons". |
+| Confirmation | [`ConfirmationDialog`](../../src/main/java/dev/universaladmin/gui/ConfirmationDialog.java) | Yes/no with a danger level. |
+| Selection | [`SelectionDialog`](../../src/main/java/dev/universaladmin/gui/SelectionDialog.java) | Pick one from a list, built on `AbstractListGuiPage`. |
+| Text input | [`GuiTextInput`](../../src/main/java/dev/universaladmin/gui/GuiTextInput.java) | Free text via the Paper dialog API - see "Search". |
+| Bundle | [`GuiFramework`](../../src/main/java/dev/universaladmin/gui/GuiFramework.java) | `GuiSessionManager` + `IconProvider`, passed to every page via the constructor (`UniversalAdmin#guiFramework()`). |
 
 ## Slots
 
-Keine Magic Numbers pro Feature - jede Seite rendert in dasselbe 6-reihige
-Layout, definiert einmal in `GuiLayout`:
+No magic numbers per feature - every page renders into the same six-row
+layout, defined once in `GuiLayout`:
 
 ```
-Reihe 0: Back (Slot 0) · Refresh (Slot 4) · Close (Slot 8)
-Reihe 1-4: Content-Bereich, 36 Slots - GuiLayout.contentSlot(0..35)
-Reihe 5: Previous (48) · Seitenanzeige (49) · Next (50)
+Row 0: Back (slot 0) · Refresh (slot 4) · Close (slot 8)
+Rows 1-4: content area, 36 slots - GuiLayout.contentSlot(0..35)
+Row 5: Previous (48) · page indicator (49) · Next (50)
 ```
 
-Eine Seite, die eigenen Content rendert, nutzt ausschließlich
-`GuiLayout.contentSlot(index)` statt einer Zahl - so bleibt "wo ist der
-Zurück-Button" plattformweit eine einzige Antwort.
+A page rendering its own content exclusively uses
+`GuiLayout.contentSlot(index)` instead of a raw number - so "where is the
+back button" stays a single, platform-wide answer.
 
 ## Navigation
 
-Der gesamte Navigationsmechanismus ist genau ein Konzept: **eine Seite
-öffnen ist immer `GuiPage#open(Player)`.**
+The entire navigation mechanism is exactly one concept: **opening a page
+is always `GuiPage#open(Player)`.**
 
-- **Vorwärts** (`GuiClickContext#open(GuiPage)`): merkt sich, wie die
-  aktuelle Seite neu gezeichnet wird (`() -> currentPage.open(viewer)`),
-  legt das auf `GuiSession`s Historie, öffnet dann die nächste Seite.
-- **Zurück** (`GuiClickContext#back()`): holt den obersten Historie-Eintrag
-  und führt ihn aus - das ruft schlicht wieder `open(...)` auf der
-  vorherigen Seite auf. Ohne Historie schließt `back()` das Inventar.
-- **Refresh**: der Refresh-Button in `AbstractGuiPage` ruft `this.open(viewer)`
-  erneut auf derselben Seite auf - kein Sonderfall, keine zweite Methode.
+- **Forward** (`GuiClickContext#open(GuiPage)`): remembers how the current
+  page redraws itself (`() -> currentPage.open(viewer)`), pushes that onto
+  `GuiSession`'s history, then opens the next page.
+- **Back** (`GuiClickContext#back()`): pops the top history entry and runs
+  it - which simply calls `open(...)` on the previous page again. With no
+  history, `back()` closes the inventory.
+- **Refresh**: the refresh button in `AbstractGuiPage` calls
+  `this.open(viewer)` again on the same page - no special case, no second
+  method.
 
-Kein separater Stack von `GuiPageId`s, der von Hand synchron gehalten
-werden müsste - "wie komme ich hierher zurück" ist immer ausführbarer Code,
-kein Datum.
+No separate stack of `GuiPageId`s that would need to be kept in sync by
+hand - "how do I get back here" is always executable code, never a piece
+of data.
 
 ## Pagination
 
-`Pagination<T>` ist reine, ungetestete-Bukkit-freie Logik: Slice-Berechnung,
-Clamping bei leerer/zu kurzer Liste, `hasPrevious()`/`hasNext()`. Ein
-Seitenwechsel ändert nur die Seitenzahl (in der `GuiSession` unter
-`<pageId>.page` abgelegt) und ruft `open(viewer)` erneut auf - dieselbe
-Refresh-Mechanik wie oben.
+`Pagination<T>` is pure, Bukkit-free logic: slice calculation, clamping for
+an empty/short list, `hasPrevious()`/`hasNext()`. Changing pages only
+changes the page number (stored in `GuiSession` under `<pageId>.page`) and
+calls `open(viewer)` again - the same refresh mechanism as above.
 
 ## Async Data
 
-`AbstractListGuiPage<T>` ist die vollständige Referenz für den geforderten
-Ablauf:
+`AbstractListGuiPage<T>` is the complete reference for the required flow:
 
 ```
-open() → Loading-Platzhalter rendern (sofort)
-       → loadItems(viewer) auf dem TaskScheduler
+open() → render a loading placeholder (immediately)
+       → loadItems(viewer) on the TaskScheduler
        → whenComplete(...) → scheduler.runOnMainThread(...)
-       → GuiView erneut befüllen
+       → repopulate the GuiView
 ```
 
-**Keine Inventory-Mutation außerhalb des Main-Threads** - siehe
-[docs/architecture/threading.md](../architecture/threading.md). Ein
-Ergebnis, das eintrifft, nachdem der Spieler die Seite verlassen hat, wird
-erkannt (`viewer.getOpenInventory().getTopInventory().getHolder() == view`)
-und verworfen, statt ein geschlossenes/fremdes Inventory zu mutieren.
+**No inventory mutation off the main thread** - see
+[docs/architecture/threading.md](../architecture/threading.md). A result
+that arrives after the player has already left the page is detected
+(`viewer.getOpenInventory().getTopInventory().getHolder() == view`) and
+discarded, instead of mutating a closed/foreign inventory.
 
-Ein Fehler im geladenen `CompletableFuture` rendert den Error-Zustand
-(`gui.error`, Refresh versucht es erneut); eine leere Liste rendert den
-Empty-Zustand (`gui.empty`); während des Ladens den Loading-Zustand
-(`gui.loading`) - alle drei über `IconProvider`/`MessageService`, nie fest
-codiert.
+An error in the loaded `CompletableFuture` renders the error state
+(`gui.error`, refresh retries); an empty list renders the empty state
+(`gui.empty`); while loading, the loading state (`gui.loading`) - all
+three via `IconProvider`/`MessageService`, never hardcoded.
 
 ## Permissions
 
-Ein `GuiButton` trägt optional einen `PermissionNode`. Die Regel ist
-mechanisch erzwungen, nicht nur dokumentiert: `GuiView#place(int, GuiButton, Player)`
-platziert den Button nur, wenn `viewer.hasPermission(...)` wahr ist -
-andernfalls bleibt der Slot leer ("hide by default", kein disabled-grau).
-`GuiButton#handle` prüft beim Klick sicherheitshalber erneut (Verteidigung
-gegen einen Klick, der mit einer Rechteänderung wettläuft).
+A `GuiButton` optionally carries a `PermissionNode`. The rule is
+mechanically enforced, not just documented: `GuiView#place(int, GuiButton, Player)`
+only places the button if `viewer.hasPermission(...)` is true - otherwise
+the slot stays empty ("hide by default", no grayed-out disabled state).
+`GuiButton#handle` checks again on click as a safety net (defense against
+a click racing a permission change).
 
-**GUI-Permission ist ausschließlich Darstellung.** Der Service/die Action,
-die ein Button am Ende aufruft, muss selbst erneut autorisieren - siehe
+**GUI permission is display only.** The service/action a button ultimately
+calls must re-authorize itself - see
 [docs/architecture/decisions/0004-gui-service-separation.md](../architecture/decisions/0004-gui-service-separation.md)
-und [SECURITY.md](../../SECURITY.md). Ein optionaler "disabled, aber
-sichtbar"-Zustand ist bewusst kein Framework-Feature: eine Seite, die das
-will, rendert selbst ein `GuiItem` (ohne Klick-Handler) statt eines
-`GuiButton`, wenn `viewer.hasPermission(...)` fehlschlägt.
+and [SECURITY.md](../../SECURITY.md). An optional "disabled but visible"
+state is deliberately not a framework feature: a page that wants that
+renders its own `GuiItem` (with no click handler) instead of a
+`GuiButton` when `viewer.hasPermission(...)` fails.
 
 ## Icons
 
-Kein `Material` verstreut im Feature-Code. `IconProvider#resolve(GuiIcon)`
-ist die einzige Stelle, die aus einem [`GuiIcon`](../../src/main/java/dev/universaladmin/module/GuiIcon.java)
-(materialKey + Label, siehe `ModuleDescriptor.icon()`) ein `Material` macht;
-`MaterialIconProvider` ist die Standardimplementierung (unbekannter Key →
-`PAPER` + einmalige Warnung, dasselbe Fallback-Prinzip wie `YamlSettingsService`
-bei einem ungültigen Config-Wert). Die feste Handvoll Framework-Icons
-(Back/Close/Refresh/Pagination/Loading/Empty/Error/Confirm/Cancel) sind
-Default-Methoden auf `IconProvider` - auch hier wählt keine Seite selbst
-ein `Material`.
+No `Material` scattered through feature code. `IconProvider#resolve(GuiIcon)`
+is the only place that turns a [`GuiIcon`](../../src/main/java/dev/universaladmin/module/GuiIcon.java)
+(materialKey + label, see `ModuleDescriptor.icon()`) into a `Material`;
+`MaterialIconProvider` is the default implementation (unknown key →
+`PAPER` + a one-time warning, the same fallback principle as
+`YamlSettingsService` for an invalid config value). The small fixed set of
+framework icons (back/close/refresh/pagination/loading/empty/error/
+confirm/cancel) are default methods on `IconProvider` - here too, no page
+picks its own `Material`.
 
 ## Player Session
 
-`GuiSession` (Navigationshistorie + Attribut-Bag) und `GuiSessionManager`
-(`Map<UUID, GuiSession>`) halten **niemals** eine `Player`-Referenz, nur
-die `UUID` - ein `Player`-Objekt langfristig zu halten ist ein klassischer
-Weg, veraltete/tote Referenzen anzusammeln, sobald der Spieler den Server
-verlässt und ein neues `Player`-Objekt für dieselbe Session entsteht. Jede
-Framework-Klasse holt sich den lebenden `Player` immer frisch aus dem
-auslösenden Bukkit-Event.
+`GuiSession` (navigation history + attribute bag) and `GuiSessionManager`
+(`Map<UUID, GuiSession>`) **never** hold a `Player` reference, only the
+`UUID` - holding a `Player` object long-term is a classic way to
+accumulate stale/dead references once the player leaves the server and a
+new `Player` object is created for the same session. Every framework
+class always fetches the live `Player` fresh from the triggering Bukkit
+event.
 
-Eine registrierte `AbstractGuiPage` ist ein Singleton, das von jedem
-Spieler geteilt wird (wie jeder andere Service in diesem Codebase) - sie
-darf also selbst **keinen** Instanzzustand pro Spieler halten (kein
-`private int currentPage`!). Genau dafür existiert `GuiSession`: Zustand,
-der nur für einen Spieler gilt, lebt dort, keyed über den eigenen
-`GuiPageId` (z. B. `core:players.list.page`), nie als Instanzfeld der Seite.
+A registered `AbstractGuiPage` is a singleton shared by every player (like
+any other service in this codebase) - so it may hold **no** per-player
+instance state itself (no `private int currentPage`!). That's exactly why
+`GuiSession` exists: state that only applies to one player lives there,
+keyed by its own `GuiPageId` (e.g. `core:players.list.page`), never as an
+instance field of the page.
 
-**Kein Memory Leak:** `GuiListener` entfernt eine Session, sobald das
-zugehörige Inventory aus einem "echten" Grund schließt (`PLAYER`,
-`DISCONNECT`, ...) - nicht bei `OPEN_NEW` (das sind wir selbst, die zur
-nächsten Seite navigieren). `PlayerQuitEvent` entfernt zusätzlich
-defensiv, unabhängig von der Close-Event-Reihenfolge. Siehe
-[`GuiSessionManager`](../../src/main/java/dev/universaladmin/gui/GuiSessionManager.java)s
-Klassenkommentar für das vollständige Argument.
+**No memory leak:** `GuiListener` removes a session as soon as the
+associated inventory closes for a "real" reason (`PLAYER`, `DISCONNECT`,
+...) - not on `OPEN_NEW` (that's us navigating to the next page ourselves).
+`PlayerQuitEvent` additionally removes it defensively, independent of the
+close-event ordering. See
+[`GuiSessionManager`](../../src/main/java/dev/universaladmin/gui/GuiSessionManager.java)'s
+class comment for the full argument.
 
 ## Click Handling
 
-Ein einziger [`GuiListener`](../../src/main/java/dev/universaladmin/gui/GuiListener.java),
-registriert einmal in `UniversalAdminPlugin#bootstrapCore` - kein Feature
-registriert einen eigenen `InventoryClickEvent`-Handler. Erkennung über
-`inventory.getHolder() instanceof GuiView` (nicht über den Titel-String,
-der sich pro Locale unterscheiden könnte).
+A single [`GuiListener`](../../src/main/java/dev/universaladmin/gui/GuiListener.java),
+registered once in `UniversalAdminPlugin#bootstrapCore` - no feature
+registers its own `InventoryClickEvent` handler. Detection is via
+`inventory.getHolder() instanceof GuiView` (not the title string, which
+could differ per locale).
 
-Standardverhalten für jede Seite: das gesamte Klick-Event wird abgebrochen
-(`setCancelled(true)`) - nichts kann aus dem GUI entnommen, hineingezogen
-oder per Shift-Klick verschoben werden. Ein Klick auf einen Slot mit
-`GuiButton` löst dessen `ClickHandler` mit dem passenden `GuiClickType`
-(LEFT/SHIFT_LEFT/RIGHT/SHIFT_RIGHT/MIDDLE/OTHER) aus; ein Klick auf einen
-leeren/dekorativen Slot wird nur abgebrochen, nichts weiter.
+Default behavior for every page: the entire click event is cancelled
+(`setCancelled(true)`) - nothing can be taken out of, dragged into, or
+shift-clicked out of the GUI. A click on a slot with a `GuiButton` fires
+its `ClickHandler` with the matching `GuiClickType` (LEFT/SHIFT_LEFT/
+RIGHT/SHIFT_RIGHT/MIDDLE/OTHER); a click on an empty/decorative slot is
+only cancelled, nothing more.
 
-`GuiView#editable(boolean)` schaltet den automatischen Cancel ab, sodass
-freies Ziehen/Ablegen innerhalb der (synthetischen, per `GuiListener`
-geschützten) `GuiView` möglich wird - genutzt z. B. von
+`GuiView#editable(boolean)` turns off the automatic cancel, allowing free
+drag/drop within the (synthetic, `GuiListener`-protected) `GuiView` -
+used e.g. by
 `dev.universaladmin.modules.players.gui.PlayerInventoryPage`/
-`PlayerEnderChestPage` für den Inventar-/Enderchest-Editor. Ein Slot mit
-einem registrierten `GuiButton` bleibt dabei immer geschützt (siehe
-`GuiListener`) - so lassen sich einzelne Slots (z. B. dekorative Filler
-zwischen zwei Bereichen) auch in einer editierbaren Seite sperren, indem man
-sie als `GuiButton` mit No-op-Handler statt als reines `GuiItem` platziert.
+`PlayerEnderChestPage` for the inventory/ender chest editor. A slot with a
+registered `GuiButton` stays protected regardless (see `GuiListener`) - so
+individual slots (e.g. decorative filler between two areas) can still be
+locked on an editable page by placing them as a `GuiButton` with a no-op
+handler instead of a plain `GuiItem`.
 
-`GuiView#onClose(Consumer<GuiView>)` ist der Anschlusspunkt für eine
-editierbare Seite, die ohne separaten Save-Button auskommen will: der
-Callback läuft, sobald die View wirklich schließt (nicht beim Navigieren zu
-einer anderen UniversalAdmin-Seite - dieselbe `OPEN_NEW`-Unterscheidung wie
-beim Session-Cleanup), zu dem Zeitpunkt ist jeder Drag/Klick der Spielerin
-bereits im `Inventory` angekommen. `PlayerInventoryPage`/`PlayerEnderChestPage`
-lesen dort den finalen Inhalt aus und rufen ganz normal
-`SetPlayerInventoryContentsAction`/`SetPlayerEnderChestContentsAction` über
-`ActionExecutor` auf - "live" heißt hier "kein Save-Klick nötig", nicht "am
-`ActionExecutor` vorbei direkt ins echte Inventory schreiben" (siehe
-docs/user/modules/players.md für die volle Begründung, warum ein direkt
-geöffnetes `PlayerInventory` des Ziels bewusst *nicht* der gewählte Weg ist).
+`GuiView#onClose(Consumer<GuiView>)` is the attachment point for an
+editable page that wants to skip a separate save button: the callback runs
+once the view actually closes (not when navigating to another
+UniversalAdmin page - the same `OPEN_NEW` distinction as session cleanup),
+by which point every drag/click by the player has already landed in the
+`Inventory`. `PlayerInventoryPage`/`PlayerEnderChestPage` read the final
+contents there and call `SetPlayerInventoryContentsAction`/
+`SetPlayerEnderChestContentsAction` through `ActionExecutor` normally -
+"live" here means "no save click needed", not "bypass `ActionExecutor` and
+write straight into the real inventory" (see docs/user/modules/players.md
+for the full reasoning on why a directly opened `PlayerInventory` of the
+target is deliberately *not* the chosen path).
 
 ## Confirmations
 
-`ConfirmationDialog.open(...)` rendert ein kleines Inventory (nicht die
-Paper-Dialog-API - siehe "Search" unten für die Abwägung, wann welche
-Lösung passt) mit Titel, Beschreibung, Confirm-/Cancel-Button und einem
-`DangerLevel` (`NORMAL`/`WARNING`/`DANGEROUS`), der die Confirm-Button-Farbe
-über `IconProvider#confirm(DangerLevel)` bestimmt (Lime/Gelb/Rot-Wolle).
-Ephemer: nicht in `GuiRegistry` registriert, ein Klick-Handler öffnet
-direkt eine neue Instanz mit den konkreten Parametern (z. B. "Spieler X
-bannen?"). Vorgesehen für Ban/Clear-Inventory/Restart/Shutdown/Entity-Clear,
-sobald die jeweiligen Module das brauchen - noch nicht verdrahtet.
+`ConfirmationDialog.open(...)` renders a small inventory (not the Paper
+dialog API - see "Search" below for the trade-off between the two) with a
+title, description, confirm/cancel button, and a `DangerLevel`
+(`NORMAL`/`WARNING`/`DANGEROUS`) that determines the confirm button's color
+via `IconProvider#confirm(DangerLevel)` (lime/yellow/red wool). Ephemeral:
+not registered in `GuiRegistry`, a click handler opens a fresh instance
+directly with the concrete parameters (e.g. "ban player X?"). Intended for
+ban/clear-inventory/restart/shutdown/entity-clear, once the respective
+modules need it - not wired up yet.
 
 ## Selection
 
-`SelectionDialog.open(...)` ist Pick-one-aus-einer-Liste, implementiert als
-dünner Adapter über `AbstractListGuiPage` - dieselbe Pagination/Async-
-Maschinerie wie jede andere Listenseite, nur mit einem einmaligen Callback
-statt einer registrierten `GuiPageId`.
+`SelectionDialog.open(...)` is pick-one-from-a-list, implemented as a thin
+adapter over `AbstractListGuiPage` - the same pagination/async machinery
+as any other list page, just with a one-off callback instead of a
+registered `GuiPageId`.
 
 ## Search
 
-Minecraft-Inventories haben kein Textfeld, und dieses Projekt schließt
-Packet-Hacks/ProtocolLib/NMS aus (siehe docs/development/architecture-rules.md). Geprüfte Optionen:
+Minecraft inventories have no text field, and this project rules out
+packet hacks/ProtocolLib/NMS (see docs/development/architecture-rules.md).
+Options considered:
 
-- **Anvil-GUI-Hack** (umbenennbarer Amboss als Texteingabe): funktioniert
-  nur über ein "leeres" Rezept + Klick-Interception, ist in der Praxis ein
-  Packet-/NMS-nahes Verhalten je nach Implementierung - verworfen.
-- **Chat-Input-Session** (nächste Chat-Nachricht des Spielers abfangen):
-  funktioniert, kollidiert aber mit `AsyncPlayerChatEvent`/anderen Plugins,
-  die auf Chat hören, und der Spieler tippt "irgendwo im Chat", nicht in
-  einem erkennbaren UI-Kontext - kein sauberer Zustand, kein Timeout ohne
-  Zusatzaufwand.
-- **Sign API**: erzwingt eine Schild-Textur/Blockplatzierung als
-  Eingabefläche - funktional, aber visuell und UX-mäßig ein Fremdkörper
-  für ein Menü, das sonst komplett Inventory-basiert ist.
+- **Anvil GUI hack** (a renamable anvil as text input): only works via an
+  "empty" recipe plus click interception, in practice a packet-/NMS-
+  adjacent behavior depending on the implementation - rejected.
+- **Chat input session** (intercept the player's next chat message):
+  works, but collides with `AsyncPlayerChatEvent`/other plugins listening
+  to chat, and the player types "somewhere in chat", not in a recognizable
+  UI context - no clean state, no timeout without extra work.
+- **Sign API**: forces a sign texture/block placement as the input
+  surface - functional, but a visual and UX mismatch for a menu that's
+  otherwise entirely inventory-based.
 - **Paper Dialog API** (`io.papermc.paper.dialog.Dialog`,
-  `Player#showDialog`, `TextDialogInput`): serverseitig definierte,
-  clientseitig gerenderte Eingabemaske - kein Packet-Hack, offizieller
-  Bestandteil der Ziel-Paper-Version (bestätigt im `paper-api`-Jar dieses
-  Projekts). **Gewählt.**
+  `Player#showDialog`, `TextDialogInput`): a server-defined,
+  client-rendered input form - not a packet hack, an official part of the
+  target Paper version (confirmed in this project's `paper-api` jar.
+  **Chosen.**
 
 [`GuiTextInput.request(...)`](../../src/main/java/dev/universaladmin/gui/GuiTextInput.java)
-baut einen `Dialog` mit einem Textfeld plus Submit-/Cancel-Button; jeder
-Button ist ein `DialogAction.customClick(...)`-Callback mit `uses(1)` und
-zwei Minuten Lebensdauer, damit ein nie beantworteter Dialog nicht
-wiederholt/repliziert werden kann. Der Callback läuft (wie ein Command
-oder ein Klick-Event) auf dem Main-Thread - ein Aufrufer, der daraufhin
-blockierendes IO braucht, muss selbst über `TaskScheduler` abspringen,
-genau wie überall sonst.
+builds a `Dialog` with a text field plus submit/cancel button; each button
+is a `DialogAction.customClick(...)` callback with `uses(1)` and a
+two-minute lifetime, so a dialog that's never answered can't be replayed.
+The callback runs (like a command or a click event) on the main thread -
+a caller that needs blocking IO afterward has to hop off via
+`TaskScheduler` itself, same as everywhere else.
 
-Ein "Search"-Button einer künftigen Listenseite ruft also z. B.:
+A "search" button on a future list page would call, for example:
 
 ```java
 GuiTextInput.request(
         viewer, title, label, previousQuery, submitLabel, cancelLabel,
-        query -> { /* Ergebnisse filtern, Seite neu öffnen */ },
-        () -> { /* nichts tun oder zur Liste zurück */ });
+        query -> { /* filter results, reopen the page */ },
+        () -> { /* do nothing, or go back to the list */ });
 ```
 
 ## Main Menu Skeleton
 
-`MainMenuPage` (`/admin` ohne Argumente, siehe unten) zeigt einen Button
-pro eingebautem Modul, gefiltert nach:
+`MainMenuPage` (`/admin` with no arguments, see below) shows one button per
+built-in module, filtered by:
 
-1. **Modul tatsächlich `ENABLED`** (`ModuleRegistry#state(...)`) - ein per
-   `config.yml` deaktiviertes oder fehlgeschlagenes Modul taucht gar nicht
-   auf, nicht als "disabled" angezeigt.
-2. **Berechtigung** - dasselbe bestehende Permission-Node des jeweiligen
-   Moduls (`universaladmin.players.view`, `universaladmin.moderation.use`,
-   ...), über `GuiButton`s Hide-by-default-Regel.
+1. **The module is actually `ENABLED`** (`ModuleRegistry#state(...)`) - a
+   module disabled via `config.yml` or failed doesn't show up at all,
+   never as "disabled".
+2. **Permission** - the module's own existing permission node
+   (`universaladmin.players.view`, `universaladmin.moderation.use`, ...),
+   via `GuiButton`'s hide-by-default rule.
 
-`MainMenuPage` referenziert jedes Modul nur über sein `ModuleId`-Literal
-(`ModuleId.core("players")`, identisch zu dem, was jede Modulklasse selbst
-für sich definiert) - **nicht** über einen Import der konkreten
-`dev.universaladmin.modules.*`-Klasse. Das GUI-Framework-Package bleibt
-damit generisch und hängt nicht "nach oben" von einzelnen Built-in-Modulen
-ab, siehe [Entwicklungsregeln](architecture-rules.md)s "Package-Regeln"-Abschnitt.
+`MainMenuPage` only references each module through its `ModuleId` literal
+(`ModuleId.core("players")`, identical to what each module class defines
+for itself) - **not** through an import of the concrete
+`dev.universaladmin.modules.*` class. That keeps the GUI framework package
+generic and not dependent "upward" on individual built-in modules, see
+the "Package Rules" section of the
+[development rules](architecture-rules.md).
 
-Jeder Button öffnet heute eine `PlaceholderGuiPage` ("noch nicht gebaut")
-unter einer stabilen `GuiPageId` (`core:<modul>.home`, z. B.
-`core:players.home`). Ein Modul, das später eine echte GUI bekommt,
-registriert seine eigene Seite unter derselben `GuiPageId` - `GuiRegistry`
-erlaubt genau einen Eigentümer pro Id, die Platzhalterregistrierung in
-`UniversalAdminPlugin#registerMainMenu` muss dann für dieses Modul entfernt
-werden.
+Every button today opens a `PlaceholderGuiPage` ("not built yet") under a
+stable `GuiPageId` (`core:<module>.home`, e.g. `core:players.home`). A
+module that later gets a real GUI registers its own page under the same
+`GuiPageId` - `GuiRegistry` allows exactly one owner per id, so the
+placeholder registration in `UniversalAdminPlugin#registerMainMenu` then
+has to be removed for that module.
 
-## `/admin`-Command
+## The `/admin` Command
 
-- `/admin` (kein Argument): öffnet für einen Spieler `MainMenuPage`
-  (Permission `universaladmin.menu.open`, sonst `error.no-permission`).
-  Für Konsole/Command-Block (kann kein Inventory sehen) bleibt der
-  bisherige Text-Statusbericht erhalten.
-- `/admin reload`: unverändert, komplett getrennt vom Menü - siehe
+- `/admin` (no argument): opens `MainMenuPage` for a player (permission
+  `universaladmin.menu.open`, otherwise `error.no-permission`). For
+  console/command blocks (can't see an inventory), the previous text
+  status report remains.
+- `/admin reload`: unchanged, entirely separate from the menu - see
   [docs/user/configuration.md#reload](../user/configuration.md#reload).
 
-## Extension-Fähigkeit
+## Extension Readiness
 
-Wie der Rest der Plattform (siehe
-[docs/architecture/decisions/0005-extension-ready-design.md](../architecture/decisions/0005-extension-ready-design.md))
-ist dieses Framework so gebaut, dass eine künftige externe Extension
-dieselben Bausteine nutzen könnte wie ein eingebautes Modul - `AbstractGuiPage`,
-`GuiButton`, `GuiFramework` sind nicht an `dev.universaladmin.modules.*`
-gekoppelt. Es gibt aber **noch keine öffentliche, versionierte API-Grenze**
-(kein `universaladmin-api`-Modul, siehe ROADMAP.md Phase 4) - dieses
-Package kann sich also noch ohne Kompatibilitätsversprechen ändern.
+Like the rest of the platform (see
+[docs/architecture/decisions/0005-extension-ready-design.md](../architecture/decisions/0005-extension-ready-design.md)),
+this framework is built so a future external extension could use the same
+building blocks as a built-in module - `AbstractGuiPage`, `GuiButton`,
+`GuiFramework` aren't coupled to `dev.universaladmin.modules.*`. But there
+is **no public, versioned API boundary yet** (no `universaladmin-api`
+module, see ROADMAP.md Phase 4) - so this package can still change without
+a compatibility promise.
 
-## Ein Modul baut eine Seite: Beispiel
+## A Module Builds a Page: Example
 
-Angenommen, `PlayersModule` bekäme eine echte "Spielerliste"-Seite (noch
-nicht Teil dieses Tasks, aber das Muster ist bereits nutzbar). Der Service
-existiert schon (`PlayerService`, siehe
+Suppose `PlayersModule` got a real "player list" page (not yet part of
+this task, but the pattern is already usable). The service already exists
+(`PlayerService`, see
 [docs/development/adding-module.md](adding-module.md)):
 
 ```java
@@ -332,12 +329,12 @@ public final class PlayerListPage extends AbstractListGuiPage<PlayerProfile> {
 
     @Override
     protected Component title(Player viewer) {
-        return text("players.gui.title"); // neuer lang-Key, kein hartcodierter String
+        return text("players.gui.title"); // a new lang key, no hardcoded string
     }
 
     @Override
     protected CompletableFuture<List<PlayerProfile>> loadItems(Player viewer) {
-        return playerService.allProfiles(); // Service, keine Repository-/SQL-Kenntnis hier
+        return playerService.allProfiles(); // service, no repository/SQL knowledge here
     }
 
     @Override
@@ -347,13 +344,13 @@ public final class PlayerListPage extends AbstractListGuiPage<PlayerProfile> {
 
     @Override
     protected void onSelect(GuiClickContext ctx, PlayerProfile profile) {
-        ctx.open(new PlayerDetailPage(framework, messages, profile)); // Vorwärtsnavigation
+        ctx.open(new PlayerDetailPage(framework, messages, profile)); // forward navigation
     }
 }
 ```
 
-Registrierung in `PlayersModule#onEnable` ersetzt einfach die bisherige
-`PlaceholderGuiPage`-Registrierung für `core:players.home`:
+Registration in `PlayersModule#onEnable` simply replaces the previous
+`PlaceholderGuiPage` registration for `core:players.home`:
 
 ```java
 context.platform().guiPages().register(
@@ -361,8 +358,8 @@ context.platform().guiPages().register(
                 context.platform().scheduler(), playerService));
 ```
 
-Kein `InventoryClickListener`, kein Pagination-Code, kein manuelles
-Main-Thread-Hopping - alles davon liefert `AbstractListGuiPage`. Der
-Klick-Handler (`onSelect`) ruft ausschließlich Navigation und (indirekt,
-über den Service) Domain-Logik auf, nie SQL oder Berechnung direkt - siehe
-"Die eine Architekturregel bleibt bestehen" oben.
+No `InventoryClickListener`, no pagination code, no manual main-thread
+hopping - `AbstractListGuiPage` provides all of that. The click handler
+(`onSelect`) only calls navigation and (indirectly, through the service)
+domain logic, never SQL or computation directly - see "The One
+Architecture Rule Still Holds" above.

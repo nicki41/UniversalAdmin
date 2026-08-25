@@ -22,7 +22,7 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
  * still natively whitelisted but whose UniversalAdmin-tracked entry has
  * already expired (the periodic sweep just hasn't reached them yet). Pure
  * event-to-service-call translation, no business logic here (see docs/development/architecture-rules.md's
- * "keine Bukkit-Event-Listener mit Logik" rule) - the expiry decision is
+ * "no Bukkit event listeners with logic" rule) - the expiry decision is
  * {@link WhitelistEntry#isExpired}, and the actual cleanup runs through
  * {@link ActionExecutor} exactly like the periodic sweep (see {@link
  * WhitelistExpirySweeper}), so both paths produce the same audit entry

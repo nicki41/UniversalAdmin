@@ -1,51 +1,50 @@
-# 0005 - Built-in-Module nutzen dieselben Abstraktionen wie künftige Extensions
+# 0005 - Built-in Modules Use the Same Abstractions as Future Extensions
 
 ## Status
 
-Angenommen
+Accepted
 
-## Kontext
+## Context
 
-UniversalAdmin soll später Community- und offizielle Extensions zulassen,
-die Module, GUI-Pages, Actions, Permissions, Migrationen usw. registrieren
-können (vollständige Liste in [../extensions-future.md](../extensions-future.md)).
-Eine öffentliche, versionierte Extension-API wird explizit *nicht* in
-diesem Schritt gebaut. Das Risiko: wenn Built-in-Module intern anders
-funktionieren als eine spätere Extension funktionieren müsste, erzwingt
-der API-Cut später einen Rewrite der Built-ins.
+UniversalAdmin should later allow community and official extensions that
+can register modules, GUI pages, actions, permissions, migrations, and so
+on (full list in [../extensions-future.md](../extensions-future.md)). A
+public, versioned extension API is explicitly *not* built at this stage.
+The risk: if built-in modules internally work differently from how a future
+extension would need to work, the later API cut forces a rewrite of the
+built-ins.
 
-## Entscheidung
+## Decision
 
-Built-in-Module implementieren exakt das `Module`-Interface, das später
-auch eine externe Extension implementieren würde - kein interner
-"Fast-Path" für Built-ins, der an Zustand hängt, den nur der Core sehen
-kann. Alle Registries (`ActionRegistry`, `GuiRegistry`, `PermissionRegistry`,
-`ServiceRegistry`, `MigrationRunner`) sind bereits so geschnitten, dass
-Herkunft (eingebaut vs. extern) keine Rolle für die Registrierung spielt.
+Built-in modules implement exactly the `Module` interface a future external
+extension would also implement - no internal "fast path" for built-ins that
+depends on state only the core can see. All registries (`ActionRegistry`,
+`GuiRegistry`, `PermissionRegistry`, `ServiceRegistry`, `MigrationRunner`)
+are already cut so that origin (built-in vs. external) plays no role in
+registration.
 
-Namespacing (`Key`, siehe `dev.universaladmin.core.id.Key`) ist von Anfang
-an Teil jeder Registry-ID (`ModuleId`, `ActionId`, `GuiPageId`,
-`AuditEventType`), damit eine künftige Extension mit eigenem Namespace nie
-mit einem Core-Namespace (`core:*`) kollidieren kann.
+Namespacing (`Key`, see `dev.universaladmin.core.id.Key`) is part of every
+registry id (`ModuleId`, `ActionId`, `GuiPageId`, `AuditEventType`) from the
+start, so a future extension with its own namespace can never collide with
+a core namespace (`core:*`).
 
-## Konsequenzen
+## Consequences
 
-- Jede neue Fähigkeit, die "nur für Built-ins" gebaut wird, ist ein
-  Regelverstoß gegen diese ADR, sofern sie nicht explizit als vorübergehende
-  Einschränkung dokumentiert wird (z. B. "es gibt noch keinen Extension-
-  Loader" ist okay, "Built-ins dürfen Dinge, die eine Extension technisch
-  nicht könnte" ist nicht okay).
-- Der spätere Schritt "API extrahieren" (siehe
+- Any new capability built "for built-ins only" is a violation of this ADR,
+  unless it's explicitly documented as a temporary limitation (e.g. "there
+  is no extension loader yet" is fine, "built-ins may do things an
+  extension technically couldn't" is not).
+- The later "extract the API" step (see
   [0006-optional-web-architecture.md](0006-optional-web-architecture.md))
-  wird dadurch zu einem Modul-Split mit dünner Versionierungsschicht
-  obendrauf, nicht zu einer Neuentwicklung der Extension-Punkte.
-- Es gibt aktuell trotzdem keine echte Abwärtskompatibilitätsgarantie -
-  interne Interfaces können sich bis zum API-Cut noch ändern. Diese ADR
-  regelt die *Form* der Abstraktionen, nicht deren *Stabilität*.
+  becomes a module split with a thin versioning layer on top, rather than a
+  redesign of the extension points.
+- There is still no real backward-compatibility guarantee today - internal
+  interfaces can still change before the API cut. This ADR governs the
+  *shape* of the abstractions, not their *stability*.
 
-## Alternativen
+## Alternatives
 
-- **Erst intern schnell bauen, API-Schicht separat nachziehen:** Ist
-  genau das Risiko, das diese ADR vermeiden soll - "separat nachziehen"
-  wird in der Praxis zum Rewrite, sobald Built-ins erst mal an internem
-  Zustand statt an registrierten Interfaces hängen.
+- **Build fast internally first, add the API layer separately later:** the
+  exact risk this ADR is meant to avoid - "add it separately later" turns
+  into a rewrite in practice, once built-ins depend on internal state
+  instead of registered interfaces.

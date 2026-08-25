@@ -1,77 +1,75 @@
-# 0007 - Ein typisiertes Settings-System statt verstreuter `config.getString(...)`-Aufrufe
+# 0007 - A Typed Settings System Instead of Scattered `config.getString(...)` Calls
 
 ## Status
 
-Angenommen
+Accepted
 
-## Kontext
+## Context
 
-`config.yml` sollte von Anfang an mehr als die Handvoll Werte tragen, die
-`YamlConfigService` bisher direkt aus `FileConfiguration` gelesen hat
-(Datenbank, Locale). Mit GUI-, Audit-, Modul-Toggle-, Performance- und
-Wartungs-Einstellungen dazu wächst die Zahl der Config-Werte deutlich -
-und mit ihr das Risiko, dass jede Stelle im Code ihren eigenen
-`config.getString("irgendwas")`-Aufruf mit eigenem Default und eigener
-(oder fehlender) Validierung mitbringt. Das ist genau das Muster, das
-[Entwicklungsregeln](../../development/architecture-rules.md) explizit vermeiden soll.
+`config.yml` was always meant to carry more than the handful of values
+`YamlConfigService` originally read directly from `FileConfiguration`
+(database, locale). Adding GUI, audit, module-toggle, performance, and
+maintenance settings on top grows the number of config values considerably
+- and with it the risk that every spot in the code brings its own
+`config.getString("something")` call with its own default and its own (or
+missing) validation. That's exactly the pattern the
+[development rules](../../development/architecture-rules.md) explicitly
+mean to avoid.
 
-Gleichzeitig soll das System später auch von Modulen und Extensions
-genutzt werden können (siehe
+At the same time, the system should later be usable by modules and
+extensions too (see
 [decisions/0005-extension-ready-design.md](0005-extension-ready-design.md))
-- nicht nur vom Core.
+- not just the core.
 
-## Entscheidung
+## Decision
 
-- **Ein** Zugriffspfad von `config.yml` zu Anwendungscode: ein
-  registriertes `SettingDefinition<T>` (Key, Typ, Default, Beschreibung,
-  `requiresRestart`-Flag, Validator), aufgelöst über `SettingsService.get(key)`.
-  Kein Code außerhalb von `dev.universaladmin.settings.YamlSettingsService`
-  liest `config.yml` direkt.
-- `SettingKey<T>` trennt bewusst zwei Strings: den `configPath` (den
-  wörtlichen YAML-Pfad, z. B. `gui.page-size` - global eindeutig über alle
-  Namespaces hinweg, weil es dieselbe Zeile derselben Datei ist) und den
-  `namespace` (wer die Einstellung besitzt - `core`, ein Modul über
-  `ModuleDescriptor.settingsNamespace()`, später eine Extension-ID). Siehe
-  [../modules.md](../modules.md) für die Verbindung zu `ModuleDescriptor`.
-- Parsing (`SettingType<T>`) und Validierung (`SettingValidator<T>`) sind
-  getrennte, kombinierbare Bausteine statt einer monolithischen
-  Parse-Funktion pro Setting.
-- **Ein ungültiger Wert crasht nie den Server.** `YamlSettingsService`
-  fällt bei Parse- oder Validierungsfehlern auf den registrierten Default
-  zurück und loggt eine klare Warnung - sowohl beim initialen Start als
-  auch bei `/admin reload`.
-- `config-version` plus `ConfigMigrationRunner` (im schlanker gewordenen
-  `config`-Package) versioniert die Datei selbst, analog zu
-  `storage.Migration` für das Datenbankschema - eine bestehende
-  Nutzer-Config wird bei einem Update nie stillschweigend überschrieben.
+- **One** access path from `config.yml` to application code: a registered
+  `SettingDefinition<T>` (key, type, default, description,
+  `requiresRestart` flag, validator), resolved via `SettingsService.get(key)`.
+  No code outside `dev.universaladmin.settings.YamlSettingsService` reads
+  `config.yml` directly.
+- `SettingKey<T>` deliberately separates two strings: the `configPath` (the
+  literal YAML path, e.g. `gui.page-size` - globally unique across every
+  namespace, because it's the same line in the same file) and the
+  `namespace` (who owns the setting - `core`, a module via
+  `ModuleDescriptor.settingsNamespace()`, later an extension id). See
+  [../modules.md](../modules.md) for the connection to `ModuleDescriptor`.
+- Parsing (`SettingType<T>`) and validation (`SettingValidator<T>`) are
+  separate, combinable building blocks rather than one monolithic parse
+  function per setting.
+- **An invalid value never crashes the server.** `YamlSettingsService` falls
+  back to the registered default on a parse or validation error and logs a
+  clear warning - both at the initial start and on `/admin reload`.
+- `config-version` plus `ConfigMigrationRunner` (in the now-leaner `config`
+  package) versions the file itself, analogous to `storage.Migration` for
+  the database schema - an existing user's config is never silently
+  overwritten on an update.
 
-Details: [docs/development/settings.md](../../development/settings.md).
+Detail: [docs/development/settings.md](../../development/settings.md).
 
-## Konsequenzen
+## Consequences
 
-- Neue Config-Werte brauchen mehr Ceremony als ein einzeiliger
-  `getString(...)`-Aufruf (eine `SettingKey`-Konstante, eine
-  `SettingDefinition`-Registrierung). Akzeptiert als Preis für zentrale
-  Typsicherheit, Validierung und einen einheitlichen Reload-Mechanismus.
-- Jedes Setting deklariert explizit, ob es live änderbar ist
-  (`requiresRestart`). Das zwingt zu einer bewussten Entscheidung pro
-  Wert statt eines pauschalen "Reload macht schon alles neu" - siehe
+- New config values need more ceremony than a one-line `getString(...)`
+  call (a `SettingKey` constant, a `SettingDefinition` registration).
+  Accepted as the price for central type safety, validation, and a uniform
+  reload mechanism.
+- Every setting explicitly declares whether it's live-changeable
+  (`requiresRestart`). That forces a deliberate decision per value instead
+  of a blanket "reload just refreshes everything" - see
   `ReloadConfigAction`.
-- `config`- und `settings`-Package sind jetzt klar getrennt: `config`
-  kennt nur noch die Datei-Versionierung, `settings` das eigentliche
-  Typsystem. Das ist eine sichtbare Verschiebung gegenüber dem ursprünglich
-  in `config.ConfigService` zentralisierten Zugriff.
+- The `config` and `settings` packages are now clearly separated: `config`
+  only knows about file versioning, `settings` owns the actual type
+  system. That's a visible shift from the access originally centralized in
+  `config.ConfigService`.
 
-## Alternativen
+## Alternatives
 
-- **Ein generisches `Map<String, Object>`-basiertes Config-Objekt** ohne
-  Registrierung: spart die Definitions-Ceremony, verliert aber die
-  zentrale Stelle, an der alle Settings (mit Beschreibung, Default,
-  Restart-Flag) für Doku/GUI/Extensions sichtbar sind - genau das, was
-  `SettingRegistry` bereitstellt.
-- **Ein bestehendes Config-Framework (z. B. Configurate) einbinden:**
-  hätte ähnliche Typsicherheit gebracht, aber eine zusätzliche
-  Abhängigkeit für ein Problem, das mit der bereits vorhandenen
-  Bukkit-`FileConfiguration` und einer schlanken eigenen Schicht lösbar
-  ist - siehe "keine neuen Dependencies ohne klaren Grund" in
-  [Entwicklungsregeln](../../development/architecture-rules.md).
+- **A generic `Map<String, Object>`-based config object** without
+  registration: saves the definition ceremony, but loses the central place
+  where every setting (with description, default, restart flag) is visible
+  for docs/GUI/extensions - exactly what `SettingRegistry` provides.
+- **Adopt an existing config framework (e.g. Configurate):** would have
+  brought similar type safety, but an additional dependency for a problem
+  solvable with the already-present Bukkit `FileConfiguration` and a thin
+  layer of our own - see "no new dependencies without a clear reason" in
+  the [development rules](../../development/architecture-rules.md).

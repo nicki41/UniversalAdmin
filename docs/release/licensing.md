@@ -1,81 +1,77 @@
-# Lizenzierung
+# Licensing
 
-**Kein Rechtsrat.** Dieses Dokument hält fest, welche Lizenz für welchen Teil
-von UniversalAdmin gilt bzw. vorgesehen ist, und warum. Es ist keine
-juristische Beratung. Für verbindliche Aussagen - insbesondere zu
-Kompatibilität mit der Paper-API, zu Marken-/Namensfragen und zu allem, was
-später kommerziell vertrieben werden soll - gehört ein Anwalt hinzugezogen,
-bevor darauf aufgebaut wird.
+**Not legal advice.** This document records which license applies to which
+part of UniversalAdmin, and why. It is not legal counsel. For binding
+statements - especially on compatibility with the Paper API, on trademark/
+naming questions, and on anything meant to be sold commercially later - talk
+to a lawyer before building on it.
 
-## Entschieden: Core unter Apache-2.0
+## Decided: Core under Apache-2.0
 
-Der Core (dieses Repository) steht unter der **Apache License 2.0**. Der
-vollständige, unveränderte Lizenztext liegt als [LICENSE](../../LICENSE) im
-Repository-Root.
+The core (this repository) is licensed under the **Apache License 2.0**. The
+complete, unmodified license text is in [LICENSE](../../LICENSE) in the
+repository root.
 
-Gründe für Apache-2.0 statt einer der Alternativen:
+Reasons for Apache-2.0 over the alternatives:
 
-- **Permissiv, wie MIT** - maximale Adoption, niedrige Einstiegshürde für
-  Serverbetreiber und Contributor. Kommerzielle Nutzung ist ausdrücklich
-  erlaubt.
-- **Expliziter Patent-Grant**, den MIT nicht hat. Sobald Dritte Extensions
-  und Integrationen beisteuern, ist das der praktisch relevante Unterschied.
-- **Keine Copyleft-Frage im Extension-Ökosystem.** Bei GPL/AGPL müssten
-  Extension-Autoren erst klären, ob ihre Extension eine "abgeleitete Arbeit"
-  des Cores ist - eine Frage, die bei Plugin-Architekturen regelmäßig
-  strittig ist und kommerzielle Extension-Autoren abschreckt.
-- **Im Java-/Server-Ökosystem der Normalfall**, entsprechend vertraut.
+- **Permissive, like MIT** - maximum adoption, low barrier to entry for
+  server operators and contributors. Commercial use is explicitly permitted.
+- **Explicit patent grant**, which MIT lacks. Once third parties contribute
+  extensions and integrations, that's the practically relevant difference.
+- **No copyleft question in the extension ecosystem.** Under GPL/AGPL,
+  extension authors would first have to figure out whether their extension
+  is a "derivative work" of the core - a question that's regularly disputed
+  for plugin architectures and discourages commercial extension authors.
+- **The default in the Java/server-software ecosystem**, so contributors are
+  already familiar with it.
 
-Bewusst in Kauf genommen: Eine permissive Lizenz erlaubt es Dritten, den Core
-zu forken und proprietär weiterzuverwenden. Das ist der Preis dafür, dass ein
-Open-Core-Modell mit später möglichen proprietären Extensions überhaupt sauber
-funktionieren kann.
+Deliberately accepted trade-off: a permissive license lets third parties fork
+the core and reuse it proprietarily. That's the price of letting an open-core
+model with possible future proprietary extensions work cleanly at all.
 
-## Was das für die einzelnen Teile bedeutet
+## What This Means for Each Part
 
-| Teil | Lizenz | Status |
+| Part | License | Status |
 |---|---|---|
-| **Core** (dieses Repository) | Apache-2.0 | gilt jetzt |
-| **Öffentliche Extension-API** (`universaladmin-api`, [ROADMAP.md](../../ROADMAP.md) Phase 4) | Apache-2.0 geplant | noch nicht implementiert |
-| **SDK / Beispiel-Extensions** | Apache-2.0 geplant | noch nicht implementiert |
-| **Community-Extensions** | frei wählbar | Sache der jeweiligen Autoren |
-| **Künftige offizielle Premium-Extensions** | können separat proprietär lizenziert werden | keine existieren |
-| **Marketplace-/Web-Backend** | kann separat lizenziert werden | keine Implementierung, siehe [web-future.md](../architecture/web-future.md) |
+| **Core** (this repository) | Apache-2.0 | applies now |
+| **Public extension API** (`universaladmin-api`, [ROADMAP.md](../../ROADMAP.md) Phase 4) | Apache-2.0 planned | not yet implemented |
+| **SDK / example extensions** | Apache-2.0 planned | not yet implemented |
+| **Community extensions** | free choice | up to each extension's own author |
+| **Future official premium extensions** | may be separately proprietary | none exist |
+| **Marketplace/web backend** | may be separately licensed | no implementation, see [web-future.md](../architecture/web-future.md) |
 
-Im Detail:
+In detail:
 
-- **Community-Extensions** dürfen jede Lizenz verwenden, die mit Apache-2.0
-  vereinbar ist - inklusive proprietärer Lizenzen. Apache-2.0 verlangt vom
-  Core-Nutzer keine bestimmte Lizenz für eigenen, darauf aufbauenden Code.
-- **Offizielle Premium-Extensions** sind heute nicht geplant und existieren
-  nicht. Die Lizenzwahl hält die Tür offen: eine separat entwickelte,
-  separat vertriebene Extension kann proprietär lizenziert werden, ohne dass
-  daraus eine Pflicht folgt, den Core zu schließen. Der Core bleibt
-  Apache-2.0.
-- **Ein Marketplace- oder Web-Backend** wäre ein eigenes Projekt mit eigener
-  Lizenz. Nichts an der Core-Lizenz zwingt dazu, ein gehostetes Backend
-  offenzulegen.
-- **Beiträge** zu diesem Repository werden unter Apache-2.0 eingebracht (§5
-  des Lizenztexts: Beiträge stehen mangels anderslautender Vereinbarung unter
-  denselben Bedingungen). Es gibt aktuell **kein** zusätzliches CLA.
+- **Community extensions** may use any license compatible with Apache-2.0 -
+  including proprietary licenses. Apache-2.0 doesn't require a particular
+  license from code built on top of the core.
+- **Official premium extensions** aren't planned today and don't exist. The
+  license choice keeps that door open: a separately developed, separately
+  distributed extension could be proprietary without that forcing the core
+  to close. The core stays Apache-2.0.
+- **A marketplace or web backend** would be its own project with its own
+  license. Nothing about the core's license forces a hosted backend to be
+  open.
+- **Contributions** to this repository are made under Apache-2.0 (§5 of the
+  license text: contributions are under the same terms absent a separate
+  agreement). There is currently **no** additional CLA.
 
-## Offene Punkte
+## Open Items
 
-- **Copyright-Zeile.** `LICENSE` enthält den unveränderten offiziellen
-  Apache-2.0-Text inklusive des `Copyright [yyyy] [name of copyright owner]`-
-  Platzhalters im Anhang. Wer als Rechteinhaber eingetragen wird (Einzelperson,
-  später eventuell eine Organisation), ist bewusst noch nicht ausgefüllt - das
-  ist eine Entscheidung des Projektinhabers, keine technische.
-- **NOTICE-Datei.** Apache-2.0 verlangt keine, und es gibt derzeit keinen
-  Inhalt dafür. Sollten später fremde Apache-2.0-Quellen in den Core kopiert
-  werden, ist an dem Punkt eine `NOTICE` zu prüfen.
-- **Paper-API-Kompatibilität.** `compileOnly("io.papermc.paper:paper-api:...")`
-  wird nicht mitausgeliefert, sondern vom Server zur Laufzeit gestellt - der
-  übliche Bukkit-Plugin-Mechanismus. Mit einer permissiven Lizenz ist das
-  unkritischer als mit Copyleft, aber ebenfalls nichts, das hier verbindlich
-  beurteilt wird.
-- **Gebündelte Abhängigkeiten.** Die Shaded jar enthält `sqlite-jdbc`,
-  `mariadb-java-client` und `HikariCP` (siehe `build.gradle.kts`). Deren
-  eigene Lizenzbedingungen gelten für die jeweils enthaltenen Klassen
-  unabhängig von der Lizenz des Cores; vor dem ersten Distributionskanal
-  (Modrinth) prüfen, ob deren Lizenzhinweise mit ausgeliefert werden müssen.
+- **Copyright line.** `LICENSE` contains the unmodified official Apache-2.0
+  text, including the `Copyright [yyyy] [name of copyright owner]` appendix
+  placeholder. Who is listed as the rights holder (an individual, later
+  possibly an organization) is deliberately not filled in - that's the
+  project owner's decision, not a technical one.
+- **NOTICE file.** Apache-2.0 doesn't require one, and there's currently
+  nothing for it to contain. If third-party Apache-2.0 sources are ever
+  copied into the core, a `NOTICE` file should be reconsidered at that point.
+- **Paper API compatibility.** `compileOnly("io.papermc.paper:paper-api:...")`
+  isn't bundled but supplied by the server at runtime - the usual Bukkit
+  plugin mechanism. Less of a concern with a permissive license than with
+  copyleft, but not something assessed authoritatively here either.
+- **Bundled dependencies.** The shaded jar includes `sqlite-jdbc`,
+  `mariadb-java-client`, and `HikariCP` (see `build.gradle.kts`). Their own
+  license terms apply to the classes they contribute regardless of the
+  core's license; before the first distribution channel (Modrinth), check
+  whether their license notices need to be shipped alongside.

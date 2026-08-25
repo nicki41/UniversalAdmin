@@ -151,8 +151,8 @@ public final class PlayerProfilePage extends AbstractGuiPage {
         view.place(slot++, GuiButton.of(GuiItem.of(Material.BREWING_STAND, text("players.gui.profile.effects")),
                 clickCtx -> clickCtx.open(new PlayerEffectsPage(ctx, targetId, targetName))), viewer);
         // Inventory/Ender Chest need a live PlayerInventory - hidden (not
-        // disabled) when the target is offline, per "GUI disabled/hidden
-        // wenn Action Online Player benötigt".
+        // disabled) when the target is offline, per "hide (don't disable) a
+        // GUI button whose action needs an online player".
         if (snapshot.online()) {
             if (viewer.hasPermission(PlayerPermissions.INVENTORY_VIEW.value())) {
                 view.place(slot++, GuiButton.of(GuiItem.of(Material.CHEST, text("players.gui.profile.inventory")),

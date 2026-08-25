@@ -1,58 +1,57 @@
-# Anonyme Nutzungsstatistik (Telemetry)
+# Anonymous Usage Statistics (Telemetry)
 
-UniversalAdmin kann in regelmäßigen Abständen eine sehr kleine, anonyme
-Nachricht ("Heartbeat") senden. Dieses Dokument beschreibt **vollständig**,
-was dabei übertragen wird, was ausdrücklich nicht übertragen wird, wie oft das
-passiert, und wie man es abschaltet.
+UniversalAdmin can, at regular intervals, send a very small, anonymous
+message ("heartbeat"). This document **fully** describes what is transmitted,
+what is explicitly not transmitted, how often it happens, and how to turn it
+off.
 
-Die Regel dahinter: **Es wird nichts erhoben, was hier nicht dokumentiert
-ist.** Ein neues Feld im Heartbeat und eine Änderung an diesem Dokument sind
-derselbe Change - der Test `TelemetryPayloadTest#sendsNoFieldBeyondTheSixDocumentedOnes`
-schlägt fehl, wenn jemand ein Feld hinzufügt.
+The rule behind it: **nothing is collected that isn't documented here.** A
+new field in the heartbeat and a change to this document are the same
+change - the test
+`TelemetryPayloadTest#sendsNoFieldBeyondTheSixDocumentedOnes` fails if
+someone adds a field.
 
-## Aktueller Status: es wird nichts gesendet
+## Current Status: Nothing Is Sent
 
-**Stand heute sendet UniversalAdmin nichts.** Es gibt noch keinen offiziellen
-Statistik-Endpunkt, und es ist keiner in der Software hinterlegt -
-`telemetry.endpoint` ist leer voreingestellt, und es gibt keinen eingebauten
-Fallback-Host. Solange kein Endpunkt konfiguriert ist:
+**As of today, UniversalAdmin sends nothing.** There is no official
+statistics endpoint yet, and none is baked into the software -
+`telemetry.endpoint` defaults to empty, and there is no built-in fallback
+host. As long as no endpoint is configured:
 
-- wird kein Request irgendwo hin gemacht,
-- wird keine Installation-ID erzeugt,
-- wird keine Datei dafür angelegt,
-- läuft kein Hintergrund-Timer.
+- no request is made anywhere,
+- no installation id is generated,
+- no file is created for one,
+- no background timer runs.
 
-Beim Start steht das auch im Log:
+The log says so at startup, too:
 
 ```
 Anonymous usage statistics are enabled but no endpoint is configured
 (telemetry.endpoint is empty), so nothing is sent.
 ```
 
-Der Rest dieses Dokuments beschreibt, was passiert, sobald es einen offiziellen
-Endpunkt gibt (oder jemand einen eigenen einträgt).
+The rest of this document describes what happens once there is an official
+endpoint (or someone configures their own).
 
-## Zweck
+## Purpose
 
-Drei Fragen sollen beantwortbar werden - und nur die:
+Three questions should become answerable - and only those:
 
-1. **Wie viele Installationen sind aktiv?** Also: lohnt sich die
-   Weiterentwicklung, und wie schnell verbreitet sich ein Release.
-2. **Wie viele Spieler sind insgesamt auf diesen Servern online?** Eine
-   aggregierte Zahl über alle Installationen.
-3. **Wie verteilen sich Versionen?** UniversalAdmin-, Minecraft- und
-   Java-Version - die Grundlage dafür, zu entscheiden, was noch unterstützt
-   werden muss.
+1. **How many installations are active?** I.e. is continued development
+   worth it, and how fast does a release spread.
+2. **How many players in total are online across these servers?** An
+   aggregated number across all installations.
+3. **How do versions distribute?** UniversalAdmin, Minecraft, and Java
+   version - the basis for deciding what still needs to be supported.
 
-Nicht Zweck: einzelne Server identifizieren, vergleichen, öffentlich
-auflisten oder ranken. Es gibt keine Server-Liste und keine Möglichkeit, aus
-den Daten eine zu bauen (siehe unten - es wird keine Adresse und kein Name
-übertragen).
+Not the purpose: identifying, comparing, publicly listing, or ranking
+individual servers. There is no server list and no way to build one from the
+data (see below - no address and no name is ever transmitted).
 
-## Was genau übertragen wird
+## Exactly What Is Transmitted
 
-Ein Heartbeat ist ein HTTP-POST mit genau diesem JSON-Body - sechs Felder,
-mehr nicht:
+A heartbeat is an HTTP POST with exactly this JSON body - six fields, nothing
+more:
 
 ```json
 {
@@ -65,99 +64,95 @@ mehr nicht:
 }
 ```
 
-| Feld | Bedeutung | Wofür |
+| Field | Meaning | What it's for |
 |---|---|---|
-| `installationId` | 128 Bit Zufall, siehe unten | Zwei Heartbeats derselben Installation zusammenführen, damit "aktive Installationen" nicht einfach "empfangene Requests" bedeutet |
-| `universalAdminVersion` | Plugin-Version | Versionsverteilung |
-| `minecraftVersion` | z. B. `1.21.4` | Welche Minecraft-Versionen weiter unterstützt werden müssen |
-| `javaMajorVersion` | z. B. `25` | Ob eine Anhebung der Java-Anforderung Installationen abhängen würde |
-| `onlinePlayers` | Anzahl - nur die Zahl | Aggregierte "Players Online"-Summe |
-| `maxPlayers` | Slot-Anzahl des Servers | Einordnung der Größenordnung |
+| `installationId` | 128 random bits, see below | Merges two heartbeats from the same installation, so "active installations" doesn't just mean "requests received" |
+| `universalAdminVersion` | plugin version | version distribution |
+| `minecraftVersion` | e.g. `1.21.4` | which Minecraft versions still need support |
+| `javaMajorVersion` | e.g. `25` | whether raising the Java requirement would strand installations |
+| `onlinePlayers` | count only | aggregated "Players Online" total |
+| `maxPlayers` | server slot count | scale for that number |
 
-Technisch außerdem unvermeidbar, wie bei jedem HTTP-Request: die IP-Adresse
-des sendenden Servers ist dem empfangenden Endpunkt auf Transportebene
-bekannt. Sie ist **nicht Teil des Payloads**, wird nicht als Identifier
-verwendet, und wie ein künftiges Backend damit umgeht (nicht loggen bzw.
-sofort verwerfen) gehört in dessen eigene Datenschutzerklärung - siehe
-"Offene Punkte" unten.
+Technically unavoidable, as with any HTTP request: the sending server's IP
+address is known to the receiving endpoint at the transport layer. It is
+**not part of the payload**, is not used as an identifier, and how a future
+backend handles it (not logging it, or discarding it immediately) belongs in
+that backend's own privacy policy - see "Open Items" below.
 
-### Zwei Felder, die bewusst *nicht* gesendet werden
+### Two Fields Deliberately *Not* Sent
 
-Beide standen zur Diskussion und wurden nach dem Minimalprinzip gestrichen:
+Both were considered and dropped under the minimalism principle:
 
-- **Paper-Build-String** (`git-Paper-123 (MC: 1.21.4)`): beantwortet keine der
-  drei Fragen oben, die `minecraftVersion` nicht schon beantwortet, wäre aber
-  ein feineres Unterscheidungsmerkmal.
-- **Client-Zeitstempel**: der Empfangszeitpunkt beim Backend ist ohnehin die
-  maßgebliche Zeit (siehe "Was 'aktiver Server' bedeutet"), und einer Uhr auf
-  einem fremden Server kann man nicht trauen. Ein Feld, das nichts
-  Verlässliches hinzufügt, wird nicht gesendet.
+- **Paper build string** (`git-Paper-123 (MC: 1.21.4)`): doesn't answer any
+  of the three questions above beyond what `minecraftVersion` already
+  answers, but would be a finer-grained distinguishing mark.
+- **Client timestamp**: the backend's own receipt time is the authoritative
+  time anyway (see "What 'Active Server' Means"), and a clock on a foreign
+  server can't be trusted. A field that adds nothing reliable isn't sent.
 
-### Was ausdrücklich nie übertragen wird
+### What Is Explicitly Never Transmitted
 
-- Server-IP, Hostname, Domain, Port, MOTD, Server-Name
-- Spielernamen, Spieler-UUIDs, Spieler-IP-Adressen
-- Chat-Nachrichten, ausgeführte Commands
-- Weltnamen, Koordinaten, Weltgrößen
-- andere installierte Plugins
-- Dateiinhalte, Datenbankinhalte, Audit-Log-Einträge, Konfigurationswerte
-- Hardware-Merkmale, MAC-Adressen, Seriennummern, Maschinen-Fingerprints
-- Betriebssystem-Benutzername, absolute Dateipfade
+- Server IP, hostname, domain, port, MOTD, server name
+- Player names, player UUIDs, player IP addresses
+- Chat messages, executed commands
+- World names, coordinates, world sizes
+- other installed plugins
+- File contents, database contents, audit log entries, configuration values
+- Hardware characteristics, MAC addresses, serial numbers, machine
+  fingerprints
+- OS username, absolute file paths
 
-Die Anzahl der Spieler ist ausschließlich eine Zahl. Es gibt keinen Weg,
-daraus eine Spieleridentität zu rekonstruieren.
+The player count is exclusively a number. There is no way to reconstruct a
+player identity from it.
 
-## Die Installation-ID
+## The Installation ID
 
-- Wird **einmal** erzeugt - beim ersten Start, an dem Telemetrie tatsächlich
-  senden könnte (aktiviert **und** Endpunkt konfiguriert).
-- 128 Bit aus `SecureRandom`, dargestellt als 32 Hex-Zeichen. **Nicht**
-  abgeleitet aus IP, MAC-Adresse, Hardware, Hostname, Serveradresse,
-  Dateipfad oder Spielerdaten - aus gar nichts. Reiner Zufall.
-- Bewusst kein UUID-String-Format, damit sie in keinem Log und keiner
-  Datenbank mit einer Spieler-UUID verwechselt werden kann.
-- Liegt in `plugins/UniversalAdmin/installation-id.yml` und bleibt über
-  Neustarts hinweg gleich.
-- Wird die Datei gelöscht, entsteht beim nächsten Start eine neue ID. Die
-  alte Installation ist dann nicht mehr zuordenbar; ein Backend würde sie nach
-  Ablauf des Aktivitätsfensters (siehe unten) einfach nicht mehr zählen.
-- Wer die ID nicht auf einen neuen Server mitnehmen will, löscht die Datei
-  beim Kopieren des Plugin-Ordners. Sie liegt genau deshalb nicht in
+- Generated **once** - on the first start where telemetry could actually send
+  (enabled **and** an endpoint configured).
+- 128 bits from `SecureRandom`, represented as 32 hex characters. **Not**
+  derived from IP, MAC address, hardware, hostname, server address, file
+  path, or player data - from nothing at all. Pure randomness.
+- Deliberately not in UUID string format, so it can never be confused with a
+  player UUID in any log or database.
+- Lives in `plugins/UniversalAdmin/installation-id.yml` and stays the same
+  across restarts.
+- If the file is deleted, a new id is created on the next start. The old
+  installation is then no longer attributable; a backend would simply stop
+  counting it once its activity window (see below) expires.
+- Anyone who doesn't want the id to follow a server copy just deletes the
+  file when copying the plugin folder. That's exactly why it isn't in
   `config.yml`.
 
-## Intervall
+## Interval
 
-- Der **erste** Heartbeat kommt frühestens rund 5 Minuten nach einem
-  erfolgreichen Start (plus Zufallsanteil) - nie während des Startvorgangs.
-- Danach: alle `telemetry.interval` (Standard 30 Minuten, Minimum 5 Minuten,
-  Maximum 24 Stunden), **plus ein Zufallsanteil von bis zu der Hälfte dieses
-  Werts**. Standardkonfiguration heißt also ungefähr alle 30-45 Minuten.
-- Der Zufallsanteil (Jitter) wird für jedes Intervall neu gezogen, damit viele
-  Server nicht synchron senden - etwa nach einer gemeinsamen Downtime.
+- The **first** heartbeat arrives at the earliest around 5 minutes after a
+  successful start (plus a random component) - never during startup.
+- After that: every `telemetry.interval` (default 30 minutes, minimum 5
+  minutes, maximum 24 hours), **plus a random extra of up to half that
+  value**. With default configuration, that's roughly every 30-45 minutes.
+- The random extra (jitter) is drawn fresh for every interval, so many
+  servers don't send in lockstep - e.g. after a shared outage.
 
-## Verhalten bei Fehlern
+## Failure Behavior
 
-Telemetrie ist das Unwichtigste, was dieses Plugin tut, und verhält sich auch
-so:
+Telemetry is the least important thing this plugin does, and it behaves that
+way:
 
-- Läuft nie auf dem Paper-Main-Thread. Die Spielerzahlen werden auf dem
-  Main-Thread gelesen (das ist Main-Thread-Zustand), der Request selbst läuft
-  auf einem Hintergrund-Thread - siehe
-  [docs/architecture/threading.md](../architecture/threading.md).
-- Kurze Timeouts (5 s Verbindungsaufbau, 10 s gesamt).
-- Kein Retry, keine Warteschlange, kein Zwischenspeichern. Ein verlorener
-  Heartbeat ist verloren.
-- Ein Ausfall des Endpunkts hat **keine** Auswirkung auf den Server oder auf
-  irgendeine Plugin-Funktion.
-- Kein Log-Spam: Der erste Fehlschlag pro Serverlauf ist eine einzelne
-  Warnung, alles danach steht nur noch auf `FINE`.
-- Antworten des Endpunkts werden verworfen, nicht geparst. Über diesen Kanal
-  kann ein Backend dem Server nichts mitteilen und nichts anweisen.
-- Weiterleitungen (HTTP-Redirects) werden nicht verfolgt: ein umgezogener
-  Endpunkt gehört neu konfiguriert, nicht automatisch zu einem anderen Host
-  verfolgt.
+- Never runs on the Paper main thread. Player counts are read on the main
+  thread (that's main-thread state), the request itself runs on a background
+  thread - see [docs/architecture/threading.md](../architecture/threading.md).
+- Short timeouts (5s connect, 10s total).
+- No retry, no queue, no caching. A lost heartbeat is lost.
+- An endpoint outage has **no** effect on the server or on any plugin
+  functionality.
+- No log spam: the first failure per server run is a single warning,
+  everything after that is `FINE` only.
+- Endpoint responses are discarded, never parsed. A backend can't instruct
+  the server through this channel.
+- Redirects (HTTP redirects) aren't followed: a relocated endpoint needs to
+  be reconfigured, not automatically chased to a different host.
 
-## Abschalten (Opt-out)
+## Turning It Off (Opt-out)
 
 In `plugins/UniversalAdmin/config.yml`:
 
@@ -166,35 +161,34 @@ telemetry:
   enabled: false
 ```
 
-Danach `/admin reload` (oder Serverneustart). Bei `enabled: false` gilt:
+Then `/admin reload` (or a server restart). With `enabled: false`:
 
-- kein Request irgendwelcher Art, auch kein "notwendiger" oder "essenzieller",
-- kein Payload wird überhaupt gebaut,
-- keine Installation-ID wird erzeugt oder gelesen,
-- kein Timer läuft.
+- no request of any kind, including no "necessary" or "essential" one,
+- no payload is even built,
+- no installation id is generated or read,
+- no timer runs.
 
-`telemetry.enabled` wird bei **jedem** Heartbeat neu aus der Konfiguration
-gelesen. Ein `/admin reload` mit `enabled: false` stoppt die Statistik also
-sofort, ohne Neustart.
+`telemetry.enabled` is read fresh from configuration on **every** heartbeat.
+An `/admin reload` with `enabled: false` stops statistics immediately, no
+restart needed.
 
-Die vollständige Einstellungsübersicht steht in
-[configuration.md](configuration.md).
+The full settings overview is in [configuration.md](configuration.md).
 
-## Was "aktiver Server" bedeutet
+## What "Active Server" Means
 
-Für ein künftiges Backend ist die Semantik hier festgehalten, damit später
-keine irreführenden Zahlen entstehen:
+For a future backend, the semantics are recorded here so later numbers aren't
+misleading:
 
-- **Aktive Installation** = eine eindeutige `installationId`, von der
-  innerhalb der **letzten 24 Stunden** (gerechnet ab Empfangszeitpunkt
-  serverseitig) mindestens ein gültiger Heartbeat empfangen wurde.
-- **Nicht** die Gesamtzahl jemals gesehener Installation-IDs. Eine
-  Lifetime-Zahl als "aktive Server" darzustellen wäre schlicht falsch.
-- **Players Online** = Summe von `onlinePlayers` über den jeweils **neuesten**
-  gültigen Heartbeat jeder aktiven Installation. Nicht die Summe aller
-  Heartbeats eines Zeitraums (das würde denselben Spieler dutzendfach zählen).
+- **Active installation** = a unique `installationId` that sent at least one
+  valid heartbeat within the **last 24 hours** (counted from server-side
+  receipt time).
+- **Not** the total count of installation ids ever seen. Presenting a
+  lifetime count as "active servers" would simply be wrong.
+- **Players Online** = the sum of `onlinePlayers` from the **most recent**
+  valid heartbeat of each active installation. Not the sum of all heartbeats
+  in a time window (that would count the same player dozens of times).
 
-Damit lassen sich später Angaben wie diese darstellen:
+That makes numbers like this possible later:
 
 ```
 UniversalAdmin Network
@@ -202,42 +196,39 @@ Active Servers: 1,284
 Players Online: 18,492
 ```
 
-Einzelne Server werden nicht öffentlich aufgelistet - es gibt dafür auch keine
-Daten.
+Individual servers are not publicly listed - there's no data for that
+either.
 
-## Implementierung
+## Implementation
 
-| Klasse | Aufgabe |
+| Class | Responsibility |
 |---|---|
-| `InstallationIdentity` / `InstallationIdentityStore` | Erzeugen und Persistieren der ID |
-| `TelemetryPayload` | Der Heartbeat, exakt wie er über die Leitung geht |
-| `TelemetryEnvironment` / `PlayerCounts` | Die Eingangsdaten des Payloads |
-| `TelemetryClient` | Schnittstelle; `HttpTelemetryClient` (JDK-HTTP-Client) und `NoOpTelemetryClient` (Standard) |
-| `TelemetryService` | Baut und sendet einen Heartbeat; setzt die Garantien oben durch |
-| `TelemetryScheduler` | Intervall, Jitter, Lifecycle |
-| `TelemetryBootstrap` | Verdrahtung beim Start, drei Ausgänge (aus / kein Endpunkt / aktiv) |
+| `InstallationIdentity` / `InstallationIdentityStore` | generating and persisting the id |
+| `TelemetryPayload` | the heartbeat, exactly as it goes over the wire |
+| `TelemetryEnvironment` / `PlayerCounts` | the payload's inputs |
+| `TelemetryClient` | interface; `HttpTelemetryClient` (JDK HTTP client) and `NoOpTelemetryClient` (default) |
+| `TelemetryService` | builds and sends a heartbeat; enforces the guarantees above |
+| `TelemetryScheduler` | interval, jitter, lifecycle |
+| `TelemetryBootstrap` | wiring at startup, three outcomes (off / no endpoint / active) |
 
-Alles unter `dev.universaladmin.telemetry`, keine neue Abhängigkeit (der
-HTTP-Client und der JSON-Encoder kommen aus dem JDK bzw. sind sechs Zeilen).
-Die Tests unter `src/test/java/dev/universaladmin/telemetry` machen keinen
-einzigen echten Netzwerk-Request.
+All under `dev.universaladmin.telemetry`, no new dependency (the HTTP client
+and the JSON encoder come from the JDK, or are six lines). The tests under
+`src/test/java/dev/universaladmin/telemetry` make zero real network requests.
 
-## Offene Punkte
+## Open Items
 
-Ehrlich benannt, statt Compliance zu behaupten:
+Stated honestly rather than claiming compliance:
 
-- **Es gibt noch keine Datenschutzerklärung.** Bevor ein echter Endpunkt in
-  Betrieb geht, muss eine separate Prüfung stattfinden (auch zur Frage, wie
-  mit der Transport-IP umgegangen wird). Dieses Dokument beschreibt die
-  technische Umsetzung; es ist keine rechtliche Zusicherung und keine Aussage
-  über DSGVO-Konformität.
-- **Aufbewahrungsdauer (Retention)** ist eine Backend-Entscheidung und noch
-  offen. Anzustreben ist: Rohdaten kurz, danach nur noch Aggregate.
-- **Opt-in statt Opt-out** ist bewusst nicht gewählt (Standard ist
-  `enabled: true`), aber solange kein Endpunkt existiert, ist die praktische
-  Wirkung identisch: es wird nichts gesendet. Vor dem Livegang eines Endpunkts
-  gehört diese Entscheidung noch einmal bewusst getroffen und im Release
-  angekündigt.
-- **Modrinth** verlangt je nach geltenden Regeln eine Offenlegung von
-  Telemetrie in der Projektbeschreibung - siehe
+- **There is no privacy policy yet.** Before a real endpoint goes into
+  operation, a separate review has to happen (including how the transport IP
+  is handled). This document describes the technical implementation; it is
+  not a legal guarantee and not a statement about GDPR compliance.
+- **Retention period** is a backend decision and still open. The goal:
+  short-lived raw data, aggregates afterward.
+- **Opt-in instead of opt-out** was deliberately not chosen (the default is
+  `enabled: true`), but as long as no endpoint exists, the practical effect
+  is identical: nothing is sent. Before an endpoint goes live, this decision
+  needs to be made deliberately again and announced with the release.
+- **Modrinth** may require disclosing telemetry in the project description,
+  depending on the rules in effect at the time - see
   [../release/modrinth.md](../release/modrinth.md).

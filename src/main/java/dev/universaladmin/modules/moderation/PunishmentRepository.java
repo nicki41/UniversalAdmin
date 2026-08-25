@@ -15,8 +15,8 @@ import java.util.concurrent.CompletableFuture;
  * <p>"Is this currently in force" is never read off a pre-computed flag:
  * {@link #findActiveBan}/{@link #findActiveIpBan}/{@link #findActiveMute}
  * compute it at query time from {@code active} and {@code expires_at}
- * against the {@code now} passed in - the "TEMPBAN: keine fragile
- * Timer-pro-Ban-Lösung, Status anhand expiresAt bestimmen" requirement. The
+ * against the {@code now} passed in - the "TEMPBAN: no fragile
+ * per-ban timer, determine status from expiresAt" requirement. The
  * {@code active} column itself only changes via an explicit revoke
  * ({@link #revokeById}/{@link #revokeActiveByTarget}) or the optional
  * periodic {@link #expireOverdue} sweep - both housekeeping, never

@@ -3,7 +3,7 @@
 The Players module is a player browser, profile viewer, and admin-action
 toolkit built entirely on the existing Module/GUI/Action/Audit/Settings
 infrastructure - no shortcuts specific to a built-in module (see docs/development/architecture-rules.md's
-"Built-in Modules bleiben Extension-freundlich"). Every mutation is an
+"Built-in Modules Stay Extension-Friendly"). Every mutation is an
 `Action` run through `ActionExecutor`, so it is permission-checked and
 audited the same way regardless of whether it's clicked in the GUI or (in
 the future) invoked from a command.
@@ -91,7 +91,7 @@ Reachable from the profile page **only when the target is online** (hidden,
 not shown disabled, per the "hide what can't work right now" rule the whole
 GUI framework follows) - editing an offline player's inventory would need
 NMS-level player-data-file access, which this project doesn't use (see
-docs/development/architecture-rules.md's "Sicherheit" section on packet/NMS hacks).
+docs/development/architecture-rules.md's "Security" section on packet/NMS hacks).
 
 - **Inventory** (`PlayerInventoryPage`) - the 36 main+hotbar slots in the
   content area, plus armor (helmet/chestplate/leggings/boots) and offhand in
@@ -114,8 +114,8 @@ but it bypasses `ActionExecutor` entirely: no audit trail, no
 permission-gated read-only mode, no clean failure if the target disconnects
 mid-edit, and (since a raw `PlayerInventory` isn't a `GuiView`) none of
 `GuiListener`'s own click protections either. That directly contradicts
-"every change is audited" and docs/development/architecture-rules.md's "kein Modul baut eigenes
-Audit-Logging" rule. Instead, these pages still render a *mirror* of the
+"every change is audited" and docs/development/architecture-rules.md's "no module builds its own
+audit logging" rule. Instead, these pages still render a *mirror* of the
 inventory in the GUI's own `GuiView` - `GuiListener` still owns every click/
 drag against it, same as any other UniversalAdmin page - and edits happen
 freely inside that mirror (drag items in/out/around) while it's open. The

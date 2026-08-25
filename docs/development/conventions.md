@@ -1,57 +1,57 @@
 # Conventions
 
-Ausführliche Begründungen stehen in [Entwicklungsregeln](architecture-rules.md) und den
-[ADRs](../architecture/decisions/). Hier die Kurzfassung als Nachschlagwerk.
+Detailed rationale is in the [development rules](architecture-rules.md) and
+the [ADRs](../architecture/decisions/). Here's the short version as a
+reference.
 
 ## Packages
 
 - Root: `dev.universaladmin`.
-- Architektur-Pakete (`core`, `module`, `action`, `gui`, `command`,
+- Architecture packages (`core`, `module`, `action`, `gui`, `command`,
   `permission`, `storage`, `audit`, `config`, `localization`,
-  `notification`, `scheduler`) - plattformweite Abstraktionen.
-- Eingebaute Module: `dev.universaladmin.modules.<name>` (Plural
-  `modules`). Adapter-/Bukkit-spezifischer Code in einem Subpackage wie
-  `jdbc`, nicht im Interface-Package.
+  `notification`, `scheduler`) - platform-wide abstractions.
+- Built-in modules: `dev.universaladmin.modules.<name>` (plural
+  `modules`). Adapter/Bukkit-specific code in a subpackage like `jdbc`, not
+  in the interface package.
 
 ## Naming
 
-- Interfaces ohne Präfix/Suffix: `Repository`, `Module`, `Action`,
+- Interfaces without a prefix/suffix: `Repository`, `Module`, `Action`,
   `SettingsService`.
-- Implementierungen mit sprechendem Präfix, das die Technologie/den
-  Kontext nennt: `JdbcPlayerProfileRepository`, `YamlSettingsService`,
+- Implementations with a descriptive prefix naming the technology/context:
+  `JdbcPlayerProfileRepository`, `YamlSettingsService`,
   `InGameNotificationService`, `PaperTaskScheduler`.
-- Typed IDs statt roher Strings für alles, was in einer Registry landet:
-  `ModuleId`, `ActionId`, `GuiPageId`, `AuditEventType` (alle über
-  `dev.universaladmin.core.id.Key`, Format `namespace:name`).
-  `PermissionNode`/`MessageKey` sind eigene, einfache dotted-String-
-  Records (externe Konventionen, siehe deren Javadoc).
-- `ModuleId.core(...)`/`ActionId.core(...)`/... als Shorthand für den
-  `core`-Namespace, den alle eingebauten Module nutzen.
+- Typed IDs instead of raw strings for anything that lands in a registry:
+  `ModuleId`, `ActionId`, `GuiPageId`, `AuditEventType` (all via
+  `dev.universaladmin.core.id.Key`, format `namespace:name`).
+  `PermissionNode`/`MessageKey` are their own, simple dotted-string
+  records (external conventions, see their Javadoc).
+- `ModuleId.core(...)`/`ActionId.core(...)`/... as shorthand for the
+  `core` namespace every built-in module uses.
 
-## Domain-Modelle
+## Domain Models
 
-- `record`, nicht Klassen mit Settern. Zustandsänderung erzeugt einen
-  neuen Record (`PlayerProfile.withLastSeen(...)`), keine Mutation.
-- Keine `null`-Rückgaben für "nicht gefunden" - `Optional<T>` bei
-  Repository-Lookups, `ActionResult.Failure` bei Actions.
+- `record`, not classes with setters. A state change produces a new record
+  (`PlayerProfile.withLastSeen(...)`), never mutation.
+- No `null` returns for "not found" - `Optional<T>` for repository lookups,
+  `ActionResult.Failure` for actions.
 
-## Fehlerbehandlung
+## Error Handling
 
-- Actions: `ActionResult<R>` (sealed `Success`/`Failure` mit
-  `FailureReason`), keine Exceptions für erwartbare Fehlerfälle
-  (nicht gefunden, keine Berechtigung, Validierung).
-- Repository-/Storage-Fehler: eigene, modulspezifische unchecked
-  Exception (`PlayerStorageException`, `AuditStorageException`), die eine
-  `SQLException` wrapped - kein rohes `SQLException`-Durchreichen an
-  Aufrufer außerhalb der `jdbc`-Schicht.
+- Actions: `ActionResult<R>` (sealed `Success`/`Failure` with
+  `FailureReason`), no exceptions for expected failure cases (not found,
+  no permission, validation).
+- Repository/storage errors: a dedicated, module-specific unchecked
+  exception (`PlayerStorageException`, `AuditStorageException`) wrapping a
+  `SQLException` - no raw `SQLException` passed through to a caller outside
+  the `jdbc` layer.
 
-## Formatierung
+## Formatting
 
-- UTF-8, `-parameters`-Compiler-Flag aktiv (siehe `build.gradle.kts`).
-- Kein festes Auto-Formatter-Tool aktuell eingerichtet; an bestehendem
-  Stil im jeweiligen Package orientieren (4 Leerzeichen Einrückung,
-  Zeilenlänge grob ~110 Zeichen, ein Import pro Zeile, keine Wildcard-
-  Imports).
-- Javadoc auf öffentlichen Interfaces/Klassen erklärt *warum*, nicht
-  *was* (siehe bestehende Klassen als Beispiel) - keine Javadoc-Pflicht
-  für private/offensichtliche Methoden.
+- UTF-8, the `-parameters` compiler flag is on (see `build.gradle.kts`).
+- No fixed auto-formatter tool set up currently; follow the existing style
+  in the respective package (4-space indentation, roughly ~110 character
+  line length, one import per line, no wildcard imports).
+- Javadoc on public interfaces/classes explains *why*, not *what* (see
+  existing classes as examples) - no Javadoc requirement for
+  private/obvious methods.

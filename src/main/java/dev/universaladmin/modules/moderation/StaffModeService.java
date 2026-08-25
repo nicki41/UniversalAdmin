@@ -12,15 +12,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 /**
- * Orchestrates Enter/Exit/Recover. The crash-safety requirement ("Staff
- * Snapshot persistent speichern, bevor Player Inventory verändert wird") is
- * an ordering property of {@link #enter}, not a flag anywhere: the
- * inventory is never cleared until the snapshot's {@code save} future has
- * already resolved successfully, so a crash between those two steps simply
- * never mutates anything - the player keeps their real inventory and next
- * login has no snapshot to recover (nothing was lost, nothing needs
- * recovering). "Wenn Snapshot bereits existiert: nicht blind überschreiben"
- * is the {@code repository.findById} check at the top of {@link #enter}.
+ * Orchestrates Enter/Exit/Recover. The crash-safety requirement ("persist
+ * the staff snapshot before the player's inventory is changed") is an
+ * ordering property of {@link #enter}, not a flag anywhere: the inventory
+ * is never cleared until the snapshot's {@code save} future has already
+ * resolved successfully, so a crash between those two steps simply never
+ * mutates anything - the player keeps their real inventory and next login
+ * has no snapshot to recover (nothing was lost, nothing needs recovering).
+ * "If a snapshot already exists, don't blindly overwrite it" is the
+ * {@code repository.findById} check at the top of {@link #enter}.
  */
 public final class StaffModeService {
 

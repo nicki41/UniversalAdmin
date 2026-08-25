@@ -5,8 +5,8 @@ import org.bukkit.inventory.ItemStack;
 /**
  * Coarse before/after summary for an inventory-contents change, used as the
  * audit {@code oldValue}/{@code newValue} for inventory/ender-chest actions.
- * Deliberately counts only - never the actual items/NBT - per "Positionen
- * und sensible Daten nur soweit nötig" (docs/user/modules/players.md).
+ * Deliberately counts only - never the actual items/NBT - per "only as much
+ * positional/sensitive data as actually needed" (docs/user/modules/players.md).
  */
 public record InventoryChangeSummary(int slots, int nonEmptyBefore, int nonEmptyAfter) {
 

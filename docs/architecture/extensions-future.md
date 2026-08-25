@@ -1,63 +1,61 @@
 # Extensions (Future)
 
-Dieses Dokument beschreibt eine **geplante**, noch nicht gebaute Fähigkeit.
-Es gibt aktuell keine öffentliche API, keinen Extension-Loader und keine
-Trennung zwischen Core und einem `universaladmin-api`-Modul. Was es gibt:
-Abstraktionen, die so entworfen sind, dass sie später ohne Rewrite
-extern nutzbar werden. Siehe
+This document describes a **planned**, not-yet-built capability. There is
+currently no public API, no extension loader, and no separation between the
+core and a `universaladmin-api` module. What does exist: abstractions
+designed so they can later become externally usable without a rewrite. See
 [decisions/0005-extension-ready-design.md](decisions/0005-extension-ready-design.md).
 
-## Was eine Extension später registrieren soll
+## What an Extension Should Later Be Able to Register
 
-Aus der Projektvorgabe, als Checkliste, mit dem Mechanismus, der dafür
-schon existiert:
+From the project brief, as a checklist, with the mechanism that already
+exists for it:
 
-| Erweiterungspunkt | Heutiger Mechanismus |
+| Extension point | Today's mechanism |
 |---|---|
-| Module | `Module`-Interface, `ModuleManager` |
-| GUI Pages | `GuiPage`-Interface, `GuiRegistry` |
-| Main Menu Entries | noch kein Hauptmenü gebaut (Phase 1) |
-| Player Actions | `Action<I, R>`, `ActionRegistry` |
-| Player Profile Sections | noch kein Profil-UI gebaut (Phase 1) |
-| Admin Actions | `Action<I, R>`, `ActionRegistry` (kein Unterschied zu "Player Actions" im Typsystem - der Unterschied ist, wer sie aufrufen darf, über Permissions) |
-| Settings | `SettingRegistry`/`SettingsService` (siehe [docs/development/settings.md](../development/settings.md)) - Namespacing für Core/Modul/künftige Extension existiert bereits, aktuell registriert aber nur `CoreSettings` etwas |
+| Modules | `Module` interface, `ModuleManager` |
+| GUI pages | `GuiPage` interface, `GuiRegistry` |
+| Main menu entries | no main menu built yet (Phase 1) |
+| Player actions | `Action<I, R>`, `ActionRegistry` |
+| Player profile sections | no profile UI built yet (Phase 1) |
+| Admin actions | `Action<I, R>`, `ActionRegistry` (no difference from "player actions" in the type system - the difference is who is allowed to call them, via permissions) |
+| Settings | `SettingRegistry`/`SettingsService` (see [docs/development/settings.md](../development/settings.md)) - namespacing for core/module/future extension already exists, but currently only `CoreSettings` registers anything |
 | Permissions | `PermissionNode`/`PermissionDefinition`, `PermissionRegistry` |
-| Events | es gibt noch kein UniversalAdmin-eigenes Event-System (aktuell nur Bukkit-Events, die Module intern konsumieren) |
-| Audit Events | `AuditEventType`, `AuditService` |
-| Storage/Migrations | `Migration`, `MigrationRunner` |
-| Dashboard Widgets | existiert erst mit der Web-App, siehe [web-future.md](web-future.md) |
-| Web Pages | existiert erst mit der Web-App |
-| Web API Hooks | existiert erst mit der Web-App/REST-API |
-| Notifications | `NotificationService` (aktuell nur Ingame-Kanal) |
+| Events | there is no UniversalAdmin-specific event system yet (currently only Bukkit events, consumed internally by modules) |
+| Audit events | `AuditEventType`, `AuditService` |
+| Storage/migrations | `Migration`, `MigrationRunner` |
+| Dashboard widgets | only exists once the web app exists, see [web-future.md](web-future.md) |
+| Web pages | only exists once the web app exists |
+| Web API hooks | only exists once the web app/REST API exists |
+| Notifications | `NotificationService` (currently only an in-game channel) |
 
-Zeilen ohne heutigen Mechanismus sind kein Widerspruch zur "extension-
-ready"-Prämisse - sie existieren schlicht noch nicht als Feature für
-irgendjemanden (auch nicht für Built-ins). Sobald sie gebaut werden (siehe
-[ROADMAP.md](../../ROADMAP.md)), folgen sie demselben Muster: ein
-Interface + eine Registry, kein Built-in-only-Shortcut.
+Rows without a mechanism today aren't a contradiction of the
+"extension-ready" premise - they simply don't exist as a feature for
+anyone yet (not even for built-ins). Once they're built (see
+[ROADMAP.md](../../ROADMAP.md)), they follow the same pattern: an
+interface plus a registry, no built-in-only shortcut.
 
-## Was fehlt, bevor Extensions real werden
+## What's Missing Before Extensions Become Real
 
-- **Stabile, versionierte API-Grenze.** Aktuell kann jede interne Klasse
-  sich jederzeit ändern. Eine Extension-API braucht Abwärtskompatibilitäts-
-  Garantien, die der Core intern nicht braucht.
-- **Extension-Loader.** Offen: eigene jars in einem
-  `plugins/UniversalAdmin/extensions/`-Ordner (von UniversalAdmin selbst
-  geladen) vs. eigenständige Bukkit-Plugins mit `depend: [UniversalAdmin]`
-  (von Paper geladen, UniversalAdmin nur als Dependency). Beide Wege sind
-  mit dem aktuellen `Module`-Interface kompatibel; die Entscheidung
-  beeinflusst nur, *wer* `ModuleManager.enable(...)` für eine Extension
-  aufruft.
-- **Sandboxing/Vertrauen.** Eine Extension läuft im selben JVM-Prozess wie
-  der Core - es gibt keine Isolation. Das ist für ein Server-Plugin normal
-  (genau wie bei jedem anderen Bukkit-Plugin), sollte aber in der
-  Extension-Dokumentation explizit stehen, wenn sie geschrieben wird.
-- **`universaladmin-sdk`.** Beispiel-Extension + Dokumentation, damit
-  Dritte nicht raten müssen, wie ein `Module` "richtig" aussieht.
+- **A stable, versioned API boundary.** Currently any internal class can
+  change at any time. An extension API needs backward-compatibility
+  guarantees the core doesn't need internally.
+- **An extension loader.** Open: separate jars in a
+  `plugins/UniversalAdmin/extensions/` folder (loaded by UniversalAdmin
+  itself) vs. standalone Bukkit plugins with `depend: [UniversalAdmin]`
+  (loaded by Paper, UniversalAdmin only as a dependency). Both paths are
+  compatible with the current `Module` interface; the decision only
+  affects *who* calls `ModuleManager.enable(...)` for an extension.
+- **Sandboxing/trust.** An extension runs in the same JVM process as the
+  core - there's no isolation. That's normal for a server plugin (same as
+  for any other Bukkit plugin), but should be stated explicitly in the
+  extension documentation once it's written.
+- **`universaladmin-sdk`.** Example extension plus documentation, so third
+  parties don't have to guess what a "correct" `Module` looks like.
 
-## Was jetzt schon gilt
+## What Already Applies Now
 
-Baue kein Verhalten, das ein eingebautes Modul kann und eine (hypothetische)
-Extension nicht könnte, weil es an internem Zustand statt an einem
-registrierten Interface hängt. Das ist die einzige Regel, die *jetzt schon*
-durchgesetzt werden muss, damit der spätere API-Cut kein Rewrite ist.
+Don't build behavior an existing built-in module can do that a
+(hypothetical) extension couldn't, because it depends on internal state
+instead of a registered interface. That's the one rule that has to be
+enforced *now already*, so the later API cut isn't a rewrite.

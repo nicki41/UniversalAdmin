@@ -1,75 +1,74 @@
-# 0008 - Zentrale Autorisierung/Validierung über `ActionExecutor`
+# 0008 - Central Authorization/Validation via `ActionExecutor`
 
 ## Status
 
-Angenommen
+Accepted
 
-## Kontext
+## Context
 
-[0002](0002-action-system.md) legt `Action<I, R>` als einzigen Ort für
-Business-Logik fest, aber nicht, *wer* eine Action ausführen darf oder wie
-Eingaben/Targets vor dem eigentlichen Aufruf geprüft werden. In der Praxis
-landete das dort, wo es historisch am bequemsten war:
-`UniversalAdminCommand#handleReload` prüfte `sender.hasPermission("universaladmin.reload")`
-als rohen String-Literal, komplett getrennt von der über `PermissionRegistry`
-registrierten `PermissionDefinition` mit demselben Node - und
-`GetPlayerProfileAction` hatte trotz registrierter
-`universaladmin.players.view`-Permission überhaupt keine Berechtigungsprüfung.
-Mit mehr Frontends (Web-API, Extensions) hätte sich dieses Muster
-vervielfacht, mit divergierenden Prüfungen pro Frontend - exakt das
-Problem, das 0002 für die Business-Logik selbst schon gelöst hatte, nur
-eine Ebene höher.
+[0002](0002-action-system.md) established `Action<I, R>` as the only place
+for business logic, but not *who* is allowed to run an action or how
+inputs/targets are checked before the actual call. In practice that landed
+wherever was historically most convenient:
+`UniversalAdminCommand#handleReload` checked
+`sender.hasPermission("universaladmin.reload")` as a raw string literal,
+completely separate from the `PermissionDefinition` registered through
+`PermissionRegistry` with the same node - and `GetPlayerProfileAction` had
+no permission check at all despite a registered
+`universaladmin.players.view` permission. With more frontends (web API,
+extensions), this pattern would have multiplied, with diverging checks per
+frontend - exactly the problem 0002 had already solved for the business
+logic itself, just one level up.
 
-## Entscheidung
+## Decision
 
-Ein `ActionExecutor` ist die einzige Stelle, an der ein Frontend eine
-`Action` ausführt - nie `Action.execute(...)` direkt. Module registrieren
-nicht mehr die rohe `Action`, sondern eine `ActionDefinition<I, R>`
-(Permission, Validator, Self-Target-Policy, Feature-enabled-Check,
-Audit-Konfiguration). Der Executor prüft Permission → Feature-enabled →
-Self-Target → Input-Validierung, bevor die Action überhaupt läuft, ruft bei
-Erfolg `AuditService.record(...)` auf, und feuert `ActionEvent`s
-(`Executing`/`Executed`/`Failed`) für alles, was die Pipeline beobachten
-will (künftige Extension-API/WebSocket).
+An `ActionExecutor` is the only place a frontend runs an `Action` - never
+`Action.execute(...)` directly. Modules no longer register the raw `Action`,
+but an `ActionDefinition<I, R>` (permission, validator, self-target policy,
+feature-enabled check, audit configuration). The executor checks permission
+→ feature-enabled → self-target → input validation before the action even
+runs, calls `AuditService.record(...)` on success, and fires `ActionEvent`s
+(`Executing`/`Executed`/`Failed`) for anything that wants to observe the
+pipeline (a future extension API/WebSocket).
 
-Autorisierung selbst läuft über einen `Actor`-getragenen
-`PermissionEvaluator` statt über verstreute `Permissible.hasPermission(...)`-
-Aufrufe - ein Bukkit-`Permissible` wird über
+Authorization itself runs through an `Actor`-carried `PermissionEvaluator`
+instead of scattered `Permissible.hasPermission(...)` calls - a Bukkit
+`Permissible` is adapted via
 `dev.universaladmin.permission.bukkit.PermissiblePermissionEvaluator`
-adaptiert (analog zum `storage`/`storage.jdbc`-Muster), sodass `permission`
-und `action` selbst frei von Paper-Imports bleiben. Details und
-Code-Beispiele: [../actions.md](../actions.md).
+(analogous to the `storage`/`storage.jdbc` pattern), so `permission` and
+`action` themselves stay free of Paper imports. Detail and code examples:
+[../actions.md](../actions.md).
 
-## Konsequenzen
+## Consequences
 
-- Jede Autorisierungs-/Validierungslogik für eine Action lebt an genau
-  einer Stelle (`ActionDefinition`), nicht dupliziert je Frontend.
-  `UniversalAdminCommand#handleReload` wurde entsprechend umgebaut: der
-  Command prüft keine Permission mehr selbst, sondern rendert nur noch das
-  vom Executor zurückgegebene `ActionResult`.
-- Ein Frontend, das `Action.execute(...)` direkt aufruft statt über
-  `ActionExecutor`, umgeht Autorisierung/Validierung/Audit vollständig -
-  das ist die eine Sache, die docs/architecture/actions.md explizit als
-  "folgt dem Muster nicht" markiert.
-- `ActionResult` bekommt `messageKey`/`messageArgs`/`metadata` zusätzlich
-  zum bisherigen `message`, damit Fehler aus der Pipeline (Permission
-  fehlt, Feature deaktiviert, Self-Target) genauso lokalisiert gerendert
-  werden können wie Fehler aus der Action selbst.
-- Undo-Vorbereitung (`ReversibleAction`) und Audit-Hook sind bewusst nur
-  der Vertrag/Anschlusspunkt, nicht das vollständige Undo- bzw.
-  Audit-System - siehe [0009](0009-audit-system.md) für Letzteres.
+- Every authorization/validation rule for an action lives in exactly one
+  place (`ActionDefinition`), not duplicated per frontend.
+  `UniversalAdminCommand#handleReload` was reworked accordingly: the
+  command no longer checks a permission itself, it only renders the
+  `ActionResult` the executor returns.
+- A frontend that calls `Action.execute(...)` directly instead of going
+  through `ActionExecutor` completely bypasses authorization/validation/
+  audit - the one thing docs/architecture/actions.md explicitly flags as
+  "doesn't follow the pattern".
+- `ActionResult` gains `messageKey`/`messageArgs`/`metadata` in addition to
+  the existing `message`, so errors from the pipeline (missing permission,
+  disabled feature, self-target) can be rendered localized the same way as
+  errors from the action itself.
+- Undo preparation (`ReversibleAction`) and the audit hook are deliberately
+  only the contract/attachment point, not the complete undo or audit
+  system - see [0009](0009-audit-system.md) for the latter.
 
-## Alternativen
+## Alternatives
 
-- **Permission-Check weiter pro Frontend, nur Business-Logik zentralisiert
-  (Status quo vor dieser Entscheidung):** Genau das Muster, das schon beim
-  `/admin reload`-Command zu einem rohen String-Permission-Literal geführt
-  hat, das an der registrierten `PermissionDefinition` vorbeilief - kein
-  struktureller Schutz dagegen für künftige Actions/Frontends.
-- **Autorisierung als Teil von `Action#execute` selbst (jede Action prüft
-  ihre eigene Permission):** Würde `ActionDefinition` sparen, aber jede
-  Action müsste ihre Permission-Prüfung selbst schreiben statt sie
-  deklarativ zu registrieren - und ein Frontend könnte eine Action nicht
-  mehr generisch (ohne sie zu kennen) auf "brauche ich hierfür eine
-  Permission" abfragen, was einer künftigen dynamischen Web-UI die
-  Möglichkeit nähme, Buttons/Aktionen vorab auszublenden.
+- **Keep the permission check per frontend, only centralize business logic
+  (the status quo before this decision):** exactly the pattern that already
+  led the `/admin reload` command to a raw string permission literal that
+  bypassed the registered `PermissionDefinition` - no structural protection
+  against the same thing for future actions/frontends.
+- **Authorization as part of `Action#execute` itself (each action checks
+  its own permission):** would save `ActionDefinition`, but every action
+  would have to write its own permission check instead of registering it
+  declaratively - and a frontend could no longer generically ask an action
+  (without knowing it) "do I need a permission for this", which would take
+  away a future dynamic web UI's ability to hide buttons/actions ahead of
+  time.

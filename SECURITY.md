@@ -1,107 +1,102 @@
 # Security Policy
 
-## Unterstützte Versionen
+## Supported Versions
 
-UniversalAdmin ist in der Alpha-Phase. Sicherheitsfixes gehen in die jeweils
-aktuellste Version; es gibt keine Backports auf ältere Alpha-Releases.
+UniversalAdmin is in its alpha phase. Security fixes go into the latest
+version; there are no backports to older alpha releases.
 
-| Version | Unterstützt |
+| Version | Supported |
 |---|---|
-| aktuellstes Release / `main` | ja |
-| ältere Alpha-Releases | nein |
+| latest release / `main` | yes |
+| older alpha releases | no |
 
-## Sicherheitslücken melden
+## Reporting a Vulnerability
 
-Bitte **nicht** als öffentliches Issue melden.
+Please do **not** report it as a public issue.
 
-Bevorzugter Weg: **GitHub Private Vulnerability Reporting** über den Tab
+Preferred path: **GitHub Private Vulnerability Reporting** via the
 ["Security" → "Report a vulnerability"](https://github.com/nicki41/UniversalAdmin/security/advisories/new)
-in diesem Repository. Der Report ist dann nur für die Maintainer sichtbar.
+tab on this repository. The report is then visible only to the maintainers.
 
-Sollte das für dich nicht verfügbar sein, wende dich über einen der auf dem
-GitHub-Profil des Repository-Inhabers angegebenen Kontaktwege direkt an die
-Maintainer. Es wird hier bewusst keine E-Mail-Adresse erfunden, die es nicht
-gibt.
+If that isn't available to you, reach out to the maintainers through one of
+the contact paths listed on the repository owner's GitHub profile. No email
+address is invented here that doesn't exist.
 
-Bitte enthalten:
+Please include:
 
-- Betroffene Version bzw. Commit
-- Reproduktionsschritte
-- Erwartetes vs. tatsächliches Verhalten
-- Mögliche Auswirkung (z. B. Rechteausweitung, Datenverlust, RCE)
+- Affected version or commit
+- Reproduction steps
+- Expected vs. actual behavior
+- Potential impact (e.g. privilege escalation, data loss, RCE)
 
-**Bitte keine Zugangsdaten, Tokens, Passwörter oder Serverlogs mit
-personenbezogenen Daten in den Report kopieren** - eine Beschreibung reicht.
+**Please don't paste credentials, tokens, passwords, or server logs
+containing personal data into the report** - a description is enough.
 
-Es gibt kein Bug-Bounty-Programm.
+There is no bug bounty program.
 
-## Sicherheitsrelevante Designentscheidungen
+## Security-Relevant Design Decisions
 
-Diese Regeln sind bewusst gesetzt, siehe auch die
-[Entwicklungsregeln](docs/development/architecture-rules.md):
+These rules are set deliberately, see also the
+[development rules](docs/development/architecture-rules.md):
 
-- **Keine Secrets im Log.** Datenbank-Passwörter und künftige API-Tokens
-  werden nie geloggt, auch nicht auf Debug-Level. `DatabaseConfig#toString()`
-  redigiert das Passwort explizit.
-- **Keine unsicheren Packet-Hacks im Core.** UniversalAdmin greift nicht in
-  das Netzwerkprotokoll ein (kein ProtocolLib, kein rohes Packet-Injection)
-  - das reduziert die Angriffsfläche und hält den Core kompatibel mit
-    Server-internen Änderungen.
-- **Permissions statt harter Op-Checks.** Jede geschützte Aktion hat einen
-  eigenen `PermissionNode` (siehe
-  [docs/user/permissions.md](docs/user/permissions.md)), sodass
-  Serverbetreiber granular vergeben können, statt pauschal Op zu vergeben.
-  Geprüft wird zentral im `ActionExecutor`, nicht verstreut im Frontend.
-- **SQL-Injection:** Ausschließlich `PreparedStatement` mit gebundenen
-  Parametern in Repository-Implementierungen - siehe
-  [docs/architecture/storage.md](docs/architecture/storage.md). Kein
-  String-Concatenation von Nutzereingaben in SQL.
-- **Datenbank-Zugangsdaten** liegen in `config.yml` im Plugin-Ordner
-  (Dateisystem-Berechtigungen des Servers sind der Schutz dafür, wie bei
-  jedem anderen Paper-Plugin auch). Es gibt aktuell keinen verschlüsselten
-  Secret-Store; das ist eine bekannte Grenze, kein Versehen.
-- **Verbindungsfehler zur Datenbank loggen nie das Passwort.**
-  `StorageService`/`DataSourceFactory` geben `DatabaseConfig.password()`
-  nirgends an einen Logger weiter - auch nicht in der Exception, die beim
-  Start einen fehlgeschlagenen Verbindungsaufbau meldet. Siehe
+- **No secrets in logs.** Database passwords and future API tokens are never
+  logged, not even at debug level. `DatabaseConfig#toString()` explicitly
+  redacts the password.
+- **No unsafe packet hacks in the core.** UniversalAdmin doesn't touch the
+  network protocol (no ProtocolLib, no raw packet injection) - that reduces
+  the attack surface and keeps the core compatible with internal server
+  changes.
+- **Permissions instead of hard op checks.** Every protected action has its
+  own `PermissionNode` (see
+  [docs/user/permissions.md](docs/user/permissions.md)), so server operators
+  can grant access granularly instead of blanket op. Checked centrally in
+  `ActionExecutor`, not scattered across the frontend.
+- **SQL injection:** exclusively `PreparedStatement` with bound parameters in
+  repository implementations - see
+  [docs/architecture/storage.md](docs/architecture/storage.md). No string
+  concatenation of user input into SQL.
+- **Database credentials** live in `config.yml` in the plugin folder (the
+  server's own filesystem permissions are the protection for that, same as
+  for any other Paper plugin). There is currently no encrypted secret store;
+  that's a known limitation, not an oversight.
+- **Database connection failures never log the password.**
+  `StorageService`/`DataSourceFactory` never pass `DatabaseConfig.password()`
+  to a logger - not even in the exception raised when a connection attempt
+  fails at startup. See
   [docs/architecture/storage.md#health](docs/architecture/storage.md#health).
-- **Audit-Trail.** Jede mutierende Action erzeugt automatisch einen
-  `AuditEvent` über `ActionExecutor` - kein Modul kann das umgehen, ohne die
-  Architekturregeln zu brechen. Siehe
+- **Audit trail.** Every mutating action automatically produces an
+  `AuditEvent` through `ActionExecutor` - no module can bypass that without
+  breaking the architecture rules. See
   [docs/user/audit-log.md](docs/user/audit-log.md).
 
-## Telemetrie und Datenschutz
+## Telemetry and Privacy
 
-UniversalAdmin enthält eine anonyme Nutzungsstatistik. Vollständig
-dokumentiert - jedes einzelne Feld, das Intervall, das Opt-out und alles, was
-ausdrücklich nicht erhoben wird - in
-[docs/user/telemetry.md](docs/user/telemetry.md).
+UniversalAdmin includes anonymous usage statistics. Fully documented - every
+single field, the interval, the opt-out, and everything explicitly not
+collected - in [docs/user/telemetry.md](docs/user/telemetry.md).
 
-Sicherheitsrelevante Eckpunkte:
+Security-relevant highlights:
 
-- **Standardmäßig wird nichts gesendet.** Es ist kein Endpunkt hinterlegt und
-  es gibt keinen eingebauten Fallback-Host. Ohne konfigurierten
-  `telemetry.endpoint` wird kein Request ausgeführt, keine Installation-ID
-  erzeugt und kein Timer gestartet.
-- **Kein Identifier, der auf den Host zurückführt.** Die Installation-ID sind
-  128 zufällige Bits aus `SecureRandom` - nicht abgeleitet aus IP,
-  MAC-Adresse, Hardware, Hostname, Serveradresse oder Dateipfad.
-- **Keine personenbezogenen Spielerdaten.** Übertragen werden ausschließlich
-  Anzahlen; nie Namen, UUIDs, IP-Adressen, Chat oder Commands.
-- **Der Kanal ist einseitig.** Antworten des Endpunkts werden verworfen, nie
-  geparst und nie ausgeführt; Redirects werden nicht verfolgt. Ein
-  kompromittierter oder falsch konfigurierter Endpunkt kann dem Server
-  dadurch nichts anweisen.
-- **Vollständiges Opt-out** über `telemetry.enabled: false`, wirksam ohne
-  Neustart nach `/admin reload`.
-- **Noch keine Datenschutzerklärung.** Es wird hier ausdrücklich keine
-  Aussage über DSGVO- oder sonstige Compliance getroffen. Vor dem Betrieb
-  eines echten Endpunkts muss das separat geprüft werden.
+- **Nothing is sent by default.** No endpoint is preconfigured and there's no
+  built-in fallback host. Without a configured `telemetry.endpoint`, no
+  request is made, no installation id is generated, and no timer starts.
+- **No identifier that traces back to the host.** The installation id is 128
+  random bits from `SecureRandom` - not derived from IP, MAC address,
+  hardware, hostname, server address, or file path.
+- **No personal player data.** Only counts are transmitted; never names,
+  UUIDs, IP addresses, chat, or commands.
+- **The channel is one-way.** Endpoint responses are discarded, never
+  parsed, never acted on; redirects aren't followed. A compromised or
+  misconfigured endpoint can't instruct the server through this channel.
+- **Full opt-out** via `telemetry.enabled: false`, effective without a
+  restart after `/admin reload`.
+- **No privacy policy yet.** No claim of GDPR or other compliance is made
+  here. Before a real endpoint goes live, that has to be reviewed separately.
 
-## Abhängigkeiten
+## Dependencies
 
-Der Core hat bewusst eine kleine Abhängigkeitsliste (siehe
-`build.gradle.kts`), um die Angriffsfläche durch Third-Party-Code klein zu
-halten: zwei JDBC-Treiber und ein Connection-Pool, sonst nichts zur Laufzeit.
-Aktualisierungen werden bewusst manuell geprüft und eingespielt; es gibt
-absichtlich keine automatischen Dependency-Update-Pull-Requests.
+The core deliberately keeps a small dependency list (see
+`build.gradle.kts`) to keep the third-party attack surface small: two JDBC
+drivers and a connection pool at runtime, nothing else. Updates are
+deliberately reviewed and applied manually; there are intentionally no
+automated dependency-update pull requests.

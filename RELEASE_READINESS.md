@@ -1,118 +1,115 @@
 # Release Readiness
 
-Stand des Projekts im Hinblick auf eine Veröffentlichung. Aktualisiert im
-Zuge der Öffentlichmachung des Repositories (Apache-2.0, CI, automatisierte
-Releases, anonyme Nutzungsstatistik).
+Project status with respect to publication. Updated as part of making the
+repository public (Apache-2.0, CI, automated releases, anonymous usage
+statistics).
 
-## Überblick
+## Overview
 
-| Punkt | Stand |
+| Item | Status |
 |---|---|
-| **Current version** | `0.1.0-alpha` (`build.gradle.kts`, einzige Quelle; `./gradlew -q printVersion`) |
-| **Build** | grün - `./gradlew clean build` inklusive `verifyShadedJarDrivers` (öffnet eine echte SQLite-Verbindung durch die fertige jar) |
-| **Tests** | grün - 245 Tests in 51 Testklassen, 0 Fehler, 0 Fehlschläge, 0 übersprungen |
-| **GitHub** | öffentliches Repository, Default-Branch `main`, Issues aktiv, Issue-/PR-Vorlagen vorhanden |
-| **License** | Apache-2.0, `LICENSE` mit unverändertem offiziellem Text; Begründung in [docs/release/licensing.md](docs/release/licensing.md) |
-| **CI** | `.github/workflows/build.yml` - Build und Tests auf jedem Push/PR gegen `main`, jar als Actions-Artifact, `contents: read` |
-| **Automatic releases** | `.github/workflows/release.yml` - Tag `v*` → Tag/Version-Prüfung, Build, Tests, GitHub-Release mit jar und SHA-256, Prerelease-Erkennung, `contents: write`, nur `GITHUB_TOKEN` |
-| **Telemetry implementation** | vollständig implementiert und getestet (`dev.universaladmin.telemetry`), dokumentiert in [docs/user/telemetry.md](docs/user/telemetry.md) |
-| **Telemetry endpoint** | **keiner** - `telemetry.endpoint` ist leer voreingestellt, es existiert kein offizieller Endpunkt und kein Fallback-Host. Es wird nichts gesendet. |
-| **Modrinth** | nicht hochgeladen; Projektseite und Checkliste vorbereitet in [docs/release/modrinth.md](docs/release/modrinth.md) |
-| **Extension API** | nicht implementiert - nächster großer Meilenstein ([ROADMAP.md](ROADMAP.md) Phase 4) |
-| **Dependabot** | bewusst **nicht** eingerichtet; Abhängigkeiten werden manuell aktualisiert |
+| **Current version** | `0.1.0-alpha` (`build.gradle.kts`, single source of truth; `./gradlew -q printVersion`) |
+| **Build** | green - `./gradlew clean build` including `verifyShadedJarDrivers` (opens a real SQLite connection through the finished jar) |
+| **Tests** | green - 245 tests across 51 test classes, 0 failures, 0 errors, 0 skipped |
+| **GitHub** | public repository, default branch `main`, issues enabled, issue/PR templates present |
+| **License** | Apache-2.0, `LICENSE` with the unmodified official text; rationale in [docs/release/licensing.md](docs/release/licensing.md) |
+| **CI** | `.github/workflows/build.yml` - build and tests on every push/PR against `main`, jar as an Actions artifact, `contents: read` |
+| **Automatic releases** | `.github/workflows/release.yml` - a `v*` tag triggers a tag/version check, build, tests, a GitHub release with the jar and its SHA-256, prerelease detection, `contents: write`, only `GITHUB_TOKEN` |
+| **Telemetry implementation** | fully implemented and tested (`dev.universaladmin.telemetry`), documented in [docs/user/telemetry.md](docs/user/telemetry.md) |
+| **Telemetry endpoint** | **none** - `telemetry.endpoint` defaults to empty, there is no official endpoint and no fallback host. Nothing is sent. |
+| **Modrinth** | not uploaded; project page and checklist prepared in [docs/release/modrinth.md](docs/release/modrinth.md) |
+| **Extension API** | not implemented - next major milestone ([ROADMAP.md](ROADMAP.md) Phase 4) |
+| **Dependabot** | deliberately **not** set up; dependencies are updated manually |
 
-## Was in diesem Schritt dazugekommen ist
+## What Was Added in This Step
 
-- **Apache-2.0-Lizenzierung.** `LICENSE` mit dem unveränderten offiziellen
-  Lizenztext (kein erfundener Copyright-Inhaber im Anhang-Platzhalter),
-  Entscheidung samt Begründung und Auswirkung auf Extension-API,
-  Community-Extensions und ein mögliches Marketplace-Backend in
+- **Apache-2.0 licensing.** `LICENSE` with the unmodified official license
+  text (no invented copyright holder in the appendix placeholder), the
+  decision and its rationale, and its implications for the extension API,
+  community extensions, and a possible marketplace backend in
   [docs/release/licensing.md](docs/release/licensing.md).
-- **Anonyme Nutzungsstatistik.** Installation-ID (128 Bit aus `SecureRandom`,
-  aus nichts abgeleitet), Payload mit genau sechs Feldern, HTTP-Client mit
-  kurzen Timeouts, Scheduler mit verzögertem Start und Jitter, vollständiges
-  Opt-out ohne Neustart. Kein Feld wird erhoben, das nicht in
-  [docs/user/telemetry.md](docs/user/telemetry.md) steht - ein Test hält das
-  fest.
-- **Automatisierte Releases.** Tag-getrieben, mit einer Prüfung, dass der Tag
-  zur Projektversion passt, bevor irgendetwas gebaut oder veröffentlicht wird.
-- **Öffentliche Entwicklerdokumentation.** Die verbindlichen Projektregeln
-  liegen jetzt als reguläre Doku unter
+- **Anonymous usage statistics.** Installation id (128 bits from
+  `SecureRandom`, derived from nothing), a payload with exactly six fields,
+  an HTTP client with short timeouts, a scheduler with a delayed start and
+  jitter, full opt-out without a restart. No field is collected that isn't
+  in [docs/user/telemetry.md](docs/user/telemetry.md) - a test enforces
+  that.
+- **Automated releases.** Tag-driven, with a check that the tag matches the
+  project version before anything is built or published.
+- **Public developer documentation.** The binding project rules now live as
+  regular documentation under
   [docs/development/architecture-rules.md](docs/development/architecture-rules.md);
-  alle Verweise in Quellcode und Doku zeigen dorthin.
-- **README/CONTRIBUTING/SECURITY** auf öffentlichen Stand gebracht,
-  inklusive Private Vulnerability Reporting und Telemetrie-Offenlegung.
+  all references in source code and docs point there.
+- **README/CONTRIBUTING/SECURITY** brought to a public-facing state,
+  including private vulnerability reporting and the telemetry disclosure.
 
-## Telemetrie im Detail
+## Telemetry in Detail
 
-| Frage | Antwort |
+| Question | Answer |
 |---|---|
-| Wird etwas gesendet? | Nein. Kein Endpunkt konfiguriert, kein eingebauter Fallback. |
-| Wird eine ID erzeugt? | Nur, wenn Telemetrie aktiv **und** ein Endpunkt konfiguriert ist. Sonst wird nicht einmal eine Datei angelegt. |
-| Welche Felder? | `installationId`, `universalAdminVersion`, `minecraftVersion`, `javaMajorVersion`, `onlinePlayers`, `maxPlayers`. Mehr nicht. |
-| Spielerbezogene Daten? | Keine. Nur zwei Zahlen. Keine Namen, UUIDs, IPs. |
-| Hardware-Fingerprint? | Nein. Reiner Zufall. |
-| Opt-out? | `telemetry.enabled: false`, wirksam nach `/admin reload`, ohne Neustart. |
-| Auswirkung eines Backend-Ausfalls? | Keine. Kein Retry, keine Queue, eine einzige Warnung pro Serverlauf. |
-| Main-Thread? | Nie. Spielerzahlen werden auf dem Main-Thread gelesen, der Request läuft im Hintergrund. |
-| Offen | Kein Endpunkt, keine Datenschutzerklärung, keine Retention-Entscheidung, Opt-in-vs-Opt-out vor Livegang erneut zu prüfen. |
+| Is anything sent? | No. No endpoint configured, no built-in fallback. |
+| Is an id generated? | Only if telemetry is active **and** an endpoint is configured. Otherwise not even a file is created. |
+| Which fields? | `installationId`, `universalAdminVersion`, `minecraftVersion`, `javaMajorVersion`, `onlinePlayers`, `maxPlayers`. Nothing more. |
+| Player-related data? | None. Just two numbers. No names, UUIDs, IPs. |
+| Hardware fingerprint? | No. Pure randomness. |
+| Opt-out? | `telemetry.enabled: false`, effective after `/admin reload`, no restart. |
+| Impact of a backend outage? | None. No retry, no queue, a single warning per server run. |
+| Main thread? | Never. Player counts are read on the main thread, the request runs in the background. |
+| Open | No endpoint, no privacy policy, no retention decision, opt-in-vs-opt-out to be revisited before going live. |
 
-## Known limitations
+## Known Limitations
 
-Unverändert gültige Einschränkungen aus dem vorherigen Readiness-Durchlauf,
-plus die neuen:
+Still-valid limitations from the previous readiness pass, plus the new ones:
 
-- **Kein Test auf einem laufenden Paper-Server in diesem Durchlauf.** Der
-  Build ist grün und `verifyShadedJarDrivers` prüft die fertige jar gegen eine
-  echte Datenbank, aber GUI-Navigation (Back/Close/Pagination/Empty-State/
-  Confirmations) und die Moderations-Edge-Cases (abgelaufener Ban/Mute,
-  Neustart, Disconnect während Freeze, Staff-Mode-/Vanish-Reconnect,
-  Inventar-Wiederherstellung) sind weiterhin nur code-geprüft. Frühere
-  Erfahrung in diesem Projekt: ein grüner Build war schon einmal **nicht**
-  ausreichend - ein Serverstart deckte zwei Shading-Fehler auf, die keine
-  Testsuite sehen konnte (deshalb existiert `verifyShadedJarDrivers`).
-- **Auch die Telemetrie wurde nicht gegen einen echten Endpunkt getestet** -
-  es gibt keinen. Die Unit-Tests decken Aktivierung/Deaktivierung, Payload,
-  Fehlerpfad, Jitter und Cleanup ohne Netzwerk ab; ein echter HTTP-Roundtrip
-  ist ungeprüft.
-- **Confirmation-Dialog-Historie:** `ConfirmationDialog.open(...)` legt keinen
-  eigenen Eintrag auf den Navigationsstack, sodass `confirmCtx.back()` zur
-  obersten Redraw-Callback-Seite zurückkehrt, nicht zwingend zu der Seite, von
-  der der Dialog geöffnet wurde. Repo-weites, bestehendes Muster; die
-  Performance-Dialoge umgehen es mit `this.open(viewer)`. Nicht behoben, um
-  keine breite, verhaltensändernde Änderung ohne Live-Test vorzunehmen.
-- **Zwei Low-Severity-Security-Punkte als Backlog:** kein
-  Path-Traversal-Validator auf `database.file` (Admin-Eingabe, dieselbe
-  Vertrauensstufe wie der Rest von `config.yml`) und kein Click-Debounce auf
-  GUI-Bestätigungsbuttons.
-- **Architektur-Nitpick:** `ModerationPlayerLink` (ein
-  Cross-Modul-Erweiterungspunkt) liegt im Package des Moderation-Moduls statt
-  an neutraler Stelle; der Lookup läuft korrekt über `ServiceRegistry`.
-- **Bekannter, nicht damit zusammenhängender Bug:**
-  `InGameNotificationService` rendert die Nachricht einer `Notification` als
-  Literaltext statt MiniMessage zu parsen, sodass Tags wie `<yellow>` in
-  einzelnen Lang-Keys unrendert im Chat erscheinen.
-- **Unterstützter Minecraft-/Paper-Versionsbereich ist nicht explizit
-  festgelegt** - nur "die in `build.gradle.kts` gepinnte API-Version". Für
-  einen Modrinth-Upload muss das beantwortet werden.
-- **Keine Screenshots** für README/Modrinth.
-- **Settings-GUI/-Commands fehlen** (der Service existiert), ebenso die
-  Command-Frontends für Players/Moderation/Worlds/Whitelist/Performance.
+- **No test against a running Paper server in this pass.** The build is
+  green and `verifyShadedJarDrivers` checks the finished jar against a real
+  database, but GUI navigation (back/close/pagination/empty-state/
+  confirmations) and the moderation edge cases (expired ban/mute, restart,
+  disconnect during freeze, staff-mode/vanish reconnect, inventory
+  restoration) are still only code-reviewed. Prior experience in this
+  project: a green build was once **not** sufficient - an actual server
+  start uncovered two shading bugs no test suite could see (which is why
+  `verifyShadedJarDrivers` exists).
+- **Telemetry also hasn't been tested against a real endpoint** - there
+  isn't one. The unit tests cover enable/disable, the payload, the failure
+  path, jitter, and cleanup without any network; a real HTTP round trip is
+  unverified.
+- **Confirmation dialog history:** `ConfirmationDialog.open(...)` doesn't
+  push its own entry onto the navigation stack, so `confirmCtx.back()`
+  returns to whatever page's redraw callback is on top, not necessarily the
+  page the dialog was opened from. A pre-existing, repo-wide pattern; the
+  Performance dialogs work around it with `this.open(viewer)`. Not fixed, to
+  avoid a wide, behavior-changing edit without live testing.
+- **Two low-severity security items tracked as backlog:** no path-traversal
+  validator on `database.file` (admin-only input, same trust level as the
+  rest of `config.yml`), and no click-debounce on GUI confirmation buttons.
+- **Architecture nitpick:** `ModerationPlayerLink` (a cross-module extension
+  point) lives in the moderation module's own package instead of a neutral
+  location; the lookup itself correctly goes through `ServiceRegistry`.
+- **Known, unrelated bug:** `InGameNotificationService` renders a
+  `Notification`'s message as literal text instead of parsing MiniMessage,
+  so tags like `<yellow>` in a few lang keys show up unrendered in chat.
+- **Supported Minecraft/Paper version range is not explicitly stated** -
+  only "whatever API version `build.gradle.kts` currently pins". Needs an
+  answer before a Modrinth upload.
+- **No screenshots** for the README/Modrinth.
+- **Settings GUI/commands are missing** (the service exists), as are the
+  command frontends for Players/Moderation/Worlds/Whitelist/Performance.
 
-## Empfohlene nächste Schritte
+## Recommended Next Steps
 
-1. **Einen echten Paper-Server** gegen die gebaute jar laufen lassen und die
-   GUI-/Moderations-Checkliste oben von Hand durchgehen.
-2. **Screenshots** aufnehmen (Liste in
+1. **Run a real Paper server** against the built jar and walk the GUI/
+   moderation checklist above by hand.
+2. **Capture screenshots** (list in
    [docs/release/modrinth.md](docs/release/modrinth.md)).
-3. **Versionsbereich festlegen** (welche Paper-/Minecraft-Versionen werden
-   unterstützt).
-4. **Ersten Alpha-Release taggen** nach
-   [docs/release/releasing.md](docs/release/releasing.md) - der Workflow
-   erledigt Build, Tests, Release, jar und SHA-256.
-5. Danach: **öffentliche Extension-API** (ROADMAP.md Phase 4). Der Core hat
-   genug Funktionsumfang; weitere eingebaute Features konkurrieren zunehmend
-   mit "die bestehende Oberfläche erweiterbar machen".
-6. Unabhängig davon: **Telemetrie-Backend** samt Datenschutzerklärung,
-   Retention und einer bewussten Opt-in-/Opt-out-Entscheidung, bevor ein
-   Endpunkt live geht.
+3. **Decide the supported version range** (which Paper/Minecraft versions
+   are actually supported).
+4. **Tag the first alpha release** following
+   [docs/release/releasing.md](docs/release/releasing.md) - the workflow
+   handles build, tests, release, jar, and SHA-256.
+5. After that: the **public extension API** (ROADMAP.md Phase 4). The core
+   has enough feature depth now; more built-in features increasingly compete
+   with "make the existing surface extensible" for priority.
+6. Independently: a **telemetry backend** with a privacy policy, retention,
+   and a deliberate opt-in-vs-opt-out decision before any endpoint goes
+   live.

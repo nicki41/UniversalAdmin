@@ -18,7 +18,7 @@ import java.util.UUID;
  * first, and every punishing action here picks it up automatically. Kept as
  * a plain per-action check rather than a new hook on {@code ActionExecutor}/
  * {@code ActionDefinition} (core) - nothing else needs this capability yet,
- * see docs/development/architecture-rules.md's "Baue kein Schnellweg-Verhalten" guidance.
+ * see docs/development/architecture-rules.md's "Built-in Modules Stay Extension-Friendly" guidance.
  */
 public interface ModerationPolicy {
 

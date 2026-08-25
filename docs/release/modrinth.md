@@ -1,24 +1,22 @@
-# Modrinth-Seite (Entwurf)
+# Modrinth Page (Draft)
 
-Entwurf für die künftige Modrinth-Projektseite. **Noch nichts hochgeladen** -
-dieses Dokument ist die Vorbereitung dafür, kein veröffentlichter Inhalt und
-kein automatisierter Upload. Texte unten sind auf Englisch, da
-Modrinth-Projektseiten üblicherweise englischsprachig sind (internationale
-Zielgruppe); die interne Doku bleibt überwiegend Deutsch.
+Draft for the future Modrinth project page. **Nothing has been uploaded
+yet** - this document is the preparation for that, not published content and
+not an automated upload.
 
 ## Project Title
 
 **UniversalAdmin**
 
-## Projekt-Metadaten
+## Project Metadata
 
 - **Name:** UniversalAdmin
-- **Slug:** `universaladmin` (Verfügbarkeit auf Modrinth prüfen, bevor angelegt
-  wird)
-- **Kategorie:** Admin Tools / Utility / Management
-- **Client/Server-Seite:** Server-only (kein Client-Mod nötig)
-- **Lizenz:** Apache-2.0 (entschieden, siehe [licensing.md](licensing.md);
-  `LICENSE` liegt im Repository-Root)
+- **Slug:** `universaladmin` (check availability on Modrinth before creating
+  it)
+- **Category:** Admin Tools / Utility / Management
+- **Client/Server side:** Server-only (no client mod needed)
+- **License:** Apache-2.0 (decided, see [licensing.md](licensing.md);
+  `LICENSE` is in the repository root)
 - **Source:** https://github.com/nicki41/UniversalAdmin
 
 ## Summary
@@ -27,9 +25,9 @@ Zielgruppe); die interne Doku bleibt überwiegend Deutsch.
 > GUIs for players, moderation, worlds, whitelist and performance, every action
 > permission-checked and audited.
 
-(Modrinth-Summary ist längenbegrenzt - notfalls kürzen auf: "A dependency-free
-admin platform for Paper servers with full in-game GUIs and a complete audit
-trail.")
+(Modrinth's summary field is length-limited - shorten to this if needed: "A
+dependency-free admin platform for Paper servers with full in-game GUIs and a
+complete audit trail.")
 
 ## Description
 
@@ -145,10 +143,10 @@ Modrinth page rather than duplicating it there (it would go stale).
 
 ## Telemetry Disclosure
 
-Muss auf der Projektseite stehen, sofern die zum Veröffentlichungszeitpunkt
-geltenden Modrinth-Regeln eine Offenlegung von Telemetrie verlangen (vor dem
-Upload gegen die dann aktuellen Regeln prüfen - hier wird keine
-Plattform-Compliance behauptet). Vorgeschlagener Text:
+Must appear on the project page if the Modrinth rules in effect at the time
+of publishing require a telemetry disclosure (check against the then-current
+rules before uploading - no platform compliance is claimed here). Suggested
+text:
 
 > **Anonymous statistics**
 >
@@ -182,11 +180,11 @@ Plattform-Compliance behauptet). Vorgeschlagener Text:
 | Source | https://github.com/nicki41/UniversalAdmin |
 | Issue tracker | https://github.com/nicki41/UniversalAdmin/issues |
 | Wiki / Documentation | https://github.com/nicki41/UniversalAdmin/tree/main/docs |
-| Discord | keiner - nicht angeben, solange keiner existiert |
+| Discord | none - don't list one until one actually exists |
 
 ## Screenshots
 
-Noch keine erstellt - vor dem ersten öffentlichen Listing nötig:
+None captured yet - needed before the first public listing:
 
 - [ ] Server dashboard (TPS/MSPT/memory/players/modules tile view)
 - [ ] Player browser + profile page
@@ -200,39 +198,37 @@ Noch keine erstellt - vor dem ersten öffentlichen Listing nötig:
 
 ## Versioning
 
-- Version number, Release-Typ und Tag-Schema kommen aus dem GitHub-Release -
-  siehe [releasing.md](releasing.md). Ein Modrinth-Upload verwendet exakt
-  dieselbe Versionsnummer wie der zugehörige GitHub-Release.
-- Versionen mit `-alpha`/`-beta`/`-rc` werden auf Modrinth als **Alpha** bzw.
-  **Beta** hochgeladen, nie als Release.
-- Hochgeladen wird ausschließlich die installierbare, shaded jar
-  (`universaladmin-core-<version>.jar`) - keine sources- oder javadoc-jar. Die
-  SHA-256-Datei aus dem GitHub-Release kann zur Prüfung verlinkt werden.
+- Version number, release type, and tag scheme come from the GitHub release
+  - see [releasing.md](releasing.md). A Modrinth upload uses exactly the
+  same version number as the corresponding GitHub release.
+- Versions with `-alpha`/`-beta`/`-rc` are uploaded to Modrinth as **Alpha**
+  or **Beta**, never as a Release.
+- Only the installable, shaded jar (`universaladmin-core-<version>.jar`) is
+  uploaded - no sources or javadoc jar. The SHA-256 file from the GitHub
+  release can be linked for verification.
 
 ## Release Checklist
 
-Vor dem ersten Modrinth-Upload:
+Before the first Modrinth upload:
 
-- [x] Lizenz entschieden und `LICENSE` im Repository (Apache-2.0, siehe
+- [x] License decided and `LICENSE` in the repository (Apache-2.0, see
       [licensing.md](licensing.md)).
-- [x] Öffentliches GitHub-Repository mit CI und automatisierten Releases.
-- [x] Telemetrie dokumentiert
-      ([docs/user/telemetry.md](../user/telemetry.md)) und
-      Offenlegungstext oben vorbereitet.
-- [ ] Screenshots/Galerie erstellt (Liste oben).
-- [ ] Unterstützter Minecraft-/Paper-Versionsbereich bestätigt und angegeben
-      (nicht nur "was zuletzt kompiliert wurde").
-- [ ] Ein echter Paper-Server-Durchlauf mit der Release-jar (GUI-Navigation,
-      Moderation-Edge-Cases) - siehe
+- [x] Public GitHub repository with CI and automated releases.
+- [x] Telemetry documented ([docs/user/telemetry.md](../user/telemetry.md))
+      and the disclosure text above prepared.
+- [ ] Screenshots/gallery captured (list above).
+- [ ] Supported Minecraft/Paper version range confirmed and stated (not just
+      "whatever was last compiled against").
+- [ ] A real Paper server run with the release jar (GUI navigation,
+      moderation edge cases) - see
       [RELEASE_READINESS.md](../../RELEASE_READINESS.md).
-- [ ] `./gradlew clean build` grün, inklusive Tests.
-- [ ] `CHANGELOG.md` hat einen datierten Versionsabschnitt (nicht nur
-      `[Unreleased]`).
-- [ ] Version in `build.gradle.kts` entspricht dem zu veröffentlichenden Tag.
-- [ ] GitHub-Release existiert und enthält jar + SHA-256.
-- [ ] Modrinth-Projekt angelegt, Slug/Kategorie/Beschreibung oben geprüft und
-      eingesetzt.
-- [ ] Telemetrie-Offenlegung gegen die dann geltenden Modrinth-Regeln geprüft
-      und eingesetzt.
-- [ ] Ein Maintainer löst den Upload bewusst aus - es gibt keinen CI-Job, der
-      auf Modrinth veröffentlicht (und keinen Modrinth-Token im Repository).
+- [ ] `./gradlew clean build` green, including tests.
+- [ ] `CHANGELOG.md` has a dated version section (not just `[Unreleased]`).
+- [ ] Version in `build.gradle.kts` matches the tag being published.
+- [ ] GitHub release exists and contains the jar + SHA-256.
+- [ ] Modrinth project created, slug/category/description above reviewed and
+      pasted in.
+- [ ] Telemetry disclosure checked against the then-current Modrinth rules
+      and pasted in.
+- [ ] A maintainer deliberately triggers the upload - there is no CI job
+      that publishes to Modrinth (and no Modrinth token in the repository).

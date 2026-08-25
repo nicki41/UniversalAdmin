@@ -1,25 +1,24 @@
 # Contributing
 
-Danke für dein Interesse an UniversalAdmin. Dieses Dokument beschreibt, was
-du zum Mitarbeiten brauchst und woran ein Pull Request gemessen wird.
+Thanks for your interest in UniversalAdmin. This document describes what you
+need to contribute and what a pull request is measured against.
 
-Die kurze Version: lies
+Short version: read
 [docs/development/architecture-rules.md](docs/development/architecture-rules.md)
-und [ARCHITECTURE.md](ARCHITECTURE.md), bevor du etwas baust. Die
-Architekturregeln sind verbindlich, nicht empfehlend - sie sind der Grund,
-warum dieselbe Logik später von GUI, Command und Web-API genutzt werden kann.
+and [ARCHITECTURE.md](ARCHITECTURE.md) before you build anything. The
+architecture rules are binding, not a suggestion - they're the reason the
+same logic can later be reused by the GUI, a command, and a web API.
 
 ## Setup
 
-Du brauchst:
+You need:
 
-- **Java 25.** Der Gradle-Wrapper holt sich per
-  `foojay-resolver-convention` automatisch eine passende Toolchain, wenn
-  lokal keine installiert ist - ein anderes lokales JDK reicht also, um den
-  Build zu starten.
-- **Kein Gradle-Installationszwang** - benutze den mitgelieferten Wrapper
-  (`./gradlew`, unter Windows `gradlew.bat`).
-- Eine IDE mit Gradle-Import (IntelliJ IDEA, Eclipse, VS Code) - optional.
+- **Java 25.** The Gradle wrapper auto-provisions a matching toolchain via
+  `foojay-resolver-convention` if none is installed locally - so a different
+  local JDK is enough to get the build started.
+- **No Gradle install required** - use the bundled wrapper (`./gradlew`, on
+  Windows `gradlew.bat`).
+- An IDE with Gradle import (IntelliJ IDEA, Eclipse, VS Code) - optional.
 
 ```bash
 git clone https://github.com/nicki41/UniversalAdmin.git
@@ -27,101 +26,104 @@ cd UniversalAdmin
 ./gradlew build
 ```
 
-`build` kompiliert, führt alle Tests aus, baut die shaded jar unter
-`build/libs/` und prüft zusätzlich über `verifyShadedJarDrivers`, dass die
-gebündelten Datenbanktreiber in der fertigen jar wirklich funktionieren.
-Ausführlicher: [docs/development/setup.md](docs/development/setup.md).
+`build` compiles, runs every test, builds the shaded jar under `build/libs/`,
+and additionally checks via `verifyShadedJarDrivers` that the bundled
+database drivers actually work in the final jar. More detail:
+[docs/development/setup.md](docs/development/setup.md).
 
-## Architektur
+## Architecture
 
-Alles Verbindliche steht in
+Everything binding is in
 [docs/development/architecture-rules.md](docs/development/architecture-rules.md).
-Die Punkte, an denen Pull Requests am häufigsten scheitern:
+The points pull requests most often trip on:
 
-- **Business-Logik lebt in Services und Actions**, nicht in GUI-Click-Handlern
-  oder Command-Executors. Frontends rufen auf, sie entscheiden nicht.
-- **Kein SQL außerhalb einer `*Repository`- oder `Migration`-Implementierung.**
-  Services kennen nur das `Repository`-Interface, nie `Connection` oder
-  `DataSource`.
-- **Mutierende Operationen laufen über `ActionExecutor`**, nie über einen
-  direkten `Action.execute(...)`-Aufruf - sonst fehlen Permission-Prüfung und
-  Audit-Eintrag.
-- **Keine blockierenden Datenbankaufrufe auf dem Paper-Main-Thread.** Alles
-  IO läuft über `TaskScheduler.supplyAsync`/`runAsync`, alles Bukkit-API über
-  `runOnMainThread`. Siehe
+- **Business logic lives in services and actions**, not in GUI click handlers
+  or command executors. Frontends call, they don't decide.
+- **No SQL outside a `*Repository` or `Migration` implementation.** Services
+  only know the `Repository` interface, never `Connection` or `DataSource`.
+- **Mutating operations run through `ActionExecutor`**, never a direct
+  `Action.execute(...)` call - otherwise permission checks and the audit
+  entry are skipped.
+- **No blocking database calls on the Paper main thread.** All IO goes
+  through `TaskScheduler.supplyAsync`/`runAsync`, all Bukkit API through
+  `runOnMainThread`. See
   [docs/architecture/threading.md](docs/architecture/threading.md).
-- **Keine sichtbaren Texte im Code.** Jeder Nutzertext ist ein `MessageKey`,
-  aufgelöst über `MessageService` aus `lang/<locale>.yml` - und wird in
-  **beiden** mitgelieferten Sprachen ergänzt.
-- **Kein `config.getString(...)`.** Jeder Konfigurationswert ist ein
-  typisiertes, validiertes `SettingDefinition` - siehe
+- **No visible text in code.** Every user-facing string is a `MessageKey`,
+  resolved through `MessageService` from `lang/<locale>.yml` - and added to
+  **both** shipped languages.
+- **No `config.getString(...)`.** Every configuration value is a typed,
+  validated `SettingDefinition` - see
   [docs/development/settings.md](docs/development/settings.md).
-- **Keine neue Dependency ohne Begründung** im PR-Text. Insbesondere keine
-  Pflicht-Abhängigkeit auf Vault, LuckPerms, PlaceholderAPI oder ProtocolLib.
+- **No new dependency without a reason** stated in the PR text. In
+  particular, no mandatory dependency on Vault, LuckPerms, PlaceholderAPI, or
+  ProtocolLib.
 
-Ein Umbau der Architektur ist ein eigenes Gespräch und bekommt eine eigene
-ADR unter [docs/architecture/decisions/](docs/architecture/decisions/) - kein
-Nebeneffekt eines Feature-PRs.
+Reworking the architecture is a separate conversation and gets its own ADR
+under [docs/architecture/decisions/](docs/architecture/decisions/) - never a
+side effect of a feature PR.
 
-## Neues Modul hinzufügen
+## Adding a Module
 
-Schritt-für-Schritt-Anleitung mit dem `players`-Modul als Vorlage:
+Step-by-step guide using the `players` module as a template:
 [docs/development/adding-module.md](docs/development/adding-module.md).
 
 ## Testing
 
-- Jede neue Business-Logik (Service, Action, Migration mit nicht-trivialer
-  Logik) braucht einen Unit-Test, der **ohne** laufenden Paper-Server läuft.
-- Repositories werden gegen ein In-Memory-Fake des Interfaces getestet, nicht
-  gemockt, wo ein Fake einfacher ist.
-- Migrationen werden gegen eine echte, temporäre SQLite-Datenbank getestet.
-- Keine Tests, die echte Netzwerk-Requests machen.
-- Keine Getter-Tests.
+- Every new piece of business logic (service, action, migration with
+  non-trivial logic) needs a unit test that runs **without** a live Paper
+  server.
+- Repositories are tested against an in-memory fake of the interface, not
+  mocked, wherever a fake is simpler.
+- Migrations are tested against a real, temporary SQLite database.
+- No tests that make real network requests.
+- No getter tests.
 
 ```bash
 ./gradlew test
 ```
 
-Konventionen im Detail:
-[docs/development/testing.md](docs/development/testing.md).
+Full conventions: [docs/development/testing.md](docs/development/testing.md).
 
-## Code-Stil
+## Code Style
 
-- Java 25, 4 Leerzeichen Einrückung, UTF-8, keine Tabs.
-- Interfaces ohne Präfix/Suffix (`Repository`, `Module`, `Action`), konkrete
-  Implementierungen mit sprechendem Präfix (`JdbcPlayerProfileRepository`).
-- Domain-Modelle sind `record`s, keine Klassen mit Settern.
-- Typisierte IDs statt roher Strings (`ModuleId`, `ActionId`, `GuiPageId`).
-- Kommentare erklären das *Warum*, nicht das *Was* - besonders da, wo eine
-  offensichtlichere Lösung bewusst verworfen wurde.
+- Java 25, 4-space indentation, UTF-8, no tabs.
+- Interfaces without a prefix/suffix (`Repository`, `Module`, `Action`),
+  concrete implementations with a descriptive prefix
+  (`JdbcPlayerProfileRepository`).
+- Domain models are `record`s, not classes with setters.
+- Typed IDs instead of raw strings (`ModuleId`, `ActionId`, `GuiPageId`).
+- Comments explain *why*, not *what* - especially where a more obvious
+  solution was deliberately rejected.
 
-Vollständig: [docs/development/conventions.md](docs/development/conventions.md).
+Full detail: [docs/development/conventions.md](docs/development/conventions.md).
 
-## Dokumentation
+## Documentation
 
-Ändert dein PR eine Architekturentscheidung, ein Modul-Verhalten, eine
-Permission oder eine Konfigurationsoption, gehört die passende Datei unter
-`docs/` (bzw. `README.md`, `ROADMAP.md`, `CHANGELOG.md`) **im selben PR**
-aktualisiert - nicht "später".
+If your PR changes an architecture decision, module behavior, a permission,
+or a configuration option, the relevant file under `docs/` (or
+`README.md`/`ROADMAP.md`/`CHANGELOG.md`) gets updated **in the same PR** -
+not "later".
 
-Betrifft eine Änderung die Telemetrie, gehört sie zusätzlich in
-[docs/user/telemetry.md](docs/user/telemetry.md). Es wird nichts erhoben, was
-dort nicht dokumentiert ist.
+If a change touches telemetry, it additionally belongs in
+[docs/user/telemetry.md](docs/user/telemetry.md). Nothing is collected that
+isn't documented there.
 
-## Pull-Request-Ablauf
+## Pull Request Flow
 
-1. Fork erstellen, Branch von `main` abzweigen.
-2. Änderung umsetzen, Tests ergänzen, Doku im selben Commit-Satz mitziehen.
-3. `./gradlew build` muss lokal grün sein.
-4. PR gegen `main` öffnen und die Checkliste in der PR-Vorlage abarbeiten.
-5. CI (Build + Tests) muss grün sein, bevor gemerged wird.
+1. Fork the repo, branch off `main`.
+2. Implement the change, add tests, carry documentation along in the same
+   set of commits.
+3. `./gradlew build` must be green locally.
+4. Open a PR against `main` and work through the checklist in the PR
+   template.
+5. CI (build + tests) must be green before merging.
 
-**Commit-Messages** sind kurz und auf den Punkt und erklären das *Warum*, nicht
-nur das *Was* - der Diff zeigt das *Was* bereits. Ein Präfix im Stil von
-`feat:`/`fix:`/`docs:`/`chore:` ist willkommen, aber nicht erzwungen.
+**Commit messages** are short, to the point, and explain *why*, not just
+*what* - the diff already shows *what*. A prefix in the style of
+`feat:`/`fix:`/`docs:`/`chore:` is welcome but not required.
 
-## Lizenz der Beiträge
+## License of Contributions
 
-Mit einem Pull Request stellst du deinen Beitrag unter die
-[Apache License 2.0](LICENSE) (§5 des Lizenztexts). Es gibt kein zusätzliches
-CLA.
+By opening a pull request you submit your contribution under the
+[Apache License 2.0](LICENSE) (§5 of the license text). There is no
+additional CLA.

@@ -24,7 +24,7 @@ import org.bukkit.entity.Player;
 
 /**
  * Currently-online players with World/Gamemode filter-cycle buttons - the
- * "Filter vorbereiten für World/Gamemode" requirement, meaningful here since
+ * "prepare a World/Gamemode filter" requirement, meaningful here since
  * both are live state only an online player has. Reading {@link
  * Bukkit#getOnlinePlayers()} and filtering/sorting for display is
  * presentation assembly, not business logic (see {@code AuditLogListPage}'s

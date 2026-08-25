@@ -1,15 +1,14 @@
-# Ein neues Modul hinzufügen (bzw. ein Skelett ausbauen)
+# Adding a New Module (or Building Out a Skeleton)
 
-Sieben der acht eingebauten Module (alle außer `players`) sind aktuell
-Skelette: sie implementieren `Module`, registrieren eine Beispiel-
-Permission und sonst nichts. Diese Anleitung nutzt
+Seven of the eight built-in modules (all except `players`) are currently
+skeletons: they implement `Module`, register an example permission, and
+nothing else. This guide uses
 [`dev.universaladmin.modules.players`](../../src/main/java/dev/universaladmin/modules/players)
-als vollständiges Vorbild - dieselben Schritte gelten für ein komplett
-neues Modul.
+as the complete template - the same steps apply for a brand-new module.
 
-## 1. Domain-Modell
+## 1. Domain Model
 
-Ein unveränderliches `record` pro Entität.
+An immutable `record` per entity.
 
 ```java
 public record PlayerProfile(UUID id, String lastKnownName, Instant firstJoin, Instant lastSeen) {
@@ -17,10 +16,10 @@ public record PlayerProfile(UUID id, String lastKnownName, Instant firstJoin, In
 }
 ```
 
-## 2. Repository-Interface
+## 2. Repository Interface
 
-Erweitert `dev.universaladmin.storage.Repository<T, ID>`, ggf. mit
-modulspezifischen Zusatzmethoden.
+Extends `dev.universaladmin.storage.Repository<T, ID>`, with
+module-specific extra methods where needed.
 
 ```java
 public interface PlayerProfileRepository extends Repository<PlayerProfile, UUID> {}
@@ -28,23 +27,23 @@ public interface PlayerProfileRepository extends Repository<PlayerProfile, UUID>
 
 ## 3. Migration
 
-Erstellt die Tabelle. Version ab 1000 aufwärts (siehe
-[storage.md](../architecture/storage.md) für die Versionsbereiche) -
-prüfe die höchste bereits vergebene Version im Zielmodul, bevor du eine
-neue Zahl wählst. Dialektunterschiede (SQLite vs. MySQL/MariaDB) über
-`connection.getMetaData().getDatabaseProductName()` behandeln, siehe
-`PlayerProfileMigration`/`AuditSchemaMigration` als Beispiel.
+Creates the table. Version 1000 and up (see
+[storage.md](../architecture/storage.md) for the version ranges) - check
+the highest version already used in the target module before picking a new
+number. Handle dialect differences (SQLite vs. MySQL/MariaDB) via
+`connection.getMetaData().getDatabaseProductName()`, see
+`PlayerProfileMigration`/`AuditSchemaMigration` as an example.
 
-## 4. JDBC-Repository-Implementierung
+## 4. JDBC Repository Implementation
 
-In einem `jdbc`-Subpackage, async über den vom Modul erhaltenen
-`TaskScheduler`, `PreparedStatement` mit gebundenen Parametern (nie
-String-Concatenation). Eigene unchecked Exception für SQL-Fehler
-(`PlayerStorageException`-Muster).
+In a `jdbc` subpackage, async through the module's `TaskScheduler`,
+`PreparedStatement` with bound parameters (never string concatenation).
+Its own unchecked exception for SQL errors (the `PlayerStorageException`
+pattern).
 
 ## 5. Application Service
 
-Die eigentliche Business-Logik. Kennt nur das Repository-*Interface*.
+The actual business logic. Only knows the repository *interface*.
 
 ```java
 public final class PlayerService {
@@ -56,8 +55,8 @@ public final class PlayerService {
 
 ## 6. (Optional) Action
 
-Nur wenn die Operation von mehreren Frontends aufrufbar oder
-auditiert/berechtigt werden soll (siehe [actions.md](../architecture/actions.md)).
+Only if the operation should be callable from multiple frontends or needs
+to be audited/authorized (see [actions.md](../architecture/actions.md)).
 
 ```java
 public final class GetPlayerProfileAction implements Action<UUID, PlayerProfile> {
@@ -66,25 +65,25 @@ public final class GetPlayerProfileAction implements Action<UUID, PlayerProfile>
 }
 ```
 
-## 7. Module-Klasse
+## 7. Module Class
 
-Ein `ModuleDescriptor` (statische Metadaten - siehe
+A `ModuleDescriptor` (static metadata - see
 [modules.md](../architecture/modules.md#moduledescriptor---static-metadata)),
-eine `onLoad`, die **nur** die Migration(en) registriert, und ein `onEnable`,
-das den Rest verdrahtet: Repository/Service bauen, Service ggf.
-modulübergreifend über `ServiceRegistry` verfügbar machen, Actions/
-Permissions registrieren.
+an `onLoad` that registers **only** the migration(s), and an `onEnable`
+that wires up the rest: build the repository/service, expose the service
+across modules via `ServiceRegistry` if needed, register actions/
+permissions.
 
-**Migration registrieren gehört in `onLoad`, nicht `onEnable`.**
-`ModuleManager.loadAll()` ruft `onLoad` für **jedes** Modul auf, bevor
-`enableAll()` für irgendein Modul `onEnable` aufruft - und
-`UniversalAdminPlugin#onEnable` ruft `storage.migrations().runPending()`
-genau dazwischen auf. Registriert ein Modul seine Migration stattdessen in
-`onEnable`, ist die Tabelle zu dem Zeitpunkt, an dem dasselbe `onEnable`
-schon sein Repository/seinen Service baut, noch nicht angelegt - bei einem
-Service, der beim Bauen sofort (auch nur asynchron/fire-and-forget) einen
-Datenbank-Read auslöst, ist das ein garantierter `no such table`-Fehler,
-kein theoretisches Risiko (siehe
+**Registering the migration belongs in `onLoad`, not `onEnable`.**
+`ModuleManager.loadAll()` calls `onLoad` for **every** module before
+`enableAll()` calls `onEnable` for any of them - and
+`UniversalAdminPlugin#onEnable` calls `storage.migrations().runPending()`
+exactly in between. If a module registers its migration in `onEnable`
+instead, the table doesn't exist yet at the point where that same
+`onEnable` already builds its repository/service - for a service that
+triggers a database read immediately when built (even asynchronously/
+fire-and-forget), that's a guaranteed `no such table` error, not a
+theoretical risk (see
 [docs/architecture/threading.md](../architecture/threading.md)).
 
 ```java
@@ -122,58 +121,58 @@ public final class PlayersModule implements Module {
 }
 ```
 
-Nur falls das Modul einen anderen Built-in-Module *zwingend* braucht (nicht
-"nutzt ihn, falls vorhanden"): `.dependsOn(OtherModule.ID)` auf dem
-Builder. Ohne echten Grund keine Abhängigkeit deklarieren - siehe
+Only if the module *requires* another built-in module (not "uses it if
+present"): `.dependsOn(OtherModule.ID)` on the builder. Don't declare a
+dependency without a real reason - see
 [modules.md](../architecture/modules.md#dependencies-and-ordering).
 
-Registriert das Modul in `onEnable` einen Bukkit-Listener, einen
-Scheduler-Task, oder einen Registry-Eintrag, der beim Disable wieder
-verschwinden soll, geht das über `context.resources()` statt über
-manuelles Bookkeeping in `onDisable` - siehe
+If the module registers a Bukkit listener, a scheduler task, or a registry
+entry in `onEnable` that should disappear again on disable, that goes
+through `context.resources()` instead of manual bookkeeping in
+`onDisable` - see
 [modules.md](../architecture/modules.md#resource-cleanup):
 
 ```java
 context.resources().listener(new MyJoinListener(service));
 ```
 
-## 8. In `UniversalAdminPlugin#registerBuiltInModules()` registrieren
+## 8. Register in `UniversalAdminPlugin#registerBuiltInModules()`
 
-Das ist die einzige Stelle im Bootstrap, die built-in Module namentlich
-kennt. `ModuleManager` bringt sie danach über `loadAll()`/`enableAll()`
-selbst in Abhängigkeitsreihenfolge - die Registrierungsreihenfolge hier
-muss also nur dann etwas garantieren, wenn eine echte
-`ModuleDescriptor.dependsOn(...)`-Abhängigkeit fehlt, auf die man sich
-sonst verlassen müsste.
+That's the only place in bootstrap that knows built-in modules by name.
+`ModuleManager` then brings them into dependency order itself via
+`loadAll()`/`enableAll()` - so the registration order here only has to
+guarantee anything when a real `ModuleDescriptor.dependsOn(...)`
+dependency is missing that one would otherwise have to rely on.
 
 ## 9. Tests
 
-Mindestens ein Test für den Service gegen ein In-Memory-Fake des
-Repositorys (siehe [testing.md](testing.md) und `PlayerServiceTest`).
-Migration gegen eine echte temporäre SQLite-Datenbank testen, falls sie
-nicht-triviale SQL enthält. Lifecycle-/Registrierungsverhalten des
-Moduls selbst (falscher State-Übergang, Fehlerisolierung, Cleanup) ist
-bereits durch [`ModuleManagerTest`](../../src/test/java/dev/universaladmin/module/ModuleManagerTest.java)
-generisch abgedeckt - dafür braucht ein neues Modul keinen eigenen Test.
+At least one test for the service against an in-memory fake of the
+repository (see [testing.md](testing.md) and `PlayerServiceTest`). Test a
+migration against a real, temporary SQLite database if it contains
+non-trivial SQL. The module's own lifecycle/registration behavior (wrong
+state transition, failure isolation, cleanup) is already generically
+covered by
+[`ModuleManagerTest`](../../src/test/java/dev/universaladmin/module/ModuleManagerTest.java)
+- a new module doesn't need its own test for that.
 
-## 10. GUI/Command-Frontend
+## 10. GUI/Command Frontend
 
-`players` ist inzwischen selbst das vollständige Vorbild dafür: siehe
+`players` is by now the complete template for this too: see
 [`dev.universaladmin.modules.players.gui`](../../src/main/java/dev/universaladmin/modules/players/gui)
-(`PlayerBrowserHomePage` als Einstiegsseite, weitere Seiten ephemer wie
-`AuditLogDetailPage`) und [gui-framework.md](gui-framework.md). Kurzfassung:
-eine Seite erweitert `AbstractGuiPage`/`AbstractListGuiPage` statt `GuiPage`
-von Hand zu implementieren, bekommt Services über den Konstruktor (plus
-`GuiFramework`), und registriert sich in `onEnable` unter derselben
-`GuiPageId`, die heute noch eine `PlaceholderGuiPage` belegt
-(`core:<modul>.home`, siehe `UniversalAdminPlugin#registerMainMenu`) - diese
-Platzhalter-Registrierung muss dann für das jeweilige Modul entfernt werden
-(siehe die Entfernung der `players.home`-Zeile dort als Beispiel). Die Regel
-bleibt: der Klick-Handler/Command-Executor ruft nur den Service/die Action
-auf.
+(`PlayerBrowserHomePage` as the entry page, further pages like
+`AuditLogDetailPage`) and [gui-framework.md](gui-framework.md). Short
+version: a page extends `AbstractGuiPage`/`AbstractListGuiPage` instead of
+implementing `GuiPage` by hand, gets its services through the constructor
+(plus `GuiFramework`), and registers itself in `onEnable` under the same
+`GuiPageId` a `PlaceholderGuiPage` currently occupies
+(`core:<module>.home`, see `UniversalAdminPlugin#registerMainMenu`) - that
+placeholder registration then has to be removed for the respective module
+(see the removal of the `players.home` line there as an example). The rule
+stays the same: the click handler/command executor only calls the
+service/action.
 
-## 11. Doku aktualisieren
+## 11. Update Documentation
 
-`docs/architecture/modules.md` (Statuszeile des Moduls),
-`ROADMAP.md` (abgehakter Punkt), ggf. `docs/user/permissions.md` (neue
-Permission-Node).
+`docs/architecture/modules.md` (the module's status row), `ROADMAP.md`
+(the checked-off item), and `docs/user/permissions.md` if applicable (a
+new permission node).

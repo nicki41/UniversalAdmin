@@ -13,8 +13,8 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
 /**
  * Denies login for an actively banned target - pure event-to-service-call
- * translation, no business logic here (see docs/development/architecture-rules.md's "keine
- * Bukkit-Event-Listener mit Logik" rule; the actual "is this player banned"
+ * translation, no business logic here (see docs/development/architecture-rules.md's "no
+ * Bukkit event listeners with logic" rule; the actual "is this player banned"
  * decision lives in {@link PunishmentService}). {@link AsyncPlayerPreLoginEvent}
  * fires off the main thread (before a {@code Player} object even exists),
  * which is exactly what a DB-backed ban lookup needs - blocking on {@link

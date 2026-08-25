@@ -3,8 +3,8 @@
 The Server module is a live dashboard plus server-wide control: broadcasts,
 maintenance mode, and confirmed shutdown/restart - built entirely on the
 existing Module/GUI/Action/Audit/Settings infrastructure, no shortcuts
-specific to a built-in module (see docs/development/architecture-rules.md's "Built-in Modules bleiben
-Extension-freundlich"). Every mutation is an `Action` run through
+specific to a built-in module (see docs/development/architecture-rules.md's "Built-in Modules Stay
+Extension-Friendly"). Every mutation is an `Action` run through
 `ActionExecutor`, so it is permission-checked and audited the same way
 whether it's clicked in the GUI or run from `/admin server ...`.
 

@@ -18,9 +18,9 @@ import org.bukkit.entity.Player;
 
 /**
  * {@code worlds.home} - the World Browser: one tile per currently loaded
- * world ({@link Bukkit#getWorlds()} - "alle geladenen Welten", never a
- * file-system scan, see docs/development/architecture-rules.md's "Keine Welt-Datei-Manipulation im
- * Core"). Always a small, already-in-memory list, so plain synchronous
+ * world ({@link Bukkit#getWorlds()} - every loaded world, never a
+ * file-system scan; deliberately no world file manipulation in the core).
+ * Always a small, already-in-memory list, so plain synchronous
  * rendering like {@code ServerHomePage}'s dashboard tiles - no async load,
  * no pagination, unlike list pages backed by a database query.
  */

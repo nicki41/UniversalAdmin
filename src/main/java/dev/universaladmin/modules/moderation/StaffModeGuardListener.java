@@ -34,8 +34,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
  * Entity#setInvulnerable}, no listener needed, see {@code
  * StaffModeService#applyEntry}). Every tool-item branch cancels the
  * triggering event <b>before</b> dispatching, regardless of what was
- * clicked - "Tool Interaction darf normale Weltaktionen nicht versehentlich
- * auslösen" applies even when a Player-Inspector-holding staff member
+ * clicked - "a tool interaction must never accidentally trigger a normal
+ * world action" applies even when a Player-Inspector-holding staff member
  * right-clicks a cow, not just when they right-click another player.
  */
 public final class StaffModeGuardListener implements Listener {

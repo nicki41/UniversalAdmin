@@ -1,53 +1,52 @@
-# 0001 - Modularer Core statt monolithischer Plugin-Klasse
+# 0001 - Modular Core Instead of a Monolithic Plugin Class
 
 ## Status
 
-Angenommen
+Accepted
 
-## Kontext
+## Context
 
-UniversalAdmin soll acht eingebaute Fachbereiche (Players, Moderation,
-Server, Worlds, Whitelist, Performance, Audit Log, Settings) abdecken und
-langfristig externe Extensions zulassen. Ein einzelner
-`JavaPlugin`-Listener/Command-Wust pro Feature führt erfahrungsgemäß zu
-genau der Art von unwartbarem Admin-Plugin, die dieses Projekt vermeiden
-soll (siehe Projektphilosophie in [../overview.md](../overview.md)).
+UniversalAdmin has to cover eight built-in areas (Players, Moderation,
+Server, Worlds, Whitelist, Performance, Audit Log, Settings) and allow
+external extensions in the long run. A single `JavaPlugin`
+listener/command tangle per feature reliably leads to exactly the kind of
+unmaintainable admin plugin this project is meant to avoid (see the project
+philosophy in [../overview.md](../overview.md)).
 
-Zusätzlich gibt es keinen Dependency-Injection-Rahmen (bewusst - siehe
-Alternativen unten), aber trotzdem den Wunsch nach klar geschnittenen,
-unabhängig testbaren Einheiten.
+There is also no dependency-injection framework (deliberately - see
+Alternatives below), but still a need for clearly cut, independently
+testable units.
 
-## Entscheidung
+## Decision
 
-- Ein `Module`-Interface, das Fachbereiche als in sich geschlossene
-  Einheiten modelliert, die sich bei geteilten Registries anmelden statt
-  selbst Zustand zu halten.
-- Ein einziger Composition Root (`UniversalAdmin`), von Hand in
-  `UniversalAdminPlugin#onEnable` zusammengebaut und per Konstruktor an
-  alles weitergereicht, was es braucht. Das ist das einzige bewusst
-  erlaubte "God Object" im Projekt.
-- Keine DI-Framework-Abhängigkeit (Guice, Spring, etc.). Für die aktuelle
-  Größe ist manuelles Wiring einfacher zu lesen und zu debuggen als eine
-  Framework-Konfiguration, und es entfällt eine weitere Abhängigkeit.
+- A `Module` interface that models feature areas as self-contained units
+  that register with shared registries instead of holding their own state.
+- A single composition root (`UniversalAdmin`), assembled by hand in
+  `UniversalAdminPlugin#onEnable` and passed via constructor to everything
+  that needs it. This is the only deliberately allowed "god object" in the
+  project.
+- No DI-framework dependency (Guice, Spring, etc.). At the current size,
+  manual wiring is easier to read and debug than a framework configuration,
+  and it avoids another dependency.
 
-## Konsequenzen
+## Consequences
 
-- Neuer Service = neuer Konstruktor-Parameter an den Stellen, die ihn
-  brauchen. Das ist mehr Tipparbeit als ein DI-Framework, aber jede
-  Abhängigkeit ist im Code sichtbar, nicht in einer Annotation versteckt.
-- `UniversalAdmin` wächst mit jedem neuen Querschnittsservice. Das ist
-  akzeptiert, solange es nur *Registries/Services referenzieren*, nicht
-  *Business-Logik enthalten* tut - siehe [Entwicklungsregeln](../../development/architecture-rules.md).
-- Wenn das manuelle Wiring bei wachsender Modulzahl unhandlich wird, ist
-  ein DI-Framework eine spätere, bewusste Entscheidung (neue ADR), kein
-  stillschweigender Umbau.
+- A new service means a new constructor parameter everywhere it's needed.
+  That's more typing than a DI framework, but every dependency is visible in
+  the code, not hidden behind an annotation.
+- `UniversalAdmin` grows with every new cross-cutting service. Accepted, as
+  long as it only *references registries/services*, never *contains business
+  logic* - see the [development rules](../../development/architecture-rules.md).
+- If manual wiring becomes unwieldy as the module count grows, a DI
+  framework is a later, deliberate decision (a new ADR), not a silent
+  rework.
 
-## Alternativen
+## Alternatives
 
-- **DI-Framework (Guice/Spring):** Mehr Boilerplate-Reduktion bei großer
-  Modulzahl, aber eine zusätzliche Kern-Abhängigkeit und eine Indirektion,
-  die für ein Projekt dieser Größe (noch) nicht gerechtfertigt ist.
-- **Ein Bukkit-Plugin pro Modul:** Würde echte Prozess-/Classloader-
-  Isolation geben, aber jedes Modul bräuchte eine eigene Datenbankverbindung
-  und ein eigenes Update/Versionsschema - Overhead ohne Nutzen, solange
-  alle Module im selben Repository entwickelt werden.
+- **DI framework (Guice/Spring):** More boilerplate reduction with a large
+  module count, but an additional core dependency and an indirection not
+  (yet) justified for a project this size.
+- **One Bukkit plugin per module:** Would give real process/classloader
+  isolation, but every module would need its own database connection and
+  its own update/version schema - overhead without benefit as long as all
+  modules are developed in the same repository.

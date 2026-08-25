@@ -11,7 +11,7 @@ import org.bukkit.event.player.PlayerLoginEvent;
  * Denies login while maintenance mode is enabled, for anyone without {@link
  * ServerPermissions#BYPASS_MAINTENANCE} or an allow-listed name - pure
  * event-to-service-call translation, no business logic here (see docs/development/architecture-rules.md's
- * "keine Bukkit-Event-Listener mit Logik" rule; the actual decision is
+ * "no Bukkit event listeners with logic" rule; the actual decision is
  * {@link MaintenanceService#isAllowed}).
  *
  * <p>Uses {@link PlayerLoginEvent} rather than {@code AsyncPlayerPreLoginEvent}

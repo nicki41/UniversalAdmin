@@ -3,7 +3,7 @@
 The Worlds module is a world browser, profile viewer, and world-control
 toolkit built entirely on the existing Module/GUI/Action/Audit/Permission
 infrastructure - no shortcuts specific to a built-in module (see docs/development/architecture-rules.md's
-"Built-in Modules bleiben Extension-freundlich"). Every mutation is an
+"Built-in Modules Stay Extension-Friendly"). Every mutation is an
 `Action` run through `ActionExecutor`, so it is permission-checked and
 audited the same way regardless of frontend.
 
@@ -18,7 +18,7 @@ permission-checked, audited wrapper around a `World`/`WorldBorder` call.
 ## World Browser
 
 One tile per currently **loaded** world (`Bukkit.getWorlds()` - never a
-file-system scan, see docs/development/architecture-rules.md's "Keine Welt-Datei-Manipulation im Core"),
+file-system scan, deliberately no world file manipulation in the core),
 showing Name, Environment, Players, Loaded Chunks, Entities, Difficulty,
 Time, and Weather. Click a tile to open its profile.
 
@@ -81,9 +81,9 @@ buffer, warning distance, and warning time.
 ## Dangerous Features (out of scope)
 
 **Not implemented, deliberately:** delete world, clone world, reset world.
-These are genuinely destructive, file-level operations this module does not
-perform - see docs/development/architecture-rules.md's "Keine Welt-Datei-Manipulation im Core". They
-belong in a future "Advanced World Manager" extension, not the core.
+These are genuinely destructive, file-level operations this module
+deliberately does not perform - no world file manipulation in the core.
+They belong in a future "Advanced World Manager" extension, not the core.
 
 ## Permissions
 

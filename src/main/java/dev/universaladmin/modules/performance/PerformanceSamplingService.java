@@ -178,7 +178,7 @@ public final class PerformanceSamplingService {
 
     /**
      * Fires at most once per {@code cooldown} while a threshold stays breached
-     * (not once per refresh interval) - "noch keine komplexe Alert Engine",
+     * (not once per refresh interval) - "no elaborate alert engine yet",
      * just enough hysteresis that a persisting breach doesn't spam staff.
      * Delivered through {@link NotificationService#notifyStaff}, the same
      * interface a future Discord/web-push channel implements - see its
