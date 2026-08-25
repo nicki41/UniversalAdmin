@@ -26,10 +26,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 25 (build toolchain) and 21 (runs Gradle)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: |
@@ -37,7 +37,7 @@ jobs:
             21
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       # Guard against publishing a mislabelled release: tag v0.2.0 must not
       # ship a jar built from version 0.1.0. Runs before the build so a

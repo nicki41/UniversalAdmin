@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Two JDKs on purpose. Gradle itself runs on the last one listed (21);
       # the compile/test toolchain the project actually targets is Java 25
@@ -34,7 +34,7 @@ jobs:
       # detection ever fails, settings.gradle.kts' foojay resolver
       # auto-provisions the toolchain and the build still works.
       - name: Set up JDK 25 (build toolchain) and 21 (runs Gradle)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: |
@@ -42,7 +42,7 @@ jobs:
             21
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Build and test
         run: >-
@@ -60,7 +60,7 @@ jobs:
       # `jar` task writes to the same file name and is overwritten by
       # shadowJar, so build/libs holds exactly one, installable jar).
       - name: Upload plugin jar
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: UniversalAdmin-${{ steps.version.outputs.version }}
           path: build/libs/*.jar
@@ -68,7 +68,7 @@ jobs:
 
       - name: Upload test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-report
           path: build/reports/tests/test
