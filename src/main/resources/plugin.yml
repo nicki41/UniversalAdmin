@@ -1,0 +1,19 @@
+name: UniversalAdmin
+version: '${version}'
+main: dev.universaladmin.bootstrap.UniversalAdminPlugin
+api-version: '26.2'
+description: A universal admin platform for Paper servers.
+website: https://github.com/nicki41/UniversalAdmin
+author: UniversalAdmin
+
+commands:
+  admin:
+    description: UniversalAdmin main command.
+    usage: /admin
+    aliases: [ua, uadmin]
+
+# Deliberately no `permissions:` block here. Permission nodes come from
+# modules (built-in and, later, extensions) via PermissionRegistry and are
+# registered with Bukkit's PluginManager at runtime in UniversalAdminPlugin -
+# plugin.yml is static and cannot know about extension-defined permissions.
+# See docs/architecture/decisions/0005-extension-ready-design.md.

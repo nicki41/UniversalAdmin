@@ -1,0 +1,116 @@
+name: Bug report
+description: Report something that doesn't work as expected
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report.
+
+        **Please do not post secrets.** Server logs and configuration files can
+        contain database passwords, tokens, IP addresses, and player data.
+        Redact them before pasting anything below.
+
+        Found a **security vulnerability** (permission bypass, injection, RCE,
+        privilege escalation)? Do **not** file a public issue - see
+        [SECURITY.md](https://github.com/nicki41/UniversalAdmin/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What went wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open /admin
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: input
+    id: universaladmin-version
+    attributes:
+      label: UniversalAdmin version
+      description: From `/version UniversalAdmin` or the jar file name.
+      placeholder: 0.1.0-alpha
+    validations:
+      required: true
+
+  - type: input
+    id: paper-version
+    attributes:
+      label: Paper version
+      description: The full output of `/version`.
+      placeholder: "git-Paper-… (MC: …)"
+    validations:
+      required: true
+
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft version
+      placeholder: "1.21.4"
+    validations:
+      required: true
+
+  - type: input
+    id: java-version
+    attributes:
+      label: Java version
+      description: Output of `java -version` on the server.
+      placeholder: "25"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: database
+    attributes:
+      label: Database
+      options:
+        - SQLite (default)
+        - MySQL
+        - MariaDB
+    validations:
+      required: true
+
+  - type: textarea
+    id: extensions
+    attributes:
+      label: Extensions and other plugins
+      description: >
+        UniversalAdmin has no public extension API yet, so there are no
+        third-party extensions - list any other plugins that might be involved
+        instead. Leave empty if none are relevant.
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server log / stack trace
+      description: Relevant log output. Redact IPs, passwords, and tokens first.
+      render: text
+    validations:
+      required: false

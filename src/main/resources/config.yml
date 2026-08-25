@@ -1,0 +1,100 @@
+# UniversalAdmin configuration. See docs/user/configuration.md for the full,
+# documented reference (every key, its type, default, and valid range) and
+# docs/development/settings.md for how this file is actually read - nothing
+# in the plugin calls config.getString(...) directly; every key here is a
+# registered, typed, validated dev.universaladmin.settings.SettingDefinition.
+#
+# Bumping config-version by hand has no effect - it is managed by
+# dev.universaladmin.config.ConfigMigrationRunner. Don't edit it.
+config-version: 1
+
+general:
+  # Active locale. lang/<language>.yml must exist; en_US always ships as the
+  # fallback for any key missing from another locale.
+  language: en_US
+
+database:
+  # sqlite (default, zero setup) or mysql (also used for MariaDB - the
+  # bundled driver speaks MariaDB's protocol, which MySQL servers accept too).
+  type: sqlite
+
+  # --- sqlite ---
+  # File is created inside the plugin's data folder.
+  file: data.db
+
+  # --- mysql ---
+  # Only used when type is mysql.
+  host: localhost
+  port: 3306
+  database: universaladmin
+  username: universaladmin
+  password: ""
+  ssl: true
+  pool-size: 10
+
+gui:
+  # Inventory GUI page size; must be a multiple of 9 between 9 and 54.
+  page-size: 45
+  # Ask for confirmation before destructive GUI actions.
+  confirmations: true
+
+audit:
+  # Whether AuditService actually records events.
+  enabled: true
+  # How many days of audit history to keep. 0 = unlimited (never deleted).
+  # Cleanup runs hourly, not on every tick - see docs/user/audit-log.md.
+  retention-days: 0
+
+# Enable/disable individual built-in modules. Disabling one here means it is
+# never even registered with ModuleManager - see UniversalAdminPlugin.
+modules:
+  players: true
+  moderation: true
+  server: true
+  worlds: true
+  whitelist: true
+  performance: true
+  audit: true
+  settings: true
+
+performance:
+  # How often the Performance module refreshes its TPS/MSPT/memory/world/
+  # entity snapshot. A duration like 5s, 1m, 1h. Requires a restart.
+  refresh-interval: 5s
+
+# The Performance module's own alert-threshold and entity-clear settings
+# (performance.alerts.*, performance.entity-clear.*) are registered under
+# its own settings namespace, not core - like server.countdown.* or
+# players.gui.max-results, they are not listed here; see
+# docs/user/modules/performance.md#settings for their defaults.
+
+maintenance:
+  # Reject new joins with maintenance.kick-message while true.
+  enabled: false
+  kick-message: "<red>Server is currently under maintenance."
+
+# Anonymous usage statistics. Full documentation, including the exact payload
+# and everything that is deliberately never collected:
+# docs/user/telemetry.md
+telemetry:
+  # false switches statistics off completely - no request of any kind is made,
+  # no installation id is generated. Read again on every heartbeat, so
+  # /admin reload applies a change to this immediately.
+  enabled: true
+
+  # Where heartbeats are sent. Empty by default because UniversalAdmin has no
+  # official statistics endpoint yet: with an empty value nothing is sent
+  # anywhere, and there is no built-in fallback host. Must be http:// or
+  # https:// when set. Requires a restart.
+  endpoint: ""
+
+  # Time between heartbeats (minimum 5m, maximum 24h). A random extra of up to
+  # half this value is added to every wait, so servers don't send in lockstep.
+  # The first heartbeat additionally waits ~5-7 minutes after startup.
+  # Requires a restart.
+  interval: 30m
+
+web:
+  # Reserved for the future web app (see docs/architecture/web-future.md).
+  # Has no effect yet - there is no web server to enable.
+  enabled: false

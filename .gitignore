@@ -1,0 +1,42 @@
+# Gradle
+.gradle/
+build/
+out/
+# The wrapper jar is committed on purpose so `./gradlew` works on a fresh clone.
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Runtime / test server data (if a dev server is ever run from this repo)
+run/
+server/
+logs/
+*.log
+
+# Local databases created by a dev server
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Secrets / local environment - never commit these
+.env
+.env.*
+local.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local-only development notes. These are working documents for whoever is at
+# the keyboard, not project documentation - everything that belongs to the
+# project is in docs/ (see docs/development/architecture-rules.md).
+.claude/
+CLAUDE.md
+docs/development/HANDOFF.md

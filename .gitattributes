@@ -1,0 +1,15 @@
+# Normalise line endings so a checkout on Windows and a checkout on the CI
+# runner produce byte-identical files. Without this, a Windows clone with
+# core.autocrlf=true writes CRLF into gradlew and the shell scripts inside the
+# workflows stop being portable.
+* text=auto eol=lf
+
+# Windows-only script keeps CRLF.
+*.bat text eol=crlf
+
+# Never touch binaries.
+*.jar binary
+*.png binary
+*.gif binary
+*.jpg binary
+*.ico binary
