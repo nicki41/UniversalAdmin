@@ -226,9 +226,11 @@ Before the first Modrinth upload:
 - [ ] `CHANGELOG.md` has a dated version section (not just `[Unreleased]`).
 - [ ] Version in `build.gradle.kts` matches the tag being published.
 - [ ] GitHub release exists and contains the jar + SHA-256.
-- [ ] Modrinth project created, slug/category/description above reviewed and
-      pasted in.
+- [x] Modrinth project created (id `wGP5uSse`, still in "draft" status);
+      slug/category/description above still need reviewing and pasting in.
 - [ ] Telemetry disclosure checked against the then-current Modrinth rules
       and pasted in.
-- [ ] A maintainer deliberately triggers the upload - there is no CI job
-      that publishes to Modrinth (and no Modrinth token in the repository).
+- [x] Every GitHub release is automatically mirrored to Modrinth as a new
+      version - see [releasing.md](releasing.md#modrinth). The project page
+      itself (description, categories, screenshots) is still only prepared
+      above, not filled in - that part stays a manual, deliberate step.

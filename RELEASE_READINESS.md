@@ -17,7 +17,7 @@ statistics).
 | **Automatic releases** | `.github/workflows/release.yml` - a `v*` tag (pushed manually, or by `auto-release.yml` after a notable push to `main`) triggers a tag/version check, build, tests, a GitHub release with the jar and its SHA-256, `contents: write`, only `GITHUB_TOKEN`. Never flagged "Pre-release" - see [docs/release/releasing.md](docs/release/releasing.md#version-scheme). |
 | **Telemetry implementation** | fully implemented and tested (`dev.universaladmin.telemetry`), documented in [docs/user/telemetry.md](docs/user/telemetry.md) |
 | **Telemetry endpoint** | Fixed to `https://telemetry.0nicki.de/v1/telemetry` (the official `nicki41-telemetry` instance), not configurable - a fresh install reports by default; `telemetry.enabled: false` is the only way to turn it off. |
-| **Modrinth** | not uploaded; project page and checklist prepared in [docs/release/modrinth.md](docs/release/modrinth.md) |
+| **Modrinth** | project created (id `wGP5uSse`, still "draft"); every GitHub release is automatically mirrored to it as a new version (`MODRINTH_TOKEN` secret, `Kira-NT/mc-publish`) - see [docs/release/releasing.md](docs/release/releasing.md#modrinth). The project page content itself (description, categories, screenshots) is still only prepared in [docs/release/modrinth.md](docs/release/modrinth.md), not filled in. |
 | **Extension API** | not implemented - next major milestone ([ROADMAP.md](ROADMAP.md) Phase 4) |
 | **Dependabot** | deliberately **not** set up; dependencies are updated manually |
 

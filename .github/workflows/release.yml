@@ -129,6 +129,7 @@ jobs:
           fi
 
       - name: Create GitHub release
+        id: github_release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -145,3 +146,30 @@ jobs:
             ARGS+=(--notes-file "${{ steps.notes.outputs.notes_file }}")
           fi
           gh release create "${ARGS[@]}"
+          {
+            echo "body<<GH_RELEASE_BODY_EOF"
+            gh release view "${{ steps.tag.outputs.name }}" --json body -q .body
+            echo "GH_RELEASE_BODY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # Mirrors the same release onto the existing Modrinth project (id
+      # wGP5uSse, currently in "draft" - version uploads work regardless of
+      # the project's own moderation status). fail-mode: warn so a
+      # Modrinth-side hiccup doesn't mark the whole release as failed - the
+      # GitHub release above has already succeeded by this point.
+      - name: Publish to Modrinth
+        uses: Kira-NT/mc-publish@v3
+        with:
+          modrinth-id: wGP5uSse
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: build/libs/universaladmin-core-*.jar
+          name: UniversalAdmin ${{ steps.version.outputs.version }}
+          version: ${{ steps.version.outputs.version }}
+          changelog: ${{ steps.github_release.outputs.body }}
+          loaders: paper
+          # Only the currently pinned Paper API version is claimed - the
+          # broader supported range is an explicit open TODO, see
+          # RELEASE_READINESS.md and docs/release/modrinth.md.
+          game-versions: "26.2"
+          java: 25
+          fail-mode: warn

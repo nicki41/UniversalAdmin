@@ -7,6 +7,13 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+### Added
+
+- Every GitHub release is now automatically mirrored to the `universaladmin`
+  Modrinth project as a new version (`Kira-NT/mc-publish`, the new
+  `MODRINTH_TOKEN` repository secret). See
+  [docs/release/releasing.md](docs/release/releasing.md#modrinth).
+
 ## [0.1.0-alpha.4] - 2026-08-26
 
 ## [0.1.0-alpha.3] - 2026-08-26
