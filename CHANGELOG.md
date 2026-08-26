@@ -7,6 +7,8 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [0.1.0-alpha.5] - 2026-08-26
+
 ### Added
 
 - Every GitHub release is now automatically mirrored to the `universaladmin`
