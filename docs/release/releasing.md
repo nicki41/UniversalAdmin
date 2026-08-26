@@ -4,6 +4,42 @@ How a UniversalAdmin release comes to be. Short version: **a version tag
 triggers everything else.** There is no manual upload step and no "release
 button" - `.github/workflows/release.yml` builds, tests, and publishes.
 
+## Automatic releases
+
+`.github/workflows/auto-release.yml` runs on every push to `main` and does
+the "Steps" section below by itself, whenever both are true:
+
+- the push touched at least one file outside `docs/`, `.github/`, and the
+  small set of root Markdown/meta files (`README.md`, `CHANGELOG.md`,
+  `CONTRIBUTING.md`, `SECURITY.md`, `ROADMAP.md`, `ARCHITECTURE.md`,
+  `RELEASE_READINESS.md`, `LICENSE`, `.gitignore`) - a documentation-only or
+  CI-only push is skipped, nothing else is;
+- the current version in `build.gradle.kts` is a plain `X.Y.Z-alpha` or
+  `X.Y.Z-alpha.N` prerelease. A beta/rc/stable bump is a bigger decision
+  than this workflow makes on its own - it logs a notice and does nothing,
+  leaving the manual process below as the only way to publish one.
+
+When it runs: it builds and tests the tree exactly as pushed, bumps the
+`-alpha.N` counter (`-alpha` with no number counts as `-alpha.0`, so the
+first automatic release becomes `-alpha.1`), moves the `CHANGELOG.md`
+`[Unreleased]` section into a new dated one (leaving a fresh, empty
+`[Unreleased]` above it), commits that as `chore: release <version>`, tags
+it `v<version>`, and pushes both to `main` - using the default
+`GITHUB_TOKEN`, which deliberately does **not** trigger another workflow run
+from that push (GitHub's own recursion guard). Because of that,
+`auto-release.yml` calls `release.yml` directly via `workflow_call` instead
+of relying on the tag push to fire it - same build/test/publish steps
+either way, see that workflow's comments.
+
+`chore: release <version>` pushes are recognized and skipped by
+`auto-release.yml` itself (a second, independent guard against a release
+commit triggering another release), so this never loops.
+
+The rest of this document describes the **manual** path - still the only
+way to cut a beta/rc/stable release, and always available as a fallback if
+the automatic one is ever skipped or needs a different version number than
+a plain counter bump.
+
 ## Version Scheme
 
 [Semantic Versioning](https://semver.org/), with pre-release suffixes:
@@ -131,8 +167,9 @@ token would need to be added.
 
 ## What This Process Deliberately Doesn't Do
 
-- **No automatic tags.** A release is a deliberate decision; CI doesn't
-  generate versions on its own.
+- **No automatic version bump past a plain `-alpha` counter.** A beta/rc/
+  stable release is a deliberate decision made by hand - see "Automatic
+  releases" above.
 - **No publishing from `build.yml`.** The build workflow only uploads the
   jar as an Actions artifact (traceable, temporary), never publishes.
 - **No automated dependency updates.** No Dependabot; dependencies are

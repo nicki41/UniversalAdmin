@@ -1,0 +1,174 @@
+name: Auto Release
+
+# Releases automatically after a push to main that changes anything besides
+# docs/CI metadata, instead of requiring the manual version/changelog/tag
+# steps in docs/release/releasing.md every time. Only ever bumps the
+# prerelease counter of a plain "X.Y.Z-alpha"/"X.Y.Z-alpha.N" version - a
+# beta/rc/stable release is a bigger decision than this workflow is meant to
+# make on its own, and still goes through the manual process.
+#
+# What "notable" means here: the push touched at least one file outside
+# docs/, .github/, and the small set of root-level Markdown/meta files - see
+# the "Determine whether this push is notable" step below for the exact
+# list. A pure documentation or workflow-only push is skipped.
+#
+# Deliberately two jobs, not one:
+# - `prepare` decides notability, bumps `version` in build.gradle.kts, moves
+#   the CHANGELOG's `[Unreleased]` section into a dated, versioned one, then
+#   commits and tags that on `main` using the default GITHUB_TOKEN.
+# - `release` calls release.yml directly via `workflow_call`, rather than
+#   relying on the tag push from `prepare` to trigger it: GitHub does not
+#   fire further workflow runs from a push made with the default
+#   GITHUB_TOKEN (its built-in recursion guard), so a plain `git push` of the
+#   tag here would otherwise publish nothing. `workflow_call` runs
+#   release.yml's job directly as part of *this* run instead of depending on
+#   that push triggering a separate one.
+#
+# The guard on the `prepare` job's own `if:` (skip when the triggering
+# commit's message starts with "chore: release ") is a second, independent
+# safety net against a release-commit-triggers-another-release loop, in case
+# this workflow is ever changed to push with something other than
+# GITHUB_TOKEN.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-release-main
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Bump version and tag
+    if: "!startsWith(github.event.head_commit.message, 'chore: release ')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      notable: ${{ steps.decide.outputs.notable }}
+      tag: ${{ steps.decide.outputs.tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Determine whether this push is notable
+        id: touched
+        run: |
+          set -euo pipefail
+          LAST_TAG="$(git tag -l 'v*' --sort=-v:refname | head -n1)"
+          if [ -z "$LAST_TAG" ]; then
+            BASE="$(git rev-list --max-parents=0 HEAD | tail -n1)"
+          else
+            BASE="$LAST_TAG"
+          fi
+          echo "Comparing against: $BASE"
+          CHANGED="$(git diff --name-only "$BASE" HEAD)"
+          echo "$CHANGED"
+          # Excluded: pure documentation and CI/repo-meta files. Everything
+          # else (src/, build.gradle.kts, settings.gradle.kts, resources,
+          # gradle/, ...) counts as notable.
+          NOTABLE="$(echo "$CHANGED" | grep -vE '^(docs/|\.github/|README\.md$|CHANGELOG\.md$|CONTRIBUTING\.md$|SECURITY\.md$|ROADMAP\.md$|ARCHITECTURE\.md$|RELEASE_READINESS\.md$|LICENSE$|\.gitignore$)' || true)"
+          if [ -z "$NOTABLE" ]; then
+            echo "notable=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "notable=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up JDK 25 (build toolchain) and 21 (runs Gradle)
+        if: steps.touched.outputs.notable == 'true'
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: |
+            25
+            21
+
+      - name: Set up Gradle
+        if: steps.touched.outputs.notable == 'true'
+        uses: gradle/actions/setup-gradle@v6
+
+      # Build and test the tree exactly as pushed, before touching version/
+      # changelog metadata - so a broken build never gets tagged and handed
+      # to release.yml (which would build/test again and simply fail, but
+      # only after already consuming a version number and leaving a dangling
+      # "chore: release" commit behind).
+      - name: Build and test
+        if: steps.touched.outputs.notable == 'true'
+        run: >-
+          ./gradlew clean build --console=plain
+          -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64
+
+      - name: Compute next version
+        id: decide
+        if: steps.touched.outputs.notable == 'true'
+        run: |
+          set -euo pipefail
+          CURRENT="$(./gradlew -q --console=plain printVersion \
+            -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64)"
+          if [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-alpha(\.([0-9]+))?$ ]]; then
+            BASE="${BASH_REMATCH[1]}"
+            N="${BASH_REMATCH[3]:-0}"
+            NEW_VERSION="${BASE}-alpha.$((N + 1))"
+            echo "Current version: $CURRENT"
+            echo "Next version:    $NEW_VERSION"
+            echo "notable=true" >> "$GITHUB_OUTPUT"
+            echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+            echo "tag=v$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Current version '$CURRENT' is not a plain -alpha/-alpha.N prerelease - a beta/rc/stable release is a bigger decision than this workflow makes on its own. Skipping automatic release; use docs/release/releasing.md to release '$CURRENT' manually."
+            echo "notable=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update build.gradle.kts and CHANGELOG.md
+        if: steps.decide.outputs.notable == 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.decide.outputs.version }}"
+          sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" build.gradle.kts
+          grep -q "^version = \"${VERSION}\"\$" build.gradle.kts
+
+          DATE="$(date -u +%Y-%m-%d)"
+          awk -v date="$DATE" -v version="$VERSION" '
+            /^## \[Unreleased\]/ && !done {
+              print "## [Unreleased]"
+              print ""
+              print "## [" version "] - " date
+              done = 1
+              next
+            }
+            { print }
+          ' CHANGELOG.md > CHANGELOG.md.new
+          mv CHANGELOG.md.new CHANGELOG.md
+          grep -q "^## \[${VERSION}\]" CHANGELOG.md
+
+      - name: Commit and tag
+        if: steps.decide.outputs.notable == 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.decide.outputs.version }}"
+          TAG="${{ steps.decide.outputs.tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build.gradle.kts CHANGELOG.md
+          git commit -m "chore: release ${VERSION}"
+          git tag "$TAG"
+          git push origin HEAD:main
+          git push origin "$TAG"
+
+  release:
+    name: Build and publish release
+    needs: prepare
+    if: needs.prepare.outputs.notable == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.prepare.outputs.tag }}
