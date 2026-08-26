@@ -7,6 +7,8 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [0.1.0-alpha.1] - 2026-08-26
+
 ### Added
 
 - **Anonymous usage statistics** (`dev.universaladmin.telemetry`):
