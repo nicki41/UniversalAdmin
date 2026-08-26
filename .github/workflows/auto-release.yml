@@ -106,62 +106,102 @@ jobs:
           ./gradlew clean build --console=plain
           -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64
 
-      - name: Compute next version
-        id: decide
+      # Determines whether the current version is even a plain -alpha/-alpha.N
+      # prerelease (a beta/rc/stable bump is a bigger decision this workflow
+      # doesn't make on its own) - a one-shot check, not part of the retry
+      # loop below, since it doesn't depend on the exact tip of main.
+      - name: Check the current version is auto-releasable
+        id: version_check
         if: steps.touched.outputs.notable == 'true'
         run: |
           set -euo pipefail
           CURRENT="$(./gradlew -q --console=plain printVersion \
             -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64)"
-          if [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-alpha(\.([0-9]+))?$ ]]; then
-            BASE="${BASH_REMATCH[1]}"
-            N="${BASH_REMATCH[3]:-0}"
-            NEW_VERSION="${BASE}-alpha.$((N + 1))"
-            echo "Current version: $CURRENT"
-            echo "Next version:    $NEW_VERSION"
-            echo "notable=true" >> "$GITHUB_OUTPUT"
-            echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-            echo "tag=v$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$CURRENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha(\.[0-9]+)?$ ]]; then
+            echo "releasable=true" >> "$GITHUB_OUTPUT"
           else
             echo "::notice::Current version '$CURRENT' is not a plain -alpha/-alpha.N prerelease - a beta/rc/stable release is a bigger decision than this workflow makes on its own. Skipping automatic release; use docs/release/releasing.md to release '$CURRENT' manually."
-            echo "notable=false" >> "$GITHUB_OUTPUT"
+            echo "releasable=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Update build.gradle.kts and CHANGELOG.md
-        if: steps.decide.outputs.notable == 'true'
+      # Computes the version, edits build.gradle.kts/CHANGELOG.md, commits,
+      # tags, and pushes - retried from a fresh `git fetch` + `reset --hard`
+      # on a rejected push (main moved between checkout and push, e.g.
+      # another push landed, or - as happened once - a backlog of delayed
+      # runs racing each other) rather than failing outright. Recomputes
+      # everything from the new tip on each attempt instead of rebasing the
+      # old commit onto it, so a CHANGELOG.md conflict with whatever just
+      # landed can never leave this stuck waiting on manual conflict
+      # resolution that a non-interactive job could never do anyway. Not
+      # re-run: the "Build and test" step above, which only ever validated
+      # the tree as originally checked out - acceptable since a retry only
+      # ever happens because *another already-pushed, independently-built*
+      # commit landed first, not because this run's own tree changed.
+      - name: Bump version, commit, tag, and push (retried on a push race)
+        id: decide
+        if: steps.touched.outputs.notable == 'true' && steps.version_check.outputs.releasable == 'true'
         run: |
           set -euo pipefail
-          VERSION="${{ steps.decide.outputs.version }}"
-          sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" build.gradle.kts
-          grep -q "^version = \"${VERSION}\"\$" build.gradle.kts
-
-          DATE="$(date -u +%Y-%m-%d)"
-          awk -v date="$DATE" -v version="$VERSION" '
-            /^## \[Unreleased\]/ && !done {
-              print "## [Unreleased]"
-              print ""
-              print "## [" version "] - " date
-              done = 1
-              next
-            }
-            { print }
-          ' CHANGELOG.md > CHANGELOG.md.new
-          mv CHANGELOG.md.new CHANGELOG.md
-          grep -q "^## \[${VERSION}\]" CHANGELOG.md
-
-      - name: Commit and tag
-        if: steps.decide.outputs.notable == 'true'
-        run: |
-          set -euo pipefail
-          VERSION="${{ steps.decide.outputs.version }}"
-          TAG="${{ steps.decide.outputs.tag }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add build.gradle.kts CHANGELOG.md
-          git commit -m "chore: release ${VERSION}"
-          git tag "$TAG"
-          git push origin HEAD:main
-          git push origin "$TAG"
+
+          for attempt in 1 2 3 4 5; do
+            echo "::group::Attempt ${attempt}/5"
+            git fetch origin main
+            git reset --hard origin/main
+
+            CURRENT="$(./gradlew -q --console=plain printVersion \
+              -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64)"
+            if [[ ! "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-alpha(\.([0-9]+))?$ ]]; then
+              echo "::error::Version on origin/main ('$CURRENT') is no longer a plain -alpha/-alpha.N prerelease - someone else must have released in the meantime. Aborting without pushing."
+              exit 1
+            fi
+            BASE="${BASH_REMATCH[1]}"
+            N="${BASH_REMATCH[3]:-0}"
+            VERSION="${BASE}-alpha.$((N + 1))"
+            TAG="v${VERSION}"
+            echo "Current: $CURRENT -> Next: $VERSION"
+
+            sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" build.gradle.kts
+            grep -q "^version = \"${VERSION}\"\$" build.gradle.kts
+
+            DATE="$(date -u +%Y-%m-%d)"
+            awk -v date="$DATE" -v version="$VERSION" '
+              /^## \[Unreleased\]/ && !done {
+                print "## [Unreleased]"
+                print ""
+                print "## [" version "] - " date
+                done = 1
+                next
+              }
+              { print }
+            ' CHANGELOG.md > CHANGELOG.md.new
+            mv CHANGELOG.md.new CHANGELOG.md
+            grep -q "^## \[${VERSION}\]" CHANGELOG.md
+
+            git add build.gradle.kts CHANGELOG.md
+            git commit -m "chore: release ${VERSION}"
+
+            # The branch push is the race-prone one (rejected if main moved
+            # since the reset above); only tag - a brand new name each time,
+            # nothing to race against - once that commit has actually landed,
+            # so a rejected branch push never leaves an orphaned tag behind.
+            if git push origin HEAD:main; then
+              git tag "$TAG"
+              git push origin "$TAG"
+              echo "notable=true" >> "$GITHUB_OUTPUT"
+              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+              echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+              echo "::endgroup::"
+              exit 0
+            fi
+
+            echo "::warning::Push rejected on attempt ${attempt} (someone else pushed first) - retrying from the new tip."
+            echo "::endgroup::"
+          done
+
+          echo "::error::Could not push the release commit/tag after 5 attempts - main kept moving faster than this job could keep up. Not releasing this run; the next notable push will try again."
+          exit 1
 
   release:
     name: Build and publish release
