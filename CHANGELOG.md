@@ -7,6 +7,8 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [0.1.0-alpha.2] - 2026-08-26
+
 ### Added
 
 - **Automatic update checks**: `dev.universaladmin.update` polls the GitHub

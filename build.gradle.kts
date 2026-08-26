@@ -8,7 +8,7 @@ plugins {
 group = "dev.universaladmin"
 // Semantic versioning; "-alpha" reflects actual status (see ROADMAP.md) -
 // not a 1.0 or a stable-implying bare version number.
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 description = "UniversalAdmin - a universal admin platform for Paper servers"
 
 java {
