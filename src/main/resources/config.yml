@@ -79,14 +79,10 @@ maintenance:
 telemetry:
   # false switches statistics off completely - no request of any kind is made,
   # no installation id is generated. Read again on every heartbeat, so
-  # /admin reload applies a change to this immediately.
+  # /admin reload applies a change to this immediately. This is the only
+  # telemetry setting: the endpoint is fixed to the official
+  # nicki41-telemetry instance and is not configurable here.
   enabled: true
-
-  # Where heartbeats are sent. Empty by default because UniversalAdmin has no
-  # official statistics endpoint yet: with an empty value nothing is sent
-  # anywhere, and there is no built-in fallback host. Must be http:// or
-  # https:// when set. Requires a restart.
-  endpoint: ""
 
   # Time between heartbeats (minimum 5m, maximum 24h). A random extra of up to
   # half this value is added to every wait, so servers don't send in lockstep.

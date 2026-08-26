@@ -77,9 +77,9 @@ collected - in [docs/user/telemetry.md](docs/user/telemetry.md).
 
 Security-relevant highlights:
 
-- **Nothing is sent by default.** No endpoint is preconfigured and there's no
-  built-in fallback host. Without a configured `telemetry.endpoint`, no
-  request is made, no installation id is generated, and no timer starts.
+- **The endpoint is fixed, not configurable.** `config.yml` only ever
+  decides on/off (`telemetry.enabled`); with `enabled: false`, no request is
+  made, no installation id is generated, and no timer starts.
 - **No identifier that traces back to the host.** The installation id is 128
   random bits from `SecureRandom` - not derived from IP, MAC address,
   hardware, hostname, server address, or file path.

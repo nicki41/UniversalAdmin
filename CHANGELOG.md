@@ -13,6 +13,12 @@ dated, versioned section below it (see
   `-rc` versions included - the project's status is already communicated by
   the version string and the README, not GitHub's separate prerelease flag.
   See [docs/release/releasing.md](docs/release/releasing.md#version-scheme).
+- The telemetry endpoint is no longer a config value: `telemetry.endpoint`
+  has been removed from `config.yml` and `CoreSettings`, and every heartbeat
+  now goes to the official `nicki41-telemetry` instance, fixed in
+  `TelemetryBootstrap`. `telemetry.enabled` remains the only switch. This
+  also means an old `config.yml` with a leftover `telemetry.endpoint` value
+  (e.g. an explicit empty string) no longer has any effect.
 
 ### Fixed
 

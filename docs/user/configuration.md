@@ -108,8 +108,7 @@ and nothing is collected that isn't in it.
 
 | Key | Type | Default | Notes |
 |---|---|---|---|
-| `telemetry.enabled` | boolean | `true` | `false` means no request of any kind, no installation id, no timer. Re-read on **every** heartbeat, so `/admin reload` applies a change immediately - no restart needed. |
-| `telemetry.endpoint` | string (http/https URL) | `""` | Empty by default: UniversalAdmin has no official statistics endpoint yet, so nothing is sent anywhere and there is no built-in fallback host. Restart required. |
+| `telemetry.enabled` | boolean | `true` | `false` means no request of any kind, no installation id, no timer. Re-read on **every** heartbeat, so `/admin reload` applies a change immediately - no restart needed. The endpoint itself is not configurable - see [telemetry.md](telemetry.md). |
 | `telemetry.interval` | duration, 5m-24h | `30m` | Time between heartbeats; a random extra of up to half this value is added to each wait. The first heartbeat additionally waits ~5-7 minutes after startup. Restart required. |
 
 ## `web`

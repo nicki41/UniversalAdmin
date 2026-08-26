@@ -149,9 +149,9 @@ from - `nicki41-telemetry`, a separate, generic (not UniversalAdmin-only)
 backend project.
 
 **Active by default, reporting to `https://telemetry.0nicki.de`** - a fresh
-install starts sending the heartbeat below automatically; see "Switch it off
-completely" below to disable it entirely, or point `telemetry.endpoint` at
-your own `nicki41-telemetry` instance instead.
+install starts sending the heartbeat below automatically; the endpoint is
+fixed, not configurable, so see "Switch it off completely" below to disable
+it entirely.
 
 A heartbeat consists of exactly seven fields:
 

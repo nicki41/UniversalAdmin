@@ -16,7 +16,7 @@ statistics).
 | **CI** | `.github/workflows/build.yml` - build and tests on every push/PR against `main`, jar as an Actions artifact, `contents: read` |
 | **Automatic releases** | `.github/workflows/release.yml` - a `v*` tag (pushed manually, or by `auto-release.yml` after a notable push to `main`) triggers a tag/version check, build, tests, a GitHub release with the jar and its SHA-256, `contents: write`, only `GITHUB_TOKEN`. Never flagged "Pre-release" - see [docs/release/releasing.md](docs/release/releasing.md#version-scheme). |
 | **Telemetry implementation** | fully implemented and tested (`dev.universaladmin.telemetry`), documented in [docs/user/telemetry.md](docs/user/telemetry.md) |
-| **Telemetry endpoint** | `telemetry.endpoint` defaults to `https://telemetry.0nicki.de/v1/telemetry` (the official `nicki41-telemetry` instance) - a fresh install reports by default; `telemetry.enabled: false` or an empty `telemetry.endpoint` turns it off. |
+| **Telemetry endpoint** | Fixed to `https://telemetry.0nicki.de/v1/telemetry` (the official `nicki41-telemetry` instance), not configurable - a fresh install reports by default; `telemetry.enabled: false` is the only way to turn it off. |
 | **Modrinth** | not uploaded; project page and checklist prepared in [docs/release/modrinth.md](docs/release/modrinth.md) |
 | **Extension API** | not implemented - next major milestone ([ROADMAP.md](ROADMAP.md) Phase 4) |
 | **Dependabot** | deliberately **not** set up; dependencies are updated manually |
@@ -47,15 +47,15 @@ statistics).
 
 | Question | Answer |
 |---|---|
-| Is anything sent? | No. No endpoint configured, no built-in fallback. |
-| Is an id generated? | Only if telemetry is active **and** an endpoint is configured. Otherwise not even a file is created. |
-| Which fields? | `installationId`, `universalAdminVersion`, `minecraftVersion`, `javaMajorVersion`, `onlinePlayers`, `maxPlayers`. Nothing more. |
+| Is anything sent? | Yes, by default. Every heartbeat goes to the fixed, official `nicki41-telemetry` instance - see "Telemetry endpoint" above. |
+| Is an id generated? | Only if telemetry is enabled. Otherwise not even a file is created. |
+| Which fields? | `pluginId`, `installationId`, `pluginVersion`, `minecraftVersion`, `javaMajorVersion`, `onlinePlayers`, `maxPlayers`. Nothing more. |
 | Player-related data? | None. Just two numbers. No names, UUIDs, IPs. |
 | Hardware fingerprint? | No. Pure randomness. |
-| Opt-out? | `telemetry.enabled: false`, effective after `/admin reload`, no restart. |
+| Opt-out? | `telemetry.enabled: false`, effective after `/admin reload`, no restart. The endpoint itself isn't configurable, so this is the only switch. |
 | Impact of a backend outage? | None. No retry, no queue, a single warning per server run. |
 | Main thread? | Never. Player counts are read on the main thread, the request runs in the background. |
-| Open | No endpoint, no privacy policy, no retention decision, opt-in-vs-opt-out to be revisited before going live. |
+| Open | No published privacy policy or retention decision yet for `nicki41-telemetry`; opt-in-vs-opt-out to be revisited before a stable release. |
 
 ## Known Limitations
 
@@ -70,10 +70,10 @@ Still-valid limitations from the previous readiness pass, plus the new ones:
   project: a green build was once **not** sufficient - an actual server
   start uncovered two shading bugs no test suite could see (which is why
   `verifyShadedJarDrivers` exists).
-- **Telemetry also hasn't been tested against a real endpoint** - there
-  isn't one. The unit tests cover enable/disable, the payload, the failure
-  path, jitter, and cleanup without any network; a real HTTP round trip is
-  unverified.
+- **Telemetry's real HTTP round trip is still only verified against the
+  `nicki41-telemetry` deployment itself, not from inside UniversalAdmin.**
+  The unit tests cover enable/disable, the payload, the failure path,
+  jitter, and cleanup without any network.
 - **Confirmation dialog history:** `ConfirmationDialog.open(...)` doesn't
   push its own entry onto the navigation stack, so `confirmCtx.back()`
   returns to whatever page's redraw callback is on top, not necessarily the

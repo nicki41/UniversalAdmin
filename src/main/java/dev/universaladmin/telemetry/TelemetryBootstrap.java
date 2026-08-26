@@ -4,10 +4,8 @@ import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.CoreSettings;
 import dev.universaladmin.settings.SettingsService;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -17,26 +15,25 @@ import java.util.random.RandomGenerator;
  * Wires the telemetry subsystem together and answers the one question the
  * rest of the plugin cares about: is anything being sent, and if not, why not.
  *
- * <p>Three possible outcomes, decided once at startup and logged once:
+ * <p>Two possible outcomes, decided once at startup and logged once:
  *
  * <ol>
  *   <li>{@code telemetry.enabled: false} - nothing is constructed, no
  *       installation id is generated, no file is written, no thread is
  *       started. Off is genuinely off.
- *   <li>Enabled but {@code telemetry.endpoint} is empty - reached only if a
- *       server owner explicitly clears the default endpoint. A
- *       {@link NoOpTelemetryClient} is installed, no installation id is
- *       generated, and no timer runs.
- *   <li>Enabled with an {@code http}/{@code https} endpoint - the real path:
- *       installation id loaded (created on first use), an
- *       {@link HttpTelemetryClient}, and a {@link TelemetryScheduler} ticking
- *       in the background.
+ *   <li>Enabled - installation id loaded (created on first use), an
+ *       {@link HttpTelemetryClient} pointed at the fixed
+ *       {@link #ENDPOINT official nicki41-telemetry instance}, and a
+ *       {@link TelemetryScheduler} ticking in the background.
  * </ol>
  *
- * <p>An unusable endpoint value (not a URI, or not http/https) is a warning
- * and falls back to case 2 - never to some other host.
+ * <p>The endpoint is not configurable: {@code config.yml} only ever
+ * decides on/off ({@code telemetry.enabled}), never where a heartbeat goes.
  */
 public final class TelemetryBootstrap implements AutoCloseable {
+
+    /** The official, fixed nicki41-telemetry instance - a generic, multi-plugin backend, not UniversalAdmin-specific. See docs/user/telemetry.md. */
+    public static final URI ENDPOINT = URI.create("https://telemetry.0nicki.de/v1/telemetry");
 
     private final TelemetryClient client;
     private final TelemetryService service;
@@ -77,22 +74,15 @@ public final class TelemetryBootstrap implements AutoCloseable {
             return inert();
         }
 
-        URI endpoint = parseEndpoint(settings.get(CoreSettings.TELEMETRY_ENDPOINT), logger);
-        if (endpoint == null) {
-            logger.info("Anonymous usage statistics are enabled but no endpoint is configured "
-                    + "(telemetry.endpoint is empty), so nothing is sent. See docs/user/telemetry.md.");
-            return inert();
-        }
-
         InstallationIdentity identity = new InstallationIdentityStore(dataFolder, logger).loadOrCreate();
         Duration interval = settings.get(CoreSettings.TELEMETRY_INTERVAL);
-        TelemetryClient client = new HttpTelemetryClient(endpoint, environment.universalAdminVersion());
+        TelemetryClient client = new HttpTelemetryClient(ENDPOINT, environment.universalAdminVersion());
         TelemetryService service = new TelemetryService(
                 settings, taskScheduler, client, identity, environment, playerCounts, logger);
         TelemetryScheduler scheduler = new TelemetryScheduler(service, interval, random, logger);
         scheduler.start();
 
-        logger.info(() -> "Anonymous usage statistics enabled: a heartbeat is sent to " + endpoint
+        logger.info(() -> "Anonymous usage statistics enabled: a heartbeat is sent to " + ENDPOINT
                 + " roughly every " + interval.toMinutes() + " minutes. "
                 + "See docs/user/telemetry.md for the exact contents, or set telemetry.enabled: false to switch it off.");
         return new TelemetryBootstrap(client, service, scheduler);
@@ -120,29 +110,5 @@ public final class TelemetryBootstrap implements AutoCloseable {
 
     private static TelemetryBootstrap inert() {
         return new TelemetryBootstrap(new NoOpTelemetryClient(), null, null);
-    }
-
-    /**
-     * {@code null} for "no usable endpoint" - both for an empty value
-     * (a server owner explicitly cleared the default) and for an unusable
-     * one (a warning, then treated the same way).
-     */
-    private static URI parseEndpoint(String raw, Logger logger) {
-        if (raw == null || raw.isBlank()) {
-            return null;
-        }
-        try {
-            URI uri = new URI(raw.trim());
-            String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
-            if (!scheme.equals("http") && !scheme.equals("https") || uri.getHost() == null) {
-                logger.warning("telemetry.endpoint must be an http:// or https:// URL; "
-                        + "no usage statistics will be sent.");
-                return null;
-            }
-            return uri;
-        } catch (URISyntaxException e) {
-            logger.warning("telemetry.endpoint is not a valid URL; no usage statistics will be sent.");
-            return null;
-        }
     }
 }

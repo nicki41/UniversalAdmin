@@ -13,28 +13,17 @@ someone adds a field.
 
 ## Current Status: Active By Default
 
-`telemetry.endpoint` defaults to `https://telemetry.0nicki.de/v1/telemetry`
-- the official `nicki41-telemetry` instance, a separate project. A default
-install sends the heartbeat described below there automatically;
-`telemetry.enabled: false` (or clearing `telemetry.endpoint`) stops it
-entirely, see "Turning It Off" below.
+Every heartbeat goes to `https://telemetry.0nicki.de/v1/telemetry` - the
+official `nicki41-telemetry` instance, a separate project. This endpoint is
+fixed in the plugin itself, not a config value: `config.yml` only ever
+decides on/off (`telemetry.enabled`), never where a heartbeat goes. A
+default install sends the heartbeat described below there automatically;
+`telemetry.enabled: false` stops it entirely, see "Turning It Off" below.
 
 The wire format is generic - `pluginId`/`pluginVersion` rather than a
 UniversalAdmin-specific field name - because `nicki41-telemetry` is a shared
 backend any of nicki41's plugins can report to, not a UniversalAdmin-only
 one. Nothing about that changes what's collected.
-
-Pointing `telemetry.endpoint` at a different URL (your own
-`nicki41-telemetry` instance, or nothing else exists that speaks this
-protocol today) sends the exact same heartbeat there instead - the client
-doesn't know or care who's on the other end.
-
-If `telemetry.endpoint` is ever cleared to empty, the log says so at startup:
-
-```
-Anonymous usage statistics are enabled but no endpoint is configured
-(telemetry.endpoint is empty), so nothing is sent.
-```
 
 ## Purpose
 
@@ -112,8 +101,7 @@ player identity from it.
 
 ## The Installation ID
 
-- Generated **once** - on the first start where telemetry could actually send
-  (enabled **and** an endpoint configured).
+- Generated **once** - on the first start where telemetry is enabled.
 - 128 bits from `SecureRandom`, represented as 32 hex characters. **Not**
   derived from IP, MAC address, hardware, hostname, server address, file
   path, or player data - from nothing at all. Pure randomness.
@@ -154,8 +142,8 @@ way:
   everything after that is `FINE` only.
 - Endpoint responses are discarded, never parsed. A backend can't instruct
   the server through this channel.
-- Redirects (HTTP redirects) aren't followed: a relocated endpoint needs to
-  be reconfigured, not automatically chased to a different host.
+- Redirects (HTTP redirects) aren't followed: a relocated endpoint would
+  need a plugin update, not an automatic chase to a different host.
 
 ## Turning It Off (Opt-out)
 
@@ -211,10 +199,10 @@ either.
 | `InstallationIdentity` / `InstallationIdentityStore` | generating and persisting the id |
 | `TelemetryPayload` | the heartbeat, exactly as it goes over the wire |
 | `TelemetryEnvironment` / `PlayerCounts` | the payload's inputs |
-| `TelemetryClient` | interface; `HttpTelemetryClient` (JDK HTTP client) and `NoOpTelemetryClient` (default) |
+| `TelemetryClient` | interface; `HttpTelemetryClient` (JDK HTTP client) and `NoOpTelemetryClient` (disabled) |
 | `TelemetryService` | builds and sends a heartbeat; enforces the guarantees above |
 | `TelemetryScheduler` | interval, jitter, lifecycle |
-| `TelemetryBootstrap` | wiring at startup, three outcomes (off / no endpoint / active) |
+| `TelemetryBootstrap` | wiring at startup, two outcomes (off / active); owns the fixed endpoint constant |
 
 All under `dev.universaladmin.telemetry`, no new dependency (the HTTP client
 and the JSON encoder come from the JDK, or are six lines). The tests under
@@ -233,9 +221,8 @@ Stated honestly rather than claiming compliance:
   installation (not a history), and only counts one as "active" within the
   last 24 hours - see that project's own README for its data model.
 - **Opt-in instead of opt-out** was deliberately not chosen - the default is
-  `enabled: true` with a real default endpoint, so a fresh install reports
-  to `nicki41-telemetry` unless a server owner turns it off (see "Turning
-  It Off" below).
+  `enabled: true`, so a fresh install reports to `nicki41-telemetry` unless
+  a server owner turns it off (see "Turning It Off" below).
 - **Modrinth** may require disclosing telemetry in the project description,
   depending on the rules in effect at the time - see
   [../release/modrinth.md](../release/modrinth.md).

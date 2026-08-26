@@ -19,13 +19,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The three startup outcomes described on {@link TelemetryBootstrap}, checked
- * end to end from a {@code config.yml} snippet.
- *
- * <p>The "configured endpoint" case points at a port nothing listens on and
- * is closed immediately: the first heartbeat is minutes away
- * ({@link TelemetryScheduler#INITIAL_DELAY}), so no test here ever opens a
- * connection.
+ * The two startup outcomes described on {@link TelemetryBootstrap}, checked
+ * end to end from a {@code config.yml} snippet. The endpoint is not
+ * configurable, so every "enabled" case here ends up pointed at the same
+ * fixed {@link TelemetryBootstrap#ENDPOINT} - nothing here ever opens a real
+ * connection, since the first heartbeat is minutes away
+ * ({@link TelemetryScheduler#INITIAL_DELAY}).
  */
 class TelemetryBootstrapTest {
 
@@ -68,38 +67,9 @@ class TelemetryBootstrapTest {
     }
 
     @Test
-    void enabledWithoutAnEndpointStaysInertAndWritesNoInstallationId(@TempDir Path dataFolder) {
-        // A server owner who explicitly clears the default endpoint - the
-        // shipped default itself now has a real one, see CoreSettings.
-        try (TelemetryBootstrap telemetry = start("telemetry:\n  enabled: true\n  endpoint: \"\"\n", dataFolder)) {
-            assertFalse(telemetry.isActive());
-        }
-
-        assertFalse(Files.exists(dataFolder.resolve(InstallationIdentityStore.FILE_NAME)));
-    }
-
-    @Test
-    void theShippedDefaultIsActiveAgainstTheOfficialEndpoint(@TempDir Path dataFolder) {
+    void theShippedDefaultIsActiveAgainstTheFixedEndpoint(@TempDir Path dataFolder) {
         // No config.yml override at all - exactly what a fresh install runs with.
         try (TelemetryBootstrap telemetry = start("", dataFolder)) {
-            assertTrue(telemetry.isActive());
-            assertTrue(telemetry.service().isEnabled());
-        }
-    }
-
-    @Test
-    void anUnusableEndpointFallsBackToSendingNothing(@TempDir Path dataFolder) {
-        try (TelemetryBootstrap telemetry = start("telemetry:\n  endpoint: \"ftp://example.invalid/x\"\n", dataFolder)) {
-            assertFalse(telemetry.isActive(), "a non-http endpoint must not silently become some other host");
-        }
-
-        assertFalse(Files.exists(dataFolder.resolve(InstallationIdentityStore.FILE_NAME)));
-    }
-
-    @Test
-    void aConfiguredEndpointStartsTheHeartbeatAndCreatesAnInstallationId(@TempDir Path dataFolder) {
-        try (TelemetryBootstrap telemetry =
-                     start("telemetry:\n  endpoint: \"http://127.0.0.1:1/telemetry\"\n", dataFolder)) {
             assertTrue(telemetry.isActive());
             assertTrue(telemetry.service().isEnabled());
             assertTrue(Files.isRegularFile(dataFolder.resolve(InstallationIdentityStore.FILE_NAME)));
@@ -107,10 +77,20 @@ class TelemetryBootstrapTest {
     }
 
     @Test
+    void enabledStartsTheHeartbeatRegardlessOfAnyOtherConfigContent(@TempDir Path dataFolder) {
+        // telemetry.endpoint is not a real setting anymore; a leftover value
+        // from an older config.yml must have no effect at all.
+        try (TelemetryBootstrap telemetry =
+                     start("telemetry:\n  enabled: true\n  endpoint: \"\"\n", dataFolder)) {
+            assertTrue(telemetry.isActive());
+            assertTrue(telemetry.service().isEnabled());
+        }
+    }
+
+    @Test
     void closeIsSafeInEveryOutcomeAndSafeToRepeat(@TempDir Path dataFolder) {
         TelemetryBootstrap inert = start("telemetry:\n  enabled: false\n", dataFolder);
-        TelemetryBootstrap active =
-                start("telemetry:\n  endpoint: \"http://127.0.0.1:1/telemetry\"\n", dataFolder);
+        TelemetryBootstrap active = start("telemetry:\n  enabled: true\n", dataFolder);
 
         // onDisable must never throw over statistics, however telemetry ended
         // up configured - including when close() runs twice.

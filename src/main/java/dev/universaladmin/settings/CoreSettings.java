@@ -51,11 +51,7 @@ public final class CoreSettings {
     public static final SettingKey<String> MAINTENANCE_KICK_MESSAGE = SettingKey.of("core", "maintenance.kick-message");
 
     public static final SettingKey<Boolean> TELEMETRY_ENABLED = SettingKey.of("core", "telemetry.enabled");
-    public static final SettingKey<String> TELEMETRY_ENDPOINT = SettingKey.of("core", "telemetry.endpoint");
     public static final SettingKey<Duration> TELEMETRY_INTERVAL = SettingKey.of("core", "telemetry.interval");
-
-    /** The official nicki41-telemetry instance - a generic, multi-plugin backend, not UniversalAdmin-specific. See docs/user/telemetry.md. */
-    private static final String DEFAULT_TELEMETRY_ENDPOINT = "https://telemetry.0nicki.de/v1/telemetry";
 
     /** The one switch {@code /admin update} and the background checker both respect - see {@code update.UpdateCheckService}. */
     public static final SettingKey<Boolean> UPDATE_CHECK_ENABLED = SettingKey.of("core", "update.check-for-updates");
@@ -120,22 +116,19 @@ public final class CoreSettings {
 
     /**
      * Anonymous usage statistics - see docs/user/telemetry.md for exactly what
-     * a heartbeat contains and what it never contains.
+     * a heartbeat contains and what it never contains. The endpoint itself is
+     * not a setting: it is fixed to the official nicki41-telemetry instance
+     * in {@code TelemetryBootstrap}, so this is the only on/off switch.
      *
      * <p>{@code telemetry.enabled} deliberately does <b>not</b> require a
      * restart: it is read again on every heartbeat, so turning statistics off
-     * and running {@code /admin reload} stops them immediately. The endpoint
-     * and interval shape long-lived objects (an HTTP client and a timer) built
-     * once at startup, so those do require a restart.
+     * and running {@code /admin reload} stops them immediately. The interval
+     * shapes a long-lived object (a timer) built once at startup, so that one
+     * does require a restart.
      */
     private static void registerTelemetrySettings(SettingRegistry registry) {
         registry.register(SettingDefinition.builder(TELEMETRY_ENABLED, SettingTypes.BOOLEAN, true)
                 .description("Send anonymous usage statistics (see docs/user/telemetry.md); false sends nothing at all.")
-                .build());
-        registry.register(SettingDefinition.builder(TELEMETRY_ENDPOINT, SettingTypes.STRING, DEFAULT_TELEMETRY_ENDPOINT)
-                .description("Statistics endpoint URL. Defaults to the official nicki41-telemetry instance; "
-                        + "set to empty to send nothing anywhere, or point at your own instance.")
-                .requiresRestart(true)
                 .build());
         registry.register(SettingDefinition.builder(TELEMETRY_INTERVAL, SettingTypes.DURATION, Duration.ofMinutes(30))
                 .description("Time between heartbeats; a random extra of up to half this value is added to each one.")
