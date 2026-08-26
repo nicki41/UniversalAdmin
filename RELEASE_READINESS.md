@@ -14,9 +14,9 @@ statistics).
 | **GitHub** | public repository, default branch `main`, issues enabled, issue/PR templates present |
 | **License** | Apache-2.0, `LICENSE` with the unmodified official text; rationale in [docs/release/licensing.md](docs/release/licensing.md) |
 | **CI** | `.github/workflows/build.yml` - build and tests on every push/PR against `main`, jar as an Actions artifact, `contents: read` |
-| **Automatic releases** | `.github/workflows/release.yml` - a `v*` tag triggers a tag/version check, build, tests, a GitHub release with the jar and its SHA-256, prerelease detection, `contents: write`, only `GITHUB_TOKEN` |
+| **Automatic releases** | `.github/workflows/release.yml` - a `v*` tag (pushed manually, or by `auto-release.yml` after a notable push to `main`) triggers a tag/version check, build, tests, a GitHub release with the jar and its SHA-256, `contents: write`, only `GITHUB_TOKEN`. Never flagged "Pre-release" - see [docs/release/releasing.md](docs/release/releasing.md#version-scheme). |
 | **Telemetry implementation** | fully implemented and tested (`dev.universaladmin.telemetry`), documented in [docs/user/telemetry.md](docs/user/telemetry.md) |
-| **Telemetry endpoint** | **none** - `telemetry.endpoint` defaults to empty, there is no official endpoint and no fallback host. Nothing is sent. |
+| **Telemetry endpoint** | `telemetry.endpoint` defaults to `https://telemetry.0nicki.de/v1/telemetry` (the official `nicki41-telemetry` instance) - a fresh install reports by default; `telemetry.enabled: false` or an empty `telemetry.endpoint` turns it off. |
 | **Modrinth** | not uploaded; project page and checklist prepared in [docs/release/modrinth.md](docs/release/modrinth.md) |
 | **Extension API** | not implemented - next major milestone ([ROADMAP.md](ROADMAP.md) Phase 4) |
 | **Dependabot** | deliberately **not** set up; dependencies are updated manually |

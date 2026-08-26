@@ -7,6 +7,20 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+### Changed
+
+- Releases are no longer flagged "Pre-release" on GitHub, `-alpha`/`-beta`/
+  `-rc` versions included - the project's status is already communicated by
+  the version string and the README, not GitHub's separate prerelease flag.
+  See [docs/release/releasing.md](docs/release/releasing.md#version-scheme).
+
+### Fixed
+
+- `auto-release.yml`'s version-bump commit/tag push had no recovery if
+  `main` moved between checkout and push (hit for real when a backlog of
+  delayed Actions runs raced each other) - now retries up to 5 times, each
+  attempt recomputing from a fresh `git fetch`/`reset --hard origin/main`.
+
 ## [0.1.0-alpha.2] - 2026-08-26
 
 ### Added

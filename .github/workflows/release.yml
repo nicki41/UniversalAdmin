@@ -103,17 +103,15 @@ jobs:
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
           echo "checksum=${JAR}.sha256" >> "$GITHUB_OUTPUT"
 
-      # A version containing -alpha, -beta, or -rc is published as a GitHub
-      # prerelease; a plain SemVer version is a normal release.
-      - name: Determine release kind and notes
+      # Every version - -alpha/-beta/-rc included - is published as a normal
+      # GitHub release, not flagged "Pre-release". Deliberate: the project's
+      # own alpha status is already communicated in the README/version
+      # string itself, not through GitHub's separate prerelease flag.
+      - name: Determine release notes
         id: notes
         run: |
           set -euo pipefail
           VERSION="${{ steps.version.outputs.version }}"
-          case "$VERSION" in
-            *-alpha*|*-beta*|*-rc*) echo "prerelease=true"  >> "$GITHUB_OUTPUT" ;;
-            *)                      echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
-          esac
 
           # Use the CHANGELOG section for this version when there is one, on
           # top of GitHub's generated commit/PR notes. When the changelog has
@@ -143,9 +141,6 @@ jobs:
             --title "UniversalAdmin ${VERSION}"
             --generate-notes
           )
-          if [ "${{ steps.notes.outputs.prerelease }}" = "true" ]; then
-            ARGS+=(--prerelease)
-          fi
           if [ -n "${{ steps.notes.outputs.notes_file }}" ]; then
             ARGS+=(--notes-file "${{ steps.notes.outputs.notes_file }}")
           fi
