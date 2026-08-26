@@ -102,9 +102,13 @@ docs/development/architecture-rules.md's "Security" section on packet/NMS hacks)
 
 A viewer with only `...inventory.view`/`...enderchest.view` gets a read-only
 mirror - nothing can be moved in, out, or around. A viewer with `...edit`
-gets a live, draggable mirror - no Save button; whatever is in the mirror
-when the viewer actually closes it (walks away, presses Esc, or clicks
-Back/Close) is what gets written back.
+gets a live, draggable mirror - no Save button, and no "apply on close"
+delay either: every click/drag mirrors onto the target's real inventory
+within a tick, so picking an item up in the GUI is picking it up from the
+target immediately. The Staff Mode Inventory/Ender Chest Inspector tools
+(see [staff-tools.md](staff-tools.md#tools)) open the exact same live
+mirror mechanism from within Staff Mode, gated on the same
+`...inventory.edit`/`...enderchest.edit` permissions.
 
 **Design note - live edits, still through `ActionExecutor`.** The simplest
 implementation would open the target's real `PlayerInventory` object
@@ -119,14 +123,16 @@ audit logging" rule. Instead, these pages still render a *mirror* of the
 inventory in the GUI's own `GuiView` - `GuiListener` still owns every click/
 drag against it, same as any other UniversalAdmin page - and edits happen
 freely inside that mirror (drag items in/out/around) while it's open. The
-"no Save button" part is `GuiView#onClose`: a callback the page registers
-that runs once the view genuinely closes (not when navigating to another
-UniversalAdmin page), by which point every drag/click the viewer made has
-already settled - the callback reads the mirror's final contents and calls
+live-sync part is `GuiView#onChange`: a callback the page registers that
+`GuiListener` runs one tick after every click/drag it let through (letting
+Bukkit's own vanilla move resolve first) - the callback reads the mirror's
+*current* contents and calls
 `SetPlayerInventoryContentsAction`/`SetPlayerEnderChestContentsAction`,
-which re-resolves the target on the main thread and only then writes to
-their real inventory - audited, permission-checked, and failing cleanly
-(`CONFLICT`) if they logged off while the mirror was open.
+silently (no chat spam per item moved). `GuiView#onClose` runs the identical
+call once more, this time with a chat confirmation, as a final flush when
+the viewer actually closes the view (walks away, presses Esc, or clicks
+Back/Close) - both paths re-resolve the target fresh on the main thread and
+fail cleanly (`CONFLICT`) if they logged off while the mirror was open.
 
 The audit entry for an inventory/ender-chest change records a coarse
 before/after slot-occupancy count ("12/36 slots occupied" style), **never**

@@ -33,6 +33,7 @@ public final class GuiView implements InventoryHolder {
     private final Map<Integer, GuiButton> buttons = new HashMap<>();
     private boolean editable;
     private Consumer<GuiView> onClose;
+    private Consumer<GuiView> onChange;
 
     GuiView(GuiPage page, UUID viewerId, int rows, Component title) {
         this.page = page;
@@ -89,6 +90,31 @@ public final class GuiView implements InventoryHolder {
     void handleClose() {
         if (onClose != null) {
             onClose.accept(this);
+        }
+    }
+
+    /**
+     * Registers a callback {@link GuiListener} runs, one tick after a click
+     * or drag it let through (i.e. {@link #editable()} was {@code true} and
+     * the click wasn't on a {@link GuiButton} slot) - the seam a live-sync
+     * page (e.g. an inventory editor that must mirror onto the real target
+     * immediately, not only on close) uses. One tick later because Bukkit
+     * only applies the vanilla click/drag result to {@link #getInventory()}
+     * after the triggering event's handlers return, in the same server
+     * tick - by the next tick it's guaranteed to be visible here. Not called
+     * for every {@code editable} view - only a page that registers one
+     * gets it; default is a no-op. Independent of {@link #onClose}: a page
+     * can register either, neither, or both (e.g. live-sync per change plus
+     * a final flush on close as a safety net).
+     */
+    public void onChange(Consumer<GuiView> callback) {
+        this.onChange = callback;
+    }
+
+    /** Invoked by {@link GuiListener}, one tick after a click/drag it let through. */
+    void handleChange() {
+        if (onChange != null) {
+            onChange.accept(this);
         }
     }
 

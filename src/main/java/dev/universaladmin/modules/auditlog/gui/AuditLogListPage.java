@@ -17,10 +17,12 @@ import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.permission.PermissionNode;
 import dev.universaladmin.scheduler.TaskScheduler;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
@@ -47,9 +49,16 @@ public final class AuditLogListPage extends AbstractGuiPage {
     public static final GuiPageId ID = GuiPageId.core("audit-log.home");
 
     private static final int FILTER_SLOT = 2;
+    private static final int FILTER_MENU_SLOT = 3;
     private static final int BATCH_LIMIT = 200;
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.ROOT).withZone(ZoneId.systemDefault());
+
+    /** Session attribute keys {@link AuditLogFilterPage} reads/writes - actor/module/time-range, on top of this page's own success/failure {@link Filter}. */
+    static final String ATTR_ACTOR_ID = ID.toString() + ".filter.actor";
+    static final String ATTR_MODULE = ID.toString() + ".filter.module";
+    static final String ATTR_FROM = ID.toString() + ".filter.from";
+    static final String ATTR_TO = ID.toString() + ".filter.to";
 
     private final AuditService auditService;
     private final TaskScheduler scheduler;
@@ -73,9 +82,10 @@ public final class AuditLogListPage extends AbstractGuiPage {
     protected void renderContent(GuiRenderContext context) {
         Filter filter = filterFor(context.session());
         placeFilterButton(context.view(), context.viewer(), filter);
+        placeFilterMenuButton(context.view(), context.viewer());
         renderPlaceholder(context.view(), framework.icons().loading(), text("gui.loading"));
 
-        AuditQuery query = AuditQuery.builder().success(filter.successFilter()).pageSize(BATCH_LIMIT).build();
+        AuditQuery query = queryFor(context.session(), filter);
         auditService.query(query).whenComplete((page, error) -> scheduler.runOnMainThread(() -> {
             if (!stillOpen(context)) {
                 return;
@@ -93,6 +103,7 @@ public final class AuditLogListPage extends AbstractGuiPage {
         Player viewer = context.viewer();
         view.clearContentArea();
         placeFilterButton(view, viewer, filter);
+        placeFilterMenuButton(view, viewer);
 
         if (items.isEmpty()) {
             renderPlaceholder(view, framework.icons().empty(), text("gui.empty"));
@@ -142,6 +153,25 @@ public final class AuditLogListPage extends AbstractGuiPage {
             ctx.session().setAttribute(id().toString() + ".page", 0);
             this.open(ctx.viewer());
         }), viewer);
+    }
+
+    private void placeFilterMenuButton(GuiView view, Player viewer) {
+        GuiItem item = GuiItem.of(Material.BOOK, text("audit.gui.filter.open"),
+                List.of(Component.text(messages.get(MessageKey.of("audit.gui.filter.open-hint")), NamedTextColor.GRAY)));
+        view.place(FILTER_MENU_SLOT, GuiButton.of(item, ctx -> ctx.open(new AuditLogFilterPage(framework, messages, scheduler))), viewer);
+    }
+
+    /** Combines this page's own success/failure {@link Filter} with whatever {@link AuditLogFilterPage} last stored in {@code session}. */
+    private AuditQuery queryFor(GuiSession session, Filter filter) {
+        AuditQuery.Builder builder = AuditQuery.builder().success(filter.successFilter()).pageSize(BATCH_LIMIT);
+        session.attribute(ATTR_ACTOR_ID).filter(UUID.class::isInstance).map(UUID.class::cast).ifPresent(builder::actorId);
+        session.attribute(ATTR_MODULE).filter(String.class::isInstance).map(String.class::cast).ifPresent(builder::module);
+        Instant from = session.attribute(ATTR_FROM).filter(Instant.class::isInstance).map(Instant.class::cast).orElse(null);
+        Instant to = session.attribute(ATTR_TO).filter(Instant.class::isInstance).map(Instant.class::cast).orElse(null);
+        if (from != null || to != null) {
+            builder.timeRange(from, to);
+        }
+        return builder.build();
     }
 
     private Filter filterFor(GuiSession session) {

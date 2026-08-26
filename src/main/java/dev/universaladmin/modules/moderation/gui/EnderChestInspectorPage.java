@@ -1,4 +1,4 @@
-package dev.universaladmin.modules.players.gui;
+package dev.universaladmin.modules.moderation.gui;
 
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.gui.AbstractGuiPage;
@@ -21,23 +21,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * The 27-slot ender chest, occupying the first 27 of the 36 content slots -
- * the remaining 9 are locked filler. Same view/edit/live-persist shape as
- * {@link PlayerInventoryPage} (no Save button - {@link GuiView#onChange}
- * persists after every click/drag, {@link GuiView#onClose} once more as a
- * final flush), gated on {@code players.enderchest.*} instead.
+ * The Staff-Mode Ender Chest Inspector tool - a live mirror of a target's
+ * 27-slot ender chest, occupying the first 27 of the 36 content slots (the
+ * remaining 9 are locked filler), same shape as {@code PlayerEnderChestPage}
+ * in the Players module. View-only ({@code editable(false)}) without {@link
+ * PlayerPermissions#ENDERCHEST_EDIT}; with it, every click/drag mirrors onto
+ * the real target immediately via {@link GuiView#onChange}. Ephemeral, built
+ * fresh per click, never registered in {@code GuiRegistry}.
  */
-public final class PlayerEnderChestPage extends AbstractGuiPage {
+public final class EnderChestInspectorPage extends AbstractGuiPage {
 
-    public static final GuiPageId ID = GuiPageId.core("players.enderchest");
+    public static final GuiPageId ID = GuiPageId.core("moderation.enderchest-inspector");
 
     private static final int ENDER_CHEST_SIZE = 27;
 
-    private final PlayerGuiContext ctx;
+    private final ModerationGuiContext ctx;
     private final UUID targetId;
     private final String targetName;
 
-    public PlayerEnderChestPage(PlayerGuiContext ctx, UUID targetId, String targetName) {
+    public EnderChestInspectorPage(ModerationGuiContext ctx, UUID targetId, String targetName) {
         super(ID, ctx.framework(), ctx.messages());
         this.ctx = ctx;
         this.targetId = targetId;
@@ -45,8 +47,13 @@ public final class PlayerEnderChestPage extends AbstractGuiPage {
     }
 
     @Override
+    protected boolean refreshable() {
+        return true;
+    }
+
+    @Override
     protected Component title(Player viewer) {
-        return text("players.gui.enderchest.title", targetName);
+        return text("moderation.gui.enderchest-inspector.title", targetName);
     }
 
     @Override
@@ -55,7 +62,7 @@ public final class PlayerEnderChestPage extends AbstractGuiPage {
         Player viewer = context.viewer();
         Player target = Bukkit.getPlayer(targetId);
         if (target == null) {
-            view.place(GuiLayout.contentSlot(GuiLayout.contentSize() / 2), GuiItem.of(framework.icons().empty(), text("players.action.offline")));
+            view.place(GuiLayout.contentSlot(GuiLayout.contentSize() / 2), GuiItem.of(framework.icons().empty(), text("moderation.action.offline")));
             return;
         }
 
@@ -74,38 +81,32 @@ public final class PlayerEnderChestPage extends AbstractGuiPage {
         }
 
         if (canEdit) {
-            // Live: mirrors onto the real target after every click/drag,
-            // silently (a chat message per item moved would spam the
-            // admin); onClose notifies once, as the familiar "final save"
-            // confirmation - see PlayerInventoryPage#persist.
+            // Live, silent on success - see InventoryInspectorPage#persist.
             view.onChange(view2 -> persist(view2, false));
             view.onClose(view2 -> persist(view2, true));
         }
     }
 
     private void persist(GuiView view, boolean notify) {
-        Player admin = Bukkit.getPlayer(view.viewerId());
-        if (admin == null) {
+        Player staff = Bukkit.getPlayer(view.viewerId());
+        if (staff == null) {
             return;
         }
         List<ItemStack> contents = new ArrayList<>();
         for (int i = 0; i < ENDER_CHEST_SIZE; i++) {
             contents.add(view.getInventory().getItem(GuiLayout.contentSlot(i)));
         }
-        runAction(admin, PlayerActionIds.ENDERCHEST_SET, new SetEnderChestContentsInput(targetId, contents), notify);
-    }
-
-    /** @param notify whether to tell {@code viewer} the outcome - {@code false} for a silent live-sync write, {@code true} for a deliberate one-off action. */
-    private <I> void runAction(Player viewer, ActionId id, I input, boolean notify) {
-        ctx.actionExecutor().<I, Object>execute(id, PlayerGuiActions.contextFor(viewer), input)
+        ActionId id = PlayerActionIds.ENDERCHEST_SET;
+        SetEnderChestContentsInput input = new SetEnderChestContentsInput(targetId, contents);
+        ctx.actionExecutor().<SetEnderChestContentsInput, Object>execute(id, ModerationGuiActions.contextFor(staff), input)
                 .whenComplete((result, error) -> ctx.scheduler().runOnMainThread(() -> {
-                    if (!viewer.isOnline()) {
+                    if (!staff.isOnline()) {
                         return;
                     }
                     if (error != null) {
-                        PlayerGuiActions.notifyError(viewer, messages);
+                        ModerationGuiActions.notifyError(staff, ctx.messages());
                     } else if (notify) {
-                        PlayerGuiActions.notifyResult(viewer, messages, result);
+                        ModerationGuiActions.notifyResult(staff, ctx.messages(), id, result);
                     }
                 }));
     }

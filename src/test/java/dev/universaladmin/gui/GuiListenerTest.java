@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.UUID;
+import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -17,6 +18,8 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -31,7 +34,18 @@ import org.junit.jupiter.api.Test;
 class GuiListenerTest {
 
     private final GuiSessionManager sessions = new GuiSessionManager();
-    private final GuiListener listener = new GuiListener(sessions);
+    private final Plugin plugin = mockPlugin();
+    private final GuiListener listener = new GuiListener(sessions, plugin);
+
+    /** Just enough of the {@code Plugin -> Server -> BukkitScheduler} chain for {@code GuiListener#scheduleChange} not to NPE. */
+    private static Plugin mockPlugin() {
+        Plugin plugin = mock(Plugin.class);
+        Server server = mock(Server.class);
+        BukkitScheduler scheduler = mock(BukkitScheduler.class);
+        when(plugin.getServer()).thenReturn(server);
+        when(server.getScheduler()).thenReturn(scheduler);
+        return plugin;
+    }
 
     @Test
     void onCloseRemovesTheSessionForAGenuineClose() {

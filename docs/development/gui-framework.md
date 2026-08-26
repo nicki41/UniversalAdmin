@@ -192,10 +192,23 @@ editable page that wants to skip a separate save button: the callback runs
 once the view actually closes (not when navigating to another
 UniversalAdmin page - the same `OPEN_NEW` distinction as session cleanup),
 by which point every drag/click by the player has already landed in the
-`Inventory`. `PlayerInventoryPage`/`PlayerEnderChestPage` read the final
-contents there and call `SetPlayerInventoryContentsAction`/
-`SetPlayerEnderChestContentsAction` through `ActionExecutor` normally -
-"live" here means "no save click needed", not "bypass `ActionExecutor` and
+`Inventory`.
+
+`GuiView#onChange(Consumer<GuiView>)` is the same idea, but per click/drag
+instead of only at close - for a page where "live" needs to mean instantly
+mirrored onto the real target, not just "no save button." `GuiListener`
+schedules it one tick after a click/drag it let through (`view.editable()`
+and not a `GuiButton` slot), since Bukkit only applies the vanilla move to
+the `Inventory` *after* the triggering event's handlers return, in the same
+tick - by the next tick it's guaranteed visible. `PlayerInventoryPage`/
+`PlayerEnderChestPage` (and the Staff Mode Inventory/Ender Chest Inspector
+tools, which reuse the identical mechanism) register both: `onChange` reads
+the mirror's current contents and calls
+`SetPlayerInventoryContentsAction`/`SetPlayerEnderChestContentsAction`
+through `ActionExecutor` silently (no chat message per item moved), and
+`onClose` does the same once more as a final flush, this time with the
+usual chat confirmation. "Live" here always means "no save click needed,
+and the target sees it immediately", never "bypass `ActionExecutor` and
 write straight into the real inventory" (see docs/user/modules/players.md
 for the full reasoning on why a directly opened `PlayerInventory` of the
 target is deliberately *not* the chosen path).

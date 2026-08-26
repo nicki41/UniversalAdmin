@@ -7,6 +7,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
 
 /**
  * The single Bukkit listener for every UniversalAdmin GUI - registered once
@@ -24,9 +25,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 public final class GuiListener implements Listener {
 
     private final GuiSessionManager sessions;
+    private final Plugin plugin;
 
-    public GuiListener(GuiSessionManager sessions) {
+    public GuiListener(GuiSessionManager sessions, Plugin plugin) {
         this.sessions = sessions;
+        this.plugin = plugin;
     }
 
     @EventHandler
@@ -42,8 +45,11 @@ public final class GuiListener implements Listener {
         // A registered GuiButton's slot (chrome, or a page's own locked
         // filler) stays protected even in an editable view: editable() only
         // ever promised freedom for the *non-button* slots, see its javadoc.
-        if (!view.editable() || clickedButtonSlot) {
+        boolean allowed = view.editable() && !clickedButtonSlot;
+        if (!allowed) {
             event.setCancelled(true);
+        } else {
+            scheduleChange(view);
         }
         if (event.getClickedInventory() == null || !event.getClickedInventory().equals(event.getView().getTopInventory())) {
             // Click landed in the player's own inventory (or nowhere) - already
@@ -65,9 +71,28 @@ public final class GuiListener implements Listener {
         int topSize = event.getView().getTopInventory().getSize();
         boolean touchesButtonSlot = event.getRawSlots().stream()
                 .anyMatch(rawSlot -> rawSlot < topSize && view.buttonAt(rawSlot).isPresent());
-        if (!view.editable() || touchesButtonSlot) {
+        boolean allowed = view.editable() && !touchesButtonSlot;
+        if (!allowed) {
             event.setCancelled(true);
+        } else {
+            scheduleChange(view);
         }
+    }
+
+    /**
+     * Runs {@link GuiView#handleChange()} one tick after a click/drag this
+     * listener let through - see that method's javadoc for why the delay is
+     * necessary. Guards against the view having closed in the meantime
+     * (e.g. the same tick's close already ran) by re-checking the top
+     * inventory still holds this exact view.
+     */
+    private void scheduleChange(GuiView view) {
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            Player player = plugin.getServer().getPlayer(view.viewerId());
+            if (player != null && player.getOpenInventory().getTopInventory().getHolder() == view) {
+                view.handleChange();
+            }
+        });
     }
 
     @EventHandler

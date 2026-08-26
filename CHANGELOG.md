@@ -1,8 +1,9 @@
 # Changelog
 
-Format follows [Keep a Changelog](https://keepachangelog.com/). As long as
-there's no published release, everything is collected under
-`[Unreleased]`.
+Format follows [Keep a Changelog](https://keepachangelog.com/). Unreleased
+changes accumulate under `[Unreleased]`; each release moves them into a
+dated, versioned section below it (see
+[docs/release/releasing.md](docs/release/releasing.md)).
 
 ## [Unreleased]
 
@@ -40,7 +41,15 @@ there's no published release, everything is collected under
   GitHub release: a tag-vs-project-version check, a build including
   tests, the shaded jar plus a SHA-256 file as assets, prerelease
   detection for `-alpha`/`-beta`/`-rc`. `contents: write`, no additional
-  secrets.
+  secrets. Also callable directly (`workflow_call`, with a `tag` input) by
+  `auto-release.yml` below, not only by its own tag-push trigger.
+- `.github/workflows/auto-release.yml` - releases automatically after any
+  push to `main` that changes more than docs/CI metadata: bumps the
+  `-alpha.N` counter in `build.gradle.kts`, moves the `CHANGELOG.md`
+  `[Unreleased]` section into a dated one, commits, tags, and calls
+  `release.yml`. Skips a beta/rc/stable version bump (a bigger decision
+  than this workflow makes on its own) and its own release commits (no
+  loop). See [docs/release/releasing.md](docs/release/releasing.md).
 - A `printVersion` Gradle task as the single source of the project
   version for CI (the tag check, artifact naming).
 - Issue forms (`bug_report.yml`, `feature_request.yml`) and
@@ -158,6 +167,30 @@ there's no published release, everything is collected under
   `GuiSessionTest`, `GuiSessionManagerTest`, `GuiButtonVisibilityTest`,
   `GuiClickContextTest` (the navigation stack), `GuiListenerTest`
   (click cancel/dispatch, close/quit cleanup).
+- `GuiView#onChange` - a live-sync hook `GuiListener` runs one tick after a
+  click/drag it let through, on top of the existing `onClose`. Used by the
+  Players module's inventory/ender chest editors and the new Staff-Mode
+  Ender Chest Inspector tool so an edit mirrors onto the real target
+  immediately instead of only when the viewer closes the GUI.
+- Staff-Mode **Ender Chest Inspector** tool (`EnderChestInspectorPage`),
+  alongside a now-live (not read-only) Inventory Inspector - both gated on
+  the Players module's own `...inventory.edit`/`...enderchest.edit`
+  permissions. See [docs/user/modules/staff-tools.md](docs/user/modules/staff-tools.md).
+- Staff-Mode **Teleport Picker** tool: opens a player list, then a
+  "teleport to them"/"bring them" choice, routed through the Players
+  module's own audited `TeleportPlayerAction` - replaces Random Teleport.
+- Staff-Mode target tracking now searches by look direction within a
+  configurable range (`moderation.staffmode.target-range-blocks`, default
+  40) instead of a 6-block, wall-blocked ray trace, and sends a persistent
+  actionbar naming the current target. The Player Inspector tool's head
+  always shows the current target now, regardless of which tool is held.
+- Per-action success messages in the Moderation GUI (`ModerationGuiActions`)
+  - naming the target, reason, and duration where relevant - instead of a
+  single generic "Done." for every action.
+- Audit log GUI filtering by actor, module, and time range
+  (`AuditLogFilterPage`), on top of the existing success/failure toggle -
+  the query layer already supported all of this, only the GUI was missing.
+  See [docs/user/audit-log.md](docs/user/audit-log.md).
 
 ### Changed
 
@@ -297,3 +330,13 @@ there's no published release, everything is collected under
   SQLite/MariaDB) doesn't support - removed, since `MigrationRunner`
   already guarantees every migration runs at most once. See
   [docs/architecture/storage.md#dialect-differences](docs/architecture/storage.md#dialect-differences).
+- Freezing a player sent the target two notices for one click of the
+  Freeze Tool - `PlayerInteractEntityEvent` fires once per hand for a
+  single physical right-click, and `StaffModeGuardListener` dispatched on
+  both. Now only the main-hand firing is handled.
+- `core:performance.clear-entities` failed to record its audit event on
+  every run (`IllegalArgumentException: Unsupported audit metadata value
+  type ... ListN`) - its metadata put the selected entity types in
+  directly as a `List`, which the audit metadata codec only ever accepted
+  String/Number/Boolean/null for. Now joined into a single string, same as
+  the value already shown in the audit summary.

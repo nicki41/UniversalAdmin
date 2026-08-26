@@ -218,7 +218,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         GuiSessionManager guiSessions = new GuiSessionManager();
         GuiFramework guiFramework = new GuiFramework(guiSessions, new MaterialIconProvider(getLogger()));
         // The one GuiListener for the whole plugin - see docs/development/gui-framework.md.
-        getServer().getPluginManager().registerEvents(new GuiListener(guiSessions), this);
+        getServer().getPluginManager().registerEvents(new GuiListener(guiSessions, this), this);
         PermissionRegistry permissions = new PermissionRegistry();
         ModuleRegistry moduleRegistry = new ModuleRegistry();
         AuditService auditService =

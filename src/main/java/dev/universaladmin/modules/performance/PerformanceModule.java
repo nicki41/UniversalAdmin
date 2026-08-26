@@ -1,6 +1,7 @@
 package dev.universaladmin.modules.performance;
 
 import dev.universaladmin.action.ActionDefinition;
+import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
@@ -21,6 +22,7 @@ import dev.universaladmin.settings.CoreSettings;
 import dev.universaladmin.settings.SettingsService;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -70,7 +72,7 @@ public final class PerformanceModule implements Module {
         context.platform().services().register(PerformanceSamplingService.class, samplingService);
 
         scheduleSampling(context, plugin, settings, samplingService);
-        registerActions(context, scheduler, settings);
+        registerActions(context.platform().actions(), scheduler, settings, context.logger());
         registerGui(context, samplingService);
     }
 
@@ -82,9 +84,10 @@ public final class PerformanceModule implements Module {
         context.resources().task(task);
     }
 
-    private void registerActions(ModuleContext context, TaskScheduler scheduler, SettingsService settings) {
-        context.platform().actions().register(ActionDefinition.builder(
-                        new ClearEntitiesAction(scheduler, settings, context.logger()))
+    /** Package-private (not {@code private}) so {@code PerformanceActionsWiringTest} can exercise it without a full {@link ModuleContext} - same reasoning as {@code ModerationModule#registerActions}. */
+    static void registerActions(ActionRegistry actions, TaskScheduler scheduler, SettingsService settings, Logger logger) {
+        actions.register(ActionDefinition.builder(
+                        new ClearEntitiesAction(scheduler, settings, logger))
                 .permission(PerformancePermissions.ENTITY_CLEAR)
                 .module(ID.key().name())
                 .validator((actionContext, input) -> input.entityTypes().isEmpty()
@@ -97,7 +100,12 @@ public final class PerformanceModule implements Module {
                 .auditDetails((input, result) -> AuditDetails.builder()
                         .newValue(result instanceof ActionResult.Success<Integer> success ? "removed=" + success.value() : null)
                         .world(input.worldName())
-                        .metadata(Map.of("types", input.entityTypes().stream().map(Enum::name).sorted().toList()))
+                        // A single delimited String, not a List: AuditDetails
+                        // metadata only accepts String/Number/Boolean/null
+                        // (see MetadataJson.encodeValue) - a List value threw
+                        // and silently dropped the audit entry for every
+                        // entity-clear action.
+                        .metadata(Map.of("types", input.entityTypes().stream().map(Enum::name).sorted().collect(Collectors.joining(", "))))
                         .build())
                 .build());
     }

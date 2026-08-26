@@ -5,18 +5,27 @@ import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.Actor;
 import dev.universaladmin.action.Source;
+import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiView;
+import dev.universaladmin.gui.SelectionDialog;
+import dev.universaladmin.localization.ComponentMessages;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.moderation.action.FreezeInput;
 import dev.universaladmin.modules.moderation.action.ModerationActionIds;
 import dev.universaladmin.modules.moderation.action.UnfreezeInput;
+import dev.universaladmin.modules.moderation.gui.EnderChestInspectorPage;
 import dev.universaladmin.modules.moderation.gui.InventoryInspectorPage;
 import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
 import dev.universaladmin.modules.moderation.gui.ModeratePlayerPage;
 import dev.universaladmin.modules.moderation.gui.PunishmentListPage;
+import dev.universaladmin.modules.players.action.PlayerActionIds;
+import dev.universaladmin.modules.players.action.TeleportInput;
+import dev.universaladmin.modules.players.action.TeleportKind;
 import dev.universaladmin.permission.bukkit.PermissiblePermissionEvaluator;
 import java.util.List;
-import java.util.Random;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -27,6 +36,7 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 /**
  * Dispatches held Staff Mode tools and blocks the unconditional Staff Mode
@@ -45,7 +55,6 @@ public final class StaffModeGuardListener implements Listener {
     private final FreezeRuntimeState freezeState;
     private final ActionExecutor actionExecutor;
     private final ModerationGuiContext guiContext;
-    private final Random random = new Random();
 
     public StaffModeGuardListener(
             StaffModeState staffModeState, StaffToolItems toolItems, FreezeRuntimeState freezeState,
@@ -66,13 +75,13 @@ public final class StaffModeGuardListener implements Listener {
         toolItems.toolOf(event.getItem()).ifPresent(tool -> {
             event.setCancelled(true);
             switch (tool) {
-                case RANDOM_TELEPORT -> randomTeleport(player);
+                case TELEPORT_PICKER -> openTeleportPicker(player);
                 case VANISH_TOGGLE -> runSelfAction(player, ModerationActionIds.VANISH);
                 case EXIT_STAFF_MODE -> runSelfAction(player, ModerationActionIds.STAFF_MODE_EXIT);
                 default -> {
                     // PLAYER_INSPECTOR/FREEZE_TOOL/INVENTORY_INSPECTOR/
-                    // MODERATE_TOOL/TELEPORT_TOOL need an entity target -
-                    // handled in onInteractEntity.
+                    // ENDERCHEST_INSPECTOR/MODERATE_TOOL/TELEPORT_TOOL need
+                    // an entity target - handled in onInteractEntity.
                 }
             }
         });
@@ -80,6 +89,14 @@ public final class StaffModeGuardListener implements Listener {
 
     @EventHandler
     public void onInteractEntity(PlayerInteractEntityEvent event) {
+        // Bukkit fires this event once per hand the client reports for a
+        // single physical right-click; without this guard, every tool below
+        // (Freeze in particular) runs twice per click. Only the main hand
+        // ever holds a tool item, so the off-hand firing is always a no-op
+        // duplicate here.
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
         Player player = event.getPlayer();
         if (!staffModeState.isActive(player.getUniqueId())) {
             return;
@@ -92,11 +109,12 @@ public final class StaffModeGuardListener implements Listener {
             switch (tool) {
                 case PLAYER_INSPECTOR -> PunishmentListPage.forTarget(guiContext, target.getUniqueId()).open(player);
                 case INVENTORY_INSPECTOR -> new InventoryInspectorPage(guiContext, target.getUniqueId(), target.getName()).open(player);
+                case ENDERCHEST_INSPECTOR -> new EnderChestInspectorPage(guiContext, target.getUniqueId(), target.getName()).open(player);
                 case FREEZE_TOOL -> toggleFreeze(player, target);
                 case MODERATE_TOOL -> new ModeratePlayerPage(guiContext, target.getUniqueId(), target.getName()).open(player);
                 case TELEPORT_TOOL -> player.teleportAsync(target.getLocation());
                 default -> {
-                    // RANDOM_TELEPORT/VANISH_TOGGLE/EXIT_STAFF_MODE don't need a target - handled in onInteract.
+                    // TELEPORT_PICKER/VANISH_TOGGLE/EXIT_STAFF_MODE don't need a target - handled in onInteract.
                 }
             }
         });
@@ -154,13 +172,42 @@ public final class StaffModeGuardListener implements Listener {
         event.setCancelled(true);
     }
 
-    private void randomTeleport(Player player) {
+    /** Opens a picker over every other online player, then {@link #openTeleportActionChoice} for the one chosen. */
+    private void openTeleportPicker(Player staff) {
         List<Player> candidates = Bukkit.getOnlinePlayers().stream()
-                .filter(p -> !p.getUniqueId().equals(player.getUniqueId()))
+                .filter(p -> !p.getUniqueId().equals(staff.getUniqueId()))
                 .<Player>map(p -> p)
                 .toList();
-        if (!candidates.isEmpty()) {
-            player.teleportAsync(candidates.get(random.nextInt(candidates.size())).getLocation());
+        SelectionDialog.open(staff, guiContext.framework(), guiContext.messages(), guiContext.scheduler(),
+                ComponentMessages.render(guiContext.messages().get(MessageKey.of("moderation.gui.staffmode.teleport-picker.select-player"))),
+                candidates,
+                p -> GuiItem.playerHead(p, Component.text(p.getName()), List.of()),
+                (clickCtx, target) -> openTeleportActionChoice(clickCtx.viewer(), target));
+    }
+
+    /** Opens the "teleport to them" vs. "bring them" choice for {@code target}, then runs {@code PlayerActionIds#TELEPORT}. */
+    private void openTeleportActionChoice(Player staff, Player target) {
+        SelectionDialog.open(staff, guiContext.framework(), guiContext.messages(), guiContext.scheduler(),
+                ComponentMessages.render(guiContext.messages().get(
+                        MessageKey.of("moderation.gui.staffmode.teleport-picker.select-action"), target.getName())),
+                List.of(TeleportChoice.TO_TARGET, TeleportChoice.BRING_TARGET),
+                choice -> GuiItem.of(choice.material, ComponentMessages.render(guiContext.messages().get(MessageKey.of(choice.labelKey)))),
+                (clickCtx, choice) -> actionExecutor.<TeleportInput, Object>execute(
+                        PlayerActionIds.TELEPORT, contextFor(staff), TeleportInput.of(choice.kind, target.getUniqueId())));
+    }
+
+    private enum TeleportChoice {
+        TO_TARGET(TeleportKind.ADMIN_TO_PLAYER, Material.ENDER_PEARL, "moderation.gui.staffmode.teleport-picker.to-target"),
+        BRING_TARGET(TeleportKind.BRING_TO_ADMIN, Material.LEAD, "moderation.gui.staffmode.teleport-picker.bring-target");
+
+        private final TeleportKind kind;
+        private final Material material;
+        private final String labelKey;
+
+        TeleportChoice(TeleportKind kind, Material material, String labelKey) {
+            this.kind = kind;
+            this.material = material;
+            this.labelKey = labelKey;
         }
     }
 

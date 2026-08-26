@@ -45,6 +45,11 @@ public final class GuiSession {
         return Optional.ofNullable(attributes.get(key));
     }
 
+    /** Removes a single attribute - the "no filter on this dimension" case, since a {@link ConcurrentHashMap} value can't be {@code null}. */
+    public void removeAttribute(String key) {
+        attributes.remove(key);
+    }
+
     /** Convenience for the common "current page number" style of attribute. */
     public int intAttribute(String key, int defaultValue) {
         return attribute(key)

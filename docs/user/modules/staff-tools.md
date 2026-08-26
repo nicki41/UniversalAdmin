@@ -197,22 +197,26 @@ unnecessary, not a replacement for it.
 
 ### Tools
 
-Eight items fill your hotbar on entry, each tagged via
+Nine items fill your hotbar on entry, each tagged via
 `PersistentDataContainer`/`NamespacedKey` (not matched by display
 name/lore, so a renamed item is still recognized and nothing else can be
 mistaken for one). Every tool click **cancels the triggering interaction**
 before dispatching - a Player-Inspector-holding staff member right-clicking
 a cow doesn't feed it, right-clicking a block doesn't place/break it.
+`PlayerInteractEntityEvent` fires once per hand for a single physical
+click; every entity-targeted tool below only reacts to the main-hand
+firing, so a click never dispatches twice.
 
 | Tool | Trigger | Effect |
 |---|---|---|
-| Player Inspector | Right-click a player | Opens that player's punishment history. Its icon/name/lore also live-update to whoever is currently in your crosshair - see "Live target display" below. |
+| Player Inspector | Right-click a player | Opens that player's punishment history. Its icon/name/lore also live-update to whoever is currently in your crosshair - see "Live target display" below - regardless of which tool you're actually holding. |
 | Freeze Tool | Right-click a player | Toggles Freeze/Unfreeze immediately (fixed reason "Staff Freeze Tool" - no prompt, so using it never interrupts world interaction) |
-| Inventory Inspector | Right-click a player | Read-only mirror of their live inventory - view only, no editing |
-| Random Teleport | Right-click air | Teleports you to a random other online player |
+| Inventory Inspector | Right-click a player | Live mirror of their main inventory + armor/offhand. Editing requires `universaladmin.players.inventory.edit` (the same permission the Players module's own inventory editor uses); every click/drag mirrors onto the real target immediately, not just on close. Without that permission, view-only. |
+| Ender Chest Inspector | Right-click a player | Same as the Inventory Inspector, for their ender chest - requires `universaladmin.players.enderchest.edit` to write. |
+| Teleport to/Bring Player | Right-click air | Opens a picker over every online player, then a "Teleport to them" / "Bring them to me" choice - runs through the Players module's own audited teleport action (`TeleportKind.ADMIN_TO_PLAYER`/`BRING_TO_ADMIN`), unlike "Teleport to Player" below. |
 | Vanish Toggle | Right-click air | Runs the Vanish action on yourself |
 | Moderate Tool | Right-click a player | Opens the full Moderate wizard (Kick/Ban/Mute/Warn) for that player directly - no need to leave Staff Mode and find them again in the Player Browser |
-| Teleport to Player | Right-click a player | Teleports you directly to that player (unaudited, same as Random Teleport - a movement convenience, not a moderation action) |
+| Teleport to Player | Right-click a player | Teleports you directly to that player (unaudited - a movement convenience, not a moderation action) |
 | Exit Staff Mode | Right-click air | Runs Exit Staff Mode |
 
 While Staff Mode is active (regardless of which tool is held, or none):
@@ -222,14 +226,27 @@ invulnerable.
 ### Live target display
 
 `StaffModeTargetTracker` runs every 10 ticks (twice a second) for every
-online Staff-Mode-active player: it re-raycasts via
-`LivingEntity#getTargetEntity(6)` (the same 6-block reach the tools
-themselves interact at) and, if another player is in your crosshair,
-rewrites the Player Inspector tool to show their real skin, name, and a
-quick Frozen/Vanished status line - reset back to the default icon the
-moment you look away. This is read-only presentation; it never changes who
-gets affected by an actual tool click, which always re-resolves the
-right-clicked entity itself.
+online Staff-Mode-active player. Unlike a vanilla ray trace, it deliberately
+does **not** stop at walls: it searches every online player within
+`moderation.staffmode.target-range-blocks` (default 40 blocks, ignores line
+of sight entirely) for whoever is closest to your exact look direction,
+within a narrow angular tolerance - so it keeps working through walls and at
+much longer range than the ~6-block reach the tools themselves interact at
+(a Minecraft client limit this plugin can't change either way). If it finds
+someone:
+
+- The Player Inspector tool always shows their real skin, name, and a quick
+  Frozen/Vanished status line, whichever tool you're actually holding.
+- Whichever other status-aware tool you're currently holding (Freeze Tool,
+  Inventory/Ender Chest Inspector, Moderate Tool, Teleport to Player) shows
+  the same status line too, reset back to its default icon the moment you
+  look away or switch tools.
+- An actionbar message ("Looking at: `<name>`", or "Looking at: nobody")
+  is resent every tick a target exists, keeping it visible continuously
+  instead of fading out after Minecraft's default few seconds.
+
+This is read-only presentation; it never changes who gets affected by an
+actual tool click, which always re-resolves the right-clicked entity itself.
 
 ### Tool kit is locked
 
@@ -239,8 +256,8 @@ another inventory while Staff Mode is active -
 `StaffModeGuardListener` cancels `InventoryClickEvent`/`InventoryDragEvent`/
 `PlayerDropItemEvent` outright for a Staff-Mode-active player, except
 inside one of UniversalAdmin's own GUI pages (Player Inspector, Inventory
-Inspector, Moderate), which `GuiListener` already owns completely on its
-own. `StaffModeTargetTracker`'s periodic pass also calls
+Inspector, Ender Chest Inspector, Moderate), which `GuiListener` already
+owns completely on its own. `StaffModeTargetTracker`'s periodic pass also calls
 `StaffToolItems#restoreIfTampered`, which re-gives the whole kit if any
 tool slot is ever found empty or wrong - a backstop for an edge case the
 click/drag/drop cancellation didn't anticipate, not the primary defense.

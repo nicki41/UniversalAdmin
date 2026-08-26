@@ -31,10 +31,11 @@ import org.bukkit.inventory.PlayerInventory;
  * 5) in one view - view-only ({@code editable(false)}, nothing can move)
  * with only {@code players.inventory.view}, or freely editable with {@code
  * players.inventory.edit}. Editing is live: there is no Save button - {@link
- * GuiView#onClose} persists whatever is in the view the moment the admin
- * actually closes it (walks away, hits Esc, or uses Back/Close), the same
- * "final state, not every intermediate drag" moment a real inventory close
- * already is. See docs/user/modules/players.md.
+ * GuiView#onChange} mirrors the view's current contents onto the real
+ * target's inventory after every click/drag, and {@link GuiView#onClose}
+ * does the same once more as a final flush when the admin actually closes
+ * the view (walks away, hits Esc, or uses Back/Close). See
+ * docs/user/modules/players.md.
  */
 public final class PlayerInventoryPage extends AbstractGuiPage {
 
@@ -103,7 +104,12 @@ public final class PlayerInventoryPage extends AbstractGuiPage {
         if (canEdit) {
             view.place(CLEAR_SLOT, GuiButton.of(GuiItem.of(Material.TNT, text("players.gui.inventory.clear")),
                     this::confirmClear), viewer);
-            view.onClose(this::persistOnClose);
+            // Live: mirrors onto the real target after every click/drag, not
+            // only once at close - see GuiView#onChange. Silent on success
+            // (a chat message per item moved would spam the admin); onClose
+            // still notifies once, as the familiar "final save" confirmation.
+            view.onChange(view2 -> persist(view2, false));
+            view.onClose(view2 -> persist(view2, true));
         }
     }
 
@@ -114,14 +120,16 @@ public final class PlayerInventoryPage extends AbstractGuiPage {
     }
 
     /**
-     * Runs once the admin actually closes this view - see the class javadoc.
+     * Mirrors the view's current contents onto the real target - called
+     * after every click/drag ({@code notify = false}) and once more on
+     * close ({@code notify = true}, the familiar "final save" confirmation).
      * Re-resolves the target fresh (never captures the {@code Player} from
      * render time, see docs/development/gui-framework.md's "Player Session"
      * section) since the admin may have left this open for a while; if the
      * target went offline in the meantime, {@code SetPlayerInventoryContentsAction}
      * itself reports that failure the normal way, nothing special-cased here.
      */
-    private void persistOnClose(GuiView view) {
+    private void persist(GuiView view, boolean notify) {
         Player admin = Bukkit.getPlayer(view.viewerId());
         if (admin == null) {
             return;
@@ -137,25 +145,26 @@ public final class PlayerInventoryPage extends AbstractGuiPage {
         equipment.add(view.getInventory().getItem(BOOTS_SLOT));
         equipment.add(view.getInventory().getItem(OFFHAND_SLOT));
 
-        runAction(admin, PlayerActionIds.INVENTORY_SET, new SetInventoryContentsInput(targetId, InventorySection.MAIN, storage));
-        runAction(admin, PlayerActionIds.INVENTORY_SET, new SetInventoryContentsInput(targetId, InventorySection.EQUIPMENT, equipment));
+        runAction(admin, PlayerActionIds.INVENTORY_SET, new SetInventoryContentsInput(targetId, InventorySection.MAIN, storage), notify);
+        runAction(admin, PlayerActionIds.INVENTORY_SET, new SetInventoryContentsInput(targetId, InventorySection.EQUIPMENT, equipment), notify);
     }
 
     private void confirmClear(GuiClickContext clickCtx) {
         Player viewer = clickCtx.viewer();
         if (!ctx.settings().get(CoreSettings.GUI_CONFIRMATIONS)) {
-            runAction(viewer, PlayerActionIds.INVENTORY_CLEAR, new PlayerTargetInput(targetId));
+            runAction(viewer, PlayerActionIds.INVENTORY_CLEAR, new PlayerTargetInput(targetId), true);
             return;
         }
         ConfirmationDialog.open(viewer, framework, messages,
                 text("players.gui.inventory.clear-confirm-title"),
                 List.of(text("players.gui.inventory.clear-confirm-body")),
                 ConfirmationDialog.DangerLevel.DANGEROUS,
-                confirmCtx -> runAction(confirmCtx.viewer(), PlayerActionIds.INVENTORY_CLEAR, new PlayerTargetInput(targetId)),
+                confirmCtx -> runAction(confirmCtx.viewer(), PlayerActionIds.INVENTORY_CLEAR, new PlayerTargetInput(targetId), true),
                 GuiClickContext::back);
     }
 
-    private <I> void runAction(Player viewer, ActionId id, I input) {
+    /** @param notify whether to tell {@code viewer} the outcome - {@code false} for a silent live-sync write, {@code true} for a deliberate one-off action. */
+    private <I> void runAction(Player viewer, ActionId id, I input, boolean notify) {
         ctx.actionExecutor().<I, Object>execute(id, PlayerGuiActions.contextFor(viewer), input)
                 .whenComplete((result, error) -> ctx.scheduler().runOnMainThread(() -> {
                     if (!viewer.isOnline()) {
@@ -163,7 +172,7 @@ public final class PlayerInventoryPage extends AbstractGuiPage {
                     }
                     if (error != null) {
                         PlayerGuiActions.notifyError(viewer, messages);
-                    } else {
+                    } else if (notify) {
                         PlayerGuiActions.notifyResult(viewer, messages, result);
                     }
                 }));

@@ -63,9 +63,12 @@ always async, never blocking the main thread (see
 Open via `/admin` → **Audit Log** (needs `universaladmin.audit.view`):
 
 - **List**: newest first, paginated. A filter button in the top row cycles
-  All → Success only → Failures only - the "Filter-Grundlage" this GUI
-  ships with today; more filter dimensions (by actor, by module, ...) are
-  future work, the query layer underneath already supports them.
+  All → Success only → Failures only. A second "Filters..." button opens a
+  dedicated filter page: pick an actor (from the online-player list, or by
+  typing a cached name), a module, and/or a time range (Last Hour/24h/7d, or
+  All Time) - each combines with the success/failure toggle into one
+  `AuditQuery`. Every filter is stored per-session and cleared individually
+  from the same page.
 - **Detail**: click an entry (needs `universaladmin.audit.details` - a
   viewer without it still sees the list row, just not a clickable detail
   page) to see Actor/Action/Target/Time/Source/Result/Reason/Old-New/

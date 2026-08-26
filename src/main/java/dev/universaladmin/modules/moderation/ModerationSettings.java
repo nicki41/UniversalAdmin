@@ -5,6 +5,7 @@ import dev.universaladmin.settings.SettingKey;
 import dev.universaladmin.settings.SettingRegistry;
 import dev.universaladmin.settings.SettingTypes;
 import dev.universaladmin.settings.SettingValidator;
+import dev.universaladmin.settings.SettingValidators;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +43,15 @@ public final class ModerationSettings {
     public static final SettingKey<Boolean> STAFFMODE_AUTO_FLY = SettingKey.of("moderation", "staffmode.auto-fly");
     public static final SettingKey<Boolean> STAFFMODE_AUTO_VANISH = SettingKey.of("moderation", "staffmode.auto-vanish");
     public static final SettingKey<Boolean> STAFFMODE_AUTO_NOCOLLISION = SettingKey.of("moderation", "staffmode.auto-nocollision");
+    /**
+     * How far (in blocks, straight-line, ignoring walls) {@code
+     * StaffModeTargetTracker} looks for who a staff member is aiming at -
+     * deliberately not the same value as the tools' own ~6-block right-click
+     * reach (a Minecraft client limit this plugin can't change either way),
+     * this only affects the passive "who am I looking at" indicator (held
+     * tool lore + actionbar).
+     */
+    public static final SettingKey<Integer> STAFFMODE_TARGET_RANGE_BLOCKS = SettingKey.of("moderation", "staffmode.target-range-blocks");
 
     /**
      * A {@link DateTimeFormatter} pattern for every absolute date/time this
@@ -81,6 +91,10 @@ public final class ModerationSettings {
         registry.register(bool(STAFFMODE_AUTO_FLY, true, "Grant flight automatically when entering staff mode."));
         registry.register(bool(STAFFMODE_AUTO_VANISH, true, "Vanish automatically when entering staff mode."));
         registry.register(bool(STAFFMODE_AUTO_NOCOLLISION, true, "Disable collision automatically when entering staff mode."));
+        registry.register(SettingDefinition.builder(STAFFMODE_TARGET_RANGE_BLOCKS, SettingTypes.INTEGER, 40)
+                .description("How far (blocks, ignores walls) the Staff Mode 'who am I looking at' indicator (tool lore + actionbar) searches.")
+                .validator(SettingValidators.intRange(1, 500))
+                .build());
 
         registry.register(SettingDefinition.builder(EXPIRY_DATE_PATTERN, SettingTypes.STRING, "yyyy-MM-dd HH:mm")
                 .description("DateTimeFormatter pattern for punishment created/expires/revoked timestamps. "

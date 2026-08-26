@@ -158,7 +158,7 @@ public final class ModerationModule implements Module {
                 staffModeState, toolItems, freezeRuntimeState, context.platform().actionExecutor(), guiContext));
 
         scheduleExpirySweep(context, punishmentService);
-        scheduleStaffModeTracker(context, staffModeState, toolItems, freezeRuntimeState, vanishService);
+        scheduleStaffModeTracker(context, staffModeState, toolItems, freezeRuntimeState, vanishService, context.platform().settings(), messages);
     }
 
     /** Package-private (not {@code private}) so {@code ModerationActionsWiringTest} can exercise it without a full {@link ModuleContext}. */
@@ -375,8 +375,9 @@ public final class ModerationModule implements Module {
 
     private void scheduleStaffModeTracker(
             ModuleContext context, StaffModeState staffModeState, StaffToolItems toolItems,
-            FreezeRuntimeState freezeRuntimeState, VanishService vanishService) {
-        StaffModeTargetTracker tracker = new StaffModeTargetTracker(staffModeState, toolItems, freezeRuntimeState, vanishService);
+            FreezeRuntimeState freezeRuntimeState, VanishService vanishService, SettingsService settings, MessageService messages) {
+        StaffModeTargetTracker tracker =
+                new StaffModeTargetTracker(staffModeState, toolItems, freezeRuntimeState, vanishService, settings, messages);
         Plugin plugin = context.platform().plugin();
         BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(
                 plugin, tracker::tick, STAFF_MODE_TRACKER_PERIOD_TICKS, STAFF_MODE_TRACKER_PERIOD_TICKS);
