@@ -7,6 +7,8 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [0.1.0-alpha.3] - 2026-08-26
+
 ### Changed
 
 - Releases are no longer flagged "Pre-release" on GitHub, `-alpha`/`-beta`/
