@@ -54,6 +54,9 @@ public final class CoreSettings {
     public static final SettingKey<String> TELEMETRY_ENDPOINT = SettingKey.of("core", "telemetry.endpoint");
     public static final SettingKey<Duration> TELEMETRY_INTERVAL = SettingKey.of("core", "telemetry.interval");
 
+    /** The official nicki41-telemetry instance - a generic, multi-plugin backend, not UniversalAdmin-specific. See docs/user/telemetry.md. */
+    private static final String DEFAULT_TELEMETRY_ENDPOINT = "https://telemetry.0nicki.de/v1/telemetry";
+
     /** The one switch {@code /admin update} and the background checker both respect - see {@code update.UpdateCheckService}. */
     public static final SettingKey<Boolean> UPDATE_CHECK_ENABLED = SettingKey.of("core", "update.check-for-updates");
     public static final SettingKey<Duration> UPDATE_CHECK_INTERVAL = SettingKey.of("core", "update.check-interval");
@@ -129,8 +132,9 @@ public final class CoreSettings {
         registry.register(SettingDefinition.builder(TELEMETRY_ENABLED, SettingTypes.BOOLEAN, true)
                 .description("Send anonymous usage statistics (see docs/user/telemetry.md); false sends nothing at all.")
                 .build());
-        registry.register(SettingDefinition.builder(TELEMETRY_ENDPOINT, SettingTypes.STRING, "")
-                .description("Statistics endpoint URL. Empty (the default) means nothing is sent anywhere.")
+        registry.register(SettingDefinition.builder(TELEMETRY_ENDPOINT, SettingTypes.STRING, DEFAULT_TELEMETRY_ENDPOINT)
+                .description("Statistics endpoint URL. Defaults to the official nicki41-telemetry instance; "
+                        + "set to empty to send nothing anywhere, or point at your own instance.")
                 .requiresRestart(true)
                 .build());
         registry.register(SettingDefinition.builder(TELEMETRY_INTERVAL, SettingTypes.DURATION, Duration.ofMinutes(30))

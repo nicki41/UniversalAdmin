@@ -138,20 +138,28 @@ default to `op`. Full list: [docs/user/permissions.md](docs/user/permissions.md)
 
 ## Anonymous Statistics
 
+[![Servers](https://telemetry.0nicki.de/v1/badge/servers.svg?plugin=universaladmin)](docs/user/telemetry.md)
+[![Players Online](https://telemetry.0nicki.de/v1/badge/players.svg?plugin=universaladmin)](docs/user/telemetry.md)
+
 UniversalAdmin can send anonymous usage statistics to answer three
 questions: **how many installations are active**, **how many players are
-online across all of them**, and **how versions are distributed**.
+online across all of them**, and **how versions are distributed**. The
+badges above are live, pulled from the same aggregate the numbers above come
+from - `nicki41-telemetry`, a separate, generic (not UniversalAdmin-only)
+backend project.
 
-**Currently nothing is sent.** There is no official endpoint yet, and none is
-preconfigured (`telemetry.endpoint` is empty) - without an endpoint, no
-request is made, no installation id is generated, and no timer starts.
+**Active by default, reporting to `https://telemetry.0nicki.de`** - a fresh
+install starts sending the heartbeat below automatically; see "Switch it off
+completely" below to disable it entirely, or point `telemetry.endpoint` at
+your own `nicki41-telemetry` instance instead.
 
-When an endpoint is configured, a heartbeat consists of exactly six fields:
+A heartbeat consists of exactly seven fields:
 
 ```json
 {
+  "pluginId": "universaladmin",
   "installationId": "0123456789abcdef0123456789abcdef",
-  "universalAdminVersion": "0.1.0-alpha",
+  "pluginVersion": "0.1.0-alpha",
   "minecraftVersion": "1.21.4",
   "javaMajorVersion": 25,
   "onlinePlayers": 17,

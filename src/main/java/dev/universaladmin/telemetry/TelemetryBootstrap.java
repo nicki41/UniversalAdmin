@@ -23,11 +23,10 @@ import java.util.random.RandomGenerator;
  *   <li>{@code telemetry.enabled: false} - nothing is constructed, no
  *       installation id is generated, no file is written, no thread is
  *       started. Off is genuinely off.
- *   <li>Enabled but {@code telemetry.endpoint} is empty - the default today,
- *       because UniversalAdmin has no official statistics endpoint yet. A
+ *   <li>Enabled but {@code telemetry.endpoint} is empty - reached only if a
+ *       server owner explicitly clears the default endpoint. A
  *       {@link NoOpTelemetryClient} is installed, no installation id is
- *       generated, and no timer runs. There is deliberately no built-in
- *       fallback host: an endpoint that doesn't exist is not invented here.
+ *       generated, and no timer runs.
  *   <li>Enabled with an {@code http}/{@code https} endpoint - the real path:
  *       installation id loaded (created on first use), an
  *       {@link HttpTelemetryClient}, and a {@link TelemetryScheduler} ticking
@@ -124,9 +123,9 @@ public final class TelemetryBootstrap implements AutoCloseable {
     }
 
     /**
-     * {@code null} for "no usable endpoint" - both for an empty value (the
-     * normal default) and for an unusable one (a warning, then treated the
-     * same way).
+     * {@code null} for "no usable endpoint" - both for an empty value
+     * (a server owner explicitly cleared the default) and for an unusable
+     * one (a warning, then treated the same way).
      */
     private static URI parseEndpoint(String raw, Logger logger) {
         if (raw == null || raw.isBlank()) {

@@ -11,31 +11,30 @@ change - the test
 `TelemetryPayloadTest#sendsNoFieldBeyondTheSevenDocumentedOnes` fails if
 someone adds a field.
 
-## Current Status: Nothing Is Sent By Default
+## Current Status: Active By Default
 
-**As of today, UniversalAdmin sends nothing unless you configure an
-endpoint.** `telemetry.endpoint` defaults to empty, and there is no built-in
-fallback host baked into the software. The wire format (see below) is
-generic - `pluginId`/`pluginVersion` rather than a UniversalAdmin-specific
-field name - because it's designed for a shared backend any of nicki41's
-plugins can report to (a separate project, `nicki41-telemetry`), not a
-UniversalAdmin-only one; nothing about that changes what's collected or the
-opt-out below. As long as no endpoint is configured:
+`telemetry.endpoint` defaults to `https://telemetry.0nicki.de/v1/telemetry`
+- the official `nicki41-telemetry` instance, a separate project. A default
+install sends the heartbeat described below there automatically;
+`telemetry.enabled: false` (or clearing `telemetry.endpoint`) stops it
+entirely, see "Turning It Off" below.
 
-- no request is made anywhere,
-- no installation id is generated,
-- no file is created for one,
-- no background timer runs.
+The wire format is generic - `pluginId`/`pluginVersion` rather than a
+UniversalAdmin-specific field name - because `nicki41-telemetry` is a shared
+backend any of nicki41's plugins can report to, not a UniversalAdmin-only
+one. Nothing about that changes what's collected.
 
-The log says so at startup, too:
+Pointing `telemetry.endpoint` at a different URL (your own
+`nicki41-telemetry` instance, or nothing else exists that speaks this
+protocol today) sends the exact same heartbeat there instead - the client
+doesn't know or care who's on the other end.
+
+If `telemetry.endpoint` is ever cleared to empty, the log says so at startup:
 
 ```
 Anonymous usage statistics are enabled but no endpoint is configured
 (telemetry.endpoint is empty), so nothing is sent.
 ```
-
-The rest of this document describes what happens once there is an official
-endpoint (or someone configures their own).
 
 ## Purpose
 
@@ -225,16 +224,18 @@ and the JSON encoder come from the JDK, or are six lines). The tests under
 
 Stated honestly rather than claiming compliance:
 
-- **There is no privacy policy yet.** Before a real endpoint goes into
-  operation, a separate review has to happen (including how the transport IP
-  is handled). This document describes the technical implementation; it is
-  not a legal guarantee and not a statement about GDPR compliance.
-- **Retention period** is a backend decision and still open. The goal:
-  short-lived raw data, aggregates afterward.
-- **Opt-in instead of opt-out** was deliberately not chosen (the default is
-  `enabled: true`), but as long as no endpoint exists, the practical effect
-  is identical: nothing is sent. Before an endpoint goes live, this decision
-  needs to be made deliberately again and announced with the release.
+- **There is no published privacy policy yet** for `nicki41-telemetry`
+  itself. This document describes the technical implementation on the
+  UniversalAdmin side; it is not a legal guarantee and not a statement
+  about GDPR compliance.
+- **Retention period** is a `nicki41-telemetry` decision and still open.
+  The current implementation only ever stores the *latest* heartbeat per
+  installation (not a history), and only counts one as "active" within the
+  last 24 hours - see that project's own README for its data model.
+- **Opt-in instead of opt-out** was deliberately not chosen - the default is
+  `enabled: true` with a real default endpoint, so a fresh install reports
+  to `nicki41-telemetry` unless a server owner turns it off (see "Turning
+  It Off" below).
 - **Modrinth** may require disclosing telemetry in the project description,
   depending on the rules in effect at the time - see
   [../release/modrinth.md](../release/modrinth.md).

@@ -69,12 +69,22 @@ class TelemetryBootstrapTest {
 
     @Test
     void enabledWithoutAnEndpointStaysInertAndWritesNoInstallationId(@TempDir Path dataFolder) {
-        // The shipped default: enabled, but no official endpoint exists yet.
+        // A server owner who explicitly clears the default endpoint - the
+        // shipped default itself now has a real one, see CoreSettings.
         try (TelemetryBootstrap telemetry = start("telemetry:\n  enabled: true\n  endpoint: \"\"\n", dataFolder)) {
             assertFalse(telemetry.isActive());
         }
 
         assertFalse(Files.exists(dataFolder.resolve(InstallationIdentityStore.FILE_NAME)));
+    }
+
+    @Test
+    void theShippedDefaultIsActiveAgainstTheOfficialEndpoint(@TempDir Path dataFolder) {
+        // No config.yml override at all - exactly what a fresh install runs with.
+        try (TelemetryBootstrap telemetry = start("", dataFolder)) {
+            assertTrue(telemetry.isActive());
+            assertTrue(telemetry.service().isEnabled());
+        }
     }
 
     @Test

@@ -31,6 +31,11 @@ dated, versioned section below it (see
   `pluginVersion` - the shape a shared, multi-plugin telemetry backend
   expects (see [docs/user/telemetry.md](docs/user/telemetry.md)). What's
   collected and the opt-out are unchanged.
+- `telemetry.endpoint` now defaults to `https://telemetry.0nicki.de/v1/telemetry`
+  (the official `nicki41-telemetry` instance) instead of empty - a fresh
+  install now reports anonymous usage statistics out of the box;
+  `telemetry.enabled: false` (or clearing `telemetry.endpoint`) still turns
+  it off entirely. See [docs/user/telemetry.md](docs/user/telemetry.md).
 
 ### Fixed
 
