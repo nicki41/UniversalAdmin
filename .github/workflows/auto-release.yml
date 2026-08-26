@@ -210,5 +210,10 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/release.yml
+    # A called reusable workflow gets NO repository secrets by default -
+    # only secrets: inherit forwards them. Without this, MODRINTH_TOKEN
+    # silently arrives empty on this path (GITHUB_TOKEN still works, since
+    # that one is generated per-run rather than being a stored secret).
+    secrets: inherit
     with:
       tag: ${{ needs.prepare.outputs.tag }}
