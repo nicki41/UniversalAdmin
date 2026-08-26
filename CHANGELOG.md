@@ -13,6 +13,9 @@ dated, versioned section below it (see
   Modrinth project as a new version (`Kira-NT/mc-publish`, the new
   `MODRINTH_TOKEN` repository secret). See
   [docs/release/releasing.md](docs/release/releasing.md#modrinth).
+- The `universaladmin` Modrinth project page is now filled in: icon
+  (`assets/icon.png`), title, summary, description, categories, license, and
+  links - content lives in [docs/release/modrinth.md](docs/release/modrinth.md).
 
 ## [0.1.0-alpha.4] - 2026-08-26
 

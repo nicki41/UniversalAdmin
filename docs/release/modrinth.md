@@ -1,8 +1,10 @@
-# Modrinth Page (Draft)
+# Modrinth Page
 
-Draft for the future Modrinth project page. **Nothing has been uploaded
-yet** - this document is the preparation for that, not published content and
-not an automated upload.
+The content below is live on the `universaladmin` Modrinth project (id
+`wGP5uSse`, still in "draft" status there pending submission for review) -
+title, summary, description, categories, license, links, and icon are all
+set. This document is now the source to edit when that content needs to
+change, not a draft awaiting a first upload.
 
 ## Project Title
 
@@ -227,10 +229,12 @@ Before the first Modrinth upload:
 - [ ] Version in `build.gradle.kts` matches the tag being published.
 - [ ] GitHub release exists and contains the jar + SHA-256.
 - [x] Modrinth project created (id `wGP5uSse`, still in "draft" status);
-      slug/category/description above still need reviewing and pasting in.
-- [ ] Telemetry disclosure checked against the then-current Modrinth rules
-      and pasted in.
+      title/summary/description/categories/license/links/icon are live, set
+      from this document's content.
+- [x] Telemetry disclosure pasted in as the "Anonymous statistics" section of
+      the live description - not yet re-checked against Modrinth's
+      then-current rules before the project is actually submitted for review.
 - [x] Every GitHub release is automatically mirrored to Modrinth as a new
-      version - see [releasing.md](releasing.md#modrinth). The project page
-      itself (description, categories, screenshots) is still only prepared
-      above, not filled in - that part stays a manual, deliberate step.
+      version - see [releasing.md](releasing.md#modrinth).
+- [ ] Screenshots/gallery still not captured (see the list above) - the only
+      remaining page-content gap before submitting for review.
