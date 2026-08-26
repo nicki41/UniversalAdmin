@@ -30,8 +30,9 @@ class TelemetryPayloadTest {
         TelemetryPayload payload = TelemetryPayload.of(IDENTITY, ENVIRONMENT, new PlayerCounts(17, 100));
 
         assertEquals(
-                "{\"installationId\":\"0123456789abcdef0123456789abcdef\","
-                        + "\"universalAdminVersion\":\"0.1.0-alpha\","
+                "{\"pluginId\":\"universaladmin\","
+                        + "\"installationId\":\"0123456789abcdef0123456789abcdef\","
+                        + "\"pluginVersion\":\"0.1.0-alpha\","
                         + "\"minecraftVersion\":\"1.21.4\","
                         + "\"javaMajorVersion\":25,"
                         + "\"onlinePlayers\":17,"
@@ -45,7 +46,7 @@ class TelemetryPayloadTest {
      * nothing may be collected that isn't documented there.
      */
     @Test
-    void sendsNoFieldBeyondTheSixDocumentedOnes() {
+    void sendsNoFieldBeyondTheSevenDocumentedOnes() {
         String json = TelemetryPayload.of(IDENTITY, ENVIRONMENT, new PlayerCounts(17, 100)).toJson();
 
         List<String> keys = new ArrayList<>();
@@ -55,7 +56,7 @@ class TelemetryPayloadTest {
         }
 
         assertEquals(
-                List.of("installationId", "universalAdminVersion", "minecraftVersion",
+                List.of("pluginId", "installationId", "pluginVersion", "minecraftVersion",
                         "javaMajorVersion", "onlinePlayers", "maxPlayers"),
                 keys);
     }

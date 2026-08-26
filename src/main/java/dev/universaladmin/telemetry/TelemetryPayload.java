@@ -8,6 +8,11 @@ import java.util.Objects;
  * not collected, and a field must not be added here without adding it to that
  * document in the same change.
  *
+ * <p>{@code pluginId}/{@code pluginVersion} (rather than a UniversalAdmin-
+ * specific field name) is the shape a shared, multi-plugin telemetry backend
+ * expects - see docs/user/telemetry.md for why. {@link #PLUGIN_ID} is fixed:
+ * this class only ever sends heartbeats on behalf of UniversalAdmin itself.
+ *
  * <p>What is deliberately <b>not</b> in a heartbeat: server IP, hostname,
  * domain, port, MOTD, world names, coordinates, player names, player UUIDs,
  * player IPs, chat, commands, other installed plugins, file paths, OS user,
@@ -20,22 +25,28 @@ import java.util.Objects;
  * without adding trustworthy information.
  */
 public record TelemetryPayload(
+        String pluginId,
         String installationId,
-        String universalAdminVersion,
+        String pluginVersion,
         String minecraftVersion,
         int javaMajorVersion,
         int onlinePlayers,
         int maxPlayers) {
 
+    /** This plugin's own slug in the shared telemetry wire contract - see docs/user/telemetry.md. */
+    public static final String PLUGIN_ID = "universaladmin";
+
     public TelemetryPayload {
+        Objects.requireNonNull(pluginId, "pluginId");
         Objects.requireNonNull(installationId, "installationId");
-        Objects.requireNonNull(universalAdminVersion, "universalAdminVersion");
+        Objects.requireNonNull(pluginVersion, "pluginVersion");
         Objects.requireNonNull(minecraftVersion, "minecraftVersion");
     }
 
     public static TelemetryPayload of(
             InstallationIdentity identity, TelemetryEnvironment environment, PlayerCounts players) {
         return new TelemetryPayload(
+                PLUGIN_ID,
                 identity.value(),
                 environment.universalAdminVersion(),
                 environment.minecraftVersion(),
@@ -46,14 +57,15 @@ public record TelemetryPayload(
 
     /**
      * The JSON request body. Hand-written rather than pulling in a JSON
-     * library for six flat fields - same reasoning as the audit module's
+     * library for seven flat fields - same reasoning as the audit module's
      * metadata codec, see docs/development/architecture-rules.md's
      * "Dependencies" section.
      */
     public String toJson() {
         return "{"
+                + quoted("pluginId") + ':' + quoted(pluginId) + ','
                 + quoted("installationId") + ':' + quoted(installationId) + ','
-                + quoted("universalAdminVersion") + ':' + quoted(universalAdminVersion) + ','
+                + quoted("pluginVersion") + ':' + quoted(pluginVersion) + ','
                 + quoted("minecraftVersion") + ':' + quoted(minecraftVersion) + ','
                 + quoted("javaMajorVersion") + ':' + javaMajorVersion + ','
                 + quoted("onlinePlayers") + ':' + onlinePlayers + ','

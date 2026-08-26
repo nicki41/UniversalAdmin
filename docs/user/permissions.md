@@ -12,6 +12,8 @@ similar) that doesn't require Vault in the core.
 |---|---|---|---|
 | `universaladmin.reload` | Core (no module) | op | Reload UniversalAdmin's configuration (`/admin reload`) |
 | `universaladmin.menu.open` | Core (no module) | op | Open the `/admin` main menu (see [gui-framework.md](../development/gui-framework.md)) |
+| `universaladmin.update.notify` | Core (no module) | op | Receive a notice when a new UniversalAdmin version is available |
+| `universaladmin.update.apply` | Core (no module) | op | Download the latest UniversalAdmin release (`/admin update`) |
 | `universaladmin.players.view` | Players | op | View player profiles (browser, profile page) |
 | `universaladmin.players.ip` | Players | op | View a player's IP address |
 | `universaladmin.players.teleport` | Players | op | Teleport players (admin↔player, world spawn, bed, coordinates) |

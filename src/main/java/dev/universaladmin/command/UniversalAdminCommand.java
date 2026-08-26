@@ -16,6 +16,8 @@ import dev.universaladmin.permission.PermissionNode;
 import dev.universaladmin.permission.bukkit.PermissiblePermissionEvaluator;
 import dev.universaladmin.settings.ConfigReloadResult;
 import dev.universaladmin.settings.ReloadConfigAction;
+import dev.universaladmin.update.ApplyUpdateAction;
+import dev.universaladmin.update.UpdateApplyResult;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -92,6 +94,8 @@ public final class UniversalAdminCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
             handleReload(sender);
+        } else if (args.length > 0 && args[0].equalsIgnoreCase("update")) {
+            handleUpdate(sender);
         } else if (args.length > 1 && args[0].equalsIgnoreCase("staff") && args[1].equalsIgnoreCase("recover")) {
             handleStaffRecover(sender, args);
         } else if (args.length > 1 && args[0].equalsIgnoreCase("server")) {
@@ -162,6 +166,37 @@ public final class UniversalAdminCommand implements CommandExecutor {
                     send(sender, messages.get(key));
                 } else {
                     send(sender, messages.get(MessageKey.of("command.reload.error"), failure.message()));
+                }
+            }
+        }
+    }
+
+    /**
+     * {@code /admin update} - downloads the latest GitHub release's jar into
+     * Bukkit's own {@code plugins/update/} folder (see {@link ApplyUpdateAction}),
+     * applied automatically at the server's next restart. Never hot-swaps
+     * the running plugin.
+     */
+    private void handleUpdate(CommandSender sender) {
+        Actor actor = actorFor(sender);
+        platform.actionExecutor().<Void, UpdateApplyResult>execute(
+                        ApplyUpdateAction.ID, new ActionContext(actor, Source.COMMAND), null)
+                .thenAccept(result -> platform.scheduler().runOnMainThread(() -> reportUpdate(sender, result)));
+    }
+
+    private void reportUpdate(CommandSender sender, ActionResult<UpdateApplyResult> result) {
+        MessageService messages = platform.messages();
+        switch (result) {
+            case ActionResult.Success<UpdateApplyResult> success -> {
+                UpdateApplyResult update = success.value();
+                MessageKey key = update.updateApplied() ? MessageKey.of("command.update.applied") : MessageKey.of("command.update.up-to-date");
+                send(sender, messages.get(key, update.version()));
+            }
+            case ActionResult.Failure<UpdateApplyResult> failure -> {
+                if (failure.messageKey() != null) {
+                    send(sender, messages.get(failure.messageKey(), failure.messageArgs().toArray()));
+                } else {
+                    send(sender, messages.get(MessageKey.of("command.update.error"), failure.message()));
                 }
             }
         }

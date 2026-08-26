@@ -8,15 +8,19 @@ off.
 The rule behind it: **nothing is collected that isn't documented here.** A
 new field in the heartbeat and a change to this document are the same
 change - the test
-`TelemetryPayloadTest#sendsNoFieldBeyondTheSixDocumentedOnes` fails if
+`TelemetryPayloadTest#sendsNoFieldBeyondTheSevenDocumentedOnes` fails if
 someone adds a field.
 
-## Current Status: Nothing Is Sent
+## Current Status: Nothing Is Sent By Default
 
-**As of today, UniversalAdmin sends nothing.** There is no official
-statistics endpoint yet, and none is baked into the software -
-`telemetry.endpoint` defaults to empty, and there is no built-in fallback
-host. As long as no endpoint is configured:
+**As of today, UniversalAdmin sends nothing unless you configure an
+endpoint.** `telemetry.endpoint` defaults to empty, and there is no built-in
+fallback host baked into the software. The wire format (see below) is
+generic - `pluginId`/`pluginVersion` rather than a UniversalAdmin-specific
+field name - because it's designed for a shared backend any of nicki41's
+plugins can report to (a separate project, `nicki41-telemetry`), not a
+UniversalAdmin-only one; nothing about that changes what's collected or the
+opt-out below. As long as no endpoint is configured:
 
 - no request is made anywhere,
 - no installation id is generated,
@@ -50,13 +54,14 @@ data (see below - no address and no name is ever transmitted).
 
 ## Exactly What Is Transmitted
 
-A heartbeat is an HTTP POST with exactly this JSON body - six fields, nothing
-more:
+A heartbeat is an HTTP POST with exactly this JSON body - seven fields,
+nothing more:
 
 ```json
 {
+  "pluginId": "universaladmin",
   "installationId": "0123456789abcdef0123456789abcdef",
-  "universalAdminVersion": "0.1.0-alpha",
+  "pluginVersion": "0.1.0-alpha",
   "minecraftVersion": "1.21.4",
   "javaMajorVersion": 25,
   "onlinePlayers": 17,
@@ -66,8 +71,9 @@ more:
 
 | Field | Meaning | What it's for |
 |---|---|---|
+| `pluginId` | fixed: `"universaladmin"` (`TelemetryPayload.PLUGIN_ID`) | scopes a heartbeat to this plugin on a backend shared with others |
 | `installationId` | 128 random bits, see below | Merges two heartbeats from the same installation, so "active installations" doesn't just mean "requests received" |
-| `universalAdminVersion` | plugin version | version distribution |
+| `pluginVersion` | plugin version | version distribution |
 | `minecraftVersion` | e.g. `1.21.4` | which Minecraft versions still need support |
 | `javaMajorVersion` | e.g. `25` | whether raising the Java requirement would strand installations |
 | `onlinePlayers` | count only | aggregated "Players Online" total |

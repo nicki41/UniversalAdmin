@@ -568,6 +568,14 @@ gui:
   back: "<gray>« Back"
   close: "<red>Close"
   refresh: "<green>Refresh"
+  inventory-placeholder:
+    hotbar: "<gray>Hotbar (empty)"
+    main: "<dark_gray>Empty"
+    helmet: "<gray>Helmet (empty)"
+    chestplate: "<gray>Chestplate (empty)"
+    leggings: "<gray>Leggings (empty)"
+    boots: "<gray>Boots (empty)"
+    offhand: "<gray>Offhand (empty)"
   next-page: "<gray>Next Page »"
   previous-page: "<gray>« Previous Page"
   page-indicator: "<gray>Page {0}/{1}"
@@ -616,3 +624,10 @@ command:
       usage: "<red>Usage: /admin server broadcast <message>"
     success: "<green>Done."
     error: "<red>Failed: {0}"
+  update:
+    applied: "<green>Downloaded UniversalAdmin {0}. Restart the server to apply it."
+    up-to-date: "<green>Already running the latest version ({0})."
+    error: "<red>Failed to check/download the update: {0}"
+
+update:
+  available: "<yellow>A new UniversalAdmin version is available: {0} (currently running {1}). Run /admin update to download it, then restart the server to apply it."

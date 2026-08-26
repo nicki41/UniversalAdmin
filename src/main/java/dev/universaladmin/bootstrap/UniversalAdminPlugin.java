@@ -52,6 +52,9 @@ import dev.universaladmin.storage.StorageService;
 import dev.universaladmin.telemetry.PlayerCounts;
 import dev.universaladmin.telemetry.TelemetryBootstrap;
 import dev.universaladmin.telemetry.TelemetryEnvironment;
+import dev.universaladmin.update.ApplyUpdateAction;
+import dev.universaladmin.update.HttpGitHubReleaseClient;
+import dev.universaladmin.update.UpdateCheckBootstrap;
 import java.time.Instant;
 import java.util.random.RandomGenerator;
 import java.util.function.Supplier;
@@ -103,10 +106,14 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public final class UniversalAdminPlugin extends JavaPlugin {
 
+    /** Shared between {@link #bootstrapCore} (permission registration) and {@link #startUpdateChecks} (who gets notified). */
+    private static final PermissionNode UPDATE_NOTIFY_PERMISSION = PermissionNode.core("update.notify");
+
     private TaskScheduler scheduler;
     private StorageService storage;
     private ModuleManager moduleManager;
     private TelemetryBootstrap telemetry;
+    private UpdateCheckBootstrap updateChecks;
 
     @Override
     public void onLoad() {
@@ -162,11 +169,15 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new StartupSummaryListener(platform), this);
 
         startTelemetry(platform);
+        startUpdateChecks(platform);
         logStartupSummary(platform);
     }
 
     @Override
     public void onDisable() {
+        if (updateChecks != null) {
+            updateChecks.close();
+        }
         if (telemetry != null) {
             telemetry.close();
         }
@@ -260,6 +271,18 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         platform.permissions().register(new PermissionDefinition(
                 PermissionNode.core("menu.open"), "Open the /admin main menu",
                 dev.universaladmin.permission.PermissionDefault.OP));
+
+        platform.permissions().register(new PermissionDefinition(
+                UPDATE_NOTIFY_PERMISSION, "Receive a notice when a new UniversalAdmin version is available",
+                dev.universaladmin.permission.PermissionDefault.OP));
+        platform.permissions().register(new PermissionDefinition(
+                PermissionNode.core("update.apply"), "Download the latest UniversalAdmin release via /admin update",
+                dev.universaladmin.permission.PermissionDefault.OP));
+        actions.register(ActionDefinition.builder(new ApplyUpdateAction(
+                        scheduler, new HttpGitHubReleaseClient("nicki41", "UniversalAdmin", getPluginMeta().getVersion()),
+                        () -> getFile().toPath(), getPluginMeta().getVersion()))
+                .permission(PermissionNode.core("update.apply"))
+                .build());
         registerMainMenu(platform, guiFramework, messages, guiPages, moduleRegistry);
 
         return platform;
@@ -362,6 +385,27 @@ public final class UniversalAdminPlugin extends JavaPlugin {
             getLogger().log(Level.WARNING,
                     "Anonymous usage statistics could not be started. The server is unaffected; "
                             + "set telemetry.enabled: false in config.yml to stop trying.", e);
+        }
+    }
+
+    /**
+     * Starts the background "is a newer UniversalAdmin release out" check -
+     * see {@link UpdateCheckBootstrap} for the two possible outcomes (checks
+     * disabled entirely vs. a periodic background timer) and {@code
+     * ApplyUpdateAction} (registered in {@link #bootstrapCore}) for what
+     * {@code /admin update} itself does. Wrapped the same way {@link
+     * #startTelemetry} is: this must never be able to affect a server that
+     * has otherwise started fine.
+     */
+    private void startUpdateChecks(UniversalAdmin platform) {
+        try {
+            updateChecks = UpdateCheckBootstrap.start(
+                    platform.settings(), platform.scheduler(), platform.notifications(), platform.messages(),
+                    UPDATE_NOTIFY_PERMISSION, getPluginMeta().getVersion(), RandomGenerator.getDefault(), getLogger());
+        } catch (RuntimeException e) {
+            getLogger().log(Level.WARNING,
+                    "Update checks could not be started. The server is unaffected; "
+                            + "set update.check-for-updates: false in config.yml to stop trying.", e);
         }
     }
 

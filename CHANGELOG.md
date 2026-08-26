@@ -7,6 +7,38 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+### Added
+
+- **Automatic update checks**: `dev.universaladmin.update` polls the GitHub
+  releases API on a jittered interval (default every 6 hours) and, when a
+  newer version exists, notifies staff (`universaladmin.update.notify`) and
+  logs a console warning. `/admin update` (`universaladmin.update.apply`)
+  downloads the latest release's jar into Bukkit's own `plugins/update/`
+  folder (verified against its published SHA-256 checksum) - applied at the
+  next restart, never a live hot-swap. `update.check-for-updates` (default
+  `true`) is the on/off switch; `update.check-interval` configures the
+  background timer.
+- Empty-slot placeholders in the Players module's and Staff-Mode's
+  inventory/ender-chest editors: a dyed-gray leather armor piece per slot
+  (helmet/chestplate/leggings/boots), a grayed-out shield for offhand, and a
+  visibly distinct hotbar row - `EmptySlotPlaceholder`, stripped back to
+  `null` before ever writing to a real inventory.
+
+### Changed
+
+- `TelemetryPayload`'s wire format gained a `pluginId` field (fixed:
+  `"universaladmin"`) and renamed `universalAdminVersion` to
+  `pluginVersion` - the shape a shared, multi-plugin telemetry backend
+  expects (see [docs/user/telemetry.md](docs/user/telemetry.md)). What's
+  collected and the opt-out are unchanged.
+
+### Fixed
+
+- Closing a live inventory/ender-chest editor (Players module or the
+  Staff-Mode Inspector tools) showed the "Done." confirmation twice - both
+  halves of the split main-storage/equipment write notified independently;
+  now only the first does.
+
 ## [0.1.0-alpha.1] - 2026-08-26
 
 ### Added

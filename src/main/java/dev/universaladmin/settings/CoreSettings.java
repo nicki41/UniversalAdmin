@@ -54,6 +54,10 @@ public final class CoreSettings {
     public static final SettingKey<String> TELEMETRY_ENDPOINT = SettingKey.of("core", "telemetry.endpoint");
     public static final SettingKey<Duration> TELEMETRY_INTERVAL = SettingKey.of("core", "telemetry.interval");
 
+    /** The one switch {@code /admin update} and the background checker both respect - see {@code update.UpdateCheckService}. */
+    public static final SettingKey<Boolean> UPDATE_CHECK_ENABLED = SettingKey.of("core", "update.check-for-updates");
+    public static final SettingKey<Duration> UPDATE_CHECK_INTERVAL = SettingKey.of("core", "update.check-interval");
+
     public static final SettingKey<Boolean> WEB_ENABLED = SettingKey.of("core", "web.enabled");
 
     public static void registerAll(SettingRegistry registry) {
@@ -104,6 +108,7 @@ public final class CoreSettings {
                 .build());
 
         registerTelemetrySettings(registry);
+        registerUpdateCheckSettings(registry);
 
         registry.register(SettingDefinition.builder(WEB_ENABLED, SettingTypes.BOOLEAN, false)
                 .description("Reserved for the future web app (see docs/architecture/web-future.md); has no effect yet.")
@@ -131,6 +136,25 @@ public final class CoreSettings {
         registry.register(SettingDefinition.builder(TELEMETRY_INTERVAL, SettingTypes.DURATION, Duration.ofMinutes(30))
                 .description("Time between heartbeats; a random extra of up to half this value is added to each one.")
                 .validator(SettingValidators.durationRange(Duration.ofMinutes(5), Duration.ofHours(24)))
+                .requiresRestart(true)
+                .build());
+    }
+
+    /**
+     * {@code UPDATE_CHECK_ENABLED} is live (checked fresh on every check, an
+     * {@code /admin update} works regardless either way) but, like {@code
+     * telemetry.enabled}, whether the background timer exists at all is
+     * still decided once at startup - see {@code update.UpdateCheckBootstrap}.
+     * {@code UPDATE_CHECK_INTERVAL} changes the timer itself, so that one
+     * does require a restart, same reasoning as {@code TELEMETRY_INTERVAL}.
+     */
+    private static void registerUpdateCheckSettings(SettingRegistry registry) {
+        registry.register(SettingDefinition.builder(UPDATE_CHECK_ENABLED, SettingTypes.BOOLEAN, true)
+                .description("Check GitHub for a newer UniversalAdmin release and notify staff/console; false checks nothing automatically ('/admin update' still works on demand).")
+                .build());
+        registry.register(SettingDefinition.builder(UPDATE_CHECK_INTERVAL, SettingTypes.DURATION, Duration.ofHours(6))
+                .description("Time between automatic update checks; a random extra of up to half this value is added to each one.")
+                .validator(SettingValidators.durationRange(Duration.ofHours(1), Duration.ofDays(7)))
                 .requiresRestart(true)
                 .build());
     }

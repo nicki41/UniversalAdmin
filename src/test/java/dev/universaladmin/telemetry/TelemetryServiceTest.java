@@ -70,7 +70,8 @@ class TelemetryServiceTest {
         assertEquals(1, client.sent().size());
         TelemetryPayload payload = client.sent().getFirst();
         assertEquals(IDENTITY.value(), payload.installationId());
-        assertEquals("0.1.0-alpha", payload.universalAdminVersion());
+        assertEquals(TelemetryPayload.PLUGIN_ID, payload.pluginId());
+        assertEquals("0.1.0-alpha", payload.pluginVersion());
         assertEquals("1.21.4", payload.minecraftVersion());
         assertEquals(25, payload.javaMajorVersion());
         assertEquals(17, payload.onlinePlayers());
