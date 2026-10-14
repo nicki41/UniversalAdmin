@@ -24,6 +24,15 @@ public final class ServiceRegistry {
         }
     }
 
+    /**
+     * Removes the registration for {@code type}, but only if it is still
+     * {@code instance} - so a module's disable cleanup can never remove a
+     * replacement another module registered in the meantime.
+     */
+    public <T> void unregister(Class<T> type, T instance) {
+        services.remove(type, instance);
+    }
+
     public <T> Optional<T> get(Class<T> type) {
         return Optional.ofNullable(type.cast(services.get(type)));
     }

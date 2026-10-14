@@ -56,6 +56,7 @@ import dev.universaladmin.update.ApplyUpdateAction;
 import dev.universaladmin.update.HttpGitHubReleaseClient;
 import dev.universaladmin.update.UpdateCheckBootstrap;
 import java.time.Instant;
+import java.util.List;
 import java.util.random.RandomGenerator;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -108,6 +109,9 @@ public final class UniversalAdminPlugin extends JavaPlugin {
 
     /** Shared between {@link #bootstrapCore} (permission registration) and {@link #startUpdateChecks} (who gets notified). */
     private static final PermissionNode UPDATE_NOTIFY_PERMISSION = PermissionNode.core("update.notify");
+
+    /** Locales shipped inside the jar - see {@link YamlLocaleMessageService} for the override layering. */
+    private static final List<String> BUNDLED_LOCALES = List.of("en_US", "de_DE");
 
     private TaskScheduler scheduler;
     private StorageService storage;
@@ -200,8 +204,12 @@ public final class UniversalAdminPlugin extends JavaPlugin {
      */
     private UniversalAdmin bootstrapCore(Instant startedAt) {
         saveDefaultConfig();
-        saveResource("lang/en_US.yml", false);
-        saveResource("lang/de_DE.yml", false);
+        for (String locale : BUNDLED_LOCALES) {
+            // Only ever written once - an editable copy for the server owner.
+            // New keys in later versions still resolve from the jar's own
+            // copy, see YamlLocaleMessageService.
+            saveResource("lang/" + locale + ".yml", false);
+        }
 
         // config-version migration runs before anything reads the file, so
         // an old user config.yml is upgraded in place rather than silently
@@ -236,7 +244,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
                 new DefaultAuditService(new JdbcAuditEventRepository(storage.dataSource(), scheduler), settingsService);
         ActionExecutor actionExecutor = new ActionExecutor(actions, auditService, getLogger());
         MessageService messages = new YamlLocaleMessageService(
-                getDataFolder().toPath().resolve("lang"), settingsService, getLogger());
+                getDataFolder().toPath().resolve("lang"), this::getResource, BUNDLED_LOCALES, settingsService, getLogger());
         NotificationService notifications = new InGameNotificationService();
 
         UniversalAdmin platform = new UniversalAdmin(
@@ -264,7 +272,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
             return getConfig();
         };
         actions.register(ActionDefinition.builder(new ReloadConfigAction(
-                        configReloader, this::saveConfig, migrationRunner, settingsService, scheduler))
+                        configReloader, this::saveConfig, migrationRunner, settingsService, messages::reload, scheduler))
                 .permission(PermissionNode.core("reload"))
                 .build());
 

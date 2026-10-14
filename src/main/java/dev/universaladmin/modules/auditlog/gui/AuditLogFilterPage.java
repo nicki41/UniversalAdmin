@@ -12,6 +12,7 @@ import dev.universaladmin.gui.GuiSession;
 import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.SelectionDialog;
+import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.scheduler.TaskScheduler;
@@ -192,6 +193,9 @@ public final class AuditLogFilterPage extends AbstractGuiPage {
     }
 
     private Component currentLine(String value) {
-        return Component.text(messages.get(MessageKey.of("audit.gui.filter.current"), value), NamedTextColor.GRAY);
+        // Rendered as MiniMessage (not Component.text) so the escaped filter
+        // value - possibly typed by the viewer - shows as plain text.
+        return ComponentMessages.render(messages.get(MessageKey.of("audit.gui.filter.current"), value))
+                .colorIfAbsent(NamedTextColor.GRAY);
     }
 }

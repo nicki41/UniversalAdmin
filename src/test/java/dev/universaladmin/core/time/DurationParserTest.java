@@ -1,4 +1,4 @@
-package dev.universaladmin.modules.moderation;
+package dev.universaladmin.core.time;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -63,5 +63,14 @@ class DurationParserTest {
     void isCaseInsensitiveOnUnits() {
         assertFalse(DurationParser.parse("1D").isEmpty());
         assertEquals(DurationParser.parse("1d"), DurationParser.parse("1D"));
+    }
+
+    @org.junit.jupiter.api.Test
+    void formatIsTheCompactInverseOfParse() {
+        org.junit.jupiter.api.Assertions.assertEquals("1d 12h", DurationParser.format(java.time.Duration.ofHours(36)));
+        org.junit.jupiter.api.Assertions.assertEquals("2w 3m 4s", DurationParser.format(java.time.Duration.ofSeconds(2 * 604800 + 184)));
+        org.junit.jupiter.api.Assertions.assertEquals("0s", DurationParser.format(java.time.Duration.ofMillis(400)));
+        org.junit.jupiter.api.Assertions.assertEquals(java.time.Duration.ofHours(36),
+                DurationParser.parse(DurationParser.format(java.time.Duration.ofHours(36))).orElseThrow());
     }
 }

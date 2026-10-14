@@ -1,4 +1,4 @@
-package dev.universaladmin.modules.moderation;
+package dev.universaladmin.core.time;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -6,11 +6,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parses the duration presets/custom input the moderation GUI accepts:
- * {@code 10m}, {@code 1h}, {@code 3d}, compound forms like {@code 1d12h},
- * and {@code permanent}/{@code perm} for "no expiry". Pure and
- * side-effect-free, so it's testable without a server - see
- * docs/development/testing.md.
+ * Parses the human duration syntax used everywhere a staff member types a
+ * duration (GUI prompts, {@code /admin tempban}, whitelist expiry, chat slow
+ * mode, ...): {@code 10m}, {@code 1h}, {@code 3d}, {@code 2w}, compound forms
+ * like {@code 1d12h}, and {@code permanent}/{@code perm} for "no expiry".
+ * Pure and side-effect-free, so it's testable without a server - see
+ * docs/development/testing.md. {@link #format(Duration)} is the inverse.
  */
 public final class DurationParser {
 
@@ -66,5 +67,35 @@ public final class DurationParser {
             case 'w' -> 604800L;
             default -> throw new DurationParseException("Unknown duration unit '" + unit + "'");
         };
+    }
+
+    /**
+     * Formats {@code duration} in the same compact syntax {@link #parse}
+     * accepts, largest units first, e.g. {@code 1d 12h} or {@code 45s}.
+     * Sub-second remainders are dropped; anything under a second is {@code 0s}.
+     */
+    public static String format(Duration duration) {
+        long seconds = Math.max(0, duration.toSeconds());
+        if (seconds == 0) {
+            return "0s";
+        }
+        StringBuilder out = new StringBuilder();
+        seconds = append(out, seconds, 604800L, 'w');
+        seconds = append(out, seconds, 86400L, 'd');
+        seconds = append(out, seconds, 3600L, 'h');
+        seconds = append(out, seconds, 60L, 'm');
+        append(out, seconds, 1L, 's');
+        return out.toString();
+    }
+
+    private static long append(StringBuilder out, long seconds, long unitSeconds, char unit) {
+        long amount = seconds / unitSeconds;
+        if (amount > 0) {
+            if (!out.isEmpty()) {
+                out.append(' ');
+            }
+            out.append(amount).append(unit);
+        }
+        return seconds % unitSeconds;
     }
 }

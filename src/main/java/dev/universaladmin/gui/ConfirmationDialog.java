@@ -2,6 +2,7 @@ package dev.universaladmin.gui;
 
 import dev.universaladmin.localization.MessageService;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
@@ -16,6 +17,17 @@ import org.bukkit.entity.Player;
  * confirmation is parameterized per call site (what exactly is being
  * confirmed) and is never registered in {@code GuiRegistry} - a click
  * handler opens one directly with {@link #open}.
+ *
+ * <p><b>Navigation:</b> opening a dialog records "reopen the page the viewer
+ * is looking at right now" as the newest history entry, so
+ * {@code confirmCtx -> confirmCtx.back()} returns to exactly the page the
+ * dialog was opened from. If a handler navigates on its own instead (e.g.
+ * {@code this.open(viewer)}), that entry is dropped again so it can never
+ * resurface as a stale "back" target later.
+ *
+ * <p><b>Single use:</b> the first click on confirm or cancel wins; any
+ * further click on the same dialog instance (a double click, a lagging
+ * client) is ignored, so a confirmed dangerous action can never run twice.
  */
 public final class ConfirmationDialog {
 
@@ -45,8 +57,40 @@ public final class ConfirmationDialog {
             DangerLevel dangerLevel,
             GuiButton.ClickHandler onConfirm,
             GuiButton.ClickHandler onCancel) {
-        GuiPage dialog = new DialogPage(framework, messages, title, description, dangerLevel, onConfirm, onCancel);
+        GuiSession session = framework.sessions().sessionFor(viewer.getUniqueId());
+        Runnable backToCaller = callerReopener(viewer);
+        if (backToCaller != null) {
+            session.pushHistory(backToCaller);
+        }
+        AtomicBoolean handled = new AtomicBoolean();
+        GuiPage dialog = new DialogPage(framework, messages, title, description, dangerLevel,
+                once(handled, session, backToCaller, onConfirm), once(handled, session, backToCaller, onCancel));
         dialog.open(viewer);
+    }
+
+    /** "Reopen whatever UniversalAdmin page {@code viewer} has open right now", or {@code null} if none. */
+    private static Runnable callerReopener(Player viewer) {
+        if (viewer.getOpenInventory().getTopInventory().getHolder() instanceof GuiView view) {
+            GuiPage caller = view.page();
+            return () -> caller.open(viewer);
+        }
+        return null;
+    }
+
+    private static GuiButton.ClickHandler once(
+            AtomicBoolean handled, GuiSession session, Runnable backToCaller, GuiButton.ClickHandler handler) {
+        return ctx -> {
+            if (!handled.compareAndSet(false, true)) {
+                return;
+            }
+            handler.handle(ctx);
+            if (backToCaller != null) {
+                // Still on top: the handler didn't go back() - it navigated
+                // (or stayed) on its own, so the entry would only ever be a
+                // stale duplicate from here on.
+                session.removeIfMostRecent(backToCaller);
+            }
+        };
     }
 
     private static final class DialogPage extends AbstractGuiPage {

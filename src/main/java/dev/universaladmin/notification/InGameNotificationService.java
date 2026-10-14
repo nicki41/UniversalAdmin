@@ -1,5 +1,6 @@
 package dev.universaladmin.notification;
 
+import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.permission.PermissionNode;
 import java.time.Duration;
 import java.util.UUID;
@@ -8,7 +9,13 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-/** {@link NotificationService} that delivers notifications as in-game chat/title/actionbar messages. */
+/**
+ * {@link NotificationService} that delivers notifications as in-game
+ * chat/title/actionbar messages. A {@link Notification}'s message is an
+ * already-resolved {@link dev.universaladmin.localization.MessageService}
+ * string, so it is parsed as MiniMessage here - untrusted parts were already
+ * escaped when the message was resolved.
+ */
 public final class InGameNotificationService implements NotificationService {
 
     @Override
@@ -52,6 +59,6 @@ public final class InGameNotificationService implements NotificationService {
     }
 
     private Component render(Notification notification) {
-        return Component.text(notification.message());
+        return ComponentMessages.render(notification.message());
     }
 }

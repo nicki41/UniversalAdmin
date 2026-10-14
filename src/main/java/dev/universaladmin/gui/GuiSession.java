@@ -68,6 +68,20 @@ public final class GuiSession {
         history.push(reopenPreviousPage);
     }
 
+    /**
+     * Removes {@code entry} if it is still the most recent history entry -
+     * used by {@link ConfirmationDialog} to drop the "back to the calling
+     * page" entry it pushed when its handler navigated somewhere itself
+     * instead of going back. Returns whether anything was removed.
+     */
+    boolean removeIfMostRecent(Runnable entry) {
+        if (!history.isEmpty() && history.peek() == entry) {
+            history.pop();
+            return true;
+        }
+        return false;
+    }
+
     boolean hasHistory() {
         return !history.isEmpty();
     }

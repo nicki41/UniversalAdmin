@@ -32,6 +32,7 @@ public final class GuiView implements InventoryHolder {
     private final Inventory inventory;
     private final Map<Integer, GuiButton> buttons = new HashMap<>();
     private boolean editable;
+    private final ClickThrottle clickThrottle = new ClickThrottle(MIN_BUTTON_CLICK_INTERVAL_NANOS);
     private Consumer<GuiView> onClose;
     private Consumer<GuiView> onChange;
 
@@ -43,6 +44,23 @@ public final class GuiView implements InventoryHolder {
 
     public GuiPage page() {
         return page;
+    }
+
+    /**
+     * Minimum time between two dispatched button clicks in the same view -
+     * a double click (or a lagging client re-sending a click) must never run
+     * a "ban"/"clear inventory"/"shutdown" button twice.
+     */
+    static final long MIN_BUTTON_CLICK_INTERVAL_NANOS = 150_000_000L;
+
+    /**
+     * Records a button click at {@code nowNanos} ({@link System#nanoTime()})
+     * and returns whether it should be dispatched - {@code false} for a click
+     * that follows the previous dispatched one within
+     * {@link #MIN_BUTTON_CLICK_INTERVAL_NANOS}.
+     */
+    boolean acceptButtonClick(long nowNanos) {
+        return clickThrottle.tryAcquire(nowNanos);
     }
 
     public GuiPageId pageId() {
