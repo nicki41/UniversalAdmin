@@ -2,6 +2,7 @@ package dev.universaladmin.modules.auditlog;
 
 import dev.universaladmin.audit.AuditService;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.modules.auditlog.command.AuditCommand;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -32,6 +33,8 @@ public final class AuditLogModule implements Module {
             .permissionNamespace("audit")
             .settingsNamespace("audit")
             .icon(new GuiIcon("written_book", "Audit Log"))
+            .menu(AuditLogListPage.ID, PermissionNode.core("audit.view"))
+            .menuOrder(70)
             .build();
 
     @Override
@@ -53,6 +56,8 @@ public final class AuditLogModule implements Module {
                 context.platform().guiFramework(), context.platform().messages(), context.platform().scheduler(),
                 auditService, detailsPermission));
         context.resources().closeable(() -> context.platform().guiPages().unregister(AuditLogListPage.ID));
+
+        context.registerCommand(new AuditCommand(auditService, viewPermission));
 
         scheduleRetentionCleanup(context, auditService);
     }

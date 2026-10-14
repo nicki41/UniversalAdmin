@@ -3,6 +3,7 @@ package dev.universaladmin.settings;
 import dev.universaladmin.storage.DatabaseConfig;
 import dev.universaladmin.storage.DatabaseType;
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Every setting owned by the core platform itself (namespace {@code core}) -
@@ -59,6 +60,9 @@ public final class CoreSettings {
 
     public static final SettingKey<Boolean> WEB_ENABLED = SettingKey.of("core", "web.enabled");
 
+    public static final SettingKey<Boolean> COMMAND_SHORTCUTS_ENABLED = SettingKey.of("core", "commands.shortcuts.enabled");
+    public static final SettingKey<List<String>> COMMAND_SHORTCUTS_DISABLED = SettingKey.of("core", "commands.shortcuts.disabled");
+
     public static void registerAll(SettingRegistry registry) {
         registry.register(SettingDefinition.builder(LANGUAGE, SettingTypes.STRING, "en_US")
                 .description("Active locale; any key missing there falls back to en_US, then to a visible marker.")
@@ -111,6 +115,15 @@ public final class CoreSettings {
 
         registry.register(SettingDefinition.builder(WEB_ENABLED, SettingTypes.BOOLEAN, false)
                 .description("Reserved for the future web app (see docs/architecture/web-future.md); has no effect yet.")
+                .build());
+
+        registry.register(SettingDefinition.builder(COMMAND_SHORTCUTS_ENABLED, SettingTypes.BOOLEAN, true)
+                .description("Register short top-level commands such as /kick or /vanish next to /admin kick; /universaladmin:kick always works.")
+                .requiresRestart(true)
+                .build());
+        registry.register(SettingDefinition.builder(COMMAND_SHORTCUTS_DISABLED, SettingTypes.STRING_LIST, List.of())
+                .description("Shortcut labels to skip (e.g. [ban, mute]) - for clashes with another plugin you want to keep.")
+                .requiresRestart(true)
                 .build());
     }
 
@@ -180,6 +193,7 @@ public final class CoreSettings {
                 .build());
         registry.register(SettingDefinition.builder(DATABASE_PASSWORD, SettingTypes.STRING, "")
                 .requiresRestart(true)
+                .sensitive(true)
                 .build());
         registry.register(SettingDefinition.builder(DATABASE_SSL, SettingTypes.BOOLEAN, true)
                 .requiresRestart(true)

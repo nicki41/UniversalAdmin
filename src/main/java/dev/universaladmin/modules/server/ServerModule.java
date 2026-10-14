@@ -8,6 +8,7 @@ import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.modules.server.command.ServerCommands;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -54,6 +55,8 @@ public final class ServerModule implements Module {
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Server")
             .description("Server dashboard, broadcasts, maintenance mode, and confirmed shutdown/restart.")
             .icon(new GuiIcon("command_block", "Server"))
+            .menu(ServerHomePage.ID, ServerPermissions.VIEW)
+            .menuOrder(30)
             .build();
 
     @Override
@@ -100,6 +103,8 @@ public final class ServerModule implements Module {
         context.resources().closeable(() -> context.platform().guiPages().unregister(ServerHomePage.ID));
         context.platform().guiPages().register(new ServerMaintenancePage(guiContext));
         context.resources().closeable(() -> context.platform().guiPages().unregister(ServerMaintenancePage.ID));
+
+        ServerCommands.all(dashboardService, maintenanceService).forEach(context::registerCommand);
     }
 
     private static void registerActions(

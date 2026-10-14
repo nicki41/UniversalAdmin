@@ -29,6 +29,16 @@ public interface MessageService {
     String get(MessageKey key, Object... args);
 
     /**
+     * Whether {@code key} resolves in the active locale or the fallback -
+     * for optional, overridable texts (e.g. a localized module name) where a
+     * missing key should fall back to something else instead of showing a
+     * {@code [missing: ...]} marker. The default answers {@code true}.
+     */
+    default boolean has(MessageKey key) {
+        return true;
+    }
+
+    /**
      * Registers bundled default messages for {@code locale} - the lowest
      * layer, below anything the server owner put into
      * {@code plugins/UniversalAdmin/lang/<locale>.yml}. Intended for

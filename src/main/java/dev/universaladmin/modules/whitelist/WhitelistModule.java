@@ -9,6 +9,7 @@ import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.modules.whitelist.command.WhitelistCommands;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -44,6 +45,8 @@ public final class WhitelistModule implements Module {
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Whitelist")
             .description("Native whitelist plus UniversalAdmin metadata: added-by/at, reason, notes, and optional expiry.")
             .icon(new GuiIcon("name_tag", "Whitelist"))
+            .menu(WhitelistHomePage.ID, WhitelistPermissions.VIEW)
+            .menuOrder(50)
             .build();
 
     @Override
@@ -80,6 +83,8 @@ public final class WhitelistModule implements Module {
         WhitelistHomePage homePage = new WhitelistHomePage(guiContext);
         context.platform().guiPages().register(homePage);
         context.resources().closeable(() -> context.platform().guiPages().unregister(WhitelistHomePage.ID));
+
+        WhitelistCommands.all(whitelistService).forEach(context::registerCommand);
     }
 
     private static void registerActions(ActionRegistry actions, TaskScheduler scheduler, WhitelistService whitelistService) {

@@ -17,6 +17,8 @@ import java.util.Optional;
  * @param requiresRestart if true, a changed value is not applied by {@code /admin reload} -
  *                        it is reported as pending and only takes effect on the next start
  * @param validator       extra constraints beyond what {@code type} alone enforces (min/max, ...)
+ * @param sensitive       if true, the value is a secret (e.g. a database password): never shown in
+ *                        the settings GUI/commands, never written to the audit log, never editable in-game
  */
 public record SettingDefinition<T>(
         SettingKey<T> key,
@@ -24,7 +26,8 @@ public record SettingDefinition<T>(
         T defaultValue,
         String description,
         boolean requiresRestart,
-        SettingValidator<T> validator) {
+        SettingValidator<T> validator,
+        boolean sensitive) {
 
     public SettingDefinition {
         Optional<String> defaultError = validator.validate(defaultValue);
@@ -46,6 +49,7 @@ public record SettingDefinition<T>(
         private String description = "";
         private boolean requiresRestart = false;
         private SettingValidator<T> validator = SettingValidators.none();
+        private boolean sensitive = false;
 
         private Builder(SettingKey<T> key, SettingType<T> type, T defaultValue) {
             this.key = key;
@@ -68,8 +72,13 @@ public record SettingDefinition<T>(
             return this;
         }
 
+        public Builder<T> sensitive(boolean sensitive) {
+            this.sensitive = sensitive;
+            return this;
+        }
+
         public SettingDefinition<T> build() {
-            return new SettingDefinition<>(key, type, defaultValue, description, requiresRestart, validator);
+            return new SettingDefinition<>(key, type, defaultValue, description, requiresRestart, validator, sensitive);
         }
     }
 }

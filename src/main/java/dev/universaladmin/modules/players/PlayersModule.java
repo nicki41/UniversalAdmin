@@ -21,6 +21,7 @@ import dev.universaladmin.modules.players.action.SetPlayerEnderChestContentsActi
 import dev.universaladmin.modules.players.action.SetPlayerInventoryContentsAction;
 import dev.universaladmin.modules.players.action.TeleportInput;
 import dev.universaladmin.modules.players.action.TeleportPlayerAction;
+import dev.universaladmin.modules.players.command.PlayerCommands;
 import dev.universaladmin.modules.players.gui.PlayerBrowserHomePage;
 import dev.universaladmin.modules.players.jdbc.JdbcPlayerProfileRepository;
 import dev.universaladmin.scheduler.TaskScheduler;
@@ -39,6 +40,8 @@ public final class PlayersModule implements Module {
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Players")
             .description("Player browser (online/offline/recently seen/search), profile, and admin actions.")
             .icon(new GuiIcon("player_head", "Players"))
+            .menu(PlayerBrowserHomePage.ID, PlayerPermissions.VIEW)
+            .menuOrder(10)
             .build();
 
     @Override
@@ -73,7 +76,8 @@ public final class PlayersModule implements Module {
         PlayerPermissions.registerAll(context.platform().permissions());
 
         registerActions(context, playerService, scheduler);
-        registerGui(context, playerService);
+        PlayerBrowserHomePage homePage = registerGui(context, playerService);
+        PlayerCommands.all(playerService, homePage::gui, context.platform().messages()).forEach(context::registerCommand);
     }
 
     private void registerActions(ModuleContext context, PlayerService playerService, TaskScheduler scheduler) {
@@ -147,11 +151,11 @@ public final class PlayersModule implements Module {
         return AuditDetails.builder().oldValue(summary.describeBefore()).newValue(summary.describeAfter()).build();
     }
 
-    private void registerGui(ModuleContext context, PlayerService playerService) {
+    private PlayerBrowserHomePage registerGui(ModuleContext context, PlayerService playerService) {
         PlayerBrowserHomePage homePage = new PlayerBrowserHomePage(
                 context.platform().guiFramework(), context.platform().messages(), context.platform().scheduler(),
-                playerService, context.platform().actionExecutor(), context.platform().settings(), context.platform().services());
-        context.platform().guiPages().register(homePage);
-        context.resources().closeable(() -> context.platform().guiPages().unregister(PlayerBrowserHomePage.ID));
+                playerService, context.platform().actionExecutor(), context.platform().settings(), context.platform().playerMenu());
+        context.registerPage(homePage);
+        return homePage;
     }
 }

@@ -108,6 +108,12 @@ public final class YamlLocaleMessageService implements MessageService {
     }
 
     @Override
+    public boolean has(MessageKey key) {
+        String activeLocale = settingsService.get(CoreSettings.LANGUAGE);
+        return lookup(activeLocale, key.value()) != null || lookup(FALLBACK_LOCALE, key.value()) != null;
+    }
+
+    @Override
     public void registerDefaults(String locale, Map<String, String> messages) {
         bundled.computeIfAbsent(locale, ignored -> new ConcurrentHashMap<>()).putAll(messages);
     }

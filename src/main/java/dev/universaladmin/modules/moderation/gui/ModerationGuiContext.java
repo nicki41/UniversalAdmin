@@ -17,7 +17,7 @@ import dev.universaladmin.settings.SettingsService;
  * Players module. Public (unlike the package-private {@code PlayerGuiContext})
  * because {@link dev.universaladmin.modules.moderation.ModerationModule}
  * builds exactly one instance and both passes it to this package's pages
- * and closes over it in the {@link dev.universaladmin.modules.moderation.ModerationPlayerLink}
+ * and closes over it in the {@link ModeratePlayerMenuEntry}
  * it registers for the Players module to call into.
  */
 public record ModerationGuiContext(

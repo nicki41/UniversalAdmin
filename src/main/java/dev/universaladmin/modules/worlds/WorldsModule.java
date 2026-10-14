@@ -9,6 +9,7 @@ import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.modules.worlds.command.WorldCommands;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -56,6 +57,8 @@ public final class WorldsModule implements Module {
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Worlds")
             .description("World browser/profile, spawn/time/weather/difficulty, border and gamerule management.")
             .icon(new GuiIcon("grass_block", "Worlds"))
+            .menu(WorldsHomePage.ID, WorldsPermissions.VIEW)
+            .menuOrder(40)
             .build();
 
     @Override
@@ -77,6 +80,8 @@ public final class WorldsModule implements Module {
         WorldsHomePage homePage = new WorldsHomePage(guiContext);
         context.platform().guiPages().register(homePage);
         context.resources().closeable(() -> context.platform().guiPages().unregister(WorldsHomePage.ID));
+
+        WorldCommands.all(infoService).forEach(context::registerCommand);
     }
 
     private static void registerActions(ActionRegistry actions, TaskScheduler scheduler) {

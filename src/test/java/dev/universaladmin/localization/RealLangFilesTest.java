@@ -78,6 +78,39 @@ class RealLangFilesTest {
         checkForRegressionRisk("de_DE.yml");
     }
 
+    @Test
+    void deDeTranslatesEveryEnglishKey() throws IOException {
+        YamlConfiguration enUs = loadRealLangFile("en_US.yml");
+        YamlConfiguration deDe = loadRealLangFile("de_DE.yml");
+        Set<String> missing = new LinkedHashSet<>();
+        for (String key : enUs.getKeys(true)) {
+            if (enUs.isString(key) && !deDe.isString(key)) {
+                missing.add(key);
+            }
+        }
+        assertTrue(missing.isEmpty(), () -> "Keys in en_US.yml without a de_DE.yml translation: " + missing);
+    }
+
+    @Test
+    void templatesWithParametersDoubleTheirApostrophes() throws IOException {
+        // MessageFormat treats a single ' as the start of a quoted section,
+        // so "don't {0}" silently swallows the parameter. Templates without
+        // parameters are returned verbatim and may use plain apostrophes.
+        Pattern parameter = Pattern.compile("\\{\\d+}");
+        Pattern singleApostrophe = Pattern.compile("(?<!')'(?!')");
+        Set<String> offenders = new LinkedHashSet<>();
+        for (String fileName : List.of("en_US.yml", "de_DE.yml")) {
+            YamlConfiguration config = loadRealLangFile(fileName);
+            for (String key : config.getKeys(true)) {
+                String value = config.getString(key);
+                if (config.isString(key) && parameter.matcher(value).find() && singleApostrophe.matcher(value).find()) {
+                    offenders.add(fileName + ": " + key);
+                }
+            }
+        }
+        assertTrue(offenders.isEmpty(), () -> "Templates with {n} parameters must write apostrophes as '': " + offenders);
+    }
+
     private void checkForRegressionRisk(String fileName) throws IOException {
         Path source = Path.of("src/main/resources/lang", fileName);
         assertTrue(Files.exists(source), () -> source + " not found - run from the project root");

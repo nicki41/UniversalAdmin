@@ -141,6 +141,15 @@ players:
       title: "<gold>Ender Chest - {0}"
 
 moderation:
+  type:
+    kick: "Kick"
+    ban: "Ban"
+    temp-ban: "Temp-ban"
+    ip-ban: "IP-ban"
+    mute: "Mute"
+    temp-mute: "Temp-mute"
+    warn: "Warning"
+    freeze: "Freeze"
   action:
     offline: "<red>That player is no longer online."
     no-ip-address: "<red>No IP address is available for that player."
@@ -601,33 +610,327 @@ common:
   none: "none"
 
 command:
+  # Prepended to every command reply. Set to "" to remove it.
+  prefix: "<dark_gray>[<gradient:#55ddff:#3399ff>UA</gradient>]</dark_gray> "
+  usage: "<red>Usage: <white>{0}"
+  done: "<green>Done."
+  error:
+    player-only: "<red>Only players can use this command."
+    unknown: "<red>Unknown command. Type <white>/{0} help</white> for a list."
+    not-found: "<red>Not found: {0}"
+    disabled: "<red>This feature is currently disabled."
+    invalid: "<red>{0}"
+    internal: "<red>Something went wrong - the details are in the server log."
+    player-not-found: "<red>No player named <white>{0}</white> has played on this server."
+    player-not-online: "<red><white>{0}</white> is not online."
+    invalid-number: "<red>Not a valid number: <white>{0}"
+    invalid-duration: "<red>Not a valid duration: <white>{0}</white> <gray>(examples: 30m, 2h, 7d, 1d12h)"
+    world-not-found: "<red>No loaded world named <white>{0}"
+    confirm-required: "<yellow>This cannot be undone. Repeat the command with <white>confirm</white> at the end to go ahead."
+  help:
+    usage: "[page]"
+    description: "Lists every command you can use."
+    header: "<gradient:#55ddff:#3399ff><bold>UniversalAdmin</bold></gradient> <gray>commands, page {0}/{1}"
+    next: "<gray>» Next page: <white>/{0} help {1}</white> <dark_gray>(click)"
+    hover: "<gray>Click to put this command into the chat line"
+  menu:
+    usage: ""
+    description: "Opens the admin menu."
   status:
-    header: "<gold>UniversalAdmin</gold> v{0}"
-    uptime: "Uptime: {0}"
-    modules-active: "Active modules ({0}): {1}"
-    modules-failed: "<red>Failed modules: {0}</red>"
-    database-web: "Database: {0}  Web: {1}"
+    usage: ""
+    description: "Shows version, uptime and module status."
+    header: "<gradient:#55ddff:#3399ff><bold>UniversalAdmin</bold></gradient> <gray>v{0}"
+    uptime: "<gray>Uptime: <white>{0}"
+    modules-active: "<gray>Active modules ({0}): <white>{1}"
+    modules-failed: "<red>Failed modules: {0}"
+    database-web: "<gray>Database: <white>{0}</white>  Web: <white>{1}"
+  modules:
+    usage: ""
+    description: "Lists all modules and extensions with their state."
+    header: "<gold>Modules and extensions ({0}):"
+    entry:
+      discovered: "<gray>○ {0} <dark_gray>({1})</dark_gray> - discovered"
+      loaded: "<yellow>◐ {0} <dark_gray>({1})</dark_gray> - loaded"
+      enabled: "<green>● {0} <dark_gray>({1})</dark_gray> <gray>{2}"
+      disabled: "<gray>○ {0} <dark_gray>({1})</dark_gray> - disabled"
+      failed: "<red>✘ {0} <dark_gray>({1})</dark_gray> - failed to start, see the server log"
   reload:
+    usage: ""
+    description: "Reloads config.yml and the language files."
     unavailable: "<red>Reload is not available right now."
     success: "<green>Configuration reloaded. Applied {0} setting(s)."
-    pending-restart: "<yellow>Changed but requires a restart: {0}"
+    pending-restart: "<yellow>Changed but only applied after a restart: {0}"
     errors: "<red>Some values were invalid and fell back to their default: {0}"
-    error: "<red>Failed to reload configuration: {0}"
+    error: "<red>Failed to reload the configuration: {0}"
   staff:
     recover:
-      usage: "<red>Usage: /admin staff recover [player] - player must be online, or omit it to recover yourself."
+      usage: "<red>Usage: /admin staff recover [player] - the player must be online; leave it out to recover yourself."
       success: "<green>Staff-mode snapshot recovered."
-      error: "<red>Failed to recover staff-mode snapshot: {0}"
-  server:
-    usage: "<red>Usage: /admin server <broadcast|shutdown|restart|cancel> [message/reason]"
-    broadcast:
-      usage: "<red>Usage: /admin server broadcast <message>"
-    success: "<green>Done."
-    error: "<red>Failed: {0}"
+      error: "<red>Failed to recover the staff-mode snapshot: {0}"
   update:
+    usage: ""
+    description: "Downloads the newest release (applied on the next restart)."
+    checking: "<gray>Checking GitHub for a newer release..."
     applied: "<green>Downloaded UniversalAdmin {0}. Restart the server to apply it."
-    up-to-date: "<green>Already running the latest version ({0})."
-    error: "<red>Failed to check/download the update: {0}"
+    up-to-date: "<green>You are already running the latest version ({0})."
+    error: "<red>Failed to check or download the update: {0}"
+
+# One block per command: "usage" is the plain-text argument synopsis shown
+# after the command label (not MiniMessage), "description" the line in
+# /admin help. The other keys are that command's own replies.
+commands:
+  toggle:
+    usage: ""
+  kick:
+    usage: "<player> [reason]"
+    description: "Kicks a player from the server."
+  ban:
+    usage: "<player> [duration] [reason]"
+    description: "Bans a player - permanently, or for a duration like 7d."
+  tempban:
+    usage: "<player> <duration> [reason]"
+    description: "Bans a player for a duration such as 1h, 7d or 1d12h."
+  ipban:
+    usage: "<player> [duration] [reason]"
+    description: "Bans the IP address a player last joined from."
+  mute:
+    usage: "<player> [duration] [reason]"
+    description: "Mutes a player - permanently, or for a duration."
+  tempmute:
+    usage: "<player> <duration> [reason]"
+    description: "Mutes a player for a duration."
+  warn:
+    usage: "<player> [reason]"
+    description: "Warns a player; warnings show up in their history."
+  freeze:
+    usage: "<player> [reason]"
+    description: "Freezes a player in place until unfrozen."
+  unban:
+    usage: "<player>"
+    description: "Lifts a ban."
+  unmute:
+    usage: "<player>"
+    description: "Lifts a mute."
+  unfreeze:
+    usage: "<player>"
+    description: "Unfreezes a player."
+  unwarn:
+    usage: "<warning-id>"
+    description: "Removes a warning (the id is shown in /admin history)."
+  history:
+    usage: "<player> [page]"
+    description: "Shows every punishment a player has received."
+    header: "<gold>History of <white>{0}</white> <gray>({1} entries, page {2}/{3})"
+    entry: "<dark_gray>#{0}</dark_gray> <white>{1}</white> <gray>- {2} <dark_gray>|</dark_gray> by {3}, {4}</gray> {5}"
+    more: "<gray>More: <white>/{0} {1} {2}"
+    empty: "<green>{0} has a clean record."
+    status-active: "<red>[active]"
+    status-expired: "<dark_gray>[expired]"
+    status-revoked: "<dark_gray>[lifted by {0}]"
+  check:
+    usage: "<player>"
+    description: "Shows whether a player is banned, muted or frozen right now."
+    header: "<gold>Current status of <white>{0}</white>:"
+    banned: "<red>● Banned</red> <gray>- {0} <dark_gray>|</dark_gray> expires: {1} <dark_gray>|</dark_gray> by {2}"
+    not-banned: "<green>● Not banned"
+    muted: "<light_purple>● Muted</light_purple> <gray>- {0} <dark_gray>|</dark_gray> expires: {1} <dark_gray>|</dark_gray> by {2}"
+    not-muted: "<green>● Not muted"
+    frozen: "<aqua>● Frozen</aqua> <gray>- {0} <dark_gray>|</dark_gray> by {2}"
+    not-frozen: "<green>● Not frozen"
+    warnings: "<yellow>● Active warnings: <white>{0}"
+  vanish:
+    description: "Turns vanish on or off for yourself."
+  godmode:
+    description: "Turns godmode on or off for yourself."
+  nocollision:
+    description: "Turns player collision off or on for yourself."
+  staff:
+    usage: "[recover [player]]"
+    description: "Enters or leaves staff mode."
+  moderate:
+    usage: "<player>"
+    description: "Opens the moderation wizard for a player."
+  player:
+    usage: "<player>"
+    description: "Opens a player's profile."
+  info:
+    usage: "<player>"
+    description: "Shows details about a player, online or offline."
+    header: "<gold>{0}</gold> <gray>-</gray> {1}"
+    uuid: "<gray>UUID: <white>{0}"
+    first-join: "<gray>First join: <white>{0}"
+    last-seen: "<gray>Last seen: <white>{0}"
+    playtime: "<gray>Total playtime: <white>{0}"
+    location: "<gray>Location: <white>{0}</white> at <white>{1}, {2}, {3}"
+    state: "<gray>Gamemode <white>{0}</white>, health <white>{1}</white>, food <white>{2}</white>, ping <white>{3}ms"
+  heal:
+    usage: "[player]"
+    description: "Restores a player to full health."
+    success: "<green>Healed <white>{0}</white>."
+  feed:
+    usage: "[player]"
+    description: "Fills a player's hunger and saturation."
+    success: "<green>Fed <white>{0}</white>."
+  extinguish:
+    usage: "[player]"
+    description: "Puts out a burning player."
+    success: "<aqua>Extinguished <white>{0}</white>."
+  fly:
+    usage: "[player]"
+    description: "Toggles flight for a player."
+    success: "<aqua>Flight for <white>{0}</white>: {1}"
+  gamemode:
+    usage: "<survival|creative|adventure|spectator> [player]"
+    description: "Changes a player's gamemode (also accepts s, c, a, sp and 0-3)."
+    unknown: "<red>Unknown gamemode: <white>{0}"
+    success: "<green>Gamemode of <white>{0}</white> set to <white>{1}</white>."
+  speed:
+    usage: "<fly|walk> <0-10> [player]"
+    description: "Sets fly or walk speed (1 = default fly, 2 = default walk)."
+    success-fly: "<aqua>Fly speed of <white>{0}</white> set to <white>{1}</white>."
+    success-walk: "<aqua>Walk speed of <white>{0}</white> set to <white>{1}</white>."
+  tp:
+    usage: "<player> [destination-player]"
+    description: "Teleports you to a player, or one player to another."
+    success: "<light_purple>Teleported to <white>{0}</white>."
+    success-other: "<light_purple>Teleported <white>{0}</white> to <white>{1}</white>."
+  tphere:
+    usage: "<player>"
+    description: "Brings a player to you."
+    success: "<light_purple>Brought <white>{0}</white> to you."
+  invsee:
+    usage: "<player>"
+    description: "Opens a player's inventory (live, editable with permission)."
+  endersee:
+    usage: "<player>"
+    description: "Opens a player's ender chest (live, editable with permission)."
+  clearinv:
+    usage: "<player> confirm"
+    description: "Permanently empties a player's inventory."
+    success: "<red>Cleared the inventory of <white>{0}</white>."
+  broadcast:
+    usage: "<message>"
+    description: "Sends a message to everyone (MiniMessage formatting allowed)."
+  server:
+    usage: "[status|title <title> [| subtitle]|actionbar <text>|shutdown [reason]|restart [reason]|cancel]"
+    description: "Server status, broadcasts and a confirmed shutdown/restart."
+    shutdown-scheduled: "<red>Shutdown scheduled - players get a countdown. Cancel with /admin server cancel."
+    restart-scheduled: "<red>Restart scheduled - players get a countdown. Cancel with /admin server cancel."
+    cancelled: "<green>Cancelled."
+    status:
+      header: "<gradient:#55ddff:#3399ff><bold>Server status</bold></gradient>"
+      version: "<gray>Version: <white>UniversalAdmin {0}</white> on <white>{1}</white> (Minecraft {2}, Java {3})"
+      uptime: "<gray>Uptime: <white>{0}"
+      players: "<gray>Players: <white>{0}/{1}"
+      memory: "<gray>Memory: <white>{0} MB / {1} MB"
+      cpu: "<gray>CPU: <white>{0} cores</white>, load <white>{1}"
+      worlds: "<gray>Worlds: <white>{0}"
+      database: "<gray>Database: <white>{0}"
+  maintenance:
+    usage: "<on [kick] [reason]|off|status|allow <player>|deny <player>|list>"
+    description: "Maintenance mode: only staff and allowed players can join."
+    enabled: "<red>Maintenance mode is now ON."
+    disabled: "<green>Maintenance mode is now OFF."
+    status-on: "<red>Maintenance mode is ON</red> <gray>- reason: {0}, {1} allowed player(s)"
+    status-off: "<green>Maintenance mode is OFF</green> <gray>({1} allowed player(s) on the list)"
+    allowed: "<gray>Allowed during maintenance: <white>{0}"
+    allow-added: "<green><white>{0}</white> may now join during maintenance."
+    allow-removed: "<yellow><white>{0}</white> was removed from the maintenance allow-list."
+    already-allowed: "<yellow><white>{0}</white> is already on the allow-list."
+    not-allowed: "<yellow><white>{0}</white> is not on the allow-list."
+  worlds:
+    usage: ""
+    description: "Lists every loaded world."
+    header: "<gold>Loaded worlds ({0}):"
+    entry: "<white>{0}</white> <dark_gray>({1})</dark_gray> <gray>- {2} players, {3} chunks, {4} entities"
+  world:
+    usage: "[world] <info|tp|time <value>|weather <clear|rain|thunder>|difficulty <level>|setspawn|border <size> [seconds]|border center <x> <z>|gamerule <rule> <value>>"
+    description: "Shows or changes a world. Leave out the world to use your current one."
+    teleported: "<light_purple>Teleported to the spawn of <white>{0}</white>."
+    time-set: "<aqua>Time in <white>{0}</white> set to <white>{1}</white>."
+    weather-set: "<aqua>Weather in <white>{0}</white> set to <white>{1}</white>."
+    difficulty-set: "<aqua>Difficulty in <white>{0}</white> set to <white>{1}</white>."
+    spawn-set: "<light_purple>Spawn of <white>{0}</white> set to your location."
+    border-size-set: "<yellow>World border of <white>{0}</white> set to <white>{1}</white> blocks."
+    border-center-set: "<yellow>World border of <white>{0}</white> centered on <white>{1}, {2}</white>."
+    gamerule-set: "<gold>Gamerule <white>{0}</white> set to <white>{1}</white> in <white>{2}</white>."
+    info:
+      header: "<gold>World <white>{0}</white>:"
+      environment: "<gray>Environment: <white>{0}"
+      players: "<gray>Players: <white>{0}"
+      chunks-entities: "<gray>Loaded chunks: <white>{0}</white>, entities: <white>{1}"
+      difficulty: "<gray>Difficulty: <white>{0}"
+      time: "<gray>Time: <white>{0}"
+      weather: "<gray>Weather: <white>{0}"
+      border: "<gray>World border: <white>{0}</white> blocks"
+  whitelist:
+    usage: "<on|off|add <player> [duration] [reason]|remove <player>|list>"
+    description: "Manages the whitelist, including temporary access."
+    enabled: "<green>Whitelist is now ON."
+    disabled: "<red>Whitelist is now OFF."
+    added: "<green><white>{0}</white> is now whitelisted."
+    added-temporary: "<green><white>{0}</white> is now whitelisted for <white>{1}</white>."
+    removed: "<yellow><white>{0}</white> was removed from the whitelist."
+    not-listed: "<red><white>{0}</white> is not on the whitelist."
+    list-header-on: "<green>Whitelist is ON</green> <gray>- {0} member(s):"
+    list-header-off: "<red>Whitelist is OFF</red> <gray>- {0} member(s):"
+    list-entries: "<white>{0}"
+  perf:
+    usage: ""
+    description: "TPS, MSPT, memory and load at a glance."
+    header: "<gradient:#55ddff:#3399ff><bold>Performance</bold></gradient>"
+    tps: "<gray>TPS (1m, 5m, 15m): <white>{0}, {1}, {2}"
+    mspt: "<gray>MSPT: <white>{0} ms"
+    memory: "<gray>Memory: <white>{0} MB / {1} MB</white> ({2}%)"
+    load: "<gray>Players <white>{0}</white>, worlds <white>{1}</white>, chunks <white>{2}</white>, entities <white>{3}"
+    uptime: "<gray>Uptime: <white>{0}"
+  entities:
+    usage: "[clear <type|all> [world] confirm]"
+    description: "Shows the most common entities, or clears a type safely."
+    header: "<gold>Entities ({0} total) - most common types:"
+    type-entry: "<gray>{0}: <white>{1}"
+    world-entry: "<dark_gray>» <gray>World <white>{0}</white>: {1} entities in {2} chunks"
+    unknown-type: "<red>Unknown entity type: <white>{0}"
+    preview: "<yellow>This would remove <white>{0}</white> entities."
+    cleared: "<green>Removed <white>{0}</white> entities."
+  audit:
+    usage: "[player] [page]"
+    description: "Shows the newest audit log entries, optionally for one player."
+    header: "<gold>Audit log</gold> <gray>(page {0}/{1}, {2} entries)"
+    header-actor: "<gold>Audit log of <white>{3}</white></gold> <gray>(page {0}/{1}, {2} entries)"
+    entry: "<dark_gray>{0}</dark_gray> <white>{1}</white> <gray>{3}"
+    entry-failed: "<dark_gray>{0}</dark_gray> <white>{1}</white> <red>(failed)</red> <gray>{3}"
+    more: "<gray>More: <white>/{0} {1}{2}"
+    empty: "<gray>No audit entries found."
+
+# Main menu labels for each module. Extensions may add their own under
+# menu.<namespace>.<module>.name/description.
+menu:
+  core:
+    players:
+      name: "<gold>Players"
+      description: "<gray>Browse players, profiles, inventories and actions."
+    moderation:
+      name: "<red>Moderation"
+      description: "<gray>Punishments, history, vanish and staff mode."
+    server:
+      name: "<aqua>Server"
+      description: "<gray>Dashboard, broadcasts, maintenance and restarts."
+    worlds:
+      name: "<green>Worlds"
+      description: "<gray>Time, weather, borders, spawn and gamerules."
+    whitelist:
+      name: "<white>Whitelist"
+      description: "<gray>Who may join - including temporary access."
+    performance:
+      name: "<yellow>Performance"
+      description: "<gray>TPS, memory, worlds and entity clean-up."
+    audit-log:
+      name: "<light_purple>Audit Log"
+      description: "<gray>Every admin action, searchable and filterable."
+    settings:
+      name: "<gray>Settings"
+      description: "<gray>Change UniversalAdmin settings in-game."
 
 update:
   available: "<yellow>A new UniversalAdmin version is available: {0} (currently running {1}). Run /admin update to download it, then restart the server to apply it."

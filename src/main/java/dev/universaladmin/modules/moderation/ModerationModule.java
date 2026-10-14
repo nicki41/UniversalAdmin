@@ -38,9 +38,10 @@ import dev.universaladmin.modules.moderation.action.UnmuteAction;
 import dev.universaladmin.modules.moderation.action.VanishAction;
 import dev.universaladmin.modules.moderation.action.WarnAction;
 import dev.universaladmin.modules.moderation.action.WarnInput;
+import dev.universaladmin.modules.moderation.command.ModerationCommands;
 import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
 import dev.universaladmin.modules.moderation.gui.ModerationHomePage;
-import dev.universaladmin.modules.moderation.gui.ModeratePlayerPage;
+import dev.universaladmin.modules.moderation.gui.ModeratePlayerMenuEntry;
 import dev.universaladmin.modules.moderation.jdbc.JdbcPunishmentRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcStaffModeSnapshotRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcVanishRepository;
@@ -74,6 +75,8 @@ public final class ModerationModule implements Module {
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Moderation")
             .description("Kick/ban/tempban/ipban/mute/tempmute/warn/freeze tooling plus Vanish/Godmode/Staff Mode, with join/chat enforcement.")
             .icon(new GuiIcon("iron_sword", "Moderation"))
+            .menu(ModerationHomePage.ID, ModerationPermissions.USE)
+            .menuOrder(20)
             .build();
 
     @Override
@@ -156,6 +159,10 @@ public final class ModerationModule implements Module {
         // Inventory Inspector open GUI pages) - registered after the context exists.
         context.resources().listener(new StaffModeGuardListener(
                 staffModeState, toolItems, freezeRuntimeState, context.platform().actionExecutor(), guiContext));
+
+        ModerationCommands.all(new ModerationCommands.Dependencies(
+                punishmentService, staffModeService, guiContext, context.platform().settings(), messages))
+                .forEach(context::registerCommand);
 
         scheduleExpirySweep(context, punishmentService);
         scheduleStaffModeTracker(context, staffModeState, toolItems, freezeRuntimeState, vanishService, context.platform().settings(), messages);
@@ -354,11 +361,11 @@ public final class ModerationModule implements Module {
         context.platform().guiPages().register(homePage);
         context.resources().closeable(() -> context.platform().guiPages().unregister(ModerationHomePage.ID));
 
-        // Published for the Players module to call into without either
-        // module importing the other's internal classes - see
-        // ModerationPlayerLink's javadoc.
-        context.platform().services().register(ModerationPlayerLink.class,
-                (targetId, targetName) -> ModeratePlayerPage.open(guiContext, targetId, targetName));
+        // The "Moderate" button on every player profile - contributed through
+        // the platform's PlayerMenuRegistry, so the Players module never
+        // imports anything from this module (and an extension can add its
+        // own buttons the same way).
+        context.registerPlayerMenuEntry(new ModeratePlayerMenuEntry(guiContext));
         return guiContext;
     }
 

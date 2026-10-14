@@ -1,5 +1,7 @@
 package dev.universaladmin.module;
 
+import dev.universaladmin.gui.GuiPageId;
+import dev.universaladmin.permission.PermissionNode;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,7 +19,10 @@ import java.util.Set;
  * @param dependencies        other modules that must be {@code ENABLED} before this one can enable
  * @param settingsNamespace   reserved key under which the future Settings module stores this module's config
  * @param permissionNamespace convention: this module's nodes are expected to live under {@code universaladmin.<permissionNamespace>.*}
- * @param icon                optional future GUI/dashboard icon; {@code null} until a GUI framework exists
+ * @param icon                the icon shown for this module in the {@code /admin} main menu; {@code null} for a generic one
+ * @param homePage            the page the main-menu button opens; {@code null} if the module has no main-menu entry
+ * @param menuPermission      required to see the main-menu button; {@code null} if anyone with menu access may
+ * @param menuOrder           position in the main menu, ascending - built-ins use multiples of 10 below 1000
  */
 public record ModuleDescriptor(
         ModuleId id,
@@ -26,7 +31,10 @@ public record ModuleDescriptor(
         Set<ModuleId> dependencies,
         String settingsNamespace,
         String permissionNamespace,
-        GuiIcon icon) {
+        GuiIcon icon,
+        GuiPageId homePage,
+        PermissionNode menuPermission,
+        int menuOrder) {
 
     public ModuleDescriptor {
         dependencies = Set.copyOf(dependencies);
@@ -50,6 +58,9 @@ public record ModuleDescriptor(
         private String settingsNamespace;
         private String permissionNamespace;
         private GuiIcon icon;
+        private GuiPageId homePage;
+        private PermissionNode menuPermission;
+        private int menuOrder = 1000;
 
         private Builder(ModuleId id, String displayName) {
             this.id = id;
@@ -86,9 +97,25 @@ public record ModuleDescriptor(
             return this;
         }
 
+        /**
+         * Gives the module a button in the {@code /admin} main menu that
+         * opens {@code homePage} (registered by the module itself in
+         * {@code onEnable}), visible to holders of {@code permission}.
+         */
+        public Builder menu(GuiPageId homePage, PermissionNode permission) {
+            this.homePage = homePage;
+            this.menuPermission = permission;
+            return this;
+        }
+
+        public Builder menuOrder(int menuOrder) {
+            this.menuOrder = menuOrder;
+            return this;
+        }
+
         public ModuleDescriptor build() {
-            return new ModuleDescriptor(
-                    id, displayName, description, dependencies, settingsNamespace, permissionNamespace, icon);
+            return new ModuleDescriptor(id, displayName, description, dependencies, settingsNamespace,
+                    permissionNamespace, icon, homePage, menuPermission, menuOrder);
         }
     }
 }

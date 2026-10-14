@@ -33,12 +33,25 @@ public final class SettingRegistry {
         byConfigPath.put(path, definition);
     }
 
+    /** For a module's disable cleanup; a no-op if {@code key} is not registered. */
+    public synchronized void unregister(SettingKey<?> key) {
+        SettingDefinition<?> existing = byConfigPath.get(key.configPath());
+        if (existing != null && existing.key().equals(key)) {
+            byConfigPath.remove(key.configPath());
+        }
+    }
+
+    /** Looks a definition up by its literal config path, e.g. {@code gui.page-size} - for the settings GUI/commands. */
+    public synchronized Optional<SettingDefinition<?>> byPath(String configPath) {
+        return Optional.ofNullable(byConfigPath.get(configPath));
+    }
+
     @SuppressWarnings("unchecked")
-    public <T> Optional<SettingDefinition<T>> get(SettingKey<T> key) {
+    public synchronized <T> Optional<SettingDefinition<T>> get(SettingKey<T> key) {
         return Optional.ofNullable((SettingDefinition<T>) byConfigPath.get(key.configPath()));
     }
 
-    public Collection<SettingDefinition<?>> all() {
+    public synchronized Collection<SettingDefinition<?>> all() {
         return List.copyOf(byConfigPath.values());
     }
 }

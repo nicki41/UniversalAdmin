@@ -8,18 +8,27 @@ import dev.universaladmin.audit.AuditSchemaMigrationV2;
 import dev.universaladmin.audit.AuditService;
 import dev.universaladmin.audit.DefaultAuditService;
 import dev.universaladmin.audit.jdbc.JdbcAuditEventRepository;
+import dev.universaladmin.command.CommandInvocation;
+import dev.universaladmin.command.CommandRegistry;
 import dev.universaladmin.command.UniversalAdminCommand;
+import dev.universaladmin.command.builtin.CorePermissions;
+import dev.universaladmin.command.builtin.HelpCommand;
+import dev.universaladmin.command.builtin.MenuCommand;
+import dev.universaladmin.command.builtin.ModulesCommand;
+import dev.universaladmin.command.builtin.ReloadCommand;
+import dev.universaladmin.command.builtin.StatusCommand;
+import dev.universaladmin.command.builtin.UpdateCommand;
+import dev.universaladmin.command.paper.ShortcutCommands;
 import dev.universaladmin.config.ConfigMigrationRunner;
 import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.core.UniversalAdmin;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiListener;
-import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.GuiSessionManager;
 import dev.universaladmin.gui.MainMenuPage;
 import dev.universaladmin.gui.MaterialIconProvider;
-import dev.universaladmin.gui.PlaceholderGuiPage;
+import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.localization.YamlLocaleMessageService;
@@ -247,10 +256,10 @@ public final class UniversalAdminPlugin extends JavaPlugin {
                 getDataFolder().toPath().resolve("lang"), this::getResource, BUNDLED_LOCALES, settingsService, getLogger());
         NotificationService notifications = new InGameNotificationService();
 
-        UniversalAdmin platform = new UniversalAdmin(
+        UniversalAdmin platform = new UniversalAdminPlatform(
                 this, getPluginMeta().getVersion(), startedAt, getLogger(), settingRegistry, settingsService,
-                scheduler, storage, services, actions, actionExecutor, guiPages, guiFramework, permissions,
-                moduleRegistry, auditService, messages, notifications);
+                scheduler, storage, services, actions, actionExecutor, guiPages, guiFramework, new PlayerMenuRegistry(),
+                new CommandRegistry(), permissions, moduleRegistry, auditService, messages, notifications);
 
         // First of two runPending() calls (see the second one in onEnable(),
         // after moduleManager.enableAll()): this one only covers the two
@@ -291,40 +300,23 @@ public final class UniversalAdminPlugin extends JavaPlugin {
                         () -> getFile().toPath(), getPluginMeta().getVersion()))
                 .permission(PermissionNode.core("update.apply"))
                 .build());
-        registerMainMenu(platform, guiFramework, messages, guiPages, moduleRegistry);
+        guiPages.register(new MainMenuPage(guiFramework, messages, moduleRegistry, guiPages));
+        registerCoreCommands(platform);
 
         return platform;
     }
 
-    /**
-     * Registers the main menu and one {@link PlaceholderGuiPage} per
-     * built-in module that doesn't yet have a real GUI - see
-     * docs/development/gui-framework.md. A module with a real GUI registers
-     * its own page under the same {@link GuiPageId} in its own {@code
-     * onEnable} instead (which runs after this method, during {@code
-     * moduleManager.enableAll()}) - {@link GuiRegistry} allows exactly one
-     * owner per id, so this method must not also register a placeholder for
-     * that id. No placeholder for {@code players.home}: {@code
-     * PlayersModule} registers its own {@code PlayerBrowserHomePage} there
-     * (same precedent as {@code audit-log.home} below). No placeholder for
-     * {@code moderation.home} either: {@code ModerationModule} registers its
-     * own {@code ModerationHomePage} there. No placeholder for {@code
-     * server.home} either: {@code ServerModule} registers its own {@code
-     * ServerHomePage} there. No placeholder for {@code worlds.home} either:
-     * {@code WorldsModule} registers its own {@code WorldsHomePage} there.
-     * No placeholder for {@code whitelist.home} either: {@code
-     * WhitelistModule} registers its own {@code WhitelistHomePage} there.
-     * No placeholder for {@code performance.home} either: {@code
-     * PerformanceModule} registers its own {@code PerformanceHomePage} there.
-     */
-    private void registerMainMenu(
-            UniversalAdmin platform, GuiFramework guiFramework, MessageService messages, GuiRegistry guiPages,
-            ModuleRegistry moduleRegistry) {
-        // No placeholder for audit-log.home: AuditLogModule registers its own
-        // AuditLogListPage under that id in onEnable (see docs/development/adding-module.md
-        // step 10) - GuiRegistry allows exactly one owner per id.
-        guiPages.register(new PlaceholderGuiPage(GuiPageId.core("settings.home"), guiFramework, messages, "Settings"));
-        guiPages.register(new MainMenuPage(guiFramework, messages, moduleRegistry, guiPages));
+    /** The core's own {@code /admin} subcommands; every module adds its own in its {@code onEnable}. */
+    private void registerCoreCommands(UniversalAdmin platform) {
+        CorePermissions.registerAll(platform.permissions());
+        CommandRegistry commands = platform.commands();
+        HelpCommand help = new HelpCommand(commands);
+        commands.register(help);
+        commands.register(new MenuCommand(platform, help));
+        commands.register(new StatusCommand(platform));
+        commands.register(new ModulesCommand(platform.moduleRegistry()));
+        commands.register(new ReloadCommand());
+        commands.register(new UpdateCommand());
     }
 
     private void registerBuiltInModules(ModuleManager moduleManager, SettingsService settings) {
@@ -355,11 +347,20 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         }
     }
 
+    /**
+     * Wires {@code /admin} (plugin.yml) to the dispatcher and registers the
+     * optional top-level shortcuts ({@code /kick}, {@code /vanish}, ...)
+     * through Paper's command lifecycle - see {@link ShortcutCommands}.
+     */
     private void registerCommand(UniversalAdmin platform) {
+        UniversalAdminCommand dispatcher = new UniversalAdminCommand(platform.commands(), new CommandInvocation.CommandEnvironment(
+                platform.messages(), platform.actionExecutor(), platform.scheduler(), getLogger()));
         var command = getCommand("admin");
         if (command != null) {
-            command.setExecutor(new UniversalAdminCommand(platform));
+            command.setExecutor(dispatcher);
+            command.setTabCompleter(dispatcher);
         }
+        ShortcutCommands.install(this, dispatcher, platform.settings(), platform.messages(), getLogger());
     }
 
     /**

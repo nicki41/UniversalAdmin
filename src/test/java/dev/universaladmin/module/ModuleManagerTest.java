@@ -10,7 +10,10 @@ import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.audit.AuditService;
 import dev.universaladmin.core.ServiceRegistry;
+import dev.universaladmin.bootstrap.UniversalAdminPlatform;
+import dev.universaladmin.command.CommandRegistry;
 import dev.universaladmin.core.UniversalAdmin;
+import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.GuiSessionManager;
@@ -39,7 +42,7 @@ import org.junit.jupiter.api.Test;
 class ModuleManagerTest {
 
     private ModuleManager managerWithRegistry(ModuleRegistry registry) {
-        UniversalAdmin platform = new UniversalAdmin(
+        UniversalAdmin platform = new UniversalAdminPlatform(
                 mock(Plugin.class),
                 "0.1.0-TEST",
                 Instant.now(),
@@ -53,6 +56,8 @@ class ModuleManagerTest {
                 mock(ActionExecutor.class),
                 new GuiRegistry(),
                 new GuiFramework(new GuiSessionManager(), new MaterialIconProvider(Logger.getLogger("ModuleManagerTest"))),
+                new PlayerMenuRegistry(),
+                new CommandRegistry(),
                 new PermissionRegistry(),
                 registry,
                 mock(AuditService.class),
