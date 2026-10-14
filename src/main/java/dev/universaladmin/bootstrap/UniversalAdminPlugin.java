@@ -232,7 +232,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
 
         SettingRegistry settingRegistry = new SettingRegistry();
         CoreSettings.registerAll(settingRegistry);
-        SettingsService settingsService = new YamlSettingsService(settingRegistry, this::getConfig, getLogger());
+        SettingsService settingsService = new YamlSettingsService(settingRegistry, this::getConfig, this::saveConfig, getLogger());
 
         scheduler = new PaperTaskScheduler(this);
         DatabaseConfig databaseConfig = CoreSettings.readDatabaseConfig(settingsService);

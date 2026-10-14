@@ -52,6 +52,11 @@ public final class SettingTypes {
         public String describe() {
             return "true or false";
         }
+
+        @Override
+        public List<String> suggestions() {
+            return List.of("true", "false");
+        }
     };
 
     public static final SettingType<Integer> INTEGER = new SettingType<>() {
@@ -141,6 +146,31 @@ public final class SettingTypes {
         public String describe() {
             return "a duration like '30s', '5m', '1h', or '2d'";
         }
+
+        /** The largest unit that represents {@code value} exactly - {@code 90s} stays {@code 90s}, {@code 7200s} becomes {@code 2h}. */
+        @Override
+        public String format(Duration value) {
+            long millis = value.toMillis();
+            if (millis % 1000 != 0) {
+                return millis + "ms";
+            }
+            long seconds = millis / 1000;
+            if (seconds != 0 && seconds % 86400 == 0) {
+                return seconds / 86400 + "d";
+            }
+            if (seconds != 0 && seconds % 3600 == 0) {
+                return seconds / 3600 + "h";
+            }
+            if (seconds != 0 && seconds % 60 == 0) {
+                return seconds / 60 + "m";
+            }
+            return seconds + "s";
+        }
+
+        @Override
+        public Object toYaml(Duration value) {
+            return format(value);
+        }
     };
 
     public static final SettingType<List<String>> STRING_LIST = new SettingType<>() {
@@ -160,6 +190,24 @@ public final class SettingTypes {
         public String describe() {
             return "a list of strings";
         }
+
+        /** Comma-separated: {@code 30m, 1h, 1d}; empty text or {@code []} is the empty list. */
+        @Override
+        public List<String> parseText(String text) {
+            String trimmed = text.trim();
+            if (trimmed.isEmpty() || trimmed.equals("[]")) {
+                return List.of();
+            }
+            return Arrays.stream(trimmed.split(","))
+                    .map(String::trim)
+                    .filter(element -> !element.isEmpty())
+                    .toList();
+        }
+
+        @Override
+        public String format(List<String> value) {
+            return String.join(", ", value);
+        }
     };
 
     /** Case-insensitive; accepts hyphens as underscores (e.g. {@code "not-op"} for {@code NOT_OP}). */
@@ -178,6 +226,21 @@ public final class SettingTypes {
             @Override
             public String describe() {
                 return "one of " + Arrays.toString(enumClass.getEnumConstants());
+            }
+
+            @Override
+            public String format(E value) {
+                return value.name().toLowerCase(Locale.ROOT);
+            }
+
+            @Override
+            public Object toYaml(E value) {
+                return format(value);
+            }
+
+            @Override
+            public List<String> suggestions() {
+                return Arrays.stream(enumClass.getEnumConstants()).map(this::format).toList();
             }
         };
     }

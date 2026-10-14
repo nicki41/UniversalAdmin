@@ -679,6 +679,15 @@ command:
 # after the command label (not MiniMessage), "description" the line in
 # /admin help. The other keys are that command's own replies.
 commands:
+  settings:
+    usage: "[list [section]|get <path>|set <path> <value>|reset <path>]"
+    description: "Opens the settings GUI, or reads and changes settings from chat."
+    sections: "<gold>Settings sections: <white>{0}</white> <gray>- use /admin settings list [section]"
+    unknown-section: "<red>Unknown settings section: <white>{0}"
+    section-header: "<gold>Settings in <white>{0}</white> <gray>({1}):"
+    entry: "<gray>{0}: <white>{1}"
+    entry-restart: "<gray>{0}: <white>{1}</white> <yellow>(restart)"
+    value: "<gold>{0}</gold><gray> = <white>{1}</white> (default {2})</gray>\n<dark_gray>{3}"
   toggle:
     usage: ""
   kick:
@@ -931,6 +940,38 @@ menu:
     settings:
       name: "<gray>Settings"
       description: "<gray>Change UniversalAdmin settings in-game."
+
+settings:
+  changed: "<green>Setting <white>{0}</white> changed: <gray>{1}</gray> → <white>{2}</white>"
+  pending-restart: "<yellow>Saved - this setting takes effect after the next restart."
+  action:
+    unknown: "<red>There is no setting called <white>{0}</white>."
+    sensitive: "<red><white>{0}</white> can only be changed in config.yml."
+    invalid: "<red>Invalid value for <white>{0}</white>: {1}"
+  gui:
+    home:
+      title: "<gold><bold>Settings"
+      section-count: "<gray>{0} setting(s)"
+      section-restart: "<yellow>{0} of them need a restart"
+      section-open: "<dark_gray>Click to open"
+    section:
+      title: "<gold>Settings - {0}"
+      value: "<gray>Value: <white>{0}"
+      default: "<gray>Default: <white>{0}"
+      restart: "<yellow>⚠ Takes effect after a restart"
+      sensitive: "<red>Only editable in config.yml"
+      click-toggle: "<dark_gray>Click to toggle"
+      click-edit: "<dark_gray>Click to edit"
+      click-choose: "<dark_gray>Click to choose a value"
+      right-click-reset: "<dark_gray>Right-click to reset to the default"
+    edit:
+      title: "Edit setting"
+      label: "{0} - expects {1}"
+    choose:
+      title: "<gold>{0}"
+    reset:
+      title: "<yellow>Reset to default?"
+      body: "<gray>Reset <white>{0}</white> to <white>{1}</white>?"
 
 update:
   available: "<yellow>A new UniversalAdmin version is available: {0} (currently running {1}). Run /admin update to download it, then restart the server to apply it."

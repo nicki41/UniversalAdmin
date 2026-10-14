@@ -676,6 +676,15 @@ command:
 # (kein MiniMessage) hinter dem Befehl, "description" die Zeile in
 # /admin help. Die übrigen Schlüssel sind die Antworten des Befehls.
 commands:
+  settings:
+    usage: "[list [bereich]|get <pfad>|set <pfad> <wert>|reset <pfad>]"
+    description: "Öffnet die Einstellungen-GUI oder liest und ändert Einstellungen im Chat."
+    sections: "<gold>Einstellungsbereiche: <white>{0}</white> <gray>- mit /admin settings list [bereich]"
+    unknown-section: "<red>Unbekannter Einstellungsbereich: <white>{0}"
+    section-header: "<gold>Einstellungen in <white>{0}</white> <gray>({1}):"
+    entry: "<gray>{0}: <white>{1}"
+    entry-restart: "<gray>{0}: <white>{1}</white> <yellow>(Neustart)"
+    value: "<gold>{0}</gold><gray> = <white>{1}</white> (Standard {2})</gray>\n<dark_gray>{3}"
   toggle:
     usage: ""
   kick:
@@ -928,6 +937,38 @@ menu:
     settings:
       name: "<gray>Einstellungen"
       description: "<gray>UniversalAdmin-Einstellungen im Spiel ändern."
+
+settings:
+  changed: "<green>Einstellung <white>{0}</white> geändert: <gray>{1}</gray> → <white>{2}</white>"
+  pending-restart: "<yellow>Gespeichert - diese Einstellung wird nach dem nächsten Neustart aktiv."
+  action:
+    unknown: "<red>Es gibt keine Einstellung namens <white>{0}</white>."
+    sensitive: "<red><white>{0}</white> kann nur in der config.yml geändert werden."
+    invalid: "<red>Ungültiger Wert für <white>{0}</white>: {1}"
+  gui:
+    home:
+      title: "<gold><bold>Einstellungen"
+      section-count: "<gray>{0} Einstellung(en)"
+      section-restart: "<yellow>davon {0} erst nach Neustart aktiv"
+      section-open: "<dark_gray>Zum Öffnen klicken"
+    section:
+      title: "<gold>Einstellungen - {0}"
+      value: "<gray>Wert: <white>{0}"
+      default: "<gray>Standard: <white>{0}"
+      restart: "<yellow>⚠ Wird erst nach einem Neustart aktiv"
+      sensitive: "<red>Nur in der config.yml änderbar"
+      click-toggle: "<dark_gray>Klicken zum Umschalten"
+      click-edit: "<dark_gray>Klicken zum Bearbeiten"
+      click-choose: "<dark_gray>Klicken, um einen Wert zu wählen"
+      right-click-reset: "<dark_gray>Rechtsklick setzt auf den Standard zurück"
+    edit:
+      title: "Einstellung bearbeiten"
+      label: "{0} - erwartet {1}"
+    choose:
+      title: "<gold>{0}"
+    reset:
+      title: "<yellow>Auf Standard zurücksetzen?"
+      body: "<gray><white>{0}</white> auf <white>{1}</white> zurücksetzen?"
 
 update:
   available: "<yellow>Eine neue UniversalAdmin-Version ist verfügbar: {0} (aktuell läuft {1}). Führe /admin update aus, um sie herunterzuladen, und starte den Server neu, um sie anzuwenden."

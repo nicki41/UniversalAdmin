@@ -25,4 +25,33 @@ public interface SettingsService {
      * main thread.
      */
     ConfigReloadResult reload();
+
+    /**
+     * Parses {@code rawValue} as typed by a staff member (see
+     * {@link SettingType#parseText}), validates it, writes it to
+     * {@code config.yml} and - unless the setting requires a restart -
+     * applies it immediately. Comments and every other key in the file are
+     * preserved.
+     *
+     * @throws IllegalArgumentException if no setting is registered at {@code configPath}
+     * @throws SettingParseException    if the value does not parse or fails validation (nothing is written)
+     * @throws UnsupportedOperationException for a read-only implementation (the default)
+     */
+    default SettingChange set(String configPath, String rawValue) throws SettingParseException {
+        throw new UnsupportedOperationException("These settings are read-only");
+    }
+
+    /** Removes the setting from {@code config.yml}, so its default applies again - same rules as {@link #set}. */
+    default SettingChange reset(String configPath) {
+        throw new UnsupportedOperationException("These settings are read-only");
+    }
+
+    /** The current value of the setting at {@code configPath}, formatted for display - never for a sensitive setting. */
+    default String display(SettingDefinition<?> definition) {
+        return definition.sensitive() ? "******" : formatCurrent(definition);
+    }
+
+    private <T> String formatCurrent(SettingDefinition<T> definition) {
+        return definition.type().format(get(definition.key()));
+    }
 }
