@@ -676,6 +676,18 @@ command:
 # (kein MiniMessage) hinter dem Befehl, "description" die Zeile in
 # /admin help. Die übrigen Schlüssel sind die Antworten des Befehls.
 commands:
+  report:
+    usage: "<spieler> <grund>"
+    description: "Meldet einen Spieler an das Team."
+  reports:
+    usage: "[open|all|view <id>|claim <id>|resolve <id> [notiz]|reject <id> [notiz]]"
+    description: "Listet und bearbeitet Spieler-Meldungen."
+    none: "<gray>Es gibt noch keine Meldungen."
+    none-open: "<green>Keine offenen Meldungen - super!"
+    header-open: "<gold>Offene Meldungen ({0}):"
+    header-all: "<gold>Neuere Meldungen ({0}):"
+    entry: "<dark_gray>#{0}</dark_gray> <white>{1}</white> <gray>von {2}: {3}</gray> <dark_gray>[{4}]"
+    detail: "<gold>Meldung #{0}</gold> <gray>- <white>{1}</white> gemeldet von <white>{2}</white>: {3} <dark_gray>[{4}, bearbeitet von: {5}]"
   settings:
     usage: "[list [bereich]|get <pfad>|set <pfad> <wert>|reset <pfad>]"
     description: "Öffnet die Einstellungen-GUI oder liest und ändert Einstellungen im Chat."
@@ -913,6 +925,12 @@ commands:
 # menu.<namespace>.<modul>.name/description ergänzen.
 menu:
   core:
+    reports:
+      name: "<gold>Meldungen"
+      description: "<gray>Spieler-Meldungen - übernehmen, erledigen, hinteleportieren."
+    chat:
+      name: "<aqua>Chat"
+      description: "<gray>Team-Chat, Chat sperren, Slowmode, Chat leeren."
     players:
       name: "<gold>Spieler"
       description: "<gray>Spieler, Profile, Inventare und Aktionen."
@@ -969,6 +987,58 @@ settings:
     reset:
       title: "<yellow>Auf Standard zurücksetzen?"
       body: "<gray><white>{0}</white> auf <white>{1}</white> zurücksetzen?"
+
+reports:
+  filed: "<green>Danke! Deine Meldung über <white>{0}</white> wurde an das Team geschickt."
+  claimed: "<yellow>Du bearbeitest jetzt Meldung <white>#{0}</white> über <white>{1}</white>."
+  resolved: "<green>Meldung <white>#{0}</white> über <white>{1}</white> erledigt."
+  rejected: "<gray>Meldung <white>#{0}</white> über <white>{1}</white> abgelehnt."
+  action:
+    players-only: "<red>Nur Spieler können Meldungen abgeben."
+    self: "<red>Du kannst dich nicht selbst melden."
+    cooldown: "<red>Bitte warte noch <white>{0}</white>, bevor du die nächste Meldung abgibst."
+    too-many: "<red>Du hast bereits <white>{0}</white> offene Meldung(en) - bitte warte, bis das Team sie angesehen hat."
+    reason-too-short: "<red>Bitte beschreibe, was passiert ist (mindestens {0} Zeichen)."
+    reason-too-long: "<red>Der Grund ist zu lang (höchstens {0} Zeichen)."
+    not-found: "<red>Es gibt keine Meldung <white>#{0}</white>."
+    already-closed: "<red>Meldung <white>#{0}</white> ist bereits abgeschlossen."
+    no-location: "<red>Diese Meldung hat keinen Ort, oder ihre Welt ist nicht geladen."
+  notify:
+    new: "<gold>[Meldung #{3}]</gold> <white>{0}</white> <gray>meldet</gray> <white>{1}</white><gray>: {2}</gray> <click:run_command:''/admin reports view {3}''><yellow><u>[Ansehen]</u></yellow></click>"
+    reminder: "<gold>[Meldungen]</gold> <white>{0}</white> <gray>Meldung(en) warten auf Bearbeitung.</gray> <click:run_command:''/admin reports''><yellow><u>[Öffnen]</u></yellow></click>"
+    reporter-resolved: "<green>Deine Meldung über <white>{0}</white> wurde vom Team bearbeitet. Danke!"
+    reporter-rejected: "<gray>Deine Meldung über <white>{0}</white> wurde geprüft - diesmal war nichts zu tun. Danke für deine Hilfe!"
+  gui:
+    profile-button: "<gold>Meldungen"
+    status:
+      open: "<red>● Offen"
+      claimed: "<yellow>● In Bearbeitung"
+      resolved: "<green>● Erledigt"
+      rejected: "<gray>● Abgelehnt"
+    field:
+      reason: "<gray>Grund: <white>{0}"
+      reporter: "<gray>Gemeldet von: <white>{0}"
+      age: "<gray>Eingegangen: vor <white>{0}"
+      created: "<gray>Eingegangen: <white>{0}</white> (vor {1})"
+      handler: "<gray>Bearbeitet von: <white>{0}"
+      resolution: "<gray>Team-Notiz: <white>{0}"
+      location: "<gray>Ort: <white>{0}</white> {1}, {2}, {3}"
+    list:
+      title: "<gold><bold>Meldungen"
+      title-about: "<gold>Meldungen über {0}"
+      filter-open: "<white>Anzeige: offene Meldungen"
+      filter-all: "<white>Anzeige: alle neueren Meldungen"
+      filter-hint: "<gray>Klicken zum Umschalten"
+      open-hint: "<dark_gray>Klicken für Details"
+    detail:
+      title: "<gold>Meldung #{0}"
+      not-found: "<red>Diese Meldung existiert nicht mehr."
+      claim: "<yellow>Übernehmen (ich kümmere mich)"
+      resolve: "<green>Erledigt"
+      reject: "<red>Ablehnen"
+      teleport-target: "<light_purple>Zum gemeldeten Spieler teleportieren"
+      teleport-location: "<light_purple>Zum Ort der Meldung teleportieren"
+      prompt-note: "Optionale Notiz (wird bei der Meldung gespeichert)"
 
 update:
   available: "<yellow>Eine neue UniversalAdmin-Version ist verfügbar: {0} (aktuell läuft {1}). Führe /admin update aus, um sie herunterzuladen, und starte den Server neu, um sie anzuwenden."

@@ -23,4 +23,21 @@ public interface TaskScheduler {
 
     /** Shuts down the background executor. Called once from plugin disable. */
     void close();
+
+    /**
+     * Runs {@code task} on the main thread and completes the returned future
+     * with its result (or its exception) - for an action that must read
+     * Bukkit state, then continue asynchronously.
+     */
+    default <T> CompletableFuture<T> supplyOnMainThread(Supplier<T> task) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        runOnMainThread(() -> {
+            try {
+                future.complete(task.get());
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
+        });
+        return future;
+    }
 }

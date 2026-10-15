@@ -44,8 +44,19 @@ public abstract class AbstractListGuiPage<T> extends AbstractGuiPage {
     protected void onSelect(GuiClickContext context, T item) {
     }
 
+    /**
+     * Places page-specific controls (filter toggles, an "add" button, ...)
+     * outside the content area - the free top-row slots
+     * ({@link GuiLayout#BACK_SLOT}+1..3 and {@link GuiLayout#REFRESH_SLOT}+1..3)
+     * or the bottom row beside the pagination controls. Runs once per
+     * {@link #open}, before the items load. No-op by default.
+     */
+    protected void renderControls(GuiRenderContext context) {
+    }
+
     @Override
     protected final void renderContent(GuiRenderContext context) {
+        renderControls(context);
         renderPlaceholder(context.view(), framework.icons().loading(), text("gui.loading"));
         Player viewer = context.viewer();
         loadItems(viewer).whenComplete((items, error) -> scheduler.runOnMainThread(() -> {

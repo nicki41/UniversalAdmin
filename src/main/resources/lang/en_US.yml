@@ -679,6 +679,18 @@ command:
 # after the command label (not MiniMessage), "description" the line in
 # /admin help. The other keys are that command's own replies.
 commands:
+  report:
+    usage: "<player> <reason>"
+    description: "Reports a player to the staff team."
+  reports:
+    usage: "[open|all|view <id>|claim <id>|resolve <id> [note]|reject <id> [note]]"
+    description: "Lists and handles player reports."
+    none: "<gray>There are no reports yet."
+    none-open: "<green>No open reports - nice!"
+    header-open: "<gold>Open reports ({0}):"
+    header-all: "<gold>Recent reports ({0}):"
+    entry: "<dark_gray>#{0}</dark_gray> <white>{1}</white> <gray>by {2}: {3}</gray> <dark_gray>[{4}]"
+    detail: "<gold>Report #{0}</gold> <gray>- <white>{1}</white> reported by <white>{2}</white>: {3} <dark_gray>[{4}, handler: {5}]"
   settings:
     usage: "[list [section]|get <path>|set <path> <value>|reset <path>]"
     description: "Opens the settings GUI, or reads and changes settings from chat."
@@ -916,6 +928,12 @@ commands:
 # menu.<namespace>.<module>.name/description.
 menu:
   core:
+    reports:
+      name: "<gold>Reports"
+      description: "<gray>Player reports - claim, resolve, teleport."
+    chat:
+      name: "<aqua>Chat"
+      description: "<gray>Staff chat, chat lock, slow mode, clear chat."
     players:
       name: "<gold>Players"
       description: "<gray>Browse players, profiles, inventories and actions."
@@ -972,6 +990,58 @@ settings:
     reset:
       title: "<yellow>Reset to default?"
       body: "<gray>Reset <white>{0}</white> to <white>{1}</white>?"
+
+reports:
+  filed: "<green>Thanks! Your report about <white>{0}</white> was sent to the staff team."
+  claimed: "<yellow>You are now handling report <white>#{0}</white> about <white>{1}</white>."
+  resolved: "<green>Report <white>#{0}</white> about <white>{1}</white> resolved."
+  rejected: "<gray>Report <white>#{0}</white> about <white>{1}</white> rejected."
+  action:
+    players-only: "<red>Only players can file reports."
+    self: "<red>You cannot report yourself."
+    cooldown: "<red>Please wait <white>{0}</white> before filing another report."
+    too-many: "<red>You already have <white>{0}</white> open report(s) - please wait until staff has looked at them."
+    reason-too-short: "<red>Please describe what happened (at least {0} characters)."
+    reason-too-long: "<red>That reason is too long (at most {0} characters)."
+    not-found: "<red>There is no report <white>#{0}</white>."
+    already-closed: "<red>Report <white>#{0}</white> is already closed."
+    no-location: "<red>This report has no location, or its world is not loaded."
+  notify:
+    new: "<gold>[Report #{3}]</gold> <white>{0}</white> <gray>reported</gray> <white>{1}</white><gray>: {2}</gray> <click:run_command:''/admin reports view {3}''><yellow><u>[View]</u></yellow></click>"
+    reminder: "<gold>[Reports]</gold> <white>{0}</white> <gray>report(s) are waiting.</gray> <click:run_command:''/admin reports''><yellow><u>[Open]</u></yellow></click>"
+    reporter-resolved: "<green>Your report about <white>{0}</white> was handled by the staff team. Thank you!"
+    reporter-rejected: "<gray>Your report about <white>{0}</white> was reviewed - no action was needed this time. Thanks for helping!"
+  gui:
+    profile-button: "<gold>Reports"
+    status:
+      open: "<red>● Open"
+      claimed: "<yellow>● In progress"
+      resolved: "<green>● Resolved"
+      rejected: "<gray>● Rejected"
+    field:
+      reason: "<gray>Reason: <white>{0}"
+      reporter: "<gray>Reported by: <white>{0}"
+      age: "<gray>Filed: <white>{0} ago"
+      created: "<gray>Filed: <white>{0}</white> ({1} ago)"
+      handler: "<gray>Handled by: <white>{0}"
+      resolution: "<gray>Staff note: <white>{0}"
+      location: "<gray>Location: <white>{0}</white> {1}, {2}, {3}"
+    list:
+      title: "<gold><bold>Reports"
+      title-about: "<gold>Reports about {0}"
+      filter-open: "<white>Showing: open reports"
+      filter-all: "<white>Showing: all recent reports"
+      filter-hint: "<gray>Click to switch"
+      open-hint: "<dark_gray>Click for details"
+    detail:
+      title: "<gold>Report #{0}"
+      not-found: "<red>This report no longer exists."
+      claim: "<yellow>Claim (I will handle it)"
+      resolve: "<green>Resolve"
+      reject: "<red>Reject"
+      teleport-target: "<light_purple>Teleport to the reported player"
+      teleport-location: "<light_purple>Teleport to where it was reported"
+      prompt-note: "Optional note (shown in the report)"
 
 update:
   available: "<yellow>A new UniversalAdmin version is available: {0} (currently running {1}). Run /admin update to download it, then restart the server to apply it."

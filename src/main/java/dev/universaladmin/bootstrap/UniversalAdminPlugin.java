@@ -39,6 +39,7 @@ import dev.universaladmin.modules.auditlog.AuditLogModule;
 import dev.universaladmin.modules.moderation.ModerationModule;
 import dev.universaladmin.modules.performance.PerformanceModule;
 import dev.universaladmin.modules.players.PlayersModule;
+import dev.universaladmin.modules.reports.ReportsModule;
 import dev.universaladmin.modules.server.ServerModule;
 import dev.universaladmin.modules.settings.SettingsModule;
 import dev.universaladmin.modules.whitelist.WhitelistModule;
@@ -328,6 +329,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_PERFORMANCE_ENABLED, PerformanceModule::new);
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_AUDIT_ENABLED, AuditLogModule::new);
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_SETTINGS_ENABLED, SettingsModule::new);
+        registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_REPORTS_ENABLED, ReportsModule::new);
     }
 
     private void registerIfEnabled(

@@ -50,7 +50,7 @@ class RealLangFilesTest {
     // to contain at least one dot and use only lowercase/digits/./-/_ -
     // display strings passed to Component.text(...) essentially never look
     // like that.
-    private static final Pattern KEY_LOOKUP_CALL = Pattern.compile("(?:MessageKey\\.of|(?<![.\\w])text)\\(([^)]*)\\)");
+    private static final Pattern KEY_LOOKUP_CALL = Pattern.compile("(?:MessageKey\\.of|(?<![.\\w])text|\\.reply|\\.line)\\(([^)]*)\\)");
     private static final Pattern KEY_SHAPED_LITERAL = Pattern.compile("\"([a-z][a-z0-9_-]*(?:\\.[a-z0-9_-]+)+)\"");
 
     @Test
