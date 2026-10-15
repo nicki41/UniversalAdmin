@@ -107,3 +107,8 @@ for how a node on `ActionDefinition.Builder#permission(...)` gets enforced.
 
 None. Every field this module reads or writes already lives in Bukkit/
 Minecraft's own persisted world state - see the module overview above.
+
+## Commands
+
+`/admin worlds` and `/admin world [world] info|tp|time|weather|difficulty|setspawn|border|gamerule` -
+see [commands.md](../commands.md#worlds).

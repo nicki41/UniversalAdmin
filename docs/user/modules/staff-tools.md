@@ -308,3 +308,8 @@ mutation needs a running Paper server, same documented exclusion
 `byte[]` payload rather than real `ItemStack.serializeAsBytes()` output -
 proves the BLOB column/dialect/migration round-trip independent of live
 Bukkit item serialization).
+
+## Commands
+
+`/vanish` (`/v`), `/god`, `/nocollision`, `/staff`, `/admin staff recover [player]`,
+and `/freeze`/`/unfreeze` - see [commands.md](../commands.md#moderation).

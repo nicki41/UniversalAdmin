@@ -7,6 +7,121 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-15
+
+The first stable release: commands for everything, a report system, chat
+tools, staff notes, an in-game settings editor, a public extension API and
+the first official extension. Upgrading from an alpha is automatic - see
+"Upgrading" below.
+
+### Added
+
+- **Commands for every module** under `/admin` (aliases `/ua`, `/uadmin`),
+  with tab completion and a clickable `/admin help`. Optional top-level
+  shortcuts such as `/kick`, `/ban`, `/mute`, `/warn`, `/history`,
+  `/vanish`, `/heal`, `/gm`, `/invsee`, `/broadcast`, `/maintenance`, `/lag`
+  (`commands.shortcuts.enabled`/`disabled`; `/universaladmin:<label>` always
+  works). Full list: [docs/user/commands.md](docs/user/commands.md).
+  - Moderation: kick, ban/tempban/ipban (`/ban Steve 7d griefing`),
+    mute/tempmute, warn/unwarn, freeze/unfreeze, unban/unmute, history,
+    check, moderate, vanish, godmode, nocollision, staff [recover], notes.
+  - Players: player, info (`/seen`), heal, feed, extinguish, fly, gamemode,
+    speed, tp, tphere, invsee, endersee, clearinv.
+  - Server: broadcast, server status/title/actionbar/shutdown/restart/cancel,
+    maintenance on/off/allow/deny/list.
+  - Worlds: worlds, world info/tp/time/weather/difficulty/setspawn/border/
+    gamerule. Whitelist: on/off/add (also players who never joined, with an
+    optional duration)/remove/list. Performance: perf, entities [clear].
+    Audit: audit [player] [page]. Core: status, modules, reload, update.
+- **Reports module**: `/report <player> <reason>` for everyone (cooldown and
+  open-report limit), instant clickable staff notifications with a sound, a
+  reminder on join, a reports GUI with claim/resolve/reject and teleports to
+  the player or the report location, a "Reports" button on every profile,
+  and a thank-you to the reporter. See
+  [docs/user/modules/reports.md](docs/user/modules/reports.md).
+- **Chat module**: staff chat (`/sc`, toggle mode, or a `#` prefix), chat
+  lock, slow mode and clear chat - commands, GUI page, audited. See
+  [docs/user/modules/chat.md](docs/user/modules/chat.md).
+- **Staff notes** about players (profile button, `/admin notes`, a hint for
+  staff when a player with notes joins).
+- **Team notifications**: every punishment and pardon is announced to online
+  staff with `universaladmin.moderation.notify`.
+- **Settings editor**: every setting of the core, every module and every
+  extension is editable in-game (`/admin` → Settings, `/admin settings
+  get|set|reset|list`); changes are validated, written to `config.yml` with
+  its comments intact, applied live where possible and audited. Sensitive
+  values (database password) stay file-only.
+- **Extension API** (`universaladmin-api`): extensions are ordinary Paper
+  plugins with `depend: [UniversalAdmin]` that register modules through
+  `UniversalAdminProvider.get().extensions()` - with commands, GUI pages,
+  main-menu entries, profile buttons, audited actions, permissions,
+  settings, translations, database migrations and audit/action listeners,
+  all cleaned up automatically when the extension is disabled. Published
+  with every release (binary, sources, javadoc). Developer guide:
+  [docs/extensions/getting-started.md](docs/extensions/getting-started.md).
+- **UniversalAdmin Discord** - the first official extension: posts
+  punishments, reports, restarts, maintenance and whitelist changes to a
+  Discord channel via a webhook ([docs/extensions/discord.md](docs/extensions/discord.md)).
+- An example extension (`examples/example-extension`) as a template.
+- Ready-made LuckPerms role templates (helper, moderator, admin) in
+  [docs/user/permissions.md](docs/user/permissions.md).
+- The main menu and module names are translated (`menu.*` keys).
+
+### Changed
+
+- The shipped `config.yml` lists every setting of every module, with
+  comments, grouped by module (`moderation.vanish.*`, `server.countdown.*`,
+  `players.gui.*`, ...).
+- The audit log shows player names instead of UUIDs in targets and
+  summaries.
+- Every chat reply of a command carries a short `[UA]` prefix
+  (`command.prefix`, may be set to `""`).
+- The update check and `/admin update` compare versions properly and never
+  offer an older release.
+- Releases on GitHub additionally carry the Discord extension and the API
+  jars; Modrinth versions are marked as release instead of alpha.
+
+### Fixed
+
+- Settings of modules (vanish, freeze, staff mode, reports, ...) were only
+  read from `config.yml` after an `/admin reload`; they now apply from the
+  start.
+- New texts added in an update showed up as `[missing: ...]` because the
+  copied language files were never updated; the bundled texts are now the
+  fallback for every key.
+- A typo in a language file stopped the whole plugin from starting; the
+  file is now skipped with an error in the log.
+- Staff notifications (performance alerts, update notices, frozen-player
+  disconnects) showed raw `<yellow>` tags instead of colours.
+- Confirmation dialogs went back to the wrong page on "cancel", and a
+  quick double click could confirm a dangerous action twice; GUI buttons
+  now ignore double clicks.
+- `/admin update` could "update" to an older version on a server running a
+  newer build.
+
+### Security
+
+- Text typed by players and staff (reasons, report texts, chat, notes,
+  filters) can no longer inject MiniMessage formatting, hover or click
+  events into messages other players see - every message argument is
+  escaped ([ADR 0012](docs/architecture/decisions/0012-safe-messages.md)).
+- Discord messages never ping anyone (`allowed_mentions` disabled), and the
+  webhook URL is never logged.
+
+### Upgrading from 0.1.0-alpha
+
+- Replace the jar and restart. `config.yml` is migrated automatically
+  (config version 2): module settings move under their module's section
+  and the new sections are added. Nothing you set is lost or overwritten.
+- New database tables (`ua_reports`, `ua_player_notes`) are created
+  automatically.
+- Your `lang/*.yml` files are kept; every text you did not change now comes
+  from the plugin itself, so new texts appear automatically.
+- New permissions to hand out: `universaladmin.reports.*`,
+  `universaladmin.chat.*`, `universaladmin.moderation.notes`,
+  `universaladmin.moderation.notify`, `universaladmin.status` - and
+  `universaladmin.reports.create` is granted to everyone by default.
+
 ## [0.1.0-alpha.5] - 2026-08-26
 
 ### Added

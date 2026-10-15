@@ -131,22 +131,37 @@ across the whole database, not per module:
 
 - **1-999**: core migrations (e.g. `AuditSchemaMigration`, version 1),
   registered directly in `UniversalAdminPlugin`.
-- **1000+**: module migrations, registered by the respective module in
-  `onEnable` (e.g. `PlayerProfileMigration`, version 1000).
+- **1000+**: built-in module migrations, registered by the respective
+  module in `onLoad` (e.g. `PlayerProfileMigration`, version 1000).
+- **Extensions** pick a range far away from the built-ins and from each
+  other - by convention a hash-like block such as 50 000-50 999 - and
+  document it. A collision is detected at startup (same version, different
+  migration) and refused.
 
-Migrations run once at plugin start
-(`storage.migrations().runPending()` in `UniversalAdminPlugin#onEnable`),
-before modules are enabled - see [threading.md](threading.md) for the
-exception to the "no blocking on the main thread" principle this
-represents.
+Used versions: 1-2 audit, 1000-1001 players, 1002-1003 punishments,
+1004 vanish state, 1005 staff-mode snapshots, 1006 maintenance state,
+1007 whitelist, 1008 `ua_player_notes`, 1009 `ua_reports`.
+
+Migrations run at plugin start (`storage.migrations().runPending()` in
+`UniversalAdminPlugin#onEnable`, between every module's `onLoad` and
+`onEnable`), and once more for each extension module when its plugin
+registers it - see [threading.md](threading.md) for the exception to the
+"no blocking on the main thread" principle this represents.
+
+## Table names
+
+New tables carry a prefix - `ua_` for UniversalAdmin itself, the
+extension's own for extensions - so they never collide with another
+plugin's tables in a shared MySQL database. The tables from before 1.0
+(`punishments`, `player_profiles`, `whitelist_entries`, ...) keep their
+names; renaming them would risk data for no benefit.
 
 ## Adding a New Migration
 
 1. Write a `Migration` implementation in the module's package, versioned
    after the last value used by this module (see existing migrations for
    the current highest version).
-2. Register it in `Module#onEnable`:
-   `context.platform().storage().migrations().register(...)`.
+2. Register it in `Module#onLoad`: `context.registerMigration(...)`.
 3. A migration is forward-only - never modify an already-released
    migration after the fact; add a new one with a higher version instead.
 

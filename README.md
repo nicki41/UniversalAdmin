@@ -2,269 +2,177 @@
 
 [![Build](https://github.com/nicki41/UniversalAdmin/actions/workflows/build.yml/badge.svg)](https://github.com/nicki41/UniversalAdmin/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Modrinth](https://img.shields.io/badge/Modrinth-universaladmin-00AF5C)](https://modrinth.com/plugin/universaladmin)
 
-A universal admin platform for Paper servers - full in-game GUIs, no
-mandatory dependencies, built on an architecture designed for extensibility.
-
-> **Status: Alpha (`0.1.0-alpha`).** Six of the eight built-in modules
-> (Players, Moderation, Server, Worlds, Whitelist, Performance) are fully
-> usable - own GUI, actions, permissions, audit entries. The Audit Log module
-> has its service and GUI; Settings so far only has its core service. There is
-> **no** public extension API yet and no web app - both are planned, see
-> [Roadmap](#roadmap). Nothing has been published on Modrinth yet.
-
-## Overview
-
-Most admin plugins grow into a pile of independent GUI listeners and
-commands, each bringing its own logic, its own permission handling, and often
-its own bit of SQL. That's neither testable nor reusable later from a web app
-or an extension API.
-
-UniversalAdmin separates business logic from the interface that invokes it:
+**The free, all-in-one admin plugin for Paper.** Moderation, reports, staff
+chat, vanish, staff mode, player tools, inventories, worlds, whitelist,
+maintenance, performance and a full audit log - in clean in-game menus *and*
+commands, with no dependencies and no paywall. Open source, extensible, made
+to be the one admin plugin your server needs.
 
 ```
-Frontend (GUI / Commands / later Web)
-    ↓
-Application Services
-    ↓
-Actions / Domain Logic
-    ↓
-Repositories / Server Adapters
-    ↓
-Paper / Database
+/admin          → the admin menu
+/ban Steve 7d griefing    /mute Bob 1h spam    /report Griefer123 broke my house
 ```
 
-Every mutating operation - kicking a player, changing a gamerule, clearing a
-filtered set of entities - runs through the same permission-checked, audited
-pipeline, whether it's triggered from the GUI, a command, or later a REST
-API. No feature reimplements its own permission handling, its own SQL, or its
-own audit logging. Details: [ARCHITECTURE.md](ARCHITECTURE.md).
+## Why UniversalAdmin
+
+- **Everything in one place.** One menu, one permission system, one audit
+  log - instead of five plugins that don't know about each other.
+- **Menus and commands.** Every feature works from the GUI and from chat or
+  the console - same permissions, same messages, same audit trail.
+- **Every action is audited.** Who banned whom, who changed which gamerule,
+  who opened whose inventory - searchable in-game, with player names.
+- **Fine-grained permissions.** Give helpers "kick and mute" without "ban".
+  Role templates for LuckPerms are included.
+- **Safe by design.** Dangerous actions ask for confirmation, double clicks
+  are ignored, player input can't inject formatting or click events, and an
+  invalid config value never crashes your server.
+- **No dependencies.** No Vault, ProtocolLib, PlaceholderAPI or Essentials
+  required. SQLite works out of the box, MySQL/MariaDB optional.
+- **English and German** out of the box - every text is editable.
+- **Free forever.** Apache-2.0, no premium version, no locked features.
 
 ## Features
 
-Everything listed here is implemented and usable - planned work is under
-[Roadmap](#roadmap).
-
-- **Players** - browser (online/offline/last-seen/search), profile page, ~20
-  actions (teleport, heal, effects, gamemode, inventory/ender chest editor).
-- **Moderation** - kick, ban, tempban, IP ban, mute, tempmute, warn, unban,
-  unmute, remove-warn; join and chat enforcement, GUI wizard.
-- **Staff Tools** - vanish, freeze, godmode, no-collision, and a staff mode
-  with crash-safe snapshot/recovery (`/admin staff recover`).
-- **Server** - live dashboard, broadcast (chat/title/actionbar), maintenance
-  mode with an allow-list, shutdown/restart with confirmation and a
-  configurable countdown.
-- **Worlds** - world browser and profile, teleport/spawn/time/weather/
-  difficulty, world border management, a dynamic gamerule GUI (reads
-  gamerules at runtime, no hardcoded list).
-- **Whitelist** - native whitelist wrapping plus its own metadata (reason,
-  notes, expiration), ownership model, join check with an hourly sweep.
-- **Performance** - TPS/MSPT/memory dashboard, per-world performance, entity
-  overview by type and world, short in-memory history, staff alerts on
-  configurable thresholds, and a deliberately narrow Entity Clear (never
-  players, protected types, preview, confirmation, audited) - explicitly
-  **not** an aggressive lag cleaner.
-- **Audit Log** - every action is audited automatically; filterable,
-  paginated in-game view with a detail page and configurable retention.
-- **Settings** - typed, validated settings system for the whole platform; an
-  invalid value in `config.yml` falls back to the default instead of crashing
-  the server. Its own GUI/commands are still outstanding.
-- **Database** - SQLite (default, zero setup) or MySQL/MariaDB; both drivers
-  are bundled, all access is asynchronous.
-- **No mandatory dependencies** - no Vault, no LuckPerms, no PlaceholderAPI,
-  no ProtocolLib required.
-- **Bilingual** - `en_US` and `de_DE` out of the box; every visible string
-  comes from `lang/<locale>.yml`.
+| | |
+|---|---|
+| **Moderation** | Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn, freeze - with reason and duration presets, a guided GUI wizard, full history and `/checkban`. Team notifications for every punishment. |
+| **Reports** | `/report` for players, clickable instant alerts for staff, a reports GUI with claim/resolve/reject and one-click teleports. Spam-protected. |
+| **Staff tools** | Vanish (with fake join/leave), godmode, no-collision, and a crash-safe **staff mode** with a toolbar: player inspector, freeze stick, live inventory/ender chest inspectors, teleport picker. |
+| **Staff notes** | Private notes about players, with a heads-up when such a player joins. |
+| **Chat** | Staff chat (`/sc` or `#message`), chat lock, slow mode, clear chat. |
+| **Players** | Online/offline browser with search, profile pages, heal/feed/fly/gamemode/speed/effects, teleports, and a **live** inventory and ender chest editor. |
+| **Server** | Dashboard, broadcasts (chat, title, action bar), maintenance mode with allow-list, shutdown/restart with countdown. |
+| **Worlds** | Time, weather, difficulty, spawn, world border and a full gamerule editor - per world. |
+| **Whitelist** | With reasons, notes and **temporary** access that expires on its own. |
+| **Performance** | TPS/MSPT/memory dashboard, per-world stats, entity overview, staff alerts, and a careful entity clear that never touches players or protected mobs. |
+| **Audit log** | Every admin action, filterable by player, module and time, with details. |
+| **Settings** | Edit every setting in-game - validated, saved with comments intact. |
+| **Extensions** | A public API for other plugins - see below. Official: **Discord logging**. |
 
 ## Requirements
 
-- **Paper**, the version this is built against - currently Paper API `26.2`
-  (exact version: `build.gradle.kts`). Spigot/CraftBukkit are not supported.
-- **Java 25** on the server (same version as the build toolchain).
-- Optional: a MySQL/MariaDB server, if multiple servers should share data.
-  Without one, SQLite runs with zero setup.
+- **Paper 26.2** (Spigot/CraftBukkit are not supported)
+- **Java 25**
+- Optional: MySQL or MariaDB to share data between servers
 
-## Installation
+## Quick start
 
-Prebuilt jars are on
-[Releases](https://github.com/nicki41/UniversalAdmin/releases) (once the
-first release is tagged). Drop the jar into the `plugins/` folder and restart
-the server - done.
+1. Download the jar from [Modrinth](https://modrinth.com/plugin/universaladmin)
+   or [GitHub](https://github.com/nicki41/UniversalAdmin/releases), put it in
+   `plugins/`, restart.
+2. Join as an operator and type **`/admin`**.
+3. Give your team permissions - copy a role template from
+   [docs/user/permissions.md](docs/user/permissions.md#role-templates).
+4. Optional: tweak settings in-game (`/admin` → Settings) or in
+   `plugins/UniversalAdmin/config.yml`.
 
-Build it yourself:
+That's it - the database (SQLite) is created automatically.
 
-```bash
-./gradlew build
+## Most used commands
+
+| Command | |
+|---|---|
+| `/admin` | Admin menu |
+| `/kick`, `/ban`, `/tempban`, `/mute`, `/warn`, `/freeze` `<player> [duration] [reason]` | Punish |
+| `/unban`, `/unmute`, `/unfreeze` `<player>` · `/unwarn <id>` | Pardon |
+| `/history <player>` · `/checkban <player>` | Punishment history / current status |
+| `/report <player> <reason>` · `/admin reports` | Reports |
+| `/vanish` · `/staff` · `/sc <message>` | Staff tools |
+| `/invsee` · `/endersee` · `/tphere` · `/tpto` `<player>` | Player tools |
+| `/heal` · `/feed` · `/fly` · `/gm <mode>` `[player]` | Quick actions |
+| `/admin maintenance on\|off` · `/broadcast <message>` | Server |
+| `/lag` · `/admin entities` | Performance |
+| `/admin audit [player]` | What happened? |
+| `/admin help` | Everything you may use |
+
+Shortcuts like `/ban` can be switched off if another plugin should keep
+them; `/admin ban` always works. Full reference:
+[docs/user/commands.md](docs/user/commands.md).
+
+## FAQ
+
+**Can I use it together with EssentialsX / CMI?** Yes. If both register the
+same command (e.g. `/ban`), add the labels you want to keep elsewhere to
+`commands.shortcuts.disabled` - or switch UniversalAdmin's shortcuts off and
+use `/admin ban`.
+
+**LuckPerms?** Fully supported - every node shows up in LuckPerms' editor.
+Templates: [permissions.md](docs/user/permissions.md#role-templates).
+
+**MySQL?** Set `database.type: mysql` and the connection details in
+`config.yml`. See [docs/user/database.md](docs/user/database.md).
+
+**Folia / Spigot / older Minecraft versions?** Not supported - UniversalAdmin
+targets current Paper.
+
+**Can I import bans from another plugin?** Not yet - it is on the
+[roadmap](ROADMAP.md).
+
+**How do I change the messages?** Edit `plugins/UniversalAdmin/lang/<language>.yml`,
+then `/admin reload`. Only keep the keys you changed - everything else
+updates with the plugin.
+
+## Extensions
+
+Other plugins can add their own modules to UniversalAdmin: `/admin`
+commands, GUI pages with a menu button, buttons on player profiles, audited
+actions, settings, database tables. An extension is a normal Paper plugin:
+
+```java
+UniversalAdminProvider.get().extensions().register(this, new MyModule());
 ```
 
-The result is under `build/libs/universaladmin-core-<version>.jar` and
-already bundles the database drivers. Full instructions including
-uninstallation: [docs/user/installation.md](docs/user/installation.md).
+- Developer guide: [docs/extensions/getting-started.md](docs/extensions/getting-started.md)
+- Template: [examples/example-extension](examples/example-extension)
+- API jars (binary, sources, javadoc) are attached to every
+  [release](https://github.com/nicki41/UniversalAdmin/releases).
 
-## Quick Start
+**Official extension - UniversalAdmin Discord:** posts bans, mutes, reports,
+restarts and more to a Discord channel. Setup takes two minutes:
+[docs/extensions/discord.md](docs/extensions/discord.md).
 
-1. Drop the jar into `plugins/`, start the server.
-2. In-game, type `/admin` (aliases: `/ua`, `/uadmin`). The main menu shows
-   every active module page.
-3. Runs immediately on SQLite. Configure afterward in
-   `plugins/UniversalAdmin/config.yml`, apply changes with `/admin reload`.
-
-| Command | Purpose |
-|---|---|
-| `/admin` | Main menu (console/command blocks get a status report instead) |
-| `/admin reload` | Reloads UniversalAdmin's own `config.yml` (never Bukkit's global `/reload`) |
-| `/admin server broadcast\|shutdown\|restart\|cancel ...` | Server control from the console |
-| `/admin staff recover` | Manually restores a stuck staff-mode snapshot |
-
-Most functionality is currently GUI-driven. The underlying actions already
-run through `ActionExecutor` and are command-ready - only the command
-frontends themselves are missing (see [ROADMAP.md](ROADMAP.md)).
-
-## Database
-
-SQLite is the default and needs no setup; the file lives in the plugin
-folder. MySQL/MariaDB is optional and configurable in `config.yml` under
-`database:`. All access goes through `PreparedStatement`s and runs
-asynchronously, never blocking the Paper main thread. Schema changes go
-through versioned migrations. Details, backup guidance, and security notes:
-[docs/user/database.md](docs/user/database.md).
-
-## Permissions
-
-Every protected action has its own node of the form
-`universaladmin.<module>.<node>`, registered at runtime (not statically in
-`plugin.yml`), compatible with any standard permission plugin. All nodes
-default to `op`. Full list: [docs/user/permissions.md](docs/user/permissions.md).
-
-## Anonymous Statistics
+## Anonymous statistics
 
 [![Servers](https://telemetry.0nicki.de/v1/badge/servers.svg?plugin=universaladmin)](docs/user/telemetry.md)
 [![Players Online](https://telemetry.0nicki.de/v1/badge/players.svg?plugin=universaladmin)](docs/user/telemetry.md)
 
-UniversalAdmin can send anonymous usage statistics to answer three
-questions: **how many installations are active**, **how many players are
-online across all of them**, and **how versions are distributed**. The
-badges above are live, pulled from the same aggregate the numbers above come
-from - `nicki41-telemetry`, a separate, generic (not UniversalAdmin-only)
-backend project.
-
-**Active by default, reporting to `https://telemetry.0nicki.de`** - a fresh
-install starts sending the heartbeat below automatically; the endpoint is
-fixed, not configurable, so see "Switch it off completely" below to disable
-it entirely.
-
-A heartbeat consists of exactly seven fields:
-
-```json
-{
-  "pluginId": "universaladmin",
-  "installationId": "0123456789abcdef0123456789abcdef",
-  "pluginVersion": "0.1.0-alpha",
-  "minecraftVersion": "1.21.4",
-  "javaMajorVersion": 25,
-  "onlinePlayers": 17,
-  "maxPlayers": 100
-}
-```
-
-Explicitly **never** transmitted: server IP, hostname, domain, port, player
-names, player UUIDs, player IPs, chat, commands, world names, coordinates,
-other installed plugins, file or database contents, hardware identifiers, MAC
-addresses, OS username, or file paths. The installation id is pure random
-(128 bits) and derived from nothing - not a hardware fingerprint. The player
-count is nothing but a number.
-
-Switch it off completely:
-
-```yaml
-telemetry:
-  enabled: false
-```
-
-Then no request is made at all - there is no hidden fallback and no
-"essential" second channel. Full documentation (every field, interval,
-failure behavior, open items):
-[docs/user/telemetry.md](docs/user/telemetry.md). Nothing is collected that
-isn't documented there.
+UniversalAdmin sends a small anonymous heartbeat (random installation id,
+plugin/Minecraft/Java version, player count) so we know how many servers use
+it. **Never** any IP, server name, player name, UUID, chat or world data.
+Switch it off with `telemetry.enabled: false` - then no request is made at
+all. Exactly what is sent: [docs/user/telemetry.md](docs/user/telemetry.md).
 
 ## Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) - architecture overview and principles
-- [ROADMAP.md](ROADMAP.md) - what exists, what's next
-- [CHANGELOG.md](CHANGELOG.md) - change history
-- [docs/user/](docs/user/) - installation, configuration, permissions,
-  database, audit log, [telemetry](docs/user/telemetry.md), modules
-- [docs/development/](docs/development/) - setup, conventions, testing,
-  adding a module, the GUI framework, the settings system, and the binding
-  [development rules](docs/development/architecture-rules.md)
-- [docs/architecture/](docs/architecture/) - deeper architecture docs and
-  [ADRs](docs/architecture/decisions/)
-- [docs/release/](docs/release/) - [release process](docs/release/releasing.md),
-  [licensing](docs/release/licensing.md), Modrinth preparation
+- **Server owners:** [installation](docs/user/installation.md) ·
+  [commands](docs/user/commands.md) · [permissions](docs/user/permissions.md) ·
+  [configuration](docs/user/configuration.md) · [database](docs/user/database.md) ·
+  [audit log](docs/user/audit-log.md) · [telemetry](docs/user/telemetry.md)
+- **Modules:** [players](docs/user/modules/players.md) ·
+  [moderation](docs/user/modules/moderation.md) ·
+  [staff tools](docs/user/modules/staff-tools.md) ·
+  [reports](docs/user/modules/reports.md) · [chat](docs/user/modules/chat.md) ·
+  [server](docs/user/modules/server.md) · [worlds](docs/user/modules/worlds.md) ·
+  [whitelist](docs/user/modules/whitelist.md) ·
+  [performance](docs/user/modules/performance.md) ·
+  [settings](docs/user/modules/settings.md)
+- **Developers:** [architecture](ARCHITECTURE.md) ·
+  [extensions](docs/extensions/getting-started.md) ·
+  [development rules](docs/development/architecture-rules.md) ·
+  [ADRs](docs/architecture/decisions/) · [contributing](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
-Module documentation:
-[Players](docs/user/modules/players.md) ·
-[Moderation](docs/user/modules/moderation.md) ·
-[Staff Tools](docs/user/modules/staff-tools.md) ·
-[Server](docs/user/modules/server.md) ·
-[Worlds](docs/user/modules/worlds.md) ·
-[Whitelist](docs/user/modules/whitelist.md) ·
-[Performance](docs/user/modules/performance.md) ·
-[Audit Log](docs/user/audit-log.md)
+## Support and contributing
 
-## Extensions
-
-**Planned, not yet available.** There is no public, versioned extension API
-today - third-party extensions can't be installed yet.
-
-The core is built for it, though: every built-in module uses exactly the
-same abstractions (`Module`, `Action`, `GuiPage`, `Repository`, `Migration`,
-`PermissionRegistry`) that will later be open to extensions too. There is
-deliberately no "shortcut" for built-ins that an extension couldn't also
-take - see
-[ADR 0005](docs/architecture/decisions/0005-extension-ready-design.md) and
-[docs/architecture/extensions-future.md](docs/architecture/extensions-future.md).
-
-The public extension API is the **next major milestone**.
-
-## Web App
-
-**Planned, not yet available.** An optional web app with a REST API over the
-same services/actions as the GUI and commands is planned, but deliberately
-deferred until the core is stable - see
-[docs/architecture/web-future.md](docs/architecture/web-future.md). The
-`web.enabled` key already exists as a reserved, currently no-op setting.
-
-## Roadmap
-
-| Phase | Contents | Status |
-|---|---|---|
-| Core | Architecture, modules, GUI, actions, audit, settings, storage | largely done |
-| Command frontends | `/admin players`, `/admin moderation`, ... | outstanding |
-| **Extension API** | `universaladmin-api`, extension loader, SDK | **next milestone** |
-| Official extensions | e.g. Vault, Discord integration | outstanding |
-| Marketplace | extension distribution | outstanding, format not yet decided |
-| Web app | REST API, WebSockets, dashboard | outstanding |
-| Multi-server | proxy support (BungeeCord/Velocity) | outstanding |
-
-Full detail: [ROADMAP.md](ROADMAP.md).
-
-## Contributing
-
-Contributions are welcome. Setup, architecture rules, and test expectations:
-[CONTRIBUTING.md](CONTRIBUTING.md).
-
-Bug reports and feature requests as a
-[GitHub Issue](https://github.com/nicki41/UniversalAdmin/issues), please.
-
-## Security
-
-Please do **not** report security vulnerabilities as a public issue - see
-[SECURITY.md](SECURITY.md) for the reporting path.
+Found a bug or have an idea? Open an
+[issue](https://github.com/nicki41/UniversalAdmin/issues) - please include
+your Paper and UniversalAdmin version (`/admin status`). Pull requests are
+welcome: [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: please report
+privately, see [SECURITY.md](SECURITY.md).
 
 ## License
 
-Apache License 2.0 - see [LICENSE](LICENSE). Commercial use is permitted.
-What this means for the planned extension API, community extensions, and a
-possible marketplace backend is covered in
-[docs/release/licensing.md](docs/release/licensing.md) (not legal advice).
+[Apache License 2.0](LICENSE) - free for every server, commercial ones
+included.

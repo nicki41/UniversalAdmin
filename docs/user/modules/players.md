@@ -215,3 +215,9 @@ live field - see the "Player Browser" section above. Created by
 sort/order-by paths. Name search is a case-insensitive substring match
 (`LIKE '%term%'`), which can't use an index - accepted at the expected scale
 of "unique players who ever joined a server", not a huge event log.
+
+## Commands
+
+`/admin player`, `info` (`/seen`), `heal`, `feed`, `extinguish`, `fly`,
+`gamemode` (`/gm`), `speed`, `tp` (`/tpto`), `tphere`, `invsee`, `endersee`,
+`clearinv` - see [commands.md](../commands.md#players).

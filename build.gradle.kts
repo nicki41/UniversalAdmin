@@ -6,9 +6,11 @@ plugins {
 }
 
 group = "dev.universaladmin"
-// Semantic versioning; "-alpha" reflects actual status (see ROADMAP.md) -
-// not a 1.0 or a stable-implying bare version number.
-version = "0.1.0-alpha.5"
+// Semantic versioning. From 1.0.0 on the public API (api/) is stable: no
+// breaking change without a major version - see
+// docs/architecture/decisions/0010-extension-api.md. The api/ and extension
+// projects take this same version.
+version = "1.0.0"
 description = "UniversalAdmin - a universal admin platform for Paper servers"
 
 java {

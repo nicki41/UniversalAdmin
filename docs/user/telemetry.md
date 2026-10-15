@@ -49,7 +49,7 @@ nothing more:
 {
   "pluginId": "universaladmin",
   "installationId": "0123456789abcdef0123456789abcdef",
-  "pluginVersion": "0.1.0-alpha",
+  "pluginVersion": "1.0.0",
   "minecraftVersion": "1.21.4",
   "javaMajorVersion": 25,
   "onlinePlayers": 17,

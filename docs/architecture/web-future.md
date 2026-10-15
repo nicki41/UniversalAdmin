@@ -26,7 +26,7 @@ web app.
 
 - **`universaladmin-web` Gradle module** - separate process or embedded
   server (decision open), depends on `universaladmin-api` (see
-  extensions-future.md), not directly on core internals.
+  extensions.md), not directly on core internals.
 - **REST API** over the same actions/services.
 - **WebSockets/live updates** for dashboard widgets and live views (e.g.
   online players, performance graphs).
@@ -34,7 +34,7 @@ web app.
   admin doesn't necessarily have a Minecraft account for web access) -
   mechanism open.
 - **Dashboard widgets** as their own extension point (see
-  extensions-future.md), so extensions can contribute their own web views
+  extensions.md), so extensions can contribute their own web views
   without changing the core web code.
 
 ## What This Means for Today's Code

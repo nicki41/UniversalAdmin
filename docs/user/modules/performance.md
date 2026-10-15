@@ -177,3 +177,8 @@ new settings require a restart.
   only be reached through whatever a future command frontend adds; this
   version is fully manageable in-game via the GUI, same situation as the
   Server module's maintenance mode.
+
+## Commands
+
+`/admin perf` (`/lag`) and `/admin entities [clear <type|all> [world] confirm]` -
+see [commands.md](../commands.md#performance).

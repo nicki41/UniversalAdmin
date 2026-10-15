@@ -133,10 +133,9 @@ jobs:
             echo "FILES_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      # Every version - -alpha/-beta/-rc included - is published as a normal
-      # GitHub release, not flagged "Pre-release". Deliberate: the project's
-      # own alpha status is already communicated in the README/version
-      # string itself, not through GitHub's separate prerelease flag.
+      # Release notes come from the matching CHANGELOG section. Versions with
+      # a pre-release suffix are flagged "Pre-release" (see "Create GitHub
+      # release" below and docs/release/releasing.md#version-scheme).
       - name: Determine release notes
         id: notes
         run: |
@@ -175,6 +174,13 @@ jobs:
           while IFS= read -r extra; do
             [ -n "$extra" ] && ARGS+=("$extra")
           done <<< "${{ steps.extras.outputs.files }}"
+          # From 1.0.0 on, -alpha/-beta/-rc builds are flagged Pre-release:
+          # GitHub's /releases/latest (which the in-plugin update check
+          # reads) then only ever returns a stable version, so servers on a
+          # stable release are never offered a pre-release.
+          if [[ "$VERSION" == *-* ]]; then
+            ARGS+=(--prerelease)
+          fi
           if [ -n "${{ steps.notes.outputs.notes_file }}" ]; then
             ARGS+=(--notes-file "${{ steps.notes.outputs.notes_file }}")
           fi

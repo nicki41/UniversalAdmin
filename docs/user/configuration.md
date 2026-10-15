@@ -10,6 +10,12 @@ Every value below is a registered, typed, validated setting (see
 works internally) - an invalid value never crashes the server, it logs a
 warning and falls back to its default.
 
+**Easiest way to change anything:** in-game via `/admin` → Settings, or
+`/admin settings set <path> <value>` - see
+[modules/settings.md](modules/settings.md). The shipped `config.yml` lists
+every setting of every module with a comment; the module docs describe
+their own settings in detail.
+
 ## `general`
 
 | Key | Type | Default | Notes |
@@ -48,9 +54,7 @@ is unreachable at startup, and backups.
 | `gui.page-size` | integer, multiple of 9, 9-54 | `45` | Reloadable live. |
 | `gui.confirmations` | boolean | `true` | Ask before destructive GUI actions. Reloadable live. |
 
-No GUI exists yet to read these (see [ROADMAP.md](../../ROADMAP.md)) - they
-are registered and validated so the eventual GUI module has a settled
-config surface to build against.
+`gui.confirmations` applies to every confirmation dialog of every module.
 
 ## `audit`
 
@@ -65,6 +69,8 @@ config surface to build against.
 |---|---|---|---|
 | `modules.players` | boolean | `true` | yes |
 | `modules.moderation` | boolean | `true` | yes |
+| `modules.reports` | boolean | `true` | yes |
+| `modules.chat` | boolean | `true` | yes |
 | `modules.server` | boolean | `true` | yes |
 | `modules.worlds` | boolean | `true` | yes |
 | `modules.whitelist` | boolean | `true` | yes |
@@ -76,18 +82,36 @@ Setting one to `false` means that module is never even registered with
 `ModuleManager` - not disabled-after-the-fact, simply never brought up.
 Requires a restart: modules are only registered once, at plugin startup.
 
+## `commands`
+
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `commands.shortcuts.enabled` | boolean | `true` | Top-level shortcuts such as `/kick` next to `/admin kick`. Restart required. |
+| `commands.shortcuts.disabled` | list | `[]` | Shortcut labels to skip, e.g. `[ban, mute]`. Restart required. |
+
+`/report` and `/staffchat` are always registered; `/universaladmin:<label>`
+always works. See [commands.md](commands.md).
+
+## Module sections
+
+Each module keeps its settings in its own section - `players.*`,
+`moderation.*`, `reports.*`, `chat.*`, `server.*`, `whitelist.*`,
+`performance.*` - documented in the module pages:
+[players](modules/players.md#settings),
+[moderation](modules/moderation.md#settings),
+[staff tools](modules/staff-tools.md),
+[reports](modules/reports.md#settings), [chat](modules/chat.md#settings),
+[server](modules/server.md), [whitelist](modules/whitelist.md),
+[performance](modules/performance.md#settings).
+
 ## `performance`
 
 | Key | Type | Default | Notes |
 |---|---|---|---|
 | `performance.refresh-interval` | duration, 1s-10m | `5s` | How often the Performance module refreshes its TPS/MSPT/memory/world/entity snapshot. Restart required. |
 
-The Performance module's own alert-threshold and entity-clear settings are
-registered under its own `performance` settings namespace, not `core` - like
-every other built-in module's own settings (`server.countdown.*`,
-`players.gui.max-results`, ...), they are not part of this core-only
-reference; see [docs/user/modules/performance.md](modules/performance.md#settings)
-and [docs/development/settings.md](../development/settings.md).
+Alert thresholds and entity-clear protection: see
+[docs/user/modules/performance.md](modules/performance.md#settings).
 
 Duration values accept a bare number of seconds, or a suffix: `30s`, `5m`,
 `1h`, `2d`, `250ms`.
@@ -96,8 +120,15 @@ Duration values accept a bare number of seconds, or a suffix: `30s`, `5m`,
 
 | Key | Type | Default | Notes |
 |---|---|---|---|
-| `maintenance.enabled` | boolean | `false` | Reserved for a future join-gate; has no effect yet. Reloadable live. |
-| `maintenance.kick-message` | string (MiniMessage) | `<red>Server is currently under maintenance.` | Reloadable live. |
+| `maintenance.enabled` | boolean | `false` | Initial maintenance state on a fresh install; afterwards `/admin maintenance on\|off` and its stored state win. |
+| `maintenance.kick-message` | string (MiniMessage) | `<red>Server is currently under maintenance.` | Default message for players who cannot join. Reloadable live. |
+
+## `update`
+
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `update.check-for-updates` | boolean | `true` | Check GitHub for a newer stable release and tell staff. `/admin update` works either way. |
+| `update.check-interval` | duration, 1h-7d | `6h` | Restart required. |
 
 ## `telemetry`
 
@@ -134,15 +165,20 @@ setting:
   reported, same as at startup - reload never leaves the plugin in a
   broken state.
 
+It also re-reads the language files in `lang/`.
+
 This is **not** Bukkit's `/reload` - it never touches any other plugin or
-the server's own state, only UniversalAdmin's own `config.yml`.
+the server's own state, only UniversalAdmin's own files.
 
 ## Config versioning
 
 `config-version` at the top of the file is managed automatically - don't
 edit it by hand. Upgrading UniversalAdmin never blindly overwrites your
-existing `config.yml`; if a future version changes the config's shape, a
-migration adjusts your existing file in place instead. See
+existing `config.yml`; when the config's shape changes, a migration adjusts
+your file in place. Version 2 (UniversalAdmin 1.0) moved module settings
+under their module (`vanish.*` → `moderation.vanish.*`, `countdown.*` →
+`server.countdown.*`, `gui.max-results` → `players.gui.max-results`, ...)
+and added the `commands` section. See
 [docs/development/settings.md](../development/settings.md#config-file-versioning).
 
 ## Localization
@@ -151,14 +187,26 @@ migration adjusts your existing file in place instead. See
 `lang/de_DE.yml` ships alongside it. `general.language` selects the active
 one.
 
-**Fallback chain** for any single message key: active locale → `en_US` →
-a visible `[missing: the.key]` marker (logged once, not on every use, so a
-missing translation doesn't spam the console).
+**Your files override, the plugin fills the gaps.** The files in
+`plugins/UniversalAdmin/lang/` are yours - change any text there. Every key
+you don't have (or deleted) comes from the copy built into the plugin, so
+texts added by an update show up automatically. You can delete every key
+you did not change.
 
-**Adding a locale:** drop a new `lang/xx_XX.yml` file (any keys you skip
-fall back to `en_US`) and set `general.language` to match. New locale
-files are picked up on the next restart - unlike `config.yml` settings,
-`/admin reload` does not currently rescan the `lang/` folder.
+**Fallback chain** for any single message key: your file for the active
+locale → the built-in copy of that locale → your `en_US.yml` → the built-in
+`en_US` → a visible `[missing: the.key]` marker (logged once).
+
+**Adding a locale:** drop a new `lang/xx_XX.yml` file (anything you skip
+falls back to `en_US`), set `general.language` to match, `/admin reload`.
+
+A broken language file (YAML error) is skipped with an error in the
+console - the plugin keeps running with the built-in texts.
+
+**Placeholders and apostrophes:** `{0}`, `{1}`, ... are replaced by values.
+In a text that has placeholders, write an apostrophe as `''` (two single
+quotes). Values typed by players (reasons, report texts, chat) are always
+shown as plain text and can never add colours or click events.
 
 Message values may use [MiniMessage](https://docs.advntr.dev/minimessage/format.html)
 markup (e.g. `<green>...</green>`) - see the shipped `lang/en_US.yml` for

@@ -139,3 +139,22 @@ but `general.language` (a `CoreSettings` entry) controls which locale
 `YamlLocaleMessageService` reads from. See
 [configuration.md](../user/configuration.md#localization) for the
 fallback chain and how to add a new locale.
+
+## Changing settings at runtime
+
+`SettingsService#set(path, text)` / `#reset(path)` parse the text with
+`SettingType#parseText` (lists are comma-separated), validate it, write
+`config.yml` through `JavaPlugin#saveConfig` (comments are preserved) and
+apply the value live - unless `requiresRestart` is set, then it is saved but
+reported as pending. The in-game editor and `/admin settings` call these
+only through the audited `core:settings.set` action (`SetSettingAction`).
+
+- `SettingType#format`/`#toYaml`/`#suggestions` define how a value is
+  shown, stored and offered for completion; the built-in types implement
+  them (durations are stored as `30s`/`5m`/`2h`, enums in lower case).
+- `SettingDefinition.Builder#sensitive(true)` marks a secret: masked in the
+  GUI and commands, refused by `SetSettingAction`.
+- A setting registered after startup (every module and extension setting)
+  is resolved from the file on its first read, so its configured value
+  applies immediately - no `/admin reload` needed.
+

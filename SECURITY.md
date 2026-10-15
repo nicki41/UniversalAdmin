@@ -2,13 +2,17 @@
 
 ## Supported Versions
 
-UniversalAdmin is in its alpha phase. Security fixes go into the latest
-version; there are no backports to older alpha releases.
+Security fixes are released as a new patch version of the current stable
+line. Please update to the newest release before reporting.
 
 | Version | Supported |
 |---|---|
-| latest release / `main` | yes |
-| older alpha releases | no |
+| 1.0.x (latest) | yes |
+| `main` | yes |
+| 0.1.0-alpha.* | no - please update to 1.0 |
+
+The official Discord extension and the extension API follow the same
+versions.
 
 ## Reporting a Vulnerability
 

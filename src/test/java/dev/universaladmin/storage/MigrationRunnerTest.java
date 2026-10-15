@@ -87,4 +87,38 @@ class MigrationRunnerTest {
             }
         };
     }
+
+    @org.junit.jupiter.api.Test
+    void refusesTwoDifferentMigrationsWithTheSameVersionButIgnoresARepeat() {
+        MigrationRunner runner = new MigrationRunner(null, java.util.logging.Logger.getLogger("test"));
+        runner.register(new VersionedMigration(4242));
+        runner.register(new VersionedMigration(4242));
+
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> runner.register(new Migration() {
+            @Override
+            public int version() {
+                return 4242;
+            }
+
+            @Override
+            public String description() {
+                return "clash";
+            }
+
+            @Override
+            public void migrate(java.sql.Connection connection) {
+            }
+        }));
+    }
+
+    private record VersionedMigration(int version) implements Migration {
+        @Override
+        public String description() {
+            return "test " + version;
+        }
+
+        @Override
+        public void migrate(java.sql.Connection connection) {
+        }
+    }
 }

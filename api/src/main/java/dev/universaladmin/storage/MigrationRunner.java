@@ -31,7 +31,23 @@ public final class MigrationRunner {
         this.logger = logger;
     }
 
-    public void register(Migration migration) {
+    /**
+     * Registers a migration. Registering the same migration class again (an
+     * extension whose plugin was reloaded) is a no-op.
+     *
+     * @throws IllegalStateException if a <i>different</i> migration already uses the same version -
+     *                               versions are global across the core and every extension
+     */
+    public synchronized void register(Migration migration) {
+        for (Migration existing : migrations) {
+            if (existing.version() == migration.version()) {
+                if (existing.getClass().equals(migration.getClass())) {
+                    return;
+                }
+                throw new IllegalStateException("Migration version " + migration.version() + " is used by both "
+                        + existing.getClass().getName() + " and " + migration.getClass().getName());
+            }
+        }
         migrations.add(migration);
     }
 

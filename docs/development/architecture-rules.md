@@ -14,10 +14,10 @@ of those.
 ## Project Goal
 
 UniversalAdmin is a universal admin platform for Paper servers - **not** a
-collection of GUI commands. Long-term plan: core plugin, built-in modules, a
-public extension API, community extensions, an optional web app, REST API,
-WebSockets. Currently (see [ROADMAP.md](../../ROADMAP.md)) the core exists
-with eight built-in modules and no public API and no web server yet.
+collection of GUI commands. It consists of the core plugin with ten built-in
+modules, a public, versioned extension API (`universaladmin-api`), official
+and community extensions; an optional web app with REST API and WebSockets
+is planned (see [ROADMAP.md](../../ROADMAP.md)).
 
 Every architecture decision must be made so it doesn't force a rewrite when
 that later expansion happens. See
@@ -103,11 +103,19 @@ template - see
   `jdbc` or the respective adapter subpackage, not in the interface package
   itself. See e.g. `storage/` (interfaces) vs. `storage/jdbc/`
   (Hikari/JDBC).
-- There is currently **one** Gradle project (`universaladmin-core`). A split
-  into `universaladmin-api`/`-sdk`/`-web` is planned, but not now - rationale
-  in
-  [docs/architecture/decisions/0006-optional-web-architecture.md](../architecture/decisions/0006-optional-web-architecture.md).
-  Don't build empty multi-module scaffolding for it ahead of time.
+- Gradle projects: `universaladmin-api` (`api/`, the public extension API),
+  `universaladmin-core` (the repository root: bootstrap, implementations,
+  built-in modules), `universaladmin-discord` (`extensions/discord`, the
+  official Discord extension) and `example-extension`
+  (`examples/example-extension`). The API and the core share package names;
+  an API class must never import a core class (the build enforces it - the
+  API project does not see the core). See
+  [ADR 0010](../architecture/decisions/0010-extension-api.md). A `-web`
+  project is still deliberately not created before it has content.
+- **Everything in `api/` is public API from 1.0.0 on** and follows semantic
+  versioning: no removal or incompatible change without a major version;
+  deprecate first. Implementation classes belong in the core, even when
+  they share a package with API types.
 
 ## Naming Conventions
 
@@ -140,7 +148,9 @@ Full detail: [docs/architecture/threading.md](../architecture/threading.md).
   runs **twice** (once before, once after `ModuleManager.enableAll()`, since
   each module only registers its own migration in its own `onEnable`; see
   [docs/architecture/threading.md](../architecture/threading.md)), never
-  more often, and not a template for other code.
+  more often, and not a template for other code. An extension's module
+  that enables later gets the same treatment once, synchronously, when its
+  plugin registers it (see [ADR 0010](../architecture/decisions/0010-extension-api.md)).
 - **Never trigger or advise a global Bukkit reload** (`Bukkit.reload()` or
   similar) - that bypasses plugin lifecycle and server state in ways
   UniversalAdmin can't control. The only sanctioned reload is
@@ -166,6 +176,10 @@ Full detail: [docs/development/settings.md](../development/settings.md).
   `SettingDefinition.requiresRestart()` is `true` changes on reload, the old
   value stays active and the change is reported as "pending restart" - don't
   try to apply it live (e.g. database connection parameters).
+- **Message arguments are untrusted.** `MessageService#get` escapes every
+  `String` argument (see [ADR 0012](../architecture/decisions/0012-safe-messages.md));
+  wrap genuinely trusted markup in `MessageService.markup(...)`, and render
+  resolved messages with `ComponentMessages.render`, never `Component.text`.
 - **No visible text in code.** Every user-facing string is a `MessageKey`,
   resolved via `MessageService.get(key, args...)` from `lang/<locale>.yml`.
   Fallback chain: active locale → `en_US` → a visible `[missing: ...]`
@@ -242,12 +256,23 @@ Full detail: [docs/architecture/modules.md](../architecture/modules.md).
 ## Built-in Modules Stay Extension-Friendly
 
 Built-in modules use exactly the same abstractions
-(`Module`/`Action`/`GuiPage`/`Repository`/`Migration`/`PermissionRegistry`)
-that will later be open to external extensions too. Don't build "shortcut"
+(`Module`/`Action`/`AdminCommand`/`GuiPage`/`PlayerMenuEntry`/`Repository`/
+`Migration`/`PermissionRegistry`) that extensions use. Don't build "shortcut"
 behavior for built-ins that an extension couldn't also take - see
-[docs/architecture/extensions-future.md](../architecture/extensions-future.md).
-There's no public `api`/`sdk` module boundary yet; this rule is the
-substitute until there is one.
+[docs/architecture/extensions.md](../architecture/extensions.md).
+
+- Prefer `ModuleContext#register*` (actions, pages, commands, permissions,
+  settings, services, listeners, subscriptions) - each one removes itself
+  again when the module is disabled.
+- Cross-module access goes through `ServiceRegistry` or a registry
+  (`PlayerMenuRegistry` for profile buttons, `ModuleDescriptor#menu` for the
+  main menu), never through an import of another module's package.
+- Commands are frontends like GUI click handlers: parse, then
+  `CommandInvocation#run(actionId, input, ...)`. No logic in commands.
+- New database tables carry a prefix (`ua_` for UniversalAdmin, the
+  extension's own for extensions) so they never collide in a shared MySQL
+  database. Migration versions are global: built-ins use 1000+, see
+  [storage.md](../architecture/storage.md).
 
 ## Tests
 
@@ -279,7 +304,8 @@ along with a feature PR.
 ## Build & Test
 
 ```bash
-./gradlew build   # compiles, tests, builds the shaded jar (build/libs/universaladmin-core-*.jar)
+./gradlew build   # every project: tests, shaded plugin jar (build/libs/universaladmin-core-*.jar),
+                  # API jars (api/build/libs), Discord extension (extensions/discord/build/libs)
 ./gradlew test    # tests only
 ```
 

@@ -144,3 +144,9 @@ library dependency - same reasoning as the audit log's `MetadataJson`),
 `updated_at`, `updated_by`. Deliberately not a
 `dev.universaladmin.storage.Repository<T, ID>` - a singleton row has no
 natural `ID`, see `MaintenanceStateRepository`'s javadoc.
+
+## Commands
+
+`/admin broadcast` (`/bc`), `/admin server status|title|actionbar|shutdown|restart|cancel`,
+`/admin maintenance on [kick] [reason]|off|status|allow|deny|list` - see
+[commands.md](../commands.md#server).

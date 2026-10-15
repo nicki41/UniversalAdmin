@@ -43,10 +43,10 @@ from a single module failing. See
 A [`Module`](src/main/java/dev/universaladmin/module/Module.java) is a
 self-contained unit of functionality that registers actions, GUI pages,
 permissions, and migrations into shared registries, then gets out of the
-way. UniversalAdmin ships eight built-in modules (Players, Moderation,
-Server, Worlds, Whitelist, Performance, Audit Log, Settings) that all
-implement this exact interface - the same one a future external extension
-will implement.
+way. UniversalAdmin ships ten built-in modules (Players, Moderation,
+Reports, Chat, Server, Worlds, Whitelist, Performance, Audit Log, Settings)
+that all implement this exact interface - the same one extensions
+implement.
 
 `ModuleManager` drives every module through `DISCOVERED → LOADED → ENABLED`
 (and back to `DISABLED`) in dependency order (`ModuleDescriptor.dependencies()`),
@@ -77,18 +77,32 @@ Database and other blocking IO run on a virtual-thread executor
 through the same scheduler. See
 [docs/architecture/threading.md](docs/architecture/threading.md).
 
-## What's prepared but not built yet
+## Frontends
 
-The web app, the REST API, WebSockets, and the public extension API/SDK do
-not exist yet - by design, per the current step's scope. What *does* exist
-is the seam they will attach to without a rewrite: `Action`, `GuiPage`,
-`Module`, `PermissionRegistry`, and `AuditService` are already the shape an
-extension or a web endpoint would use. See
-[docs/architecture/extensions-future.md](docs/architecture/extensions-future.md)
-and [docs/architecture/web-future.md](docs/architecture/web-future.md).
+The in-game GUI (`dev.universaladmin.gui`) and `/admin` commands
+(`dev.universaladmin.command`, [ADR 0011](docs/architecture/decisions/0011-command-framework.md))
+are both thin frontends over the same actions. Modules contribute main-menu
+entries (`ModuleDescriptor#menu`), pages, profile buttons
+(`PlayerMenuRegistry`) and subcommands through registries - nothing in the
+core knows a module by name. All texts come from `lang/<locale>.yml`; message
+arguments are escaped ([ADR 0012](docs/architecture/decisions/0012-safe-messages.md)).
+
+## Extensions
+
+Extensions are ordinary Paper plugins (`depend: [UniversalAdmin]`) that
+register `Module`s through `UniversalAdminProvider.get().extensions()`. They
+compile against the public API project `universaladmin-api` and get exactly
+the extension points the built-in modules use. See
+[docs/architecture/extensions.md](docs/architecture/extensions.md),
+[ADR 0010](docs/architecture/decisions/0010-extension-api.md) and the
+[developer guide](docs/extensions/getting-started.md). A web app/REST API is
+still planned - [docs/architecture/web-future.md](docs/architecture/web-future.md).
 
 ## Gradle layout
 
-Single Gradle project (`universaladmin-core`) today. A split into
-`universaladmin-api` / `-sdk` / `-web` is documented, not built - see
-[docs/architecture/decisions/0006-optional-web-architecture.md](docs/architecture/decisions/0006-optional-web-architecture.md).
+| Project | Directory | Contents |
+|---|---|---|
+| `universaladmin-api` | `api/` | Public, semantically versioned extension API |
+| `universaladmin-core` | `/` | The plugin: bootstrap, implementations, built-in modules; shades the API |
+| `universaladmin-discord` | `extensions/discord/` | Official Discord extension (own plugin jar) |
+| `example-extension` | `examples/example-extension/` | Template extension, built in CI only |

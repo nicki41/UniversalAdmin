@@ -10,7 +10,7 @@ import net.kyori.adventure.text.Component;
  * member with a given permission, plus server-wide broadcast/title/actionbar
  * delivery to every online player. In-game chat/title/actionbar are the only
  * channels today; Discord/web-push channels are future extension territory -
- * see docs/architecture/extensions-future.md - and will implement this same
+ * see docs/architecture/extensions.md - and will implement this same
  * interface rather than replace it.
  *
  * <p>The broadcast methods take an already-rendered {@link Component} rather
