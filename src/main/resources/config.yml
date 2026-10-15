@@ -113,8 +113,9 @@ moderation:
     auto-fly: true
     auto-vanish: true
     auto-nocollision: true
-    # How far (in blocks) the "who am I looking at" indicator searches.
-    target-range-blocks: 40
+    # How far (in blocks, through walls) the staff mode tools reach: right-click
+    # in the air and the tool acts on the player in your crosshair.
+    target-range-blocks: 128
 
 reports:
   # Minimum time between two reports by the same player (0s = no cooldown).

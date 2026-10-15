@@ -133,12 +133,59 @@ players:
       clear: "<red>Clear Effects"
       prompt-duration-amplifier: "Enter: seconds amplifier (e.g. 30 1)"
     inventory:
-      title: "<gold>Inventory - {0}"
+      title: "<gold>Inventory · {0} <dark_gray>live"
       clear: "<red>Clear Inventory"
       clear-confirm-title: "<red>Clear Inventory?"
-      clear-confirm-body: "<gray>This permanently deletes every item this player is carrying."
+      clear-confirm-body: "<gray>This permanently deletes every item <white>{0}</white> is carrying."
+      title-view-only: "<gold>Inventory · {0} <dark_gray>view only"
+      clear-lore: "<gray>Removes every item, the armor and the offhand item."
+      legend: "<white>Layout"
+      legend-storage: "<gray>Rows 1-3: inventory"
+      legend-hotbar: "<gray>Row 4: hotbar"
+      legend-equipment: "<gray>Bottom row: helmet, chestplate, leggings, boots, offhand"
+      legend-live-edit: "<green>Live - changes apply instantly, both ways."
+      legend-live-view: "<yellow>View only - updates live."
+      target-left: "<yellow><white>{0}</white> went offline - the editor was closed."
     enderchest:
-      title: "<gold>Ender Chest - {0}"
+      title: "<dark_purple>Ender Chest · {0} <dark_gray>live"
+      title-view-only: "<dark_purple>Ender Chest · {0} <dark_gray>view only"
+      legend: "<white>Ender chest"
+  inventory:
+    edited: "<gray>Inventory of <white>{0}</white> edited: <aqua>{1}</aqua> slot(s) changed <dark_gray>({2}/{3} occupied)</dark_gray>."
+  enderchest:
+    edited: "<gray>Ender chest of <white>{0}</white> edited: <aqua>{1}</aqua> slot(s) changed <dark_gray>({2}/{3} occupied)</dark_gray>."
+  result:
+    heal: "<gray>Healed <white>{0}</white> <dark_gray>({1} HP)</dark_gray>."
+    feed: "<gray>Fed <white>{0}</white> - hunger and saturation are full."
+    extinguish: "<gray>Extinguished <white>{0}</white>."
+    effects-cleared: "<gray>Removed <aqua>{1}</aqua> effect(s) from <white>{0}</white>."
+    effect-added: "<gray>Gave <white>{0}</white> <aqua>{1} {2}</aqua> for <white>{3}</white>."
+    effect-removed: "<gray>Removed <aqua>{1}</aqua> from <white>{0}</white>."
+    health-set: "<gray>Health of <white>{0}</white> set to <aqua>{1}</aqua> HP."
+    food-set: "<gray>Food level of <white>{0}</white> set to <aqua>{1}</aqua>/20."
+    xp-set: "<gray>XP progress of <white>{0}</white> set to <aqua>{1}%</aqua>."
+    level-set: "<gray>Level of <white>{0}</white> set to <aqua>{1}</aqua>."
+    fly: "<gray>Flight for <white>{0}</white>: {1}"
+    fly-speed: "<gray>Fly speed of <white>{0}</white> set to <aqua>{1}</aqua>/10."
+    walk-speed: "<gray>Walk speed of <white>{0}</white> set to <aqua>{1}</aqua>/10."
+    glow: "<gray>Glowing for <white>{0}</white>: {1}"
+    gravity: "<gray>Gravity for <white>{0}</white>: {1}"
+    collision: "<gray>Collision for <white>{0}</white>: {1}"
+    gamemode: "<gray>Gamemode of <white>{0}</white> set to <aqua>{1}</aqua>."
+    teleport:
+      to-player: "<gray>Teleported to <white>{0}</white> <dark_gray>({1})</dark_gray>."
+      bring: "<gray>Brought <white>{0}</white> to you <dark_gray>({1})</dark_gray>."
+      player-to-player: "<gray>Teleported <white>{0}</white> to <white>{1}</white> <dark_gray>({2})</dark_gray>."
+      spawn: "<gray>Teleported <white>{0}</white> to the world spawn <dark_gray>({1})</dark_gray>."
+      respawn: "<gray>Teleported <white>{0}</white> to their respawn point <dark_gray>({1})</dark_gray>."
+      coordinates: "<gray>Teleported <white>{0}</white> to <aqua>{1}</aqua>."
+    inventory-cleared: "<gray>Cleared the inventory of <white>{0}</white> <dark_gray>({1} stack(s) removed)</dark_gray>."
+    infinite: "infinite"
+  gamemode:
+    survival: "Survival"
+    creative: "Creative"
+    adventure: "Adventure"
+    spectator: "Spectator"
 
 moderation:
   notify:
@@ -211,24 +258,6 @@ moderation:
     action:
       success: "<green>Done."
       error: "<red>Something went wrong running that action."
-      result:
-        kick: "<yellow>Kicked {0}. Reason: {1}"
-        ban: "<red>Banned {0} permanently. Reason: {1}"
-        tempban: "<red>Banned {0} for {2}. Reason: {1}"
-        ipban: "<dark_red>IP-banned {0}. Reason: {1}"
-        mute: "<light_purple>Muted {0} permanently. Reason: {1}"
-        tempmute: "<light_purple>Muted {0} for {2}. Reason: {1}"
-        warn: "<yellow>Warned {0}. Reason: {1}"
-        freeze: "<aqua>Froze {0}. Reason: {1}"
-        removewarn: "<green>Removed a warning from {0}."
-        unban: "<green>Unbanned {0}."
-        unmute: "<green>Unmuted {0}."
-        unfreeze: "<green>Unfroze {0}."
-        vanish: "<light_purple>Vanish: {0}"
-        godmode: "<yellow>Godmode: {0}"
-        collision: "<aqua>No-Collision: {0}"
-        staffmode-enter: "<gold>Entered staff mode."
-        staffmode-exit: "<gold>Exited staff mode."
     status:
       "on": "<green>ON"
       "off": "<gray>OFF"
@@ -324,10 +353,6 @@ moderation:
         select-action: "<gold>{0} - Teleport To or Bring?"
         to-target: "<aqua>Teleport to Them"
         bring-target: "<aqua>Bring Them to Me"
-    inventory-inspector:
-      title: "<gold>Inventory - {0}"
-    enderchest-inspector:
-      title: "<gold>Ender Chest - {0}"
     permanent: "Permanent"
     expired: "expired"
     time-remaining: "in {0}"
@@ -337,6 +362,27 @@ moderation:
       days: "{0}d"
       hours: "{0}h"
       minutes: "{0}m"
+  result:
+    kick: "<gray>Kicked <white>{0}</white>. Reason: <white>{1}</white> <dark_gray>#{3}</dark_gray>"
+    ban: "<gray>Banned <white>{0}</white> <red>permanently</red>. Reason: <white>{1}</white> <dark_gray>#{3}</dark_gray>"
+    tempban: "<gray>Banned <white>{0}</white> for <aqua>{2}</aqua>. Reason: <white>{1}</white> <dark_gray>#{3}</dark_gray>"
+    ipban: "<gray>IP-banned <white>{0}</white> <red>permanently</red>. Reason: <white>{1}</white> <dark_gray>#{3}</dark_gray>"
+    ipban-temp: "<gray>IP-banned <white>{0}</white> for <aqua>{2}</aqua>. Reason: <white>{1}</white> <dark_gray>#{3}</dark_gray>"
+    mute: "<gray>Muted <white>{0}</white> <red>permanently</red>. Reason: <white>{1}</white> <dark_gray>#{3}</dark_gray>"
+    tempmute: "<gray>Muted <white>{0}</white> for <aqua>{2}</aqua>. Reason: <white>{1}</white> <dark_gray>#{3}</dark_gray>"
+    warn: "<gray>Warned <white>{0}</white>. Reason: <white>{1}</white> <dark_gray>#{3} - undo with /admin unwarn {3}</dark_gray>"
+    freeze: "<gray>Froze <white>{0}</white>. Reason: <white>{1}</white> <dark_gray>#{3}</dark_gray>"
+    unban: "<gray>Unbanned <white>{0}</white> <dark_gray>({1} ban(s) lifted)</dark_gray>."
+    unmute: "<gray>Unmuted <white>{0}</white> <dark_gray>({1} mute(s) lifted)</dark_gray>."
+    unfreeze: "<gray>Unfroze <white>{0}</white>."
+    removewarn: "<gray>Removed warning <dark_gray>#{1}</dark_gray> from <white>{0}</white>."
+    vanish-on: "<gray>You are now <light_purple>vanished</light_purple> - only staff can see you."
+    vanish-off: "<gray>You are <white>visible</white> again."
+    godmode: "<gray>Godmode: {0}"
+    collision: "<gray>No-collision: {0}"
+    staffmode-enter: "<gray>Staff mode <green>on</green> - your inventory is stored safely until you leave it."
+    staffmode-exit: "<gray>Staff mode <red>off</red> - your inventory is back."
+    staff-recovered: "<gray>Staff mode inventory of <white>{0}</white> restored."
 
 server:
   action:
@@ -399,12 +445,24 @@ server:
       kick-prompt: "Kick players currently online without bypass?"
       kick-yes: "<red>Yes, kick them"
       kick-no: "<green>No, leave them"
+  result:
+    broadcast: "<gray>Message sent to <white>{0}</white> online player(s)."
+    actionbar: "<gray>Action bar shown to <white>{0}</white> online player(s)."
+    title: "<gray>Title shown to <white>{0}</white> online player(s)."
+    restart-scheduled: "<gray>Restart scheduled - countdown <aqua>{0}</aqua> seconds. Cancel with <white>/admin server cancel</white>."
+    shutdown-scheduled: "<gray>Shutdown scheduled - countdown <aqua>{0}</aqua> seconds. Cancel with <white>/admin server cancel</white>."
+    restart-cancelled: "<gray>Restart <green>cancelled</green>."
+    shutdown-cancelled: "<gray>Shutdown <green>cancelled</green>."
+    maintenance-on: "<gray>Maintenance mode is now <red>ON</red>. Reason: <white>{0}</white> <dark_gray>({1} player(s) allowed)</dark_gray>"
+    maintenance-on-kick: "<gray>Maintenance mode is now <red>ON</red> - everyone without access was kicked. Reason: <white>{0}</white> <dark_gray>({1} player(s) allowed)</dark_gray>"
+    maintenance-off: "<gray>Maintenance mode is now <green>OFF</green> - everyone can join again."
+    maintenance-allowed: "<gray>Maintenance allow list saved: <white>{0}</white> player(s)."
 
 worlds:
   action:
     world-not-found: "<red>That world is not currently loaded."
     actor-offline: "<red>You must be online to do that."
-    invalid-gamerule-value: "<red>Invalid value for that gamerule."
+    invalid-gamerule-value: "<red><white>{0}</white> is not a valid value for <white>{1}</white>."
     gamerule-name-required: "<red>A gamerule name is required."
   gui:
     not-found: "<red>That world is no longer loaded."
@@ -464,6 +522,23 @@ worlds:
       set-warning: "<yellow>Set Warning"
     gamerules:
       title: "<gold>Gamerules - {0}"
+  result:
+    spawn-set: "<gray>Spawn of <white>{0}</white> set to <aqua>{1}</aqua>."
+    time-set: "<gray>Time in <white>{0}</white> set to <aqua>{1}</aqua> <dark_gray>({2} ticks)</dark_gray>."
+    weather-set: "<gray>Weather in <white>{0}</white> set to <aqua>{1}</aqua>."
+    difficulty-set: "<gray>Difficulty of <white>{0}</white> set to <aqua>{1}</aqua>."
+    gamerule-set: "<gray>Game rule <white>{1}</white> in <white>{0}</white> is now <aqua>{2}</aqua>."
+    border-size: "<gray>World border of <white>{0}</white> set to <aqua>{1}</aqua> blocks."
+    border-size-transition: "<gray>World border of <white>{0}</white> moves to <aqua>{1}</aqua> blocks over <white>{2}</white> seconds."
+    border-center: "<gray>World border of <white>{0}</white> now centred on <aqua>X {1} Z {2}</aqua>."
+    border-damage: "<gray>World border damage in <white>{0}</white>: <aqua>{1}</aqua> per block outside, <aqua>{2}</aqua> blocks buffer."
+    border-warning: "<gray>World border warning in <white>{0}</white>: <aqua>{1}</aqua> blocks / <aqua>{2}</aqua> seconds ahead."
+    teleported-spawn: "<gray>Teleported to the spawn of <white>{0}</white> <dark_gray>({1})</dark_gray>."
+  difficulty:
+    peaceful: "Peaceful"
+    easy: "Easy"
+    normal: "Normal"
+    hard: "Hard"
 
 whitelist:
   action:
@@ -508,6 +583,12 @@ whitelist:
       prompt-notes: "Enter notes (optional)"
       prompt-expiration: "Enter an expiration (e.g. 7d, 12h) or leave blank for permanent"
       confirm: "<gray>Whitelist {0}?"
+  result:
+    enabled: "<gray>Whitelist is now <green>ON</green> <dark_gray>({0} player(s) listed)</dark_gray>."
+    disabled: "<gray>Whitelist is now <red>OFF</red> - anyone can join."
+    added: "<gray>Added <white>{0}</white> to the whitelist."
+    added-temporary: "<gray>Added <white>{0}</white> to the whitelist for <aqua>{1}</aqua>."
+    removed: "<gray>Removed <white>{0}</white> from the whitelist."
 
 performance:
   action:
@@ -559,6 +640,9 @@ performance:
       count: "<gray>Count: <white>{0}"
       protected: "<red>Protected - cannot be cleared."
       click-to-clear: "<yellow>Click to clear."
+  result:
+    entities-cleared: "<gray>Removed <aqua>{0}</aqua> entities <dark_gray>({1})</dark_gray> in <white>{2}</white>."
+    all-worlds: "all worlds"
 
 audit:
   gui:
@@ -608,14 +692,6 @@ gui:
   back: "<gray>« Back"
   close: "<red>Close"
   refresh: "<green>Refresh"
-  inventory-placeholder:
-    hotbar: "<gray>Hotbar (empty)"
-    main: "<dark_gray>Empty"
-    helmet: "<gray>Helmet (empty)"
-    chestplate: "<gray>Chestplate (empty)"
-    leggings: "<gray>Leggings (empty)"
-    boots: "<gray>Boots (empty)"
-    offhand: "<gray>Offhand (empty)"
   next-page: "<gray>Next Page »"
   previous-page: "<gray>« Previous Page"
   page-indicator: "<gray>Page {0}/{1}"
@@ -696,7 +772,6 @@ command:
   staff:
     recover:
       usage: "<red>Usage: /admin staff recover [player] - the player must be online; leave it out to recover yourself."
-      success: "<green>Staff-mode snapshot recovered."
       error: "<red>Failed to recover the staff-mode snapshot: {0}"
   update:
     usage: ""
@@ -827,38 +902,28 @@ commands:
   heal:
     usage: "[player]"
     description: "Restores a player to full health."
-    success: "<green>Healed <white>{0}</white>."
   feed:
     usage: "[player]"
     description: "Fills a player's hunger and saturation."
-    success: "<green>Fed <white>{0}</white>."
   extinguish:
     usage: "[player]"
     description: "Puts out a burning player."
-    success: "<aqua>Extinguished <white>{0}</white>."
   fly:
     usage: "[player]"
     description: "Toggles flight for a player."
-    success: "<aqua>Flight for <white>{0}</white>: {1}"
   gamemode:
     usage: "<survival|creative|adventure|spectator> [player]"
     description: "Changes a player's gamemode (also accepts s, c, a, sp and 0-3)."
     unknown: "<red>Unknown gamemode: <white>{0}"
-    success: "<green>Gamemode of <white>{0}</white> set to <white>{1}</white>."
   speed:
     usage: "<fly|walk> <0-10> [player]"
     description: "Sets fly or walk speed (1 = default fly, 2 = default walk)."
-    success-fly: "<aqua>Fly speed of <white>{0}</white> set to <white>{1}</white>."
-    success-walk: "<aqua>Walk speed of <white>{0}</white> set to <white>{1}</white>."
   tp:
     usage: "<player> [destination-player]"
     description: "Teleports you to a player, or one player to another."
-    success: "<light_purple>Teleported to <white>{0}</white>."
-    success-other: "<light_purple>Teleported <white>{0}</white> to <white>{1}</white>."
   tphere:
     usage: "<player>"
     description: "Brings a player to you."
-    success: "<light_purple>Brought <white>{0}</white> to you."
   invsee:
     usage: "<player>"
     description: "Opens a player's inventory (live, editable with permission)."
@@ -868,16 +933,12 @@ commands:
   clearinv:
     usage: "<player> confirm"
     description: "Permanently empties a player's inventory."
-    success: "<red>Cleared the inventory of <white>{0}</white>."
   broadcast:
     usage: "<message>"
     description: "Sends a message to everyone (MiniMessage formatting allowed)."
   server:
     usage: "[status|title <title> [| subtitle]|actionbar <text>|shutdown [reason]|restart [reason]|cancel]"
     description: "Server status, broadcasts and a confirmed shutdown/restart."
-    shutdown-scheduled: "<red>Shutdown scheduled - players get a countdown. Cancel with /admin server cancel."
-    restart-scheduled: "<red>Restart scheduled - players get a countdown. Cancel with /admin server cancel."
-    cancelled: "<green>Cancelled."
     status:
       header: "<gradient:#55ddff:#3399ff><bold>Server status</bold></gradient>"
       version: "<gray>Version: <white>UniversalAdmin {0}</white> on <white>{1}</white> (Minecraft {2}, Java {3})"
@@ -890,8 +951,6 @@ commands:
   maintenance:
     usage: "<on [kick] [reason]|off|status|allow <player>|deny <player>|list>"
     description: "Maintenance mode: only staff and allowed players can join."
-    enabled: "<red>Maintenance mode is now ON."
-    disabled: "<green>Maintenance mode is now OFF."
     status-on: "<red>Maintenance mode is ON</red> <gray>- reason: {0}, {1} allowed player(s)"
     status-off: "<green>Maintenance mode is OFF</green> <gray>({1} allowed player(s) on the list)"
     allowed: "<gray>Allowed during maintenance: <white>{0}"
@@ -907,14 +966,6 @@ commands:
   world:
     usage: "[world] <info|tp|time <value>|weather <clear|rain|thunder>|difficulty <level>|setspawn|border <size> [seconds]|border center <x> <z>|gamerule <rule> <value>>"
     description: "Shows or changes a world. Leave out the world to use your current one."
-    teleported: "<light_purple>Teleported to the spawn of <white>{0}</white>."
-    time-set: "<aqua>Time in <white>{0}</white> set to <white>{1}</white>."
-    weather-set: "<aqua>Weather in <white>{0}</white> set to <white>{1}</white>."
-    difficulty-set: "<aqua>Difficulty in <white>{0}</white> set to <white>{1}</white>."
-    spawn-set: "<light_purple>Spawn of <white>{0}</white> set to your location."
-    border-size-set: "<yellow>World border of <white>{0}</white> set to <white>{1}</white> blocks."
-    border-center-set: "<yellow>World border of <white>{0}</white> centered on <white>{1}, {2}</white>."
-    gamerule-set: "<gold>Gamerule <white>{0}</white> set to <white>{1}</white> in <white>{2}</white>."
     info:
       header: "<gold>World <white>{0}</white>:"
       environment: "<gray>Environment: <white>{0}"
@@ -927,11 +978,6 @@ commands:
   whitelist:
     usage: "<on|off|add <player> [duration] [reason]|remove <player>|list>"
     description: "Manages the whitelist, including temporary access."
-    enabled: "<green>Whitelist is now ON."
-    disabled: "<red>Whitelist is now OFF."
-    added: "<green><white>{0}</white> is now whitelisted."
-    added-temporary: "<green><white>{0}</white> is now whitelisted for <white>{1}</white>."
-    removed: "<yellow><white>{0}</white> was removed from the whitelist."
     not-listed: "<red><white>{0}</white> is not on the whitelist."
     list-header-on: "<green>Whitelist is ON</green> <gray>- {0} member(s):"
     list-header-off: "<red>Whitelist is OFF</red> <gray>- {0} member(s):"
@@ -953,7 +999,6 @@ commands:
     world-entry: "<dark_gray>» <gray>World <white>{0}</white>: {1} entities in {2} chunks"
     unknown-type: "<red>Unknown entity type: <white>{0}"
     preview: "<yellow>This would remove <white>{0}</white> entities."
-    cleared: "<green>Removed <white>{0}</white> entities."
   audit:
     usage: "[player] [page]"
     description: "Shows the newest audit log entries, optionally for one player."
@@ -1000,8 +1045,7 @@ menu:
       description: "<gray>Change UniversalAdmin settings in-game."
 
 settings:
-  changed: "<green>Setting <white>{0}</white> changed: <gray>{1}</gray> → <white>{2}</white>"
-  pending-restart: "<yellow>Saved - this setting takes effect after the next restart."
+  changed: "<gray>Setting <white>{0}</white> changed: <dark_gray>{1}</dark_gray> → <aqua>{2}</aqua>"
   action:
     unknown: "<red>There is no setting called <white>{0}</white>."
     sensitive: "<red><white>{0}</white> can only be changed in config.yml."
@@ -1030,6 +1074,7 @@ settings:
     reset:
       title: "<yellow>Reset to default?"
       body: "<gray>Reset <white>{0}</white> to <white>{1}</white>?"
+  changed-restart: "<gray>Setting <white>{0}</white> saved: <dark_gray>{1}</dark_gray> → <aqua>{2}</aqua> <yellow>- takes effect after the next restart."
 
 reports:
   filed: "<green>Thanks! Your report about <white>{0}</white> was sent to the staff team."
@@ -1082,6 +1127,8 @@ reports:
       teleport-target: "<light_purple>Teleport to the reported player"
       teleport-location: "<light_purple>Teleport to where it was reported"
       prompt-note: "Optional note (shown in the report)"
+  teleported-target: "<gray>Teleported to <white>{1}</white> <dark_gray>(report #{0} · {2})</dark_gray>."
+  teleported-location: "<gray>Teleported to where report <white>#{0}</white> about <white>{1}</white> was made <dark_gray>({2})</dark_gray>."
 
 chat:
   locked-broadcast: "<red>The chat has been locked by <white>{0}</white>."
@@ -1095,9 +1142,7 @@ chat:
   slowmode-none: "off"
   already-locked: "<yellow>The chat is already locked."
   already-unlocked: "<yellow>The chat is not locked."
-  lock-done: "<red>Chat locked."
-  unlock-done: "<green>Chat unlocked."
-  clear-done: "<green>Chat cleared for <white>{0}</white> player(s)."
+  clear-done: "<gray>Chat cleared for <white>{0}</white> player(s) - staff with bypass keep theirs."
   status: "<gray>Chat: {0} <dark_gray>|</dark_gray> Slow mode: <white>{1}"
   state-locked: "<red>locked"
   state-open: "<green>open"

@@ -82,7 +82,7 @@ public final class ServerCommands {
                         invocation.usage(this);
                         return;
                     }
-                    invocation.run(ServerActionIds.BROADCAST_MESSAGE, invocation.joinArgs(1), MessageKey.of("command.done"));
+                    invocation.run(ServerActionIds.BROADCAST_MESSAGE, invocation.joinArgs(1));
                 }
                 case "title" -> title(invocation);
                 case "actionbar" -> {
@@ -90,12 +90,10 @@ public final class ServerCommands {
                         invocation.usage(this);
                         return;
                     }
-                    invocation.run(ServerActionIds.BROADCAST_ACTIONBAR, invocation.joinArgs(1), MessageKey.of("command.done"));
+                    invocation.run(ServerActionIds.BROADCAST_ACTIONBAR, invocation.joinArgs(1));
                 }
-                case "shutdown" -> invocation.run(ServerActionIds.SHUTDOWN, emptyToNull(invocation.joinArgs(1)),
-                        MessageKey.of("commands.server.shutdown-scheduled"));
-                case "restart" -> invocation.run(ServerActionIds.RESTART, emptyToNull(invocation.joinArgs(1)),
-                        MessageKey.of("commands.server.restart-scheduled"));
+                case "shutdown" -> invocation.run(ServerActionIds.SHUTDOWN, emptyToNull(invocation.joinArgs(1)));
+                case "restart" -> invocation.run(ServerActionIds.RESTART, emptyToNull(invocation.joinArgs(1)));
                 case "cancel" -> cancel(invocation);
                 default -> invocation.usage(this);
             }
@@ -125,7 +123,7 @@ public final class ServerCommands {
             int separator = text.indexOf('|');
             String title = (separator < 0 ? text : text.substring(0, separator)).trim();
             String subtitle = separator < 0 ? "" : text.substring(separator + 1).trim();
-            invocation.run(ServerActionIds.BROADCAST_TITLE, new BroadcastTitleInput(title, subtitle), MessageKey.of("command.done"));
+            invocation.run(ServerActionIds.BROADCAST_TITLE, new BroadcastTitleInput(title, subtitle));
         }
 
         /** Cancels whichever of a pending shutdown/restart is actually active. */
@@ -137,10 +135,8 @@ public final class ServerCommands {
                     .whenComplete((result, error) -> {
                         if (error != null) {
                             invocation.reply("command.error.internal");
-                        } else if (result instanceof ActionResult.Failure<Object> failure) {
-                            invocation.reportFailure(failure);
                         } else {
-                            invocation.reply("commands.server.cancelled");
+                            invocation.report(result);
                         }
                     });
         }
@@ -182,11 +178,9 @@ public final class ServerCommands {
                     boolean kick = invocation.arg(1).map(arg -> arg.equalsIgnoreCase("kick")).orElse(false);
                     String reason = invocation.joinArgs(kick ? 2 : 1).trim();
                     invocation.run(ServerActionIds.MAINTENANCE_ENABLE,
-                            new EnableMaintenanceInput(reason.isEmpty() ? null : reason, null, kick),
-                            MessageKey.of("commands.maintenance.enabled"));
+                            new EnableMaintenanceInput(reason.isEmpty() ? null : reason, null, kick));
                 }
-                case "off", "disable" -> invocation.run(ServerActionIds.MAINTENANCE_DISABLE, null,
-                        MessageKey.of("commands.maintenance.disabled"));
+                case "off", "disable" -> invocation.run(ServerActionIds.MAINTENANCE_DISABLE, null);
                 case "status" -> status(invocation);
                 case "list" -> invocation.reply("commands.maintenance.allowed", maintenance.current().allowedPlayers().isEmpty()
                         ? invocation.messages().get(MessageKey.of("common.none"))

@@ -93,52 +93,41 @@ GUI framework follows) - editing an offline player's inventory would need
 NMS-level player-data-file access, which this project doesn't use (see
 docs/development/architecture-rules.md's "Security" section on packet/NMS hacks).
 
-- **Inventory** (`PlayerInventoryPage`) - the 36 main+hotbar slots in the
-  content area, plus armor (helmet/chestplate/leggings/boots) and offhand in
-  row 5, so the whole live equipped state is one page, not a separate one a
-  viewer has to already know exists.
+- **Inventory** (`PlayerInventoryPage`) - laid out like the player's own
+  screen: main storage in the top three rows, the hotbar below it, then
+  helmet, chestplate, leggings, boots and offhand in the bottom row. The book
+  in the bottom row explains the layout.
 - **Ender Chest** (`PlayerEnderChestPage`) - the 27 ender chest slots; the
-  rest of the grid is locked filler.
+  rest of the grid is locked.
 
-A viewer with only `...inventory.view`/`...enderchest.view` gets a read-only
-mirror - nothing can be moved in, out, or around. A viewer with `...edit`
-gets a live, draggable mirror - no Save button, and no "apply on close"
-delay either: every click/drag mirrors onto the target's real inventory
-within a tick, so picking an item up in the GUI is picking it up from the
-target immediately. The Staff Mode Inventory/Ender Chest Inspector tools
-(see [staff-tools.md](staff-tools.md#tools)) open the exact same live
-mirror mechanism from within Staff Mode, gated on the same
-`...inventory.edit`/`...enderchest.edit` permissions.
+Both are **live in both directions**: whatever the player does (picking up,
+dropping, eating, moving items) shows up in the editor within one tick, and
+with `...inventory.edit`/`...enderchest.edit` every change made in the
+editor lands in the player's inventory within one tick - no Save button. A
+viewer with only `...view` sees the same live view but cannot move
+anything. If the player logs off, the editor closes with a notice. The
+Staff Mode Inventory/Ender Chest Inspector tools (see
+[staff-tools.md](staff-tools.md#tools)) open exactly these pages.
 
-**Design note - live edits, still through `ActionExecutor`.** The simplest
-implementation would open the target's real `PlayerInventory` object
-directly (`viewer.openInventory(target.getInventory())`) - what most
-Essentials-style plugins do. That makes edits instant with almost no code,
-but it bypasses `ActionExecutor` entirely: no audit trail, no
-permission-gated read-only mode, no clean failure if the target disconnects
-mid-edit, and (since a raw `PlayerInventory` isn't a `GuiView`) none of
-`GuiListener`'s own click protections either. That directly contradicts
-"every change is audited" and docs/development/architecture-rules.md's "no module builds its own
-audit logging" rule. Instead, these pages still render a *mirror* of the
-inventory in the GUI's own `GuiView` - `GuiListener` still owns every click/
-drag against it, same as any other UniversalAdmin page - and edits happen
-freely inside that mirror (drag items in/out/around) while it's open. The
-live-sync part is `GuiView#onChange`: a callback the page registers that
-`GuiListener` runs one tick after every click/drag it let through (letting
-Bukkit's own vanilla move resolve first) - the callback reads the mirror's
-*current* contents and calls
-`SetPlayerInventoryContentsAction`/`SetPlayerEnderChestContentsAction`,
-silently (no chat spam per item moved). `GuiView#onClose` runs the identical
-call once more, this time with a chat confirmation, as a final flush when
-the viewer actually closes the view (walks away, presses Esc, or clicks
-Back/Close) - both paths re-resolve the target fresh on the main thread and
-fail cleanly (`CONFLICT`) if they logged off while the mirror was open.
+**How the live sync works.** The editor is a normal UniversalAdmin
+`GuiView` (so `GuiListener` still owns every click, including the
+read-only mode), and `LiveInventoryService` merges it with the real
+inventory once per tick, slot by slot: whichever side changed since the
+previous tick is copied to the other. If both changed the same slot in the
+same tick, the player's inventory wins - copying the editor's stale copy
+back could otherwise bring back an item the player had just used or
+dropped. Every slot that is not part of the inventory is locked, so an item
+can never end up stranded in the menu.
 
-The audit entry for an inventory/ender-chest change records a coarse
-before/after slot-occupancy count ("12/36 slots occupied" style), **never**
-the actual items - see `InventoryChangeSummary`. Positions and item contents
-are exactly the kind of "nur soweit nötig" sensitive data docs/development/architecture-rules.md asks to
-keep out of the audit log.
+**Audit.** One entry per editing session, not one per click: when the
+editor closes, `players.inventory.edit` / `players.enderchest.edit` runs
+through `ActionExecutor` (permission check, audit, action event) and the
+staff member gets a summary ("Inventory of Steve edited: 3 slot(s)
+changed"). The entry records how many slots changed and a coarse
+before/after occupancy ("12/41 slots occupied"), **never** the items
+themselves - see `InventoryChangeSummary`; item contents are exactly the
+kind of sensitive detail the audit log keeps out. Opening an editor
+without changing anything records nothing.
 
 **Clear Inventory** is a dangerous action (clears main storage, armor, and
 offhand - matching vanilla `/clear`, never the ender chest) behind a

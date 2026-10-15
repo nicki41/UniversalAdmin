@@ -45,7 +45,8 @@ public final class SetWorldSpawnAction implements Action<SetWorldSpawnInput, Voi
             }
             boolean applied = world.setSpawnLocation(location);
             future.complete(applied
-                    ? ActionResult.success(null)
+                    ? ActionResult.success(null, MessageKey.of("worlds.result.spawn-set"),
+                            world.getName(), WorldActionSupport.blockCoordinates(world.getSpawnLocation()))
                     : ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, "Failed to set spawn location"));
         });
         return future;

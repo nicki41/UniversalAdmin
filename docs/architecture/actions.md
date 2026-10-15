@@ -122,7 +122,8 @@ checks run in the action's own `execute(...)` and come back as an ordinary
 
 ```java
 sealed interface ActionResult<R> {
-    record Success<R>(R value, Map<String, Object> metadata) implements ActionResult<R> {}
+    record Success<R>(R value, Map<String, Object> metadata,
+                      MessageKey messageKey, List<Object> messageArgs) implements ActionResult<R> {}
     record Failure<R>(FailureReason reason, String message, MessageKey messageKey,
                        List<Object> messageArgs, Map<String, Object> metadata) implements ActionResult<R> {}
 }
@@ -134,13 +135,38 @@ information to render a meaningful error message without knowing the
 action's internals. Frontends must handle the failure case - there's no
 implicit "just throw an exception" path.
 
-`messageKey`/`messageArgs` let a failure (or success, via `metadata`) be
-rendered localized through `MessageService`, instead of hardcoding a raw
-English string - see `GetPlayerProfileAction`, which returns
-`MessageKey.of("players.not-found")` instead of a string literal. `message`
-stays available for non-localized debug/log purposes. `metadata` is a
-small, action-defined bag for anything else (e.g. an affected count),
-without inventing a new result type for every action.
+`messageKey`/`messageArgs` let a result be rendered localized through
+`MessageService` instead of a hardcoded English string. `message` stays
+available for non-localized debug/log purposes; `metadata` is a small,
+action-defined bag for anything else (e.g. an affected count).
+
+### Success messages - the action says what it did
+
+A success should tell the user exactly what happened - "Spawn of world set
+to 120 64 -30", "Banned Steve for 7d. Reason: griefing #42" - not a bare
+"Done.". The action is the one place that knows (the coordinates actually
+set, the punishment id, how many entities were removed), so it says it:
+
+```java
+return ActionResult.success(null, MessageKey.of("worlds.result.spawn-set"),
+        world.getName(), "120 64 -30");
+```
+
+Every frontend shows that same text: `CommandInvocation#run(id, input)`
+replies with it, `GuiActions.runAndReport(...)`/`GuiActions.report(...)`
+send it to a GUI viewer, both with the usual chat prefix
+(`ResultMessages` does the resolving). Conventions:
+
+- Keys live under `<module>.result.*`.
+- Pass numbers as text (`Integer.toString(n)`) - `MessageFormat` would
+  otherwise group them ("-1,234" for a coordinate).
+- An argument that is itself a `MessageKey` is resolved first and inserted
+  as trusted markup - for localized values like a difficulty name or a
+  coloured ON/OFF (`MessageKey.of("worlds.difficulty.hard")`). Every other
+  argument is escaped as usual (ADR 0012).
+- An action whose effect is already visible to the user (a broadcast that
+  also reaches the sender) reports no message; frontends then stay silent
+  (`GuiActions.report(..., null)`) instead of adding a second line.
 
 ## `Actor` Instead of Bukkit `CommandSender`
 

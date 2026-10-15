@@ -4,6 +4,7 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.server.MaintenanceService;
 import dev.universaladmin.modules.server.MaintenanceState;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +28,9 @@ public final class EnableMaintenanceAction implements Action<EnableMaintenanceIn
     @Override
     public CompletableFuture<ActionResult<MaintenanceState>> execute(ActionContext context, EnableMaintenanceInput input) {
         return maintenanceService.enable(input.reason(), input.message(), input.kickNonBypassPlayers(), context.actor())
-                .thenApply(ActionResult::success);
+                .thenApply(state -> ActionResult.success(state, MessageKey.of(input.kickNonBypassPlayers()
+                                ? "server.result.maintenance-on-kick" : "server.result.maintenance-on"),
+                        state.reason() == null || state.reason().isBlank() ? MessageKey.of("common.none") : state.reason(),
+                        Integer.toString(state.allowedPlayers().size())));
     }
 }

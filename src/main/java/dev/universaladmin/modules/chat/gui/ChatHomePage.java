@@ -112,7 +112,8 @@ public final class ChatHomePage extends AbstractGuiPage {
         run(viewer, ChatActions.SLOW_MODE, next);
     }
 
+    /** Lock/unlock/slow mode announce themselves to everyone; clear and staff chat report what they did. */
     private <I> void run(Player viewer, ActionId id, I input) {
-        GuiActions.<I, Object>run(actions, scheduler, messages, viewer, id, input, ignored -> this.open(viewer));
+        GuiActions.runAndReport(actions, scheduler, messages, viewer, id, input, null, () -> this.open(viewer));
     }
 }

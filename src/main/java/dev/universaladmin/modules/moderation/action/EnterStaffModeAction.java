@@ -41,7 +41,7 @@ public final class EnterStaffModeAction implements Action<Void, Void> {
                 if (error != null) {
                     future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));
                 } else if (entered) {
-                    future.complete(ActionResult.success(null));
+                    future.complete(ActionResult.success(null, MessageKey.of("moderation.result.staffmode-enter")));
                 } else {
                     future.complete(ActionResult.failure(
                             ActionResult.FailureReason.CONFLICT, MessageKey.of("moderation.action.staffmode-already-active")));

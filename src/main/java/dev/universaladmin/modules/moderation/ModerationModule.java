@@ -165,7 +165,8 @@ public final class ModerationModule implements Module {
         // StaffModeGuardListener needs the GUI context (Player Inspector/
         // Inventory Inspector open GUI pages) - registered after the context exists.
         context.resources().listener(new StaffModeGuardListener(
-                staffModeState, toolItems, freezeRuntimeState, context.platform().actionExecutor(), guiContext));
+                staffModeState, toolItems, freezeRuntimeState, context.platform().actionExecutor(), guiContext,
+                context.platform().settings(), context.platform().services()));
 
         ModerationCommands.all(new ModerationCommands.Dependencies(
                 punishmentService, staffModeService, guiContext, context.platform().settings(), messages))

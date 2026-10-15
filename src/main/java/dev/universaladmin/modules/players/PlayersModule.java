@@ -6,6 +6,7 @@ import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionTarget;
 import dev.universaladmin.action.AuditDetails;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
@@ -16,17 +17,21 @@ import dev.universaladmin.modules.players.action.GetPlayerIpAddressAction;
 import dev.universaladmin.modules.players.action.GetPlayerProfileAction;
 import dev.universaladmin.modules.players.action.InventoryChangeSummary;
 import dev.universaladmin.modules.players.action.PlayerActionRegistrar;
-import dev.universaladmin.modules.players.action.SetEnderChestContentsInput;
-import dev.universaladmin.modules.players.action.SetInventoryContentsInput;
-import dev.universaladmin.modules.players.action.SetPlayerEnderChestContentsAction;
-import dev.universaladmin.modules.players.action.SetPlayerInventoryContentsAction;
+import dev.universaladmin.modules.players.action.InventoryEditRecord;
+import dev.universaladmin.modules.players.action.PlayerActionIds;
+import dev.universaladmin.modules.players.action.RecordInventoryEditAction;
 import dev.universaladmin.modules.players.action.TeleportInput;
 import dev.universaladmin.modules.players.action.TeleportPlayerAction;
 import dev.universaladmin.modules.players.command.PlayerCommands;
 import dev.universaladmin.modules.players.gui.PlayerBrowserHomePage;
+import dev.universaladmin.modules.players.gui.PlayersGui;
+import dev.universaladmin.modules.players.inventory.LiveInventoryService;
 import dev.universaladmin.modules.players.jdbc.JdbcPlayerProfileRepository;
 import dev.universaladmin.scheduler.TaskScheduler;
+import java.util.Map;
 import java.util.Optional;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Player Browser/Profile/Actions module. See docs/user/modules/players.md
@@ -77,8 +82,23 @@ public final class PlayersModule implements Module {
         PlayerPermissions.registerAll(context.platform().permissions());
 
         registerActions(context, playerService, scheduler);
-        PlayerBrowserHomePage homePage = registerGui(context, playerService);
+        LiveInventoryService liveInventory = startLiveInventory(context);
+        PlayerBrowserHomePage homePage = registerGui(context, playerService, liveInventory);
+        // Other modules (e.g. the Staff Mode inspectors) open the players'
+        // inventory/ender chest editors through this.
+        context.registerService(PlayersGui.class, homePage.gui());
         PlayerCommands.all(playerService, homePage::gui, context.platform().messages()).forEach(context::registerCommand);
+    }
+
+    /** The live inventory editors sync once per tick; every open editor is closed (and recorded) on disable. */
+    private LiveInventoryService startLiveInventory(ModuleContext context) {
+        LiveInventoryService liveInventory = new LiveInventoryService(
+                context.platform().actionExecutor(), context.platform().scheduler(), context.platform().messages());
+        Plugin plugin = context.platform().plugin();
+        BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, liveInventory::tick, 1L, 1L);
+        context.resources().task(task);
+        context.resources().closeable(liveInventory::closeAll);
+        return liveInventory;
     }
 
     private void registerActions(ModuleContext context, PlayerService playerService, TaskScheduler scheduler) {
@@ -107,18 +127,22 @@ public final class PlayersModule implements Module {
                 .target(PlayersModule::teleportTarget)
                 .auditSummary(input -> "Teleport (" + input.kind() + ") " + PlayerNames.of(input.targetId()))
                 .build());
-        actions.register(ActionDefinition.builder(new SetPlayerInventoryContentsAction(scheduler))
+        actions.register(ActionDefinition.builder(new RecordInventoryEditAction(
+                        PlayerActionIds.INVENTORY_EDIT, MessageKey.of("players.inventory.edited")))
                 .permission(PlayerPermissions.INVENTORY_EDIT)
                 .module(module)
-                .target(PlayersModule::inventoryTarget)
-                .auditSummary(input -> "Set " + input.section() + " contents of " + PlayerNames.of(input.targetId()))
+                .target(PlayersModule::editTarget)
+                .auditSummary(input -> "Edited inventory of " + input.targetName() + " live ("
+                        + input.summary().changedSlots() + " slot(s) changed)")
                 .auditDetails((input, result) -> inventoryDetails(result))
                 .build());
-        actions.register(ActionDefinition.builder(new SetPlayerEnderChestContentsAction(scheduler))
+        actions.register(ActionDefinition.builder(new RecordInventoryEditAction(
+                        PlayerActionIds.ENDERCHEST_EDIT, MessageKey.of("players.enderchest.edited")))
                 .permission(PlayerPermissions.ENDERCHEST_EDIT)
                 .module(module)
-                .target(PlayersModule::enderChestTarget)
-                .auditSummary(input -> "Set ender chest contents of " + PlayerNames.of(input.targetId()))
+                .target(PlayersModule::editTarget)
+                .auditSummary(input -> "Edited ender chest of " + input.targetName() + " live ("
+                        + input.summary().changedSlots() + " slot(s) changed)")
                 .auditDetails((input, result) -> inventoryDetails(result))
                 .build());
         actions.register(ActionDefinition.builder(new ClearPlayerInventoryAction(scheduler))
@@ -136,12 +160,8 @@ public final class PlayersModule implements Module {
         return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
     }
 
-    private static Optional<ActionTarget> inventoryTarget(SetInventoryContentsInput input) {
-        return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
-    }
-
-    private static Optional<ActionTarget> enderChestTarget(SetEnderChestContentsInput input) {
-        return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
+    private static Optional<ActionTarget> editTarget(InventoryEditRecord input) {
+        return Optional.of(ActionTarget.player(input.targetId(), input.targetName()));
     }
 
     /** Coarse before/after slot-count summary, never the actual items - see {@link InventoryChangeSummary}. */
@@ -149,13 +169,15 @@ public final class PlayersModule implements Module {
         if (!(result instanceof ActionResult.Success<R> success) || !(success.value() instanceof InventoryChangeSummary summary)) {
             return AuditDetails.EMPTY;
         }
-        return AuditDetails.builder().oldValue(summary.describeBefore()).newValue(summary.describeAfter()).build();
+        return AuditDetails.builder().oldValue(summary.describeBefore()).newValue(summary.describeAfter())
+                .metadata(Map.of("changedSlots", summary.changedSlots())).build();
     }
 
-    private PlayerBrowserHomePage registerGui(ModuleContext context, PlayerService playerService) {
+    private PlayerBrowserHomePage registerGui(ModuleContext context, PlayerService playerService, LiveInventoryService liveInventory) {
         PlayerBrowserHomePage homePage = new PlayerBrowserHomePage(
                 context.platform().guiFramework(), context.platform().messages(), context.platform().scheduler(),
-                playerService, context.platform().actionExecutor(), context.platform().settings(), context.platform().playerMenu());
+                playerService, context.platform().actionExecutor(), context.platform().settings(), context.platform().playerMenu(),
+                liveInventory);
         context.registerPage(homePage);
         return homePage;
     }

@@ -76,6 +76,8 @@ public final class TeleportToReportAction implements Action<TeleportToReportActi
             destination = new Location(world, report.x(), report.y(), report.z());
         }
         staff.teleportAsync(destination);
-        return ActionResult.success(null);
+        String where = destination.getWorld().getName() + " " + destination.getBlockX() + " " + destination.getBlockY() + " " + destination.getBlockZ();
+        return ActionResult.success(null, MessageKey.of(toTarget ? "reports.teleported-target" : "reports.teleported-location"),
+                Long.toString(report.id()), report.targetName(), where);
     }
 }

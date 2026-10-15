@@ -46,12 +46,11 @@ public final class ModerationSettings {
     public static final SettingKey<Boolean> STAFFMODE_AUTO_VANISH = SettingKey.of("moderation", "moderation.staffmode.auto-vanish");
     public static final SettingKey<Boolean> STAFFMODE_AUTO_NOCOLLISION = SettingKey.of("moderation", "moderation.staffmode.auto-nocollision");
     /**
-     * How far (in blocks, straight-line, ignoring walls) {@code
-     * StaffModeTargetTracker} looks for who a staff member is aiming at -
-     * deliberately not the same value as the tools' own ~6-block right-click
-     * reach (a Minecraft client limit this plugin can't change either way),
-     * this only affects the passive "who am I looking at" indicator (held
-     * tool lore + actionbar).
+     * How far (in blocks, straight-line, ignoring walls) a staff member can
+     * aim at a player - for the "who am I looking at" indicator (held tool
+     * lore + actionbar) and for the tools themselves: a right-click in the
+     * air acts on that player at any distance up to this (see {@code
+     * StaffModeTargeting}).
      */
     public static final SettingKey<Integer> STAFFMODE_TARGET_RANGE_BLOCKS = SettingKey.of("moderation", "moderation.staffmode.target-range-blocks");
 
@@ -96,9 +95,9 @@ public final class ModerationSettings {
         registry.register(bool(STAFFMODE_AUTO_FLY, true, "Grant flight automatically when entering staff mode."));
         registry.register(bool(STAFFMODE_AUTO_VANISH, true, "Vanish automatically when entering staff mode."));
         registry.register(bool(STAFFMODE_AUTO_NOCOLLISION, true, "Disable collision automatically when entering staff mode."));
-        registry.register(SettingDefinition.builder(STAFFMODE_TARGET_RANGE_BLOCKS, SettingTypes.INTEGER, 40)
-                .description("How far (blocks, ignores walls) the Staff Mode 'who am I looking at' indicator (tool lore + actionbar) searches.")
-                .validator(SettingValidators.intRange(1, 500))
+        registry.register(SettingDefinition.builder(STAFFMODE_TARGET_RANGE_BLOCKS, SettingTypes.INTEGER, 128)
+                .description("How far (blocks, ignores walls) Staff Mode tools reach: right-click in the air acts on the player in your crosshair up to this distance.")
+                .validator(SettingValidators.intRange(1, 1000))
                 .build());
 
         registry.register(SettingDefinition.builder(EXPIRY_DATE_PATTERN, SettingTypes.STRING, "yyyy-MM-dd HH:mm")

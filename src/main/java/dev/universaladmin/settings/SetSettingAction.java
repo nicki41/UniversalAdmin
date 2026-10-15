@@ -59,7 +59,8 @@ public final class SetSettingAction implements Action<SetSettingAction.Input, Se
                 SettingChange change = input.value() == null
                         ? settings.reset(input.path())
                         : settings.set(input.path(), input.value());
-                return ActionResult.success(change);
+                return ActionResult.success(change, MessageKey.of(change.pendingRestart() ? "settings.changed-restart" : "settings.changed"),
+                        input.path(), change.oldValue(), change.newValue());
             } catch (SettingParseException e) {
                 return ActionResult.<SettingChange>failure(ActionResult.FailureReason.VALIDATION,
                         MessageKey.of("settings.action.invalid"), input.path(), e.getMessage());

@@ -83,8 +83,8 @@ public final class NotesPage extends AbstractListGuiPage<PlayerNote> {
         Player viewer = context.viewer();
         ConfirmationDialog.open(viewer, framework, messages, text("moderation.notes.gui.delete-title"),
                 List.of(Component.text(note.text(), NamedTextColor.GRAY)), ConfirmationDialog.DangerLevel.WARNING,
-                confirm -> GuiActions.<Long, PlayerNote>run(actions, scheduler, messages, viewer, NoteActions.REMOVE, note.id(),
-                        removed -> this.open(viewer)),
+                confirm -> GuiActions.runAndReport(actions, scheduler, messages, viewer, NoteActions.REMOVE, note.id(),
+                        null, () -> this.open(viewer)),
                 GuiClickContext::back);
     }
 
@@ -96,8 +96,8 @@ public final class NotesPage extends AbstractListGuiPage<PlayerNote> {
                         this.open(viewer);
                         return;
                     }
-                    GuiActions.<NoteActions.AddInput, PlayerNote>run(actions, scheduler, messages, viewer, NoteActions.ADD,
-                            new NoteActions.AddInput(target.id(), target.name(), typed), added -> this.open(viewer));
+                    GuiActions.runAndReport(actions, scheduler, messages, viewer, NoteActions.ADD,
+                            new NoteActions.AddInput(target.id(), target.name(), typed), null, () -> this.open(viewer));
                 },
                 () -> this.open(viewer));
     }

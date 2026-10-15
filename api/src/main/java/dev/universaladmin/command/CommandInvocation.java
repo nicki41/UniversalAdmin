@@ -10,6 +10,7 @@ import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
+import dev.universaladmin.localization.ResultMessages;
 import dev.universaladmin.permission.PermissionNode;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.time.Duration;
@@ -252,19 +253,39 @@ public final class CommandInvocation {
         this.<I, Object>run(id, input, ignored -> reply(successKey, successArgs));
     }
 
+    /**
+     * Runs an action and replies with what the action reports it did (see
+     * {@link ActionResult#success(Object, MessageKey, Object...)}) - or
+     * {@link CommandMessages#DONE} if it reports nothing - on success, and
+     * {@link #reportFailure} otherwise.
+     */
+    public <I> void run(ActionId id, I input) {
+        this.<I, Object>execute(id, input).whenComplete((result, error) -> environment.scheduler().runOnMainThread(() -> {
+            if (error != null) {
+                environment.logger().log(Level.SEVERE, "Command /" + label + " failed unexpectedly", error);
+                reply(CommandMessages.INTERNAL_ERROR);
+                return;
+            }
+            report(result);
+        }));
+    }
+
+    /** Replies with {@code result}'s text: what the action did ({@link CommandMessages#DONE} if it says nothing), or why it failed. */
+    public void report(ActionResult<?> result) {
+        switch (result) {
+            case ActionResult.Success<?> success -> replyText(ResultMessages.success(environment.messages(), success, CommandMessages.DONE));
+            case ActionResult.Failure<?> failure -> reportFailure(failure);
+        }
+    }
+
     /** Renders an action failure the same way for every command. */
     public void reportFailure(ActionResult.Failure<?> failure) {
-        if (failure.messageKey() != null) {
-            reply(failure.messageKey(), failure.messageArgs().toArray());
-            return;
-        }
-        switch (failure.reason()) {
-            case NOT_PERMITTED -> reply(CommandMessages.NO_PERMISSION);
-            case NOT_FOUND -> reply(CommandMessages.NOT_FOUND, String.valueOf(failure.message()));
-            case FEATURE_DISABLED -> reply(CommandMessages.DISABLED);
-            case VALIDATION, CONFLICT -> reply(CommandMessages.INVALID, String.valueOf(failure.message()));
-            case INTERNAL_ERROR -> reply(CommandMessages.INTERNAL_ERROR);
-        }
+        replyText(ResultMessages.failure(environment.messages(), failure));
+    }
+
+    /** Sends already-resolved text with the chat prefix. */
+    private void replyText(String text) {
+        send(ComponentMessages.render(environment.messages().get(CommandMessages.PREFIX) + text));
     }
 
     /**

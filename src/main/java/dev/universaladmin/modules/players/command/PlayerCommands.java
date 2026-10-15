@@ -55,11 +55,11 @@ public final class PlayerCommands {
                 new Profile(gui),
                 new Info(players, messages),
                 new SimpleTargetAction("heal", PlayerPermissions.HEAL, PlayerActionIds.HEAL,
-                        "commands.heal.usage", "commands.heal.description", "commands.heal.success"),
+                        "commands.heal.usage", "commands.heal.description"),
                 new SimpleTargetAction("feed", PlayerPermissions.FEED, PlayerActionIds.FEED,
-                        "commands.feed.usage", "commands.feed.description", "commands.feed.success"),
+                        "commands.feed.usage", "commands.feed.description"),
                 new SimpleTargetAction("extinguish", PlayerPermissions.EXTINGUISH, PlayerActionIds.EXTINGUISH,
-                        "commands.extinguish.usage", "commands.extinguish.description", "commands.extinguish.success"),
+                        "commands.extinguish.usage", "commands.extinguish.description"),
                 new Fly(),
                 new Gamemode(),
                 new Speed(),
@@ -159,19 +159,17 @@ public final class PlayerCommands {
     static final class SimpleTargetAction extends BaseAdminCommand {
 
         private final ActionId action;
-        private final MessageKey success;
 
-        SimpleTargetAction(String name, PermissionNode permission, ActionId action, String usage, String description, String success) {
+        SimpleTargetAction(String name, PermissionNode permission, ActionId action, String usage, String description) {
             super(name, permission, MessageKey.of(usage), MessageKey.of(description));
             this.action = action;
-            this.success = MessageKey.of(success);
             shortcuts(name);
         }
 
         @Override
         public void execute(CommandInvocation invocation) {
             invocation.onlinePlayerOrSelf(0, this).ifPresent(target ->
-                    invocation.run(action, new PlayerTargetInput(target.getUniqueId()), success, target.getName()));
+                    invocation.run(action, new PlayerTargetInput(target.getUniqueId())));
         }
 
         @Override
@@ -190,10 +188,8 @@ public final class PlayerCommands {
 
         @Override
         public void execute(CommandInvocation invocation) {
-            invocation.onlinePlayerOrSelf(0, this).ifPresent(target -> invocation.<PlayerTargetInput, Boolean>run(
-                    PlayerActionIds.FLY_TOGGLE, new PlayerTargetInput(target.getUniqueId()),
-                    enabled -> invocation.reply("commands.fly.success", target.getName(),
-                            onOff(invocation.messages(), Boolean.TRUE.equals(enabled)))));
+            invocation.onlinePlayerOrSelf(0, this).ifPresent(target -> invocation.run(
+                    PlayerActionIds.FLY_TOGGLE, new PlayerTargetInput(target.getUniqueId())));
         }
 
         @Override
@@ -224,8 +220,7 @@ public final class PlayerCommands {
                 return;
             }
             invocation.onlinePlayerOrSelf(1, this).ifPresent(target -> invocation.run(PlayerActionIds.GAMEMODE,
-                    new SetGamemodeInput(target.getUniqueId(), mode), MessageKey.of("commands.gamemode.success"),
-                    target.getName(), mode.name().toLowerCase(Locale.ROOT)));
+                    new SetGamemodeInput(target.getUniqueId(), mode)));
         }
 
         @Override
@@ -273,9 +268,7 @@ public final class PlayerCommands {
             float speed = (float) (value.get() / 10.0);
             invocation.onlinePlayerOrSelf(2, this).ifPresent(target -> invocation.run(
                     fly ? PlayerActionIds.FLY_SPEED : PlayerActionIds.WALK_SPEED,
-                    new SetFloatValueInput(target.getUniqueId(), speed),
-                    MessageKey.of(fly ? "commands.speed.success-fly" : "commands.speed.success-walk"),
-                    target.getName(), value.get()));
+                    new SetFloatValueInput(target.getUniqueId(), speed)));
         }
 
         @Override
@@ -313,13 +306,11 @@ public final class PlayerCommands {
                     invocation.usage(this);
                     return;
                 }
-                invocation.run(PlayerActionIds.TELEPORT, TeleportInput.of(TeleportKind.ADMIN_TO_PLAYER, target.get().getUniqueId()),
-                        MessageKey.of("commands.tp.success"), target.get().getName());
+                invocation.run(PlayerActionIds.TELEPORT, TeleportInput.of(TeleportKind.ADMIN_TO_PLAYER, target.get().getUniqueId()));
                 return;
             }
             invocation.onlinePlayer(1).ifPresent(destination -> invocation.run(PlayerActionIds.TELEPORT,
-                    TeleportInput.toPlayer(target.get().getUniqueId(), destination.getUniqueId()),
-                    MessageKey.of("commands.tp.success-other"), target.get().getName(), destination.getName()));
+                    TeleportInput.toPlayer(target.get().getUniqueId(), destination.getUniqueId())));
         }
 
         @Override
@@ -345,8 +336,7 @@ public final class PlayerCommands {
                 return;
             }
             invocation.onlinePlayer(0).ifPresent(target -> invocation.run(PlayerActionIds.TELEPORT,
-                    TeleportInput.of(TeleportKind.BRING_TO_ADMIN, target.getUniqueId()),
-                    MessageKey.of("commands.tphere.success"), target.getName()));
+                    TeleportInput.of(TeleportKind.BRING_TO_ADMIN, target.getUniqueId())));
         }
 
         @Override
@@ -417,8 +407,7 @@ public final class PlayerCommands {
             if (target.isEmpty() || !invocation.confirmed()) {
                 return;
             }
-            invocation.run(PlayerActionIds.INVENTORY_CLEAR, new PlayerTargetInput(target.get().getUniqueId()),
-                    MessageKey.of("commands.clearinv.success"), target.get().getName());
+            invocation.run(PlayerActionIds.INVENTORY_CLEAR, new PlayerTargetInput(target.get().getUniqueId()));
         }
 
         @Override
@@ -429,9 +418,5 @@ public final class PlayerCommands {
                 default -> List.of();
             };
         }
-    }
-
-    static Object onOff(MessageService messages, boolean on) {
-        return MessageService.markup(messages.get(MessageKey.of(on ? "players.gui.status.on" : "players.gui.status.off")));
     }
 }

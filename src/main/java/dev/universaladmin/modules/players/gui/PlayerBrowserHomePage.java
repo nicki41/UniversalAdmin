@@ -12,6 +12,7 @@ import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.players.PlayerService;
+import dev.universaladmin.modules.players.inventory.LiveInventoryService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
 import java.util.List;
@@ -37,9 +38,10 @@ public final class PlayerBrowserHomePage extends AbstractGuiPage {
 
     public PlayerBrowserHomePage(
             GuiFramework framework, MessageService messages, TaskScheduler scheduler,
-            PlayerService playerService, ActionExecutor actionExecutor, SettingsService settings, PlayerMenuRegistry playerMenu) {
+            PlayerService playerService, ActionExecutor actionExecutor, SettingsService settings, PlayerMenuRegistry playerMenu,
+            LiveInventoryService liveInventory) {
         super(ID, framework, messages);
-        this.ctx = new PlayerGuiContext(framework, messages, scheduler, playerService, actionExecutor, settings, playerMenu);
+        this.ctx = new PlayerGuiContext(framework, messages, scheduler, playerService, actionExecutor, settings, playerMenu, liveInventory);
     }
 
     @Override

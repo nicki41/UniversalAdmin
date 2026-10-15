@@ -99,8 +99,7 @@ public final class NotesSupport {
                     invocation.usage(this);
                     return;
                 }
-                invocation.integer(1).ifPresent(id -> invocation.<Long, PlayerNote>run(NoteActions.REMOVE, (long) id,
-                        removed -> invocation.reply("moderation.notes.removed", String.valueOf(removed.id()), removed.targetName())));
+                invocation.integer(1).ifPresent(id -> invocation.run(NoteActions.REMOVE, (long) id));
                 return;
             }
             Optional<PlayerRef> target = invocation.knownPlayer(0);
@@ -114,8 +113,7 @@ public final class NotesSupport {
                     invocation.reply("moderation.notes.too-long", NoteActions.MAX_LENGTH);
                     return;
                 }
-                invocation.<NoteActions.AddInput, PlayerNote>run(NoteActions.ADD, new NoteActions.AddInput(player.id(), player.name(), text),
-                        added -> invocation.reply("moderation.notes.added", player.name(), String.valueOf(added.id())));
+                invocation.run(NoteActions.ADD, new NoteActions.AddInput(player.id(), player.name(), text));
                 return;
             }
             ctx.notes().findByTarget(player.id(), 20).whenComplete((list, error) -> {

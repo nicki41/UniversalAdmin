@@ -64,7 +64,7 @@ public final class KickAction implements Action<KickInput, Punishment> {
                         if (error != null) {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));
                         } else {
-                            future.complete(ActionResult.success(punishment));
+                            future.complete(ModerationResults.issued(punishment));
                         }
                     });
         });

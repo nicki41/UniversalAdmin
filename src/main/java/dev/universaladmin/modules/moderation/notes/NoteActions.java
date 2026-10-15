@@ -44,7 +44,8 @@ public final class NoteActions {
         public CompletableFuture<ActionResult<PlayerNote>> execute(ActionContext context, AddInput input) {
             PlayerNote note = new PlayerNote(0, input.targetId(), input.targetName(), context.actor().playerId(),
                     context.actor().displayName(), input.text().trim(), Instant.now());
-            return notes.save(note).thenApply(ActionResult::success);
+            return notes.save(note).thenApply(saved -> ActionResult.success(saved, MessageKey.of("moderation.notes.added"),
+                    saved.targetName(), Long.toString(saved.id())));
         }
     }
 
@@ -67,7 +68,8 @@ public final class NoteActions {
             return notes.findById(id).thenCompose(found -> found.isEmpty()
                     ? CompletableFuture.completedFuture(ActionResult.<PlayerNote>failure(
                             FailureReason.NOT_FOUND, MessageKey.of("moderation.notes.not-found"), String.valueOf(id)))
-                    : notes.deleteById(id).thenApply(ignored -> ActionResult.success(found.get())));
+                    : notes.deleteById(id).thenApply(ignored -> ActionResult.success(found.get(), MessageKey.of("moderation.notes.removed"),
+                            Long.toString(found.get().id()), found.get().targetName())));
         }
     }
 }

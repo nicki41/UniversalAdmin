@@ -120,15 +120,8 @@ final class SettingsSectionPage extends AbstractListGuiPage<SettingDefinition<?>
     }
 
     private void apply(Player viewer, String path, String value) {
-        GuiActions.<SetSettingAction.Input, SettingChange>run(ctx.actionExecutor(), ctx.scheduler(), messages, viewer,
-                SetSettingAction.ID, new SetSettingAction.Input(path, value), change -> {
-                    viewer.sendMessage(ComponentMessages.render(messages.get(MessageKey.of("settings.changed"),
-                            path, change.oldValue(), change.newValue())));
-                    if (change.pendingRestart()) {
-                        viewer.sendMessage(ComponentMessages.render(messages.get(MessageKey.of("settings.pending-restart"))));
-                    }
-                    this.open(viewer);
-                });
+        GuiActions.runAndReport(ctx.actionExecutor(), ctx.scheduler(), messages, viewer,
+                SetSettingAction.ID, new SetSettingAction.Input(path, value), null, () -> this.open(viewer));
     }
 
     private static boolean isBoolean(SettingDefinition<?> definition) {

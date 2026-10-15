@@ -78,7 +78,7 @@ public final class IpBanAction implements Action<IpBanInput, Punishment> {
                             return;
                         }
                         scheduler.runOnMainThread(() -> target.kick(banMessage(punishment)));
-                        future.complete(ActionResult.success(punishment));
+                        future.complete(ModerationResults.issued(punishment));
                     });
         });
         return future;

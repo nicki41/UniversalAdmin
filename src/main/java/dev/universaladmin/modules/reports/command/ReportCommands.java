@@ -50,8 +50,7 @@ public final class ReportCommands {
                 return;
             }
             PlayerRef player = target.get();
-            invocation.run(ReportActionIds.CREATE, new CreateReportAction.Input(player.id(), player.name(), invocation.joinArgs(1)),
-                    MessageKey.of("reports.filed"), player.name());
+            invocation.run(ReportActionIds.CREATE, new CreateReportAction.Input(player.id(), player.name(), invocation.joinArgs(1)));
         }
 
         @Override
@@ -94,9 +93,9 @@ public final class ReportCommands {
                         show(invocation, id);
                     }
                 });
-                case "claim" -> withId(invocation, id -> update(invocation, ReportActionIds.CLAIM, id, null, "reports.claimed"));
-                case "resolve" -> withId(invocation, id -> update(invocation, ReportActionIds.RESOLVE, id, invocation.joinArgs(2), "reports.resolved"));
-                case "reject" -> withId(invocation, id -> update(invocation, ReportActionIds.REJECT, id, invocation.joinArgs(2), "reports.rejected"));
+                case "claim" -> withId(invocation, id -> update(invocation, ReportActionIds.CLAIM, id, null));
+                case "resolve" -> withId(invocation, id -> update(invocation, ReportActionIds.RESOLVE, id, invocation.joinArgs(2)));
+                case "reject" -> withId(invocation, id -> update(invocation, ReportActionIds.REJECT, id, invocation.joinArgs(2)));
                 default -> invocation.usage(this);
             }
         }
@@ -130,9 +129,8 @@ public final class ReportCommands {
             });
         }
 
-        private void update(CommandInvocation invocation, dev.universaladmin.action.ActionId action, long id, String note, String successKey) {
-            invocation.<UpdateReportAction.Input, Report>run(action, new UpdateReportAction.Input(id, note),
-                    report -> invocation.reply(successKey, String.valueOf(id), report.targetName()));
+        private void update(CommandInvocation invocation, dev.universaladmin.action.ActionId action, long id, String note) {
+            invocation.run(action, new UpdateReportAction.Input(id, note));
         }
 
         private void withId(CommandInvocation invocation, java.util.function.LongConsumer action) {

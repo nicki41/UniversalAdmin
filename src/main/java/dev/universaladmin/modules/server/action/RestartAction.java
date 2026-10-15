@@ -38,7 +38,8 @@ public final class RestartAction implements Action<String, Void> {
         scheduler.runOnMainThread(() -> {
             boolean started = lifecycleService.scheduleRestart(reason);
             future.complete(started
-                    ? ActionResult.success(null)
+                    ? ActionResult.success(null, MessageKey.of("server.result.restart-scheduled"),
+                            Integer.toString(lifecycleService.pending().remainingSeconds()))
                     : ActionResult.failure(ActionResult.FailureReason.CONFLICT, MessageKey.of("server.action.already-pending")));
         });
         return future;

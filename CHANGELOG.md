@@ -62,6 +62,11 @@ the first official extension. Upgrading from an alpha is automatic - see
 - **UniversalAdmin Discord** - the first official extension: posts
   punishments, reports, restarts, maintenance and whitelist changes to a
   Discord channel via a webhook ([docs/extensions/discord.md](docs/extensions/discord.md)).
+- **Live inventory and ender chest editor**: changes show up in both
+  directions within a tick - what the player does appears in the editor,
+  what staff change lands in the player's inventory. Laid out like the
+  player's own screen (storage, hotbar, armor, offhand); one audit entry
+  per editing session with the number of changed slots.
 - An example extension (`examples/example-extension`) as a template.
 - Ready-made LuckPerms role templates (helper, moderator, admin) in
   [docs/user/permissions.md](docs/user/permissions.md).
@@ -74,8 +79,19 @@ the first official extension. Upgrading from an alpha is automatic - see
   `players.gui.*`, ...).
 - The audit log shows player names instead of UUIDs in targets and
   summaries.
-- Every chat reply of a command carries a short `[UA]` prefix
-  (`command.prefix`, may be set to `""`).
+- **Precise feedback everywhere**: every command and every GUI button says
+  exactly what it did - "Spawn of world set to 120 64 -30", "Banned Steve
+  for 7d. Reason: griefing #42", "Removed 37 entities in world" - instead
+  of "Done.", and command and GUI show the same text. Extensions get the
+  same through `ActionResult.success(value, key, args...)`.
+- Every reply carries a short `[UA]` prefix (`command.prefix`, may be set
+  to `""`) - in chat after a GUI click too.
+- **Staff mode tools work at range**: aim at a player and right-click - the
+  tool acts on the player the actionbar names, up to
+  `moderation.staffmode.target-range-blocks` (now 128 blocks, through
+  walls), not only on someone close enough to click directly.
+- Menu item texts are consistently styled (white names, gray lore - no
+  more purple italic lore lines).
 - The update check and `/admin update` compare versions properly and never
   offer an older release.
 - Releases on GitHub additionally carry the Discord extension and the API
@@ -98,6 +114,12 @@ the first official extension. Upgrading from an alpha is automatic - see
   now ignore double clicks.
 - `/admin update` could "update" to an older version on a server running a
   newer build.
+- The inventory editor did not show the player's own changes while it was
+  open and could overwrite them with its outdated copy; it also wrote an
+  audit entry for every single click.
+- Punishing a player who was offline stored their UUID instead of their
+  name in the history.
+- The Freeze Tool could freeze and immediately unfreeze with one click.
 
 ### Security
 

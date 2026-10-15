@@ -113,6 +113,11 @@ public final class TicketsModule implements Module {
   an action (`CommandInvocation#run`, `GuiActions.run`); the action does the
   work. That gives you permission checks, validation and audit for free,
   and makes the same logic usable from every frontend.
+- **Say what happened.** Return `ActionResult.success(value, key, args...)`
+  with a precise message ("Ticket #12 closed", not "Done.") - then
+  `CommandInvocation#run(id, input)` and `GuiActions.runAndReport(...)`
+  show exactly that text. See the `GreetAction` in the example extension
+  and [actions.md](../architecture/actions.md#success-messages---the-action-says-what-it-did).
 - **Never block the main thread.** Database work goes through
   `TaskScheduler#supplyAsync`; Bukkit API calls back through
   `runOnMainThread`/`supplyOnMainThread`. `JdbcPlayerNoteRepository` in the

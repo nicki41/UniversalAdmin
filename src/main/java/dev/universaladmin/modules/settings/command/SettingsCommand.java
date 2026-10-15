@@ -102,12 +102,7 @@ public final class SettingsCommand extends BaseAdminCommand {
     }
 
     private void apply(CommandInvocation invocation, String path, String value) {
-        invocation.<SetSettingAction.Input, SettingChange>run(SetSettingAction.ID, new SetSettingAction.Input(path, value), change -> {
-            invocation.reply("settings.changed", path, change.oldValue(), change.newValue());
-            if (change.pendingRestart()) {
-                invocation.reply("settings.pending-restart");
-            }
-        });
+        invocation.run(SetSettingAction.ID, new SetSettingAction.Input(path, value));
     }
 
     private static <T> String formatDefault(SettingDefinition<T> definition) {

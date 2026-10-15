@@ -133,8 +133,7 @@ public final class PerformanceCommands {
                 invocation.reply("commands.entities.preview", preview);
                 return;
             }
-            invocation.<ClearEntitiesInput, Integer>run(ClearEntitiesAction.ID, new ClearEntitiesInput(types, world),
-                    removed -> invocation.reply("commands.entities.cleared", removed));
+            invocation.run(ClearEntitiesAction.ID, new ClearEntitiesInput(types, world));
         }
 
         @Override

@@ -5,11 +5,13 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.localization.ComponentMessages;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 
 /** Shows a title/subtitle to every online player. */
 public final class BroadcastTitleAction implements Action<BroadcastTitleInput, Void> {
@@ -41,7 +43,8 @@ public final class BroadcastTitleAction implements Action<BroadcastTitleInput, V
             Component subtitle = input.subtitle() == null || input.subtitle().isBlank()
                     ? Component.empty() : ComponentMessages.render(input.subtitle());
             notifications.broadcastTitle(title, subtitle, FADE_IN, STAY, FADE_OUT);
-            future.complete(ActionResult.success(null));
+            future.complete(ActionResult.success(null, MessageKey.of("server.result.title"),
+                    Integer.toString(Bukkit.getOnlinePlayers().size())));
         });
         return future;
     }

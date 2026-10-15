@@ -33,13 +33,38 @@ public final class OnlinePlayerAction<I, R> implements Action<I, R> {
     private final TaskScheduler scheduler;
     private final Function<I, UUID> targetId;
     private final BiFunction<Player, I, R> work;
+    private final MessageKey successKey;
+    private final Description<I, R> description;
 
     public OnlinePlayerAction(
             ActionId id, TaskScheduler scheduler, Function<I, UUID> targetId, BiFunction<Player, I, R> work) {
+        this(id, scheduler, targetId, work, null, null);
+    }
+
+    private OnlinePlayerAction(
+            ActionId id, TaskScheduler scheduler, Function<I, UUID> targetId, BiFunction<Player, I, R> work,
+            MessageKey successKey, Description<I, R> description) {
         this.id = id;
         this.scheduler = scheduler;
         this.targetId = targetId;
         this.work = work;
+        this.successKey = successKey;
+        this.description = description;
+    }
+
+    /**
+     * The same action, telling the user what it did: {@code successKey}
+     * with the arguments {@code description} builds from the player (after
+     * the change), the input and the result.
+     */
+    public OnlinePlayerAction<I, R> describedAs(MessageKey successKey, Description<I, R> description) {
+        return new OnlinePlayerAction<>(id, scheduler, targetId, work, successKey, description);
+    }
+
+    /** Builds the success message's arguments - see {@link #describedAs}. */
+    @FunctionalInterface
+    public interface Description<I, R> {
+        Object[] arguments(Player player, I input, R result);
     }
 
     @Override
@@ -61,7 +86,10 @@ public final class OnlinePlayerAction<I, R> implements Action<I, R> {
                 return;
             }
             try {
-                future.complete(ActionResult.success(work.apply(player, input)));
+                R value = work.apply(player, input);
+                future.complete(successKey == null
+                        ? ActionResult.success(value)
+                        : ActionResult.success(value, successKey, description.arguments(player, input, value)));
             } catch (IllegalArgumentException e) {
                 // Bukkit setters (setHealth above max health, etc.) throw this
                 // for an out-of-range value the cheap ActionValidator didn't

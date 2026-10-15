@@ -111,7 +111,7 @@ public final class WorldCommands {
                         invocation.reply("command.error.player-only");
                         return;
                     }
-                    invocation.run(WorldActionIds.TELEPORT_TO_SPAWN, name, MessageKey.of("commands.world.teleported"), name);
+                    invocation.run(WorldActionIds.TELEPORT_TO_SPAWN, name);
                 }
                 case "time" -> time(invocation, name, valueIndex);
                 case "weather" -> weather(invocation, name, valueIndex);
@@ -121,8 +121,7 @@ public final class WorldCommands {
                         invocation.reply("command.error.player-only");
                         return;
                     }
-                    invocation.run(WorldActionIds.SET_SPAWN, SetWorldSpawnInput.atActorLocation(name),
-                            MessageKey.of("commands.world.spawn-set"), name);
+                    invocation.run(WorldActionIds.SET_SPAWN, SetWorldSpawnInput.atActorLocation(name));
                 }
                 case "border" -> border(invocation, world, valueIndex);
                 case "gamerule" -> gamerule(invocation, name, valueIndex);
@@ -157,8 +156,7 @@ public final class WorldCommands {
                 }
                 ticks = (long) parsed.get();
             }
-            invocation.run(WorldActionIds.SET_TIME, new SetWorldTimeInput(world, ticks),
-                    MessageKey.of("commands.world.time-set"), world, ticks);
+            invocation.run(WorldActionIds.SET_TIME, new SetWorldTimeInput(world, ticks));
         }
 
         private void weather(CommandInvocation invocation, String world, int valueIndex) {
@@ -167,8 +165,7 @@ public final class WorldCommands {
                 invocation.usage(this);
                 return;
             }
-            invocation.run(WorldActionIds.SET_WEATHER, new SetWorldWeatherInput(world, state.get()),
-                    MessageKey.of("commands.world.weather-set"), world, state.get().name().toLowerCase(Locale.ROOT));
+            invocation.run(WorldActionIds.SET_WEATHER, new SetWorldWeatherInput(world, state.get()));
         }
 
         private void difficulty(CommandInvocation invocation, String world, int valueIndex) {
@@ -177,8 +174,7 @@ public final class WorldCommands {
                 invocation.usage(this);
                 return;
             }
-            invocation.run(WorldActionIds.SET_DIFFICULTY, new SetWorldDifficultyInput(world, difficulty.get()),
-                    MessageKey.of("commands.world.difficulty-set"), world, difficulty.get().name().toLowerCase(Locale.ROOT));
+            invocation.run(WorldActionIds.SET_DIFFICULTY, new SetWorldDifficultyInput(world, difficulty.get()));
         }
 
         /** {@code border <size> [seconds]} or {@code border center <x> <z>|here}. */
@@ -212,8 +208,7 @@ public final class WorldCommands {
                     x = parsedX.get();
                     z = parsedZ.get();
                 }
-                invocation.run(WorldActionIds.SET_BORDER_CENTER, new SetWorldBorderCenterInput(name, x, z),
-                        MessageKey.of("commands.world.border-center-set"), name, Math.round(x), Math.round(z));
+                invocation.run(WorldActionIds.SET_BORDER_CENTER, new SetWorldBorderCenterInput(name, x, z));
                 return;
             }
             Optional<Double> size = invocation.decimal(valueIndex);
@@ -228,8 +223,7 @@ public final class WorldCommands {
                 }
                 seconds = (long) parsed.get();
             }
-            invocation.run(WorldActionIds.SET_BORDER_SIZE, new SetWorldBorderSizeInput(name, size.get(), seconds),
-                    MessageKey.of("commands.world.border-size-set"), name, "%.0f".formatted(size.get()));
+            invocation.run(WorldActionIds.SET_BORDER_SIZE, new SetWorldBorderSizeInput(name, size.get(), seconds));
         }
 
         private void gamerule(CommandInvocation invocation, String world, int valueIndex) {
@@ -239,8 +233,7 @@ public final class WorldCommands {
             }
             String rule = invocation.args().get(valueIndex);
             String value = invocation.args().get(valueIndex + 1);
-            invocation.run(WorldActionIds.SET_GAME_RULE, new SetGameRuleInput(world, rule, value),
-                    MessageKey.of("commands.world.gamerule-set"), rule, value, world);
+            invocation.run(WorldActionIds.SET_GAME_RULE, new SetGameRuleInput(world, rule, value));
         }
 
         @Override

@@ -34,7 +34,7 @@ public final class CancelRestartAction implements Action<Void, Void> {
             boolean matches = lifecycleService.pending().action() == ServerLifecycleService.PendingAction.RESTART;
             boolean cancelled = matches && lifecycleService.cancel();
             future.complete(cancelled
-                    ? ActionResult.success(null)
+                    ? ActionResult.success(null, MessageKey.of("server.result.restart-cancelled"))
                     : ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("server.action.nothing-pending")));
         });
         return future;

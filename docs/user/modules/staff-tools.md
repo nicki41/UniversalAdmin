@@ -209,14 +209,14 @@ firing, so a click never dispatches twice.
 
 | Tool | Trigger | Effect |
 |---|---|---|
-| Player Inspector | Right-click a player | Opens that player's punishment history. Its icon/name/lore also live-update to whoever is currently in your crosshair - see "Live target display" below - regardless of which tool you're actually holding. |
-| Freeze Tool | Right-click a player | Toggles Freeze/Unfreeze immediately (fixed reason "Staff Freeze Tool" - no prompt, so using it never interrupts world interaction) |
-| Inventory Inspector | Right-click a player | Live mirror of their main inventory + armor/offhand. Editing requires `universaladmin.players.inventory.edit` (the same permission the Players module's own inventory editor uses); every click/drag mirrors onto the real target immediately, not just on close. Without that permission, view-only. |
-| Ender Chest Inspector | Right-click a player | Same as the Inventory Inspector, for their ender chest - requires `universaladmin.players.enderchest.edit` to write. |
+| Player Inspector | Aim at a player, right-click | Opens that player's punishment history. Its icon/name/lore also live-update to whoever is currently in your crosshair - see "Live target display" below - regardless of which tool you're actually holding. |
+| Freeze Tool | Aim at a player, right-click | Toggles Freeze/Unfreeze immediately (fixed reason "Staff Freeze Tool" - no prompt, so using it never interrupts world interaction) |
+| Inventory Inspector | Aim at a player, right-click | Opens the Players module's live inventory editor (see [players.md](players.md#inventory--ender-chest)) - changes show up in both directions within a tick. Editing requires `universaladmin.players.inventory.edit`; without it, view-only. |
+| Ender Chest Inspector | Aim at a player, right-click | Same as the Inventory Inspector, for their ender chest - requires `universaladmin.players.enderchest.edit` to write. |
 | Teleport to/Bring Player | Right-click air | Opens a picker over every online player, then a "Teleport to them" / "Bring them to me" choice - runs through the Players module's own audited teleport action (`TeleportKind.ADMIN_TO_PLAYER`/`BRING_TO_ADMIN`), unlike "Teleport to Player" below. |
 | Vanish Toggle | Right-click air | Runs the Vanish action on yourself |
-| Moderate Tool | Right-click a player | Opens the full Moderate wizard (Kick/Ban/Mute/Warn) for that player directly - no need to leave Staff Mode and find them again in the Player Browser |
-| Teleport to Player | Right-click a player | Teleports you directly to that player (unaudited - a movement convenience, not a moderation action) |
+| Moderate Tool | Aim at a player, right-click | Opens the full Moderate wizard (Kick/Ban/Mute/Warn) for that player directly - no need to leave Staff Mode and find them again in the Player Browser |
+| Teleport to Player | Aim at a player, right-click | Teleports you to that player, through the Players module's audited teleport action (needs `universaladmin.players.teleport`) |
 | Exit Staff Mode | Right-click air | Runs Exit Staff Mode |
 
 While Staff Mode is active (regardless of which tool is held, or none):
@@ -228,12 +228,12 @@ invulnerable.
 `StaffModeTargetTracker` runs every 10 ticks (twice a second) for every
 online Staff-Mode-active player. Unlike a vanilla ray trace, it deliberately
 does **not** stop at walls: it searches every online player within
-`moderation.staffmode.target-range-blocks` (default 40 blocks, ignores line
+`moderation.staffmode.target-range-blocks` (default 128 blocks, ignores line
 of sight entirely) for whoever is closest to your exact look direction,
-within a narrow angular tolerance - so it keeps working through walls and at
-much longer range than the ~6-block reach the tools themselves interact at
-(a Minecraft client limit this plugin can't change either way). If it finds
-someone:
+within a narrow angular tolerance. **The tools use the same search**: a
+right-click in the air acts on exactly the player the actionbar names, as
+far away as that range - you don't have to walk up to them. Right-clicking
+a player directly still works too. If it finds someone:
 
 - The Player Inspector tool always shows their real skin, name, and a quick
   Frozen/Vanished status line, whichever tool you're actually holding.
@@ -245,8 +245,10 @@ someone:
   is resent every tick a target exists, keeping it visible continuously
   instead of fading out after Minecraft's default few seconds.
 
-This is read-only presentation; it never changes who gets affected by an
-actual tool click, which always re-resolves the right-clicked entity itself.
+A tool click searches again at the moment of the click (it never acts on
+a stale target), and one physical click runs a tool only once - even when
+Minecraft reports it as both "clicked a player" and "clicked the air"
+(otherwise the Freeze Tool would freeze and immediately unfreeze).
 
 ### Tool kit is locked
 

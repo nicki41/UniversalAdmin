@@ -1,6 +1,5 @@
 package dev.universaladmin.modules.players.gui;
 
-import dev.universaladmin.action.ActionId;
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiItem;
@@ -9,29 +8,22 @@ import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.modules.players.PlayerPermissions;
-import dev.universaladmin.modules.players.action.PlayerActionIds;
-import dev.universaladmin.modules.players.action.SetEnderChestContentsInput;
-import java.util.ArrayList;
+import dev.universaladmin.modules.players.inventory.LiveInventoryKind;
+import dev.universaladmin.modules.players.inventory.LiveInventorySlot;
 import java.util.List;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 /**
- * The 27-slot ender chest, occupying the first 27 of the 36 content slots -
- * the remaining 9 are locked filler. Same view/edit/live-persist shape as
- * {@link PlayerInventoryPage} (no Save button - {@link GuiView#onChange}
- * persists after every click/drag, {@link GuiView#onClose} once more as a
- * final flush), gated on {@code players.enderchest.*} instead.
+ * A player's ender chest, live in both directions - same mechanism as
+ * {@link PlayerInventoryPage}, gated on {@code players.enderchest.*}.
  */
 public final class PlayerEnderChestPage extends AbstractGuiPage {
 
     public static final GuiPageId ID = GuiPageId.core("players.enderchest");
-
-    private static final int ENDER_CHEST_SIZE = 27;
 
     private final PlayerGuiContext ctx;
     private final UUID targetId;
@@ -45,8 +37,14 @@ public final class PlayerEnderChestPage extends AbstractGuiPage {
     }
 
     @Override
+    protected boolean refreshable() {
+        return false;
+    }
+
+    @Override
     protected Component title(Player viewer) {
-        return text("players.gui.enderchest.title", targetName);
+        return text(viewer.hasPermission(PlayerPermissions.ENDERCHEST_EDIT.value())
+                ? "players.gui.enderchest.title" : "players.gui.enderchest.title-view-only", targetName);
     }
 
     @Override
@@ -61,52 +59,12 @@ public final class PlayerEnderChestPage extends AbstractGuiPage {
 
         boolean canEdit = viewer.hasPermission(PlayerPermissions.ENDERCHEST_EDIT.value());
         view.editable(canEdit);
+        view.place(LiveInventoryLayout.LEGEND_SLOT, GuiButton.of(GuiItem.of(Material.ENDER_EYE, text("players.gui.enderchest.legend"),
+                List.of(text(canEdit ? "players.gui.inventory.legend-live-edit" : "players.gui.inventory.legend-live-view"))),
+                clickCtx -> { }), viewer);
 
-        ItemStack[] contents = target.getEnderChest().getContents();
-        for (int i = 0; i < contents.length && i < ENDER_CHEST_SIZE; i++) {
-            if (contents[i] != null) {
-                view.place(GuiLayout.contentSlot(i), new GuiItem(contents[i]));
-            }
-        }
-        GuiItem filler = GuiItem.filler(Material.GRAY_STAINED_GLASS_PANE);
-        for (int i = ENDER_CHEST_SIZE; i < GuiLayout.contentSize(); i++) {
-            view.place(GuiLayout.contentSlot(i), GuiButton.of(filler, clickCtx -> { }), viewer);
-        }
-
-        if (canEdit) {
-            // Live: mirrors onto the real target after every click/drag,
-            // silently (a chat message per item moved would spam the
-            // admin); onClose notifies once, as the familiar "final save"
-            // confirmation - see PlayerInventoryPage#persist.
-            view.onChange(view2 -> persist(view2, false));
-            view.onClose(view2 -> persist(view2, true));
-        }
-    }
-
-    private void persist(GuiView view, boolean notify) {
-        Player admin = Bukkit.getPlayer(view.viewerId());
-        if (admin == null) {
-            return;
-        }
-        List<ItemStack> contents = new ArrayList<>();
-        for (int i = 0; i < ENDER_CHEST_SIZE; i++) {
-            contents.add(view.getInventory().getItem(GuiLayout.contentSlot(i)));
-        }
-        runAction(admin, PlayerActionIds.ENDERCHEST_SET, new SetEnderChestContentsInput(targetId, contents), notify);
-    }
-
-    /** @param notify whether to tell {@code viewer} the outcome - {@code false} for a silent live-sync write, {@code true} for a deliberate one-off action. */
-    private <I> void runAction(Player viewer, ActionId id, I input, boolean notify) {
-        ctx.actionExecutor().<I, Object>execute(id, PlayerGuiActions.contextFor(viewer), input)
-                .whenComplete((result, error) -> ctx.scheduler().runOnMainThread(() -> {
-                    if (!viewer.isOnline()) {
-                        return;
-                    }
-                    if (error != null) {
-                        PlayerGuiActions.notifyError(viewer, messages);
-                    } else if (notify) {
-                        PlayerGuiActions.notifyResult(viewer, messages, result);
-                    }
-                }));
+        List<LiveInventorySlot> slots = LiveInventoryLayout.enderChest();
+        LiveInventoryLayout.lockFreeSlots(view, viewer, slots);
+        ctx.liveInventory().start(view, viewer, target, LiveInventoryKind.ENDER_CHEST, canEdit, slots);
     }
 }

@@ -4,6 +4,7 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
@@ -64,7 +65,7 @@ public final class MuteAction implements Action<MuteInput, Punishment> {
         CompletableFuture<ActionResult<Punishment>> future = new CompletableFuture<>();
         scheduler.runOnMainThread(() -> {
             Player online = Bukkit.getPlayer(input.targetId());
-            String targetName = online != null ? online.getName() : input.targetId().toString();
+            String targetName = online != null ? online.getName() : PlayerNames.of(input.targetId());
 
             punishmentService.issue(type, input.targetId(), targetName, null,
                             context.actor().playerId(), context.actor().displayName(), input.reason(), expiresAt)
@@ -76,7 +77,7 @@ public final class MuteAction implements Action<MuteInput, Punishment> {
                         if (online != null) {
                             scheduler.runOnMainThread(() -> online.sendMessage(muteMessage(punishment)));
                         }
-                        future.complete(ActionResult.success(punishment));
+                        future.complete(ModerationResults.issued(punishment));
                     });
         });
         return future;

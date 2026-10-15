@@ -41,7 +41,7 @@ public final class ExitStaffModeAction implements Action<Void, Void> {
                 if (error != null) {
                     future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));
                 } else if (restored) {
-                    future.complete(ActionResult.success(null));
+                    future.complete(ActionResult.success(null, MessageKey.of("moderation.result.staffmode-exit")));
                 } else {
                     future.complete(ActionResult.failure(
                             ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.staffmode-not-active")));

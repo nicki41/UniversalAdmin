@@ -75,7 +75,11 @@ public final class UpdateReportAction implements Action<UpdateReportAction.Input
                 if (kind != Kind.CLAIM) {
                     notifyReporter(updated.report());
                 }
-                yield ActionResult.success(updated.report());
+                yield ActionResult.success(updated.report(), MessageKey.of(switch (kind) {
+                    case CLAIM -> "reports.claimed";
+                    case RESOLVE -> "reports.resolved";
+                    case REJECT -> "reports.rejected";
+                }), Long.toString(updated.report().id()), updated.report().targetName());
             }
             case UpdateResult.NotFound notFound -> ActionResult.failure(
                     FailureReason.NOT_FOUND, MessageKey.of("reports.action.not-found"), String.valueOf(input.reportId()));

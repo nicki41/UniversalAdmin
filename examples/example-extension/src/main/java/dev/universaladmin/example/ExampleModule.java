@@ -131,7 +131,9 @@ public final class ExampleModule implements Module {
                             MessageKey.of("command.error.player-not-online"), target.name());
                 }
                 player.sendMessage(Component.text(template.replace("{0}", player.getName())));
-                return ActionResult.success(null);
+                // Describing the outcome here means every frontend - the
+                // command, the menu, the profile button - shows the same text.
+                return ActionResult.success(null, MessageKey.of("example.greeted"), player.getName());
             });
         }
     }
@@ -150,8 +152,7 @@ public final class ExampleModule implements Module {
                 invocation.usage(this);
                 return;
             }
-            invocation.onlinePlayer(0).ifPresent(player -> invocation.run(GREET,
-                    new PlayerRef(player.getUniqueId(), player.getName()), MessageKey.of("example.greeted"), player.getName()));
+            invocation.onlinePlayer(0).ifPresent(player -> invocation.run(GREET, new PlayerRef(player.getUniqueId(), player.getName())));
         }
 
         @Override
@@ -191,8 +192,8 @@ public final class ExampleModule implements Module {
 
         private void greet(GuiClickContext click, PlayerRef target) {
             Player viewer = click.viewer();
-            GuiActions.<PlayerRef, Void>run(platform.actionExecutor(), platform.scheduler(), platform.messages(), viewer,
-                    GREET, target, ignored -> viewer.sendMessage(text("example.greeted", target.name())));
+            GuiActions.runAndReport(platform.actionExecutor(), platform.scheduler(), platform.messages(), viewer,
+                    GREET, target, null, () -> { });
         }
     }
 
@@ -229,9 +230,8 @@ public final class ExampleModule implements Module {
         @Override
         public void onClick(GuiClickContext context, PlayerRef target) {
             Player viewer = context.viewer();
-            GuiActions.<PlayerRef, Void>run(platform.actionExecutor(), platform.scheduler(), platform.messages(), viewer,
-                    GREET, target, ignored -> viewer.sendMessage(ComponentMessages.render(
-                            platform.messages().get(MessageKey.of("example.greeted"), target.name()))));
+            GuiActions.runAndReport(platform.actionExecutor(), platform.scheduler(), platform.messages(), viewer,
+                    GREET, target, null, () -> { });
         }
     }
 }

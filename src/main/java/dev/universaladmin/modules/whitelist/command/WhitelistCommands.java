@@ -56,8 +56,8 @@ public final class WhitelistCommands {
         public void execute(CommandInvocation invocation) {
             String sub = invocation.arg(0).map(arg -> arg.toLowerCase(Locale.ROOT)).orElse("list");
             switch (sub) {
-                case "on", "enable" -> invocation.run(WhitelistActionIds.ENABLE, null, MessageKey.of("commands.whitelist.enabled"));
-                case "off", "disable" -> invocation.run(WhitelistActionIds.DISABLE, null, MessageKey.of("commands.whitelist.disabled"));
+                case "on", "enable" -> invocation.run(WhitelistActionIds.ENABLE, null);
+                case "off", "disable" -> invocation.run(WhitelistActionIds.DISABLE, null);
                 case "add" -> add(invocation);
                 case "remove" -> remove(invocation);
                 case "list" -> list(invocation);
@@ -91,9 +91,7 @@ public final class WhitelistCommands {
                 }
                 PlayerRef ref = player.get();
                 invocation.run(WhitelistActionIds.ADD,
-                        new AddWhitelistEntryInput(ref.id(), ref.name(), reason.isEmpty() ? null : reason, null, expiry),
-                        MessageKey.of(expiry == null ? "commands.whitelist.added" : "commands.whitelist.added-temporary"),
-                        ref.name(), expiry == null ? "" : DurationParser.formatRemaining(expiry));
+                        new AddWhitelistEntryInput(ref.id(), ref.name(), reason.isEmpty() ? null : reason, null, expiry));
             });
         }
 
@@ -111,8 +109,7 @@ public final class WhitelistCommands {
                     invocation.reply("commands.whitelist.not-listed", name);
                     return;
                 }
-                invocation.run(WhitelistActionIds.REMOVE, member.get().playerId(),
-                        MessageKey.of("commands.whitelist.removed"), member.get().playerName());
+                invocation.run(WhitelistActionIds.REMOVE, member.get().playerId());
             });
         }
 

@@ -14,9 +14,10 @@ import org.bukkit.persistence.PersistentDataType;
  * A visual-only stand-in for an empty slot in an editable inventory mirror
  * (main storage/hotbar, armor, offhand) - so a helmet slot still looks like
  * a helmet slot, and the hotbar row is visibly distinct from the rest of
- * main storage, even while empty. {@link dev.universaladmin.modules.players.gui.PlayerInventoryPage}
- * and {@link dev.universaladmin.modules.moderation.gui.InventoryInspectorPage}
- * use these.
+ * main storage, even while empty. Best suited to a read-only or
+ * save-on-close view: in a view that is synced live, a placeholder can be
+ * picked up like any item (the built-in inventory editors therefore leave
+ * empty slots empty).
  *
  * <p>Tagged via {@link org.bukkit.persistence.PersistentDataContainer} (the
  * {@link NamespacedKey} is built with {@link NamespacedKey#fromString(String)},

@@ -2,6 +2,7 @@ package dev.universaladmin.gui;
 
 import java.util.List;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -26,9 +27,9 @@ public record GuiItem(ItemStack itemStack) {
     public static GuiItem of(Material material, Component name, List<Component> lore) {
         ItemStack stack = new ItemStack(material);
         stack.editMeta(meta -> {
-            meta.displayName(noItalic(name));
+            meta.displayName(name(name));
             if (!lore.isEmpty()) {
-                meta.lore(lore.stream().map(GuiItem::noItalic).toList());
+                meta.lore(lore.stream().map(GuiItem::loreLine).toList());
             }
         });
         return new GuiItem(stack);
@@ -50,18 +51,23 @@ public record GuiItem(ItemStack itemStack) {
         ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
         stack.editMeta(SkullMeta.class, meta -> {
             meta.setOwningPlayer(player);
-            meta.displayName(noItalic(name));
+            meta.displayName(name(name));
             if (!lore.isEmpty()) {
-                meta.lore(lore.stream().map(GuiItem::noItalic).toList());
+                meta.lore(lore.stream().map(GuiItem::loreLine).toList());
             }
         });
         return new GuiItem(stack);
     }
 
-    // Item display names/lore render italic by default in vanilla, which
-    // reads as an unintentional style choice for plain menu text - every
-    // GuiItem opts out explicitly instead of leaving it to chance per page.
-    private static Component noItalic(Component component) {
-        return component.decoration(TextDecoration.ITALIC, false);
+    // Vanilla renders custom names and lore italic, lore in dark purple and
+    // some names in their item's rarity colour (yellow, aqua). Plain menu text
+    // should never inherit any of that: names default to white, lore to
+    // gray, neither italic - text that sets its own colour keeps it.
+    private static Component name(Component component) {
+        return component.decoration(TextDecoration.ITALIC, false).colorIfAbsent(NamedTextColor.WHITE);
+    }
+
+    private static Component loreLine(Component component) {
+        return component.decoration(TextDecoration.ITALIC, false).colorIfAbsent(NamedTextColor.GRAY);
     }
 }

@@ -147,20 +147,14 @@ final class ReportDetailPage extends AbstractGuiPage {
             case RESOLVE -> ReportActionIds.RESOLVE;
             case REJECT -> ReportActionIds.REJECT;
         };
-        GuiActions.<UpdateReportAction.Input, Report>run(ctx.actionExecutor(), ctx.scheduler(), messages, viewer, id,
-                new UpdateReportAction.Input(reportId, note), report -> {
-                    viewer.sendMessage(ComponentMessages.render(messages.get(MessageKey.of(switch (kind) {
-                        case CLAIM -> "reports.claimed";
-                        case RESOLVE -> "reports.resolved";
-                        case REJECT -> "reports.rejected";
-                    }), String.valueOf(reportId), report.targetName())));
-                    this.open(viewer);
-                });
+        GuiActions.runAndReport(ctx.actionExecutor(), ctx.scheduler(), messages, viewer, id,
+                new UpdateReportAction.Input(reportId, note), null, () -> this.open(viewer));
     }
 
     private void teleport(Player viewer, boolean toTarget) {
-        GuiActions.<TeleportToReportAction.Input, Void>run(ctx.actionExecutor(), ctx.scheduler(), messages, viewer,
-                ReportActionIds.TELEPORT, new TeleportToReportAction.Input(reportId, toTarget), ignored -> viewer.closeInventory());
+        viewer.closeInventory();
+        GuiActions.runAndReport(ctx.actionExecutor(), ctx.scheduler(), messages, viewer,
+                ReportActionIds.TELEPORT, new TeleportToReportAction.Input(reportId, toTarget), null, () -> { });
     }
 
 }

@@ -77,20 +77,20 @@ public final class ModerationCommands {
                 new Punish(Kind.WARN, deps),
                 new Punish(Kind.FREEZE, deps),
                 new Revoke("unban", ModerationPermissions.UNBAN, ModerationActionIds.UNBAN, UnbanInput::new,
-                        "moderation.gui.action.result.unban", "commands.unban.usage", "commands.unban.description"),
+                        "commands.unban.usage", "commands.unban.description"),
                 new Revoke("unmute", ModerationPermissions.UNMUTE, ModerationActionIds.UNMUTE, UnmuteInput::new,
-                        "moderation.gui.action.result.unmute", "commands.unmute.usage", "commands.unmute.description"),
+                        "commands.unmute.usage", "commands.unmute.description"),
                 new Revoke("unfreeze", ModerationPermissions.UNFREEZE, ModerationActionIds.UNFREEZE, UnfreezeInput::new,
-                        "moderation.gui.action.result.unfreeze", "commands.unfreeze.usage", "commands.unfreeze.description"),
+                        "commands.unfreeze.usage", "commands.unfreeze.description"),
                 new Unwarn(deps),
                 new History(deps),
                 new Check(deps),
                 new Toggle("vanish", ModerationPermissions.VANISH, ModerationActionIds.VANISH,
-                        "moderation.gui.action.result.vanish", "commands.vanish.description", "v"),
+                        "commands.vanish.description", "v"),
                 new Toggle("godmode", ModerationPermissions.GODMODE, ModerationActionIds.GODMODE,
-                        "moderation.gui.action.result.godmode", "commands.godmode.description", "god"),
+                        "commands.godmode.description", "god"),
                 new Toggle("nocollision", ModerationPermissions.COLLISION, ModerationActionIds.NO_COLLISION,
-                        "moderation.gui.action.result.collision", "commands.nocollision.description"),
+                        "commands.nocollision.description"),
                 new Staff(deps),
                 new Moderate(deps));
     }
@@ -179,30 +179,15 @@ public final class ModerationCommands {
             String reason = reason(invocation, reasonIndex);
             PlayerRef player = target.get();
             UUID id = player.id();
-            String durationText = expiresAt == null ? "" : DurationParser.formatRemaining(expiresAt);
             switch (kind) {
-                case KICK -> invocation.run(ModerationActionIds.KICK, new KickInput(id, reason),
-                        MessageKey.of("moderation.gui.action.result.kick"), player.name(), reason);
-                case BAN, TEMPBAN -> {
-                    boolean temporary = expiresAt != null;
-                    invocation.run(temporary ? ModerationActionIds.TEMP_BAN : ModerationActionIds.BAN,
-                            new BanInput(id, reason, expiresAt),
-                            MessageKey.of(temporary ? "moderation.gui.action.result.tempban" : "moderation.gui.action.result.ban"),
-                            player.name(), reason, durationText);
-                }
-                case IPBAN -> invocation.run(ModerationActionIds.IP_BAN, new IpBanInput(id, reason, expiresAt),
-                        MessageKey.of("moderation.gui.action.result.ipban"), player.name(), reason);
-                case MUTE, TEMPMUTE -> {
-                    boolean temporary = expiresAt != null;
-                    invocation.run(temporary ? ModerationActionIds.TEMP_MUTE : ModerationActionIds.MUTE,
-                            new MuteInput(id, reason, expiresAt),
-                            MessageKey.of(temporary ? "moderation.gui.action.result.tempmute" : "moderation.gui.action.result.mute"),
-                            player.name(), reason, durationText);
-                }
-                case WARN -> invocation.run(ModerationActionIds.WARN, new WarnInput(id, reason),
-                        MessageKey.of("moderation.gui.action.result.warn"), player.name(), reason);
-                case FREEZE -> invocation.run(ModerationActionIds.FREEZE, new FreezeInput(id, reason),
-                        MessageKey.of("moderation.gui.action.result.freeze"), player.name(), reason);
+                case KICK -> invocation.run(ModerationActionIds.KICK, new KickInput(id, reason));
+                case BAN, TEMPBAN -> invocation.run(expiresAt != null ? ModerationActionIds.TEMP_BAN : ModerationActionIds.BAN,
+                        new BanInput(id, reason, expiresAt));
+                case IPBAN -> invocation.run(ModerationActionIds.IP_BAN, new IpBanInput(id, reason, expiresAt));
+                case MUTE, TEMPMUTE -> invocation.run(expiresAt != null ? ModerationActionIds.TEMP_MUTE : ModerationActionIds.MUTE,
+                        new MuteInput(id, reason, expiresAt));
+                case WARN -> invocation.run(ModerationActionIds.WARN, new WarnInput(id, reason));
+                case FREEZE -> invocation.run(ModerationActionIds.FREEZE, new FreezeInput(id, reason));
             }
         }
 
@@ -254,14 +239,12 @@ public final class ModerationCommands {
 
         private final ActionId action;
         private final Function<UUID, Object> input;
-        private final String successKey;
 
         Revoke(String name, PermissionNode permission, ActionId action, Function<UUID, Object> input,
-                String successKey, String usageKey, String descriptionKey) {
+                String usageKey, String descriptionKey) {
             super(name, permission, MessageKey.of(usageKey), MessageKey.of(descriptionKey));
             this.action = action;
             this.input = input;
-            this.successKey = successKey;
             shortcuts(name);
         }
 
@@ -271,8 +254,7 @@ public final class ModerationCommands {
                 invocation.usage(this);
                 return;
             }
-            invocation.knownPlayer(0).ifPresent(player -> invocation.run(
-                    action, input.apply(player.id()), MessageKey.of(successKey), player.name()));
+            invocation.knownPlayer(0).ifPresent(player -> invocation.run(action, input.apply(player.id())));
         }
 
         @Override
@@ -313,8 +295,7 @@ public final class ModerationCommands {
                     return;
                 }
                 Punishment warn = warning.get();
-                invocation.run(ModerationActionIds.REMOVE_WARN, new RemoveWarnInput(warn.id(), warn.targetId()),
-                        MessageKey.of("moderation.gui.action.result.removewarn"), displayName(warn));
+                invocation.run(ModerationActionIds.REMOVE_WARN, new RemoveWarnInput(warn.id(), warn.targetId()));
             });
         }
     }
@@ -436,12 +417,10 @@ public final class ModerationCommands {
     static final class Toggle extends BaseAdminCommand {
 
         private final ActionId action;
-        private final String resultKey;
 
-        Toggle(String name, PermissionNode permission, ActionId action, String resultKey, String descriptionKey, String... shortcutAliases) {
+        Toggle(String name, PermissionNode permission, ActionId action, String descriptionKey, String... shortcutAliases) {
             super(name, permission, MessageKey.of("commands.toggle.usage"), MessageKey.of(descriptionKey));
             this.action = action;
-            this.resultKey = resultKey;
             List<String> labels = new ArrayList<>();
             labels.add(name);
             labels.addAll(List.of(shortcutAliases));
@@ -452,8 +431,7 @@ public final class ModerationCommands {
 
         @Override
         public void execute(CommandInvocation invocation) {
-            invocation.<Void, Boolean>run(action, null, enabled -> invocation.reply(MessageKey.of(resultKey),
-                    onOff(invocation.messages(), Boolean.TRUE.equals(enabled))));
+            invocation.run(action, null);
         }
     }
 
@@ -482,8 +460,7 @@ public final class ModerationCommands {
                 return;
             }
             boolean active = deps.staffMode().isActive(player.get().getUniqueId());
-            invocation.run(active ? ModerationActionIds.STAFF_MODE_EXIT : ModerationActionIds.STAFF_MODE_ENTER, null,
-                    MessageKey.of(active ? "moderation.gui.action.result.staffmode-exit" : "moderation.gui.action.result.staffmode-enter"));
+            invocation.run(active ? ModerationActionIds.STAFF_MODE_EXIT : ModerationActionIds.STAFF_MODE_ENTER, null);
         }
 
         private void recover(CommandInvocation invocation) {
@@ -500,8 +477,7 @@ public final class ModerationCommands {
                 }
                 return;
             }
-            invocation.run(ModerationActionIds.STAFF_MODE_RECOVER, target.get().getUniqueId(),
-                    MessageKey.of("command.staff.recover.success"));
+            invocation.run(ModerationActionIds.STAFF_MODE_RECOVER, target.get().getUniqueId());
         }
 
         @Override
@@ -546,10 +522,6 @@ public final class ModerationCommands {
         }
     }
 
-    static Object onOff(MessageService messages, boolean on) {
-        return MessageService.markup(messages.get(MessageKey.of(on ? "moderation.gui.status.on" : "moderation.gui.status.off")));
-    }
-
     static String typeName(MessageService messages, PunishmentType type) {
         return messages.get(MessageKey.of("moderation.type." + type.name().toLowerCase(Locale.ROOT).replace('_', '-')));
     }
@@ -564,9 +536,5 @@ public final class ModerationCommands {
         }
         return messages.get(MessageKey.of(punishment.isActiveAt(Instant.now())
                 ? "commands.history.status-active" : "commands.history.status-expired"));
-    }
-
-    private static String displayName(Punishment punishment) {
-        return punishment.targetLastKnownName() != null ? punishment.targetLastKnownName() : punishment.targetId().toString();
     }
 }

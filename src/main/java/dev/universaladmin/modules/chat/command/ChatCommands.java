@@ -46,9 +46,7 @@ public final class ChatCommands {
                 invocation.usage(this);
                 return;
             }
-            invocation.<Void, Boolean>run(ChatActions.STAFF_TOGGLE, null, enabled -> invocation.reply("chat.staff.toggled",
-                    MessageService.markup(invocation.messages().get(MessageKey.of(Boolean.TRUE.equals(enabled)
-                            ? "moderation.gui.status.on" : "moderation.gui.status.off")))));
+            invocation.run(ChatActions.STAFF_TOGGLE, null);
         }
     }
 
@@ -68,11 +66,12 @@ public final class ChatCommands {
         public void execute(CommandInvocation invocation) {
             String sub = invocation.arg(0).map(arg -> arg.toLowerCase(Locale.ROOT)).orElse("status");
             switch (sub) {
-                case "lock" -> invocation.run(ChatActions.LOCK, null, MessageKey.of("chat.lock-done"));
-                case "unlock" -> invocation.run(ChatActions.UNLOCK, null, MessageKey.of("chat.unlock-done"));
+                // Lock/unlock/slow mode announce themselves to everyone, the
+                // sender included - no second line needed.
+                case "lock" -> invocation.<Void, Boolean>run(ChatActions.LOCK, null, ignored -> { });
+                case "unlock" -> invocation.<Void, Boolean>run(ChatActions.UNLOCK, null, ignored -> { });
                 case "slow", "slowmode" -> slow(invocation);
-                case "clear" -> invocation.<Void, Integer>run(ChatActions.CLEAR, null,
-                        cleared -> invocation.reply("chat.clear-done", cleared));
+                case "clear" -> invocation.run(ChatActions.CLEAR, null);
                 case "status" -> invocation.reply("chat.status",
                         MessageService.markup(invocation.messages().get(MessageKey.of(chat.locked() ? "chat.state-locked" : "chat.state-open"))),
                         chat.slowMode().isZero() ? invocation.messages().get(MessageKey.of("chat.slowmode-none"))

@@ -83,7 +83,7 @@ public final class CreateReportAction implements Action<CreateReportAction.Input
                 .thenApply(result -> switch (result) {
                     case CreateResult.Created created -> {
                         notifyStaff(created.report());
-                        yield ActionResult.success(created.report());
+                        yield ActionResult.success(created.report(), MessageKey.of("reports.filed"), created.report().targetName());
                     }
                     case CreateResult.Rejected rejected -> rejection(rejected);
                 });

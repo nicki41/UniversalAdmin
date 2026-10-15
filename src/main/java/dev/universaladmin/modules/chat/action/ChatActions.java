@@ -134,7 +134,7 @@ public final class ChatActions {
                     }
                     player.sendMessage(notice);
                 }
-                return ActionResult.success(cleared);
+                return ActionResult.success(cleared, MessageKey.of("chat.clear-done"), Integer.toString(cleared));
             });
         }
     }
@@ -198,7 +198,9 @@ public final class ChatActions {
             if (playerId == null) {
                 return CompletableFuture.completedFuture(ActionResult.failure(FailureReason.VALIDATION, MessageKey.of("command.error.player-only")));
             }
-            return CompletableFuture.completedFuture(ActionResult.success(chat.toggleStaffChat(playerId)));
+            boolean enabled = chat.toggleStaffChat(playerId);
+            return CompletableFuture.completedFuture(ActionResult.success(enabled, MessageKey.of("chat.staff.toggled"),
+                    MessageKey.of(enabled ? "moderation.gui.status.on" : "moderation.gui.status.off")));
         }
     }
 }

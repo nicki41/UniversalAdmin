@@ -18,12 +18,28 @@ import java.util.Map;
  * {@code metadata} is a small, action-defined bag for anything else worth
  * carrying alongside the result (e.g. an affected-count a GUI wants to
  * display) without inventing a new result type per action.
+ *
+ * <p>A success can describe what it did the same way - "Spawn of world set
+ * to 120, 64, -30" instead of a bare "Done." - via
+ * {@link #success(Object, MessageKey, Object...)}. Commands and GUI pages
+ * show that text (see {@link dev.universaladmin.localization.ResultMessages}),
+ * so every frontend reports the same, precise outcome.
  */
 public sealed interface ActionResult<R> {
 
-    record Success<R>(R value, Map<String, Object> metadata) implements ActionResult<R> {
+    /**
+     * @param messageKey  what the action did, for the user - {@code null} if the action has nothing better than the frontend's default
+     * @param messageArgs arguments for {@code messageKey}; never {@code null} elements
+     */
+    record Success<R>(R value, Map<String, Object> metadata, MessageKey messageKey, List<Object> messageArgs)
+            implements ActionResult<R> {
         public Success {
             metadata = Map.copyOf(metadata);
+            messageArgs = List.copyOf(messageArgs);
+        }
+
+        public Success(R value, Map<String, Object> metadata) {
+            this(value, metadata, null, List.of());
         }
     }
 
@@ -41,6 +57,11 @@ public sealed interface ActionResult<R> {
 
     static <R> ActionResult<R> success(R value, Map<String, Object> metadata) {
         return new Success<>(value, metadata);
+    }
+
+    /** A success that tells the user exactly what happened - see the class documentation. */
+    static <R> ActionResult<R> success(R value, MessageKey messageKey, Object... args) {
+        return new Success<>(value, Map.of(), messageKey, List.of(args));
     }
 
     static <R> ActionResult<R> failure(FailureReason reason, String message) {
