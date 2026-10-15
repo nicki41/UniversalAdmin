@@ -226,7 +226,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         // an old user config.yml is upgraded in place rather than silently
         // reinterpreted (or overwritten) under the current schema. Reused by
         // /admin reload - see ReloadConfigAction.
-        ConfigMigrationRunner migrationRunner = new ConfigMigrationRunner(getLogger());
+        ConfigMigrationRunner migrationRunner = ConfigMigrationRunner.withBuiltInMigrations(getLogger());
         reloadConfig();
         if (migrationRunner.run(getConfig())) {
             saveConfig();

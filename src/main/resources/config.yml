@@ -1,25 +1,30 @@
-# UniversalAdmin configuration. See docs/user/configuration.md for the full,
-# documented reference (every key, its type, default, and valid range) and
-# docs/development/settings.md for how this file is actually read - nothing
-# in the plugin calls config.getString(...) directly; every key here is a
-# registered, typed, validated dev.universaladmin.settings.SettingDefinition.
+# UniversalAdmin configuration.
 #
-# Bumping config-version by hand has no effect - it is managed by
-# dev.universaladmin.config.ConfigMigrationRunner. Don't edit it.
-config-version: 1
+# Most of this can also be changed in-game: /admin -> Settings, or
+# /admin settings set <path> <value>. Changes made there are written back to
+# this file (comments are kept). Full reference with every key, its type,
+# default and valid range: docs/user/configuration.md.
+#
+# An invalid value never breaks the server - it is logged and the default is
+# used instead. Values marked "requires a restart" are saved immediately but
+# only take effect after the next restart.
+#
+# config-version is managed by UniversalAdmin (old files are upgraded
+# automatically). Don't edit it.
+config-version: 2
 
 general:
-  # Active locale. lang/<language>.yml must exist; en_US always ships as the
-  # fallback for any key missing from another locale.
+  # Active language. Ships with en_US and de_DE; any key missing in a
+  # language falls back to en_US. Your own texts: edit lang/<language>.yml.
   language: en_US
 
 database:
-  # sqlite (default, zero setup) or mysql (also used for MariaDB - the
-  # bundled driver speaks MariaDB's protocol, which MySQL servers accept too).
+  # sqlite (default, zero setup) or mysql (also used for MariaDB).
+  # Requires a restart.
   type: sqlite
 
   # --- sqlite ---
-  # File is created inside the plugin's data folder.
+  # File inside the plugin's data folder.
   file: data.db
 
   # --- mysql ---
@@ -28,28 +33,40 @@ database:
   port: 3306
   database: universaladmin
   username: universaladmin
+  # Never shown or editable in-game.
   password: ""
   ssl: true
   pool-size: 10
 
 gui:
-  # Inventory GUI page size; must be a multiple of 9 between 9 and 54.
+  # Inventory GUI page size; a multiple of 9 between 9 and 54.
   page-size: 45
   # Ask for confirmation before destructive GUI actions.
   confirmations: true
 
+commands:
+  shortcuts:
+    # Top-level shortcuts such as /kick, /ban, /vanish, /heal next to
+    # /admin <command>. /universaladmin:<command> always works, even if
+    # another plugin owns the plain label. Requires a restart.
+    enabled: true
+    # Shortcut labels to skip, e.g. [ban, mute] to keep another plugin's
+    # /ban and /mute. /report and /staffchat are always registered.
+    disabled: []
+
 audit:
-  # Whether AuditService actually records events.
+  # Record every admin action in the audit log.
   enabled: true
-  # How many days of audit history to keep. 0 = unlimited (never deleted).
-  # Cleanup runs hourly, not on every tick - see docs/user/audit-log.md.
+  # Days of audit history to keep. 0 = keep forever. Cleanup runs hourly.
   retention-days: 0
 
-# Enable/disable individual built-in modules. Disabling one here means it is
-# never even registered with ModuleManager - see UniversalAdminPlugin.
+# Switch built-in modules on or off. A disabled module is not loaded at all.
+# Requires a restart.
 modules:
   players: true
   moderation: true
+  reports: true
+  chat: true
   server: true
   worlds: true
   whitelist: true
@@ -57,40 +74,122 @@ modules:
   audit: true
   settings: true
 
-performance:
-  # How often the Performance module refreshes its TPS/MSPT/memory/world/
-  # entity snapshot. A duration like 5s, 1m, 1h. Requires a restart.
-  refresh-interval: 5s
+players:
+  gui:
+    # Maximum profiles shown by one offline-players/search query.
+    max-results: 200
 
-# The Performance module's own alert-threshold and entity-clear settings
-# (performance.alerts.*, performance.entity-clear.*) are registered under
-# its own settings namespace, not core - like server.countdown.* or
-# players.gui.max-results, they are not listed here; see
-# docs/user/modules/performance.md#settings for their defaults.
+moderation:
+  # Tell other online staff (universaladmin.moderation.notify) whenever
+  # someone is punished or pardoned.
+  notify-staff: true
+  notes:
+    # Tell staff when a player with staff notes joins.
+    join-alert: true
+  reasons:
+    # Reasons offered in the moderation GUI (plus a custom option).
+    presets: [Cheating, Griefing, Spam, Advertising, Harassment, Bug Abuse, Other]
+  durations:
+    # Durations offered for temporary punishments (plus a custom option).
+    presets: [10m, 30m, 1h, 6h, 1d, 3d, 7d, 30d, permanent]
+  expiry:
+    # Date format for punishment times (Java DateTimeFormatter pattern).
+    date-pattern: "yyyy-MM-dd HH:mm"
+    show-timezone: true
+  vanish:
+    hide-join-message: true
+    hide-quit-message: true
+    block-item-pickup: true
+    restore-on-reconnect: true
+    fake-leave-on-vanish: false
+    fake-join-on-unvanish: false
+  freeze:
+    block-movement: true
+    block-teleport: true
+    block-interaction: true
+    block-inventory: true
+    block-commands: true
+  staffmode:
+    auto-fly: true
+    auto-vanish: true
+    auto-nocollision: true
+    # How far (in blocks) the "who am I looking at" indicator searches.
+    target-range-blocks: 40
+
+reports:
+  # Minimum time between two reports by the same player (0s = no cooldown).
+  cooldown: 60s
+  # Open reports one player may have at a time (0 = unlimited).
+  max-open-per-player: 3
+  # Minimum length of a report reason.
+  min-reason-length: 3
+  # Play a sound for staff when a report comes in.
+  notify-sound: true
+  # Tell staff how many reports are open when they join.
+  remind-staff-on-join: true
+  # Tell the reporter when their report was handled.
+  notify-reporter: true
+
+chat:
+  staff-chat:
+    # Messages starting with this go to staff chat (for players with
+    # universaladmin.chat.staff). Set to "" to disable.
+    prefix: "#"
+    log-to-console: true
+  # Empty lines /admin chat clear sends.
+  clear-lines: 100
+
+server:
+  countdown:
+    # Broadcast a countdown before a shutdown/restart.
+    enabled: true
+    # Seconds-left marks that get a warning broadcast.
+    broadcast-steps: ["60", "30", "10", "5", "4", "3", "2", "1"]
+
+whitelist:
+  gui:
+    # Maximum offline players shown by one whitelist search.
+    search-max-results: 50
+
+performance:
+  # How often TPS/MSPT/memory/entities are sampled. Requires a restart.
+  refresh-interval: 5s
+  alerts:
+    # Staff (universaladmin.performance.view) are alerted when a value
+    # crosses its threshold - at most once per cooldown per kind.
+    tps-threshold: 18.0
+    mspt-threshold-ms: 50.0
+    memory-threshold-percent: 90.0
+    cooldown: 5m
+  entity-clear:
+    # Never removed by Entity Clear, whatever the filter. Players are always
+    # protected and don't need to be listed.
+    protected-types: [VILLAGER, WANDERING_TRADER, ARMOR_STAND, ITEM_FRAME, GLOW_ITEM_FRAME, PAINTING, ENDER_DRAGON, WITHER, ALLAY]
 
 maintenance:
-  # Reject new joins with maintenance.kick-message while true.
+  # Initial state on a fresh install only - afterwards maintenance is switched
+  # with /admin maintenance on|off or the Server GUI, and that state is kept
+  # in the database across restarts.
   enabled: false
+  # Shown to players who cannot join during maintenance (MiniMessage),
+  # unless a custom message was given when maintenance was switched on.
   kick-message: "<red>Server is currently under maintenance."
 
-# Anonymous usage statistics. Full documentation, including the exact payload
-# and everything that is deliberately never collected:
+# Anonymous usage statistics. Exactly what is sent (and what never is):
 # docs/user/telemetry.md
 telemetry:
-  # false switches statistics off completely - no request of any kind is made,
-  # no installation id is generated. Read again on every heartbeat, so
-  # /admin reload applies a change to this immediately. This is the only
-  # telemetry setting: the endpoint is fixed to the official
-  # nicki41-telemetry instance and is not configurable here.
+  # false sends nothing at all, and no installation id is created.
   enabled: true
-
-  # Time between heartbeats (minimum 5m, maximum 24h). A random extra of up to
-  # half this value is added to every wait, so servers don't send in lockstep.
-  # The first heartbeat additionally waits ~5-7 minutes after startup.
-  # Requires a restart.
+  # Time between heartbeats (5m - 24h). Requires a restart.
   interval: 30m
 
+update:
+  # Check GitHub for new releases and tell staff (universaladmin.update.notify).
+  # /admin update downloads it; the server applies it on the next restart.
+  check-for-updates: true
+  # Requires a restart.
+  check-interval: 6h
+
 web:
-  # Reserved for the future web app (see docs/architecture/web-future.md).
-  # Has no effect yet - there is no web server to enable.
+  # Reserved for a future web panel. Has no effect yet.
   enabled: false

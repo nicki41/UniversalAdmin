@@ -1,5 +1,6 @@
 package dev.universaladmin.modules.whitelist;
 
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult;
@@ -116,8 +117,8 @@ public final class WhitelistModule implements Module {
         actions.register(ActionDefinition.builder(new RemoveWhitelistEntryAction(whitelistService))
                 .permission(WhitelistPermissions.REMOVE)
                 .module(module)
-                .target(playerId -> Optional.of(ActionTarget.player(playerId, playerId.toString())))
-                .auditSummary(playerId -> "Removed " + playerId + " from the whitelist")
+                .target(playerId -> Optional.of(ActionTarget.player(playerId, PlayerNames.of(playerId))))
+                .auditSummary(playerId -> "Removed " + PlayerNames.of(playerId) + " from the whitelist")
                 .build());
     }
 

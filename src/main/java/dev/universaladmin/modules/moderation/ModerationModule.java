@@ -1,5 +1,6 @@
 package dev.universaladmin.modules.moderation;
 
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult;
@@ -191,7 +192,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::targetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(KickInput::reason))
-                .auditSummary(in -> "Kicked " + in.targetId() + ": " + in.reason())
+                .auditSummary(in -> "Kicked " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
         actions.register(ActionDefinition.builder(new BanAction(ModerationActionIds.BAN, scheduler, punishmentService, messages, policy, settings))
@@ -200,7 +201,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::banTargetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(BanInput::reason))
-                .auditSummary(in -> "Banned " + in.targetId() + ": " + in.reason())
+                .auditSummary(in -> "Banned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
         actions.register(ActionDefinition.builder(new BanAction(ModerationActionIds.TEMP_BAN, scheduler, punishmentService, messages, policy, settings))
                 .permission(ModerationPermissions.TEMPBAN)
@@ -208,15 +209,15 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::banTargetOf)
                 .forbidSelfTarget()
                 .validator(and(reasonRequired(BanInput::reason), durationRequired(BanInput::expiresAt)))
-                .auditSummary(in -> "Temp-banned " + in.targetId() + ": " + in.reason())
+                .auditSummary(in -> "Temp-banned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
         actions.register(ActionDefinition.builder(new IpBanAction(scheduler, punishmentService, messages, policy, settings))
                 .permission(ModerationPermissions.IPBAN)
                 .module(module)
-                .target(in -> Optional.of(ActionTarget.player(in.targetId(), in.targetId().toString())))
+                .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
                 .forbidSelfTarget()
                 .validator(reasonRequired(IpBanInput::reason))
-                .auditSummary(in -> "IP-banned " + in.targetId() + ": " + in.reason())
+                .auditSummary(in -> "IP-banned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
         actions.register(ActionDefinition.builder(new MuteAction(ModerationActionIds.MUTE, scheduler, punishmentService, messages, policy, settings))
@@ -225,7 +226,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::muteTargetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(MuteInput::reason))
-                .auditSummary(in -> "Muted " + in.targetId() + ": " + in.reason())
+                .auditSummary(in -> "Muted " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
         actions.register(ActionDefinition.builder(new MuteAction(ModerationActionIds.TEMP_MUTE, scheduler, punishmentService, messages, policy, settings))
                 .permission(ModerationPermissions.TEMPMUTE)
@@ -233,16 +234,16 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::muteTargetOf)
                 .forbidSelfTarget()
                 .validator(and(reasonRequired(MuteInput::reason), durationRequired(MuteInput::expiresAt)))
-                .auditSummary(in -> "Temp-muted " + in.targetId() + ": " + in.reason())
+                .auditSummary(in -> "Temp-muted " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
         actions.register(ActionDefinition.builder(new WarnAction(scheduler, punishmentService, messages, policy))
                 .permission(ModerationPermissions.WARN)
                 .module(module)
-                .target(in -> Optional.of(ActionTarget.player(in.targetId(), in.targetId().toString())))
+                .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
                 .forbidSelfTarget()
                 .validator(reasonRequired(WarnInput::reason))
-                .auditSummary(in -> "Warned " + in.targetId() + ": " + in.reason())
+                .auditSummary(in -> "Warned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
         actions.register(ActionDefinition.builder(new FreezeAction(scheduler, punishmentService, freezeRuntimeState, policy, messages))
@@ -251,32 +252,32 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::freezeTargetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(FreezeInput::reason))
-                .auditSummary(in -> "Froze " + in.targetId() + ": " + in.reason())
+                .auditSummary(in -> "Froze " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
         actions.register(ActionDefinition.builder(new UnbanAction(punishmentService))
                 .permission(ModerationPermissions.UNBAN)
                 .module(module)
-                .target(in -> Optional.of(ActionTarget.player(in.targetId(), in.targetId().toString())))
-                .auditSummary(in -> "Unbanned " + in.targetId())
+                .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
+                .auditSummary(in -> "Unbanned " + PlayerNames.of(in.targetId()))
                 .build());
         actions.register(ActionDefinition.builder(new UnmuteAction(punishmentService))
                 .permission(ModerationPermissions.UNMUTE)
                 .module(module)
-                .target(in -> Optional.of(ActionTarget.player(in.targetId(), in.targetId().toString())))
-                .auditSummary(in -> "Unmuted " + in.targetId())
+                .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
+                .auditSummary(in -> "Unmuted " + PlayerNames.of(in.targetId()))
                 .build());
         actions.register(ActionDefinition.builder(new RemoveWarnAction(punishmentService))
                 .permission(ModerationPermissions.REMOVE_WARN)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.player(in.targetId(), "warn#" + in.warnId())))
-                .auditSummary(in -> "Removed warning #" + in.warnId() + " from " + in.targetId())
+                .auditSummary(in -> "Removed warning #" + in.warnId() + " from " + PlayerNames.of(in.targetId()))
                 .build());
         actions.register(ActionDefinition.builder(new UnfreezeAction(punishmentService, freezeRuntimeState))
                 .permission(ModerationPermissions.UNFREEZE)
                 .module(module)
-                .target(in -> Optional.of(ActionTarget.player(in.targetId(), in.targetId().toString())))
-                .auditSummary(in -> "Unfroze " + in.targetId())
+                .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
+                .auditSummary(in -> "Unfroze " + PlayerNames.of(in.targetId()))
                 .build());
 
         // Self-directed: no target beyond the actor (see the Void-input
@@ -309,30 +310,30 @@ public final class ModerationModule implements Module {
         actions.register(ActionDefinition.builder(new RecoverStaffSnapshotAction(staffModeService))
                 .permission(ModerationPermissions.STAFFMODE_RECOVER)
                 .module(module)
-                .target(targetId -> Optional.of(ActionTarget.player(targetId, targetId.toString())))
-                .auditSummary(targetId -> "Recovered staff-mode snapshot for " + targetId)
+                .target(targetId -> Optional.of(ActionTarget.player(targetId, PlayerNames.of(targetId))))
+                .auditSummary(targetId -> "Recovered staff-mode snapshot for " + PlayerNames.of(targetId))
                 .build());
         actions.register(ActionDefinition.builder(new FreezeDisconnectNoticeAction(notifications, messages))
                 .module(module)
-                .target(targetId -> Optional.of(ActionTarget.player(targetId, targetId.toString())))
-                .auditSummary(targetId -> "Player disconnected while frozen: " + targetId)
+                .target(targetId -> Optional.of(ActionTarget.player(targetId, PlayerNames.of(targetId))))
+                .auditSummary(targetId -> "Player disconnected while frozen: " + PlayerNames.of(targetId))
                 .build());
     }
 
     private static Optional<ActionTarget> targetOf(KickInput input) {
-        return Optional.of(ActionTarget.player(input.targetId(), input.targetId().toString()));
+        return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
     }
 
     private static Optional<ActionTarget> banTargetOf(BanInput input) {
-        return Optional.of(ActionTarget.player(input.targetId(), input.targetId().toString()));
+        return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
     }
 
     private static Optional<ActionTarget> muteTargetOf(MuteInput input) {
-        return Optional.of(ActionTarget.player(input.targetId(), input.targetId().toString()));
+        return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
     }
 
     private static Optional<ActionTarget> freezeTargetOf(FreezeInput input) {
-        return Optional.of(ActionTarget.player(input.targetId(), input.targetId().toString()));
+        return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
     }
 
     private static <I> ActionValidator<I> reasonRequired(java.util.function.Function<I, String> reason) {

@@ -1,5 +1,6 @@
 package dev.universaladmin.modules.players.action;
 
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult.FailureReason;
@@ -15,9 +16,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
-import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 
 /**
@@ -105,7 +104,7 @@ public final class PlayerActionRegistrar {
                 .validator((context, in) -> in.durationTicks() <= 0
                         ? Optional.of(ValidationError.of(FailureReason.VALIDATION, MessageKey.of("players.action.invalid-duration")))
                         : Optional.empty())
-                .auditSummary(in -> "Added " + in.type().getName() + " " + (in.amplifier() + 1) + " to " + in.targetId())
+                .auditSummary(in -> "Added " + in.type().getName() + " " + (in.amplifier() + 1) + " to " + PlayerNames.of(in.targetId()))
                 .build();
     }
 
@@ -120,7 +119,7 @@ public final class PlayerActionRegistrar {
                 .permission(PlayerPermissions.EFFECTS_REMOVE)
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
-                .auditSummary(in -> "Removed " + in.type().getName() + " from " + in.targetId())
+                .auditSummary(in -> "Removed " + in.type().getName() + " from " + PlayerNames.of(in.targetId()))
                 .build();
     }
 
@@ -135,7 +134,7 @@ public final class PlayerActionRegistrar {
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(rangeValidator(SetDoubleValueInput::value, 0.0, 2048.0))
-                .auditSummary(in -> "Set health of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set health of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -150,7 +149,7 @@ public final class PlayerActionRegistrar {
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(intRangeValidator(SetIntValueInput::value, 0, 20))
-                .auditSummary(in -> "Set food of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set food of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -165,7 +164,7 @@ public final class PlayerActionRegistrar {
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(rangeValidator(in -> (double) in.value(), 0.0, 1.0))
-                .auditSummary(in -> "Set XP progress of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set XP progress of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -180,7 +179,7 @@ public final class PlayerActionRegistrar {
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(intRangeValidator(SetIntValueInput::value, 0, Integer.MAX_VALUE))
-                .auditSummary(in -> "Set level of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set level of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -208,7 +207,7 @@ public final class PlayerActionRegistrar {
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(rangeValidator(in -> (double) in.value(), -1.0, 1.0))
-                .auditSummary(in -> "Set fly speed of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set fly speed of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -223,7 +222,7 @@ public final class PlayerActionRegistrar {
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(rangeValidator(in -> (double) in.value(), -1.0, 1.0))
-                .auditSummary(in -> "Set walk speed of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set walk speed of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -267,7 +266,7 @@ public final class PlayerActionRegistrar {
                 .permission(PlayerPermissions.GAMEMODE)
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
-                .auditSummary(in -> "Set gamemode of " + in.targetId() + " to " + in.gamemode())
+                .auditSummary(in -> "Set gamemode of " + PlayerNames.of(in.targetId()) + " to " + in.gamemode())
                 .build();
     }
 
@@ -281,8 +280,7 @@ public final class PlayerActionRegistrar {
     }
 
     private static ActionTarget target(UUID playerId) {
-        Player online = Bukkit.getPlayer(playerId);
-        return ActionTarget.player(playerId, online != null ? online.getName() : playerId.toString());
+        return ActionTarget.player(playerId, PlayerNames.of(playerId));
     }
 
     private static <I> ActionValidator<I> rangeValidator(ToDoubleFunction<I> value, double min, double max) {

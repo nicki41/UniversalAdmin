@@ -1,5 +1,6 @@
 package dev.universaladmin.modules.players;
 
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult;
@@ -92,39 +93,39 @@ public final class PlayersModule implements Module {
         actions.register(ActionDefinition.builder(new GetPlayerIpAddressAction(scheduler))
                 .permission(PlayerPermissions.IP)
                 .module(module)
-                .target(input -> Optional.of(ActionTarget.player(input.targetId(), input.targetId().toString())))
+                .target(input -> Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId()))))
                 // Audited (unlike GetPlayerProfileAction) - who looked up
                 // whose IP address is exactly the kind of sensitive read an
                 // audit trail exists for. The IP itself never goes into the
                 // summary/metadata: an audit-log viewer without
                 // PlayerPermissions.IP must not learn it that way.
-                .auditSummary(input -> "Viewed IP address of " + input.targetId())
+                .auditSummary(input -> "Viewed IP address of " + PlayerNames.of(input.targetId()))
                 .build());
         actions.register(ActionDefinition.builder(new TeleportPlayerAction(scheduler))
                 .permission(PlayerPermissions.TELEPORT)
                 .module(module)
                 .target(PlayersModule::teleportTarget)
-                .auditSummary(input -> "Teleport (" + input.kind() + ") " + input.targetId())
+                .auditSummary(input -> "Teleport (" + input.kind() + ") " + PlayerNames.of(input.targetId()))
                 .build());
         actions.register(ActionDefinition.builder(new SetPlayerInventoryContentsAction(scheduler))
                 .permission(PlayerPermissions.INVENTORY_EDIT)
                 .module(module)
                 .target(PlayersModule::inventoryTarget)
-                .auditSummary(input -> "Set " + input.section() + " contents of " + input.targetId())
+                .auditSummary(input -> "Set " + input.section() + " contents of " + PlayerNames.of(input.targetId()))
                 .auditDetails((input, result) -> inventoryDetails(result))
                 .build());
         actions.register(ActionDefinition.builder(new SetPlayerEnderChestContentsAction(scheduler))
                 .permission(PlayerPermissions.ENDERCHEST_EDIT)
                 .module(module)
                 .target(PlayersModule::enderChestTarget)
-                .auditSummary(input -> "Set ender chest contents of " + input.targetId())
+                .auditSummary(input -> "Set ender chest contents of " + PlayerNames.of(input.targetId()))
                 .auditDetails((input, result) -> inventoryDetails(result))
                 .build());
         actions.register(ActionDefinition.builder(new ClearPlayerInventoryAction(scheduler))
                 .permission(PlayerPermissions.INVENTORY_EDIT)
                 .module(module)
-                .target(input -> Optional.of(ActionTarget.player(input.targetId(), input.targetId().toString())))
-                .auditSummary(input -> "Cleared inventory of " + input.targetId())
+                .target(input -> Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId()))))
+                .auditSummary(input -> "Cleared inventory of " + PlayerNames.of(input.targetId()))
                 .auditDetails((input, result) -> inventoryDetails(result))
                 .build());
 
@@ -132,15 +133,15 @@ public final class PlayersModule implements Module {
     }
 
     private static Optional<ActionTarget> teleportTarget(TeleportInput input) {
-        return Optional.of(ActionTarget.player(input.targetId(), input.targetId().toString()));
+        return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
     }
 
     private static Optional<ActionTarget> inventoryTarget(SetInventoryContentsInput input) {
-        return Optional.of(ActionTarget.player(input.targetId(), input.targetId().toString()));
+        return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
     }
 
     private static Optional<ActionTarget> enderChestTarget(SetEnderChestContentsInput input) {
-        return Optional.of(ActionTarget.player(input.targetId(), input.targetId().toString()));
+        return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
     }
 
     /** Coarse before/after slot-count summary, never the actual items - see {@link InventoryChangeSummary}. */

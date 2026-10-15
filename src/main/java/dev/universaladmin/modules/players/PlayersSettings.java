@@ -24,7 +24,7 @@ public final class PlayersSettings {
      * layer instead of after loading everything (see {@link
      * PlayerProfileRepository#search}).
      */
-    public static final SettingKey<Integer> GUI_MAX_RESULTS = SettingKey.of("players", "gui.max-results");
+    public static final SettingKey<Integer> GUI_MAX_RESULTS = SettingKey.of("players", "players.gui.max-results");
 
     public static void registerAll(SettingRegistry registry) {
         registry.register(SettingDefinition.builder(GUI_MAX_RESULTS, SettingTypes.INTEGER, 200)
