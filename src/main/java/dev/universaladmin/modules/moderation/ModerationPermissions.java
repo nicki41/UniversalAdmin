@@ -39,11 +39,17 @@ public final class ModerationPermissions {
     public static final PermissionNode COLLISION = PermissionNode.core("moderation.collision");
     public static final PermissionNode STAFFMODE = PermissionNode.core("moderation.staffmode");
     public static final PermissionNode STAFFMODE_RECOVER = PermissionNode.core("moderation.staffmode.recover");
+    /** Read and write staff notes about players, and see the "player with notes joined" alert. */
+    public static final PermissionNode NOTES = PermissionNode.core("moderation.notes");
+    /** Receive a staff notification whenever another staff member punishes or pardons a player. */
+    public static final PermissionNode NOTIFY = PermissionNode.core("moderation.notify");
 
     /** Registers every node above with {@link PermissionDefault#OP}, matching every other node in the plugin today. */
     public static void registerAll(PermissionRegistry registry) {
         List.of(
                 new PermissionDefinition(USE, "Open the Moderation GUI", PermissionDefault.OP),
+                new PermissionDefinition(NOTES, "Read and write staff notes about players", PermissionDefault.OP),
+                new PermissionDefinition(NOTIFY, "Get notified when staff punish or pardon a player", PermissionDefault.OP),
                 new PermissionDefinition(VIEW, "View punishment history, warnings, bans, and mutes", PermissionDefault.OP),
                 new PermissionDefinition(KICK, "Kick a player", PermissionDefault.OP),
                 new PermissionDefinition(BAN, "Permanently ban a player", PermissionDefault.OP),

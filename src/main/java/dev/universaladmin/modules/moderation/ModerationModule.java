@@ -44,7 +44,12 @@ import dev.universaladmin.modules.moderation.gui.ModerationHomePage;
 import dev.universaladmin.modules.moderation.gui.ModeratePlayerMenuEntry;
 import dev.universaladmin.modules.moderation.jdbc.JdbcPunishmentRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcStaffModeSnapshotRepository;
+import dev.universaladmin.modules.moderation.jdbc.JdbcPlayerNoteRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcVanishRepository;
+import dev.universaladmin.modules.moderation.notes.NoteActions;
+import dev.universaladmin.modules.moderation.notes.NotesSupport;
+import dev.universaladmin.modules.moderation.notes.PlayerNoteRepository;
+import dev.universaladmin.modules.moderation.notes.PlayerNotesMigration;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
@@ -92,6 +97,7 @@ public final class ModerationModule implements Module {
         context.platform().storage().migrations().register(new ModerationPunishmentIndexMigration());
         context.platform().storage().migrations().register(new VanishStateMigration());
         context.platform().storage().migrations().register(new StaffModeSnapshotMigration());
+        context.registerMigration(new PlayerNotesMigration());
     }
 
     @Override
@@ -163,6 +169,9 @@ public final class ModerationModule implements Module {
         ModerationCommands.all(new ModerationCommands.Dependencies(
                 punishmentService, staffModeService, guiContext, context.platform().settings(), messages))
                 .forEach(context::registerCommand);
+
+        registerNotes(context);
+        context.subscribe(new StaffPunishmentNotifier(messages, context.platform().settings(), scheduler));
 
         scheduleExpirySweep(context, punishmentService);
         scheduleStaffModeTracker(context, staffModeState, toolItems, freezeRuntimeState, vanishService, context.platform().settings(), messages);
@@ -367,6 +376,41 @@ public final class ModerationModule implements Module {
         // own buttons the same way).
         context.registerPlayerMenuEntry(new ModeratePlayerMenuEntry(guiContext));
         return guiContext;
+    }
+
+    /** Staff notes: table, add/remove actions, the profile button, {@code /admin notes} and the join alert. */
+    private void registerNotes(ModuleContext context) {
+        var platform = context.platform();
+        PlayerNoteRepository notes = new JdbcPlayerNoteRepository(platform.storage().dataSource(), platform.scheduler());
+        String module = ID.key().name();
+        context.registerAction(ActionDefinition.builder(new NoteActions.Add(notes))
+                .permission(ModerationPermissions.NOTES)
+                .module(module)
+                .target(input -> Optional.of(ActionTarget.player(input.targetId(), input.targetName())))
+                .validator((ctx, input) -> {
+                    String text = input.text() == null ? "" : input.text().trim();
+                    if (text.isEmpty()) {
+                        return Optional.of(ValidationError.of(ActionResult.FailureReason.VALIDATION, MessageKey.of("moderation.notes.empty")));
+                    }
+                    return text.length() > NoteActions.MAX_LENGTH
+                            ? Optional.of(ValidationError.of(ActionResult.FailureReason.VALIDATION,
+                                    MessageKey.of("moderation.notes.too-long"), NoteActions.MAX_LENGTH))
+                            : Optional.empty();
+                })
+                .auditSummary(input -> "Added a note about " + input.targetName() + ": " + input.text())
+                .build());
+        context.registerAction(ActionDefinition.builder(new NoteActions.Remove(notes))
+                .permission(ModerationPermissions.NOTES)
+                .module(module)
+                .target(id -> Optional.of(ActionTarget.of("note", String.valueOf(id), "note #" + id)))
+                .auditSummary(id -> "Removed note #" + id)
+                .build());
+
+        NotesSupport.Context notesContext = new NotesSupport.Context(platform.guiFramework(), platform.messages(),
+                platform.scheduler(), platform.actionExecutor(), notes, platform.settings(), platform.notifications());
+        context.registerPlayerMenuEntry(NotesSupport.menuEntry(notesContext));
+        context.registerCommand(new NotesSupport.NotesCommand(notesContext));
+        context.registerListener(new NotesSupport.JoinAlertListener(notesContext));
     }
 
     private void scheduleExpirySweep(ModuleContext context, PunishmentService punishmentService) {

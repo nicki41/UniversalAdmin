@@ -24,6 +24,8 @@ public final class ModerationSettings {
     }
 
     public static final SettingKey<List<String>> REASON_PRESETS = SettingKey.of("moderation", "reasons.presets");
+    public static final SettingKey<Boolean> NOTIFY_STAFF = SettingKey.of("moderation", "moderation.notify-staff");
+    public static final SettingKey<Boolean> NOTES_JOIN_ALERT = SettingKey.of("moderation", "moderation.notes.join-alert");
     public static final SettingKey<List<String>> DURATION_PRESETS = SettingKey.of("moderation", "durations.presets");
 
     public static final SettingKey<Boolean> VANISH_HIDE_JOIN_MESSAGE = SettingKey.of("moderation", "vanish.hide-join-message");
@@ -74,6 +76,9 @@ public final class ModerationSettings {
                         List.of("10m", "30m", "1h", "6h", "1d", "3d", "7d", "30d", "permanent"))
                 .description("Preset durations offered in the moderation GUI for temporary punishments (see DurationParser), alongside a custom option.")
                 .build());
+
+        registry.register(bool(NOTIFY_STAFF, true, "Tell online staff (universaladmin.moderation.notify) whenever someone is punished or pardoned."));
+        registry.register(bool(NOTES_JOIN_ALERT, true, "Tell staff with universaladmin.moderation.notes when a player who has staff notes joins."));
 
         registry.register(bool(VANISH_HIDE_JOIN_MESSAGE, true, "Suppress the real join message when a persistently-vanished player reconnects."));
         registry.register(bool(VANISH_HIDE_QUIT_MESSAGE, true, "Suppress the real quit message when a vanished player disconnects."));

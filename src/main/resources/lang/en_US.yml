@@ -141,6 +141,37 @@ players:
       title: "<gold>Ender Chest - {0}"
 
 moderation:
+  notify:
+    kick: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <yellow>kicked</yellow> <white>{1}</white><gray>: {2}"
+    ban: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <red>banned</red> <white>{1}</white> <gray>({3}): {2}"
+    tempban: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <red>banned</red> <white>{1}</white> <gray>for {3}: {2}"
+    ipban: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <dark_red>IP-banned</dark_red> <white>{1}</white> <gray>({3}): {2}"
+    mute: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <light_purple>muted</light_purple> <white>{1}</white> <gray>({3}): {2}"
+    tempmute: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <light_purple>muted</light_purple> <white>{1}</white> <gray>for {3}: {2}"
+    warn: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <yellow>warned</yellow> <white>{1}</white><gray>: {2}"
+    freeze: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <aqua>froze</aqua> <white>{1}</white><gray>: {2}"
+    unban: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <green>unbanned</green> <white>{1}</white>"
+    unmute: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <green>unmuted</green> <white>{1}</white>"
+    unfreeze: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <green>unfroze</green> <white>{1}</white>"
+    removewarn: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <green>removed a warning from</green> <white>{1}</white>"
+  notes:
+    added: "<green>Note about <white>{0}</white> saved <dark_gray>(#{1})</dark_gray>."
+    removed: "<yellow>Note <white>#{0}</white> about <white>{1}</white> deleted."
+    not-found: "<red>There is no note <white>#{0}</white>."
+    empty: "<red>A note cannot be empty."
+    too-long: "<red>That note is too long (at most {0} characters)."
+    none: "<gray>There are no notes about <white>{0}</white>."
+    header: "<gold>Notes about <white>{0}</white> <gray>({1}):"
+    entry: "<dark_gray>#{0}</dark_gray> <white>{1}</white> <gray>- {2}, {3}"
+    join-alert: "<gold>[Notes]</gold> <white>{0}</white> <gray>joined and has</gray> <white>{1}</white> <gray>staff note(s).</gray> <click:run_command:''/admin notes {0}''><yellow><u>[Show]</u></yellow></click>"
+    gui:
+      button: "<aqua>Staff notes"
+      title: "<gold>Notes - {0}"
+      add: "<green>Add a note"
+      prompt: "New note about {0}"
+      by: "<gray>by <white>{0}</white>, {1}"
+      delete-hint: "<dark_gray>Right-click to delete"
+      delete-title: "<yellow>Delete this note?"
   type:
     kick: "Kick"
     ban: "Ban"
@@ -679,6 +710,9 @@ command:
 # after the command label (not MiniMessage), "description" the line in
 # /admin help. The other keys are that command's own replies.
 commands:
+  notes:
+    usage: "<player> [add <text>] | remove <id>"
+    description: "Shows, adds or deletes staff notes about a player."
   staffchat:
     usage: "[message]"
     description: "Writes to the staff chat; without a message, toggles staff chat mode."

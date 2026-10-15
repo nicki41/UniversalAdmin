@@ -138,6 +138,37 @@ players:
       title: "<gold>Endertruhe - {0}"
 
 moderation:
+  notify:
+    kick: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <yellow>hat</yellow> <white>{1}</white> <yellow>gekickt</yellow><gray>: {2}"
+    ban: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <red>hat</red> <white>{1}</white> <red>gebannt</red> <gray>({3}): {2}"
+    tempban: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <red>hat</red> <white>{1}</white> <red>für {3} gebannt</red><gray>: {2}"
+    ipban: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <dark_red>hat</dark_red> <white>{1}</white> <dark_red>IP-gebannt</dark_red> <gray>({3}): {2}"
+    mute: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <light_purple>hat</light_purple> <white>{1}</white> <light_purple>stummgeschaltet</light_purple> <gray>({3}): {2}"
+    tempmute: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <light_purple>hat</light_purple> <white>{1}</white> <light_purple>für {3} stummgeschaltet</light_purple><gray>: {2}"
+    warn: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <yellow>hat</yellow> <white>{1}</white> <yellow>verwarnt</yellow><gray>: {2}"
+    freeze: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <aqua>hat</aqua> <white>{1}</white> <aqua>eingefroren</aqua><gray>: {2}"
+    unban: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <green>hat</green> <white>{1}</white> <green>entbannt</green>"
+    unmute: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <green>hat die Stummschaltung von</green> <white>{1}</white> <green>aufgehoben</green>"
+    unfreeze: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <green>hat</green> <white>{1}</white> <green>freigegeben</green>"
+    removewarn: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <green>hat eine Verwarnung von</green> <white>{1}</white> <green>entfernt</green>"
+  notes:
+    added: "<green>Notiz über <white>{0}</white> gespeichert <dark_gray>(#{1})</dark_gray>."
+    removed: "<yellow>Notiz <white>#{0}</white> über <white>{1}</white> gelöscht."
+    not-found: "<red>Es gibt keine Notiz <white>#{0}</white>."
+    empty: "<red>Eine Notiz darf nicht leer sein."
+    too-long: "<red>Die Notiz ist zu lang (höchstens {0} Zeichen)."
+    none: "<gray>Es gibt keine Notizen über <white>{0}</white>."
+    header: "<gold>Notizen über <white>{0}</white> <gray>({1}):"
+    entry: "<dark_gray>#{0}</dark_gray> <white>{1}</white> <gray>- {2}, {3}"
+    join-alert: "<gold>[Notizen]</gold> <white>{0}</white> <gray>ist gejoint und hat</gray> <white>{1}</white> <gray>Team-Notiz(en).</gray> <click:run_command:''/admin notes {0}''><yellow><u>[Anzeigen]</u></yellow></click>"
+    gui:
+      button: "<aqua>Team-Notizen"
+      title: "<gold>Notizen - {0}"
+      add: "<green>Notiz hinzufügen"
+      prompt: "Neue Notiz über {0}"
+      by: "<gray>von <white>{0}</white>, {1}"
+      delete-hint: "<dark_gray>Rechtsklick zum Löschen"
+      delete-title: "<yellow>Diese Notiz löschen?"
   type:
     kick: "Kick"
     ban: "Bann"
@@ -676,6 +707,9 @@ command:
 # (kein MiniMessage) hinter dem Befehl, "description" die Zeile in
 # /admin help. Die übrigen Schlüssel sind die Antworten des Befehls.
 commands:
+  notes:
+    usage: "<spieler> [add <text>] | remove <id>"
+    description: "Zeigt, ergänzt oder löscht Team-Notizen über einen Spieler."
   staffchat:
     usage: "[nachricht]"
     description: "Schreibt in den Team-Chat; ohne Nachricht schaltet es den Team-Chat-Modus um."
