@@ -66,10 +66,26 @@ jobs:
           path: build/libs/*.jar
           if-no-files-found: error
 
+      - name: Upload Discord extension jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: UniversalAdminDiscord-${{ steps.version.outputs.version }}
+          path: extensions/discord/build/libs/*.jar
+          if-no-files-found: error
+
+      - name: Upload API jars
+        uses: actions/upload-artifact@v7
+        with:
+          name: universaladmin-api-${{ steps.version.outputs.version }}
+          path: api/build/libs/*.jar
+          if-no-files-found: error
+
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: test-report
-          path: build/reports/tests/test
+          path: |
+            build/reports/tests/test
+            extensions/discord/build/reports/tests/test
           if-no-files-found: ignore

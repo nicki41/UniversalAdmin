@@ -103,6 +103,36 @@ jobs:
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
           echo "checksum=${JAR}.sha256" >> "$GITHUB_OUTPUT"
 
+      # Attached next to the plugin jar: the official Discord extension (its
+      # own plugin jar) and the extension API for developers (binary,
+      # sources, javadoc). Only the plugin jar goes to Modrinth.
+      - name: Collect extension and API artifacts
+        id: extras
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          DISCORD="extensions/discord/build/libs/universaladmin-discord-${VERSION}.jar"
+          API="api/build/libs/universaladmin-api-${VERSION}.jar"
+          for f in "$DISCORD" "$API" \
+              "api/build/libs/universaladmin-api-${VERSION}-sources.jar" \
+              "api/build/libs/universaladmin-api-${VERSION}-javadoc.jar"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Expected artifact '$f' was not produced by the build."
+              exit 1
+            fi
+          done
+          ( cd extensions/discord/build/libs && sha256sum "universaladmin-discord-${VERSION}.jar" \
+              > "universaladmin-discord-${VERSION}.jar.sha256" )
+          {
+            echo "files<<FILES_EOF"
+            echo "$DISCORD"
+            echo "${DISCORD}.sha256"
+            echo "$API"
+            echo "api/build/libs/universaladmin-api-${VERSION}-sources.jar"
+            echo "api/build/libs/universaladmin-api-${VERSION}-javadoc.jar"
+            echo "FILES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       # Every version - -alpha/-beta/-rc included - is published as a normal
       # GitHub release, not flagged "Pre-release". Deliberate: the project's
       # own alpha status is already communicated in the README/version
@@ -142,6 +172,9 @@ jobs:
             --title "UniversalAdmin ${VERSION}"
             --generate-notes
           )
+          while IFS= read -r extra; do
+            [ -n "$extra" ] && ARGS+=("$extra")
+          done <<< "${{ steps.extras.outputs.files }}"
           if [ -n "${{ steps.notes.outputs.notes_file }}" ]; then
             ARGS+=(--notes-file "${{ steps.notes.outputs.notes_file }}")
           fi
@@ -167,9 +200,11 @@ jobs:
           version: ${{ steps.version.outputs.version }}
           changelog: ${{ steps.github_release.outputs.body }}
           loaders: paper
-          # Only the currently pinned Paper API version is claimed - the
-          # broader supported range is an explicit open TODO, see
-          # RELEASE_READINESS.md and docs/release/modrinth.md.
+          # The supported range is "Minecraft/Paper 26.2" - the version the
+          # plugin is built and tested against (plugin.yml api-version
+          # '26.2' makes older servers refuse to load it). Newer versions
+          # are added here once they have been tested - see
+          # docs/user/installation.md#supported-versions.
           game-versions: "26.2"
           java: 25
           fail-mode: warn
