@@ -1,0 +1,16 @@
+# The example extension's own texts. Keys start with the extension's
+# namespace ("example.") so they never collide with UniversalAdmin's.
+example:
+  greeted: "<green>Greeted <white>{0}</white>."
+  command:
+    usage: "<player>"
+    description: "Sends a friendly greeting to a player (example extension)."
+  gui:
+    title: "<gold><bold>Greetings"
+    click-to-greet: "<gray>Click to greet"
+    profile-button: "<light_purple>Greet"
+menu:
+  example:
+    greetings:
+      name: "<light_purple>Greetings"
+      description: "<gray>Example extension - greet online players."

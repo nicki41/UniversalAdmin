@@ -1,0 +1,14 @@
+example:
+  greeted: "<green><white>{0}</white> wurde begrüßt."
+  command:
+    usage: "<spieler>"
+    description: "Sendet einem Spieler einen freundlichen Gruß (Beispiel-Erweiterung)."
+  gui:
+    title: "<gold><bold>Grüße"
+    click-to-greet: "<gray>Klicken zum Begrüßen"
+    profile-button: "<light_purple>Begrüßen"
+menu:
+  example:
+    greetings:
+      name: "<light_purple>Grüße"
+      description: "<gray>Beispiel-Erweiterung - Spieler begrüßen."

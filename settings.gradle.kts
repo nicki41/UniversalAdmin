@@ -23,3 +23,9 @@ rootProject.name = "universaladmin-core"
 
 include("universaladmin-api")
 project(":universaladmin-api").projectDir = file("api")
+
+include("example-extension")
+project(":example-extension").projectDir = file("examples/example-extension")
+
+include("universaladmin-discord")
+project(":universaladmin-discord").projectDir = file("extensions/discord")

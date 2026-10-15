@@ -1,0 +1,7 @@
+name: UniversalAdminDiscord
+version: '${version}'
+main: dev.universaladmin.discord.DiscordPlugin
+api-version: '26.2'
+description: Posts UniversalAdmin punishments, reports and other admin actions to a Discord channel.
+website: https://github.com/nicki41/UniversalAdmin
+depend: [UniversalAdmin]

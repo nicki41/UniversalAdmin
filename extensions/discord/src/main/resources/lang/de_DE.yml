@@ -1,0 +1,10 @@
+discord:
+  command:
+    usage: "[status|test|reload]"
+    description: "Status, Testnachricht und Neuladen der Discord-Anbindung."
+  status-on: "<green>Discord-Logging ist an.</green> <gray>Gepostet wird: {0}"
+  not-configured: "<yellow>Noch keine gültige Webhook-URL - trage webhook-url in plugins/UniversalAdminDiscord/config.yml ein und führe /admin discord reload aus."
+  reloaded: "<green>Discord-Konfiguration neu geladen."
+  test-sending: "<gray>Sende eine Testnachricht an Discord..."
+  test-ok: "<green>Testnachricht zugestellt - schau in deinen Discord-Kanal."
+  test-failed: "<red>Discord hat die Testnachricht nicht angenommen (Status {0}). Prüfe die Webhook-URL."
