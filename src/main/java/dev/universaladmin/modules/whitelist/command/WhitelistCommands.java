@@ -93,7 +93,7 @@ public final class WhitelistCommands {
                 invocation.run(WhitelistActionIds.ADD,
                         new AddWhitelistEntryInput(ref.id(), ref.name(), reason.isEmpty() ? null : reason, null, expiry),
                         MessageKey.of(expiry == null ? "commands.whitelist.added" : "commands.whitelist.added-temporary"),
-                        ref.name(), expiry == null ? "" : DurationParser.format(Duration.between(Instant.now(), expiry).plusSeconds(1)));
+                        ref.name(), expiry == null ? "" : DurationParser.formatRemaining(expiry));
             });
         }
 

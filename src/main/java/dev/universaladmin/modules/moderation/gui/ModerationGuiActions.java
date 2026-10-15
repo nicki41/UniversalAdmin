@@ -83,7 +83,7 @@ final class ModerationGuiActions {
             String key = toggleSuccessKey(id);
             if (key != null) {
                 String state = messages.get(MessageKey.of(enabled ? "moderation.gui.status.on" : "moderation.gui.status.off"));
-                return ComponentMessages.render(messages.get(MessageKey.of(key), state));
+                return ComponentMessages.render(messages.get(MessageKey.of(key), MessageService.markup(state)));
             }
         } else {
             String key = plainSuccessKey(id);

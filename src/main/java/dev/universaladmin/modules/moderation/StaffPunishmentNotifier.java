@@ -10,8 +10,6 @@ import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.moderation.action.ModerationActionIds;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -68,7 +66,7 @@ public final class StaffPunishmentNotifier implements ActionEventListener {
         }
         String duration = punishment.expiresAt() == null
                 ? messages.get(MessageKey.of("moderation.gui.permanent"))
-                : DurationParser.format(Duration.between(Instant.now(), punishment.expiresAt()).plusSeconds(1));
+                : DurationParser.formatRemaining(punishment.expiresAt());
         String text = messages.get(MessageKey.of(key), executed.context().actor().displayName(),
                 punishment.targetLastKnownName(), punishment.reason() == null ? "-" : punishment.reason(), duration);
         UUID actorId = executed.context().actor().playerId();

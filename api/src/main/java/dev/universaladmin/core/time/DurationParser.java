@@ -88,6 +88,16 @@ public final class DurationParser {
         return out.toString();
     }
 
+    /**
+     * Time left until {@code until}, rounded to the nearest second and
+     * formatted like {@link #format} - so a freshly issued 7-day ban reads
+     * {@code 1w}, not {@code 6d 23h 59m 59s}. {@code 0s} once it is past.
+     */
+    public static String formatRemaining(java.time.Instant until) {
+        long millis = Duration.between(java.time.Instant.now(), until).toMillis();
+        return format(Duration.ofSeconds(Math.max(0, Math.round(millis / 1000.0))));
+    }
+
     private static long append(StringBuilder out, long seconds, long unitSeconds, char unit) {
         long amount = seconds / unitSeconds;
         if (amount > 0) {

@@ -179,7 +179,7 @@ public final class ModerationCommands {
             String reason = reason(invocation, reasonIndex);
             PlayerRef player = target.get();
             UUID id = player.id();
-            String durationText = expiresAt == null ? "" : DurationParser.format(Duration.between(Instant.now(), expiresAt).plusSeconds(1));
+            String durationText = expiresAt == null ? "" : DurationParser.formatRemaining(expiresAt);
             switch (kind) {
                 case KICK -> invocation.run(ModerationActionIds.KICK, new KickInput(id, reason),
                         MessageKey.of("moderation.gui.action.result.kick"), player.name(), reason);
