@@ -679,6 +679,12 @@ command:
 # after the command label (not MiniMessage), "description" the line in
 # /admin help. The other keys are that command's own replies.
 commands:
+  staffchat:
+    usage: "[message]"
+    description: "Writes to the staff chat; without a message, toggles staff chat mode."
+  chat:
+    usage: "<lock|unlock|slow <duration|off>|clear|status>"
+    description: "Lock the chat, set slow mode or clear the chat."
   report:
     usage: "<player> <reason>"
     description: "Reports a player to the staff team."
@@ -1042,6 +1048,44 @@ reports:
       teleport-target: "<light_purple>Teleport to the reported player"
       teleport-location: "<light_purple>Teleport to where it was reported"
       prompt-note: "Optional note (shown in the report)"
+
+chat:
+  locked-broadcast: "<red>The chat has been locked by <white>{0}</white>."
+  unlocked-broadcast: "<green>The chat has been unlocked by <white>{0}</white>."
+  slowmode-broadcast: "<yellow>Slow mode is on: one message every <white>{0}</white> <gray>(set by {1})"
+  slowmode-off-broadcast: "<green>Slow mode was turned off by <white>{0}</white>."
+  cleared-broadcast: "<gray>The chat was cleared by <white>{0}</white>."
+  locked-blocked: "<red>The chat is locked right now."
+  slowmode-blocked: "<yellow>Slow mode - you can chat again in <white>{0}</white>."
+  slowmode-too-long: "<red>Slow mode can be at most 1h."
+  slowmode-none: "off"
+  already-locked: "<yellow>The chat is already locked."
+  already-unlocked: "<yellow>The chat is not locked."
+  lock-done: "<red>Chat locked."
+  unlock-done: "<green>Chat unlocked."
+  clear-done: "<green>Chat cleared for <white>{0}</white> player(s)."
+  status: "<gray>Chat: {0} <dark_gray>|</dark_gray> Slow mode: <white>{1}"
+  state-locked: "<red>locked"
+  state-open: "<green>open"
+  staff:
+    format: "<dark_aqua>[Staff]</dark_aqua> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
+    toggled: "<aqua>Staff chat mode: {0} <gray>- everything you type goes to staff chat while it is on."
+  gui:
+    title: "<gold><bold>Chat"
+    lock: "<red>Lock the chat"
+    unlock: "<green>Unlock the chat"
+    lock-status-open: "<gray>The chat is open."
+    lock-status-locked: "<red>The chat is locked - only staff can talk."
+    slowmode: "<yellow>Slow mode"
+    slowmode-current: "<gray>Currently: <white>{0}"
+    slowmode-hint: "<dark_gray>Click: next preset - right-click: custom"
+    slowmode-prompt: "Delay between messages (e.g. 5s, 30s, 1m) - empty or off to disable"
+    clear: "<red>Clear the chat"
+    clear-hint: "<gray>Pushes old messages out of view for everyone except staff."
+    clear-confirm: "<gray>Clear the chat for every player without the bypass permission?"
+    staffchat: "<aqua>My staff chat mode"
+    staffchat-on: "<green>On - what you type goes to staff chat"
+    staffchat-off: "<gray>Off - type # first, or use /sc [message]"
 
 update:
   available: "<yellow>A new UniversalAdmin version is available: {0} (currently running {1}). Run /admin update to download it, then restart the server to apply it."

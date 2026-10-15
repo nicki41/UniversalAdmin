@@ -31,7 +31,10 @@ public final class ModerationChatListener implements Listener {
         this.settings = settings;
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
+    // ignoreCancelled: a message the Chat module already routed to staff
+    // chat (or blocked for chat lock/slow mode) must not additionally
+    // trigger a "you are muted" reply.
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
         Player player = event.getPlayer();
         Optional<Punishment> mute = punishmentService.activeMute(player.getUniqueId()).join();

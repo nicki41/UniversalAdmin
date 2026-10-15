@@ -36,6 +36,7 @@ import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleManager;
 import dev.universaladmin.module.ModuleRegistry;
 import dev.universaladmin.modules.auditlog.AuditLogModule;
+import dev.universaladmin.modules.chat.ChatModule;
 import dev.universaladmin.modules.moderation.ModerationModule;
 import dev.universaladmin.modules.performance.PerformanceModule;
 import dev.universaladmin.modules.players.PlayersModule;
@@ -330,6 +331,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_AUDIT_ENABLED, AuditLogModule::new);
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_SETTINGS_ENABLED, SettingsModule::new);
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_REPORTS_ENABLED, ReportsModule::new);
+        registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_CHAT_ENABLED, ChatModule::new);
     }
 
     private void registerIfEnabled(

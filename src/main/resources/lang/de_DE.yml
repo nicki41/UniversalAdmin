@@ -676,6 +676,12 @@ command:
 # (kein MiniMessage) hinter dem Befehl, "description" die Zeile in
 # /admin help. Die übrigen Schlüssel sind die Antworten des Befehls.
 commands:
+  staffchat:
+    usage: "[nachricht]"
+    description: "Schreibt in den Team-Chat; ohne Nachricht schaltet es den Team-Chat-Modus um."
+  chat:
+    usage: "<lock|unlock|slow <dauer|off>|clear|status>"
+    description: "Chat sperren, Slowmode setzen oder Chat leeren."
   report:
     usage: "<spieler> <grund>"
     description: "Meldet einen Spieler an das Team."
@@ -1039,6 +1045,44 @@ reports:
       teleport-target: "<light_purple>Zum gemeldeten Spieler teleportieren"
       teleport-location: "<light_purple>Zum Ort der Meldung teleportieren"
       prompt-note: "Optionale Notiz (wird bei der Meldung gespeichert)"
+
+chat:
+  locked-broadcast: "<red>Der Chat wurde von <white>{0}</white> gesperrt."
+  unlocked-broadcast: "<green>Der Chat wurde von <white>{0}</white> wieder freigegeben."
+  slowmode-broadcast: "<yellow>Slowmode ist an: eine Nachricht alle <white>{0}</white> <gray>(gesetzt von {1})"
+  slowmode-off-broadcast: "<green>Slowmode wurde von <white>{0}</white> ausgeschaltet."
+  cleared-broadcast: "<gray>Der Chat wurde von <white>{0}</white> geleert."
+  locked-blocked: "<red>Der Chat ist gerade gesperrt."
+  slowmode-blocked: "<yellow>Slowmode - du kannst in <white>{0}</white> wieder schreiben."
+  slowmode-too-long: "<red>Slowmode darf höchstens 1h betragen."
+  slowmode-none: "aus"
+  already-locked: "<yellow>Der Chat ist bereits gesperrt."
+  already-unlocked: "<yellow>Der Chat ist nicht gesperrt."
+  lock-done: "<red>Chat gesperrt."
+  unlock-done: "<green>Chat freigegeben."
+  clear-done: "<green>Chat für <white>{0}</white> Spieler geleert."
+  status: "<gray>Chat: {0} <dark_gray>|</dark_gray> Slowmode: <white>{1}"
+  state-locked: "<red>gesperrt"
+  state-open: "<green>offen"
+  staff:
+    format: "<dark_aqua>[Team]</dark_aqua> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
+    toggled: "<aqua>Team-Chat-Modus: {0} <gray>- solange er an ist, geht alles, was du schreibst, in den Team-Chat."
+  gui:
+    title: "<gold><bold>Chat"
+    lock: "<red>Chat sperren"
+    unlock: "<green>Chat freigeben"
+    lock-status-open: "<gray>Der Chat ist offen."
+    lock-status-locked: "<red>Der Chat ist gesperrt - nur das Team kann schreiben."
+    slowmode: "<yellow>Slowmode"
+    slowmode-current: "<gray>Aktuell: <white>{0}"
+    slowmode-hint: "<dark_gray>Klick: nächste Stufe - Rechtsklick: eigener Wert"
+    slowmode-prompt: "Abstand zwischen Nachrichten (z. B. 5s, 30s, 1m) - leer oder off zum Ausschalten"
+    clear: "<red>Chat leeren"
+    clear-hint: "<gray>Schiebt alte Nachrichten für alle außer dem Team aus dem Blickfeld."
+    clear-confirm: "<gray>Den Chat für alle Spieler ohne Bypass-Berechtigung leeren?"
+    staffchat: "<aqua>Mein Team-Chat-Modus"
+    staffchat-on: "<green>An - was du schreibst, geht in den Team-Chat"
+    staffchat-off: "<gray>Aus - schreibe # davor oder nutze /sc [nachricht]"
 
 update:
   available: "<yellow>Eine neue UniversalAdmin-Version ist verfügbar: {0} (aktuell läuft {1}). Führe /admin update aus, um sie herunterzuladen, und starte den Server neu, um sie anzuwenden."
