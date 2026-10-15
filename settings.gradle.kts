@@ -1,16 +1,17 @@
-// UniversalAdmin is a single Gradle project for now (the "core").
+// Two projects:
 //
-// Why not a multi-project build yet: `universaladmin-api`, `universaladmin-sdk`
-// and `universaladmin-web` don't exist as real, independently-consumed
-// artifacts yet - there are no external extensions and no web app to build
-// against. Introducing extra Gradle subprojects today would just be structure
-// with nothing inside it. The seam is prepared in code instead: everything an
-// external extension or the web app would need lives behind the
-// `dev.universaladmin.contracts` package (see docs/architecture/decisions/0006-optional-web-architecture.md
-// and 0005-extension-ready-design.md). When `universaladmin-api` is actually
-// extracted, that package becomes its content with minimal churn.
+// - universaladmin-api (api/): the public, versioned extension API - the
+//   interfaces and framework classes an extension compiles against (modules,
+//   actions, commands, GUI framework, settings, storage, audit, ...). Package
+//   names are the same as in the core; the split is a jar boundary, not a
+//   rename. See docs/architecture/decisions/0010-extension-api.md.
+// - universaladmin-core (the repository root): the plugin itself - bootstrap,
+//   implementations (JDBC, YAML, Paper adapters) and the built-in modules.
+//   Its shaded jar contains the API classes unrelocated, so extensions find
+//   them at runtime.
 //
-// See docs/architecture/overview.md for the full reasoning.
+// The example extension in examples/ is built in CI to prove the API is
+// usable from outside, but is never shipped inside the plugin jar.
 
 plugins {
     // Lets Gradle auto-provision a Java 25 toolchain when the host JDK is a
@@ -19,3 +20,6 @@ plugins {
 }
 
 rootProject.name = "universaladmin-core"
+
+include("universaladmin-api")
+project(":universaladmin-api").projectDir = file("api")

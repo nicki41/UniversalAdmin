@@ -1,6 +1,11 @@
-package dev.universaladmin.storage;
+package dev.universaladmin.storage.jdbc;
 
-import dev.universaladmin.storage.jdbc.DataSourceFactory;
+import dev.universaladmin.storage.DatabaseConfig;
+import dev.universaladmin.storage.DatabaseHealth;
+import dev.universaladmin.storage.DatabaseType;
+import dev.universaladmin.storage.MigrationRunner;
+import dev.universaladmin.storage.StorageException;
+import dev.universaladmin.storage.StorageService;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -9,10 +14,9 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 /**
- * Owns the plugin's {@link DataSource} and {@link MigrationRunner}. One
- * instance lives on {@link dev.universaladmin.core.UniversalAdmin}; modules
- * get their {@link Repository} implementations a {@link DataSource} from
- * here and register their migrations with {@link #migrations()}.
+ * The HikariCP-backed {@link StorageService}: owns the plugin's pooled
+ * {@link DataSource} and {@link MigrationRunner}. One instance lives on
+ * {@link dev.universaladmin.core.UniversalAdmin}.
  *
  * <h2 id="health">Health</h2>
  *
@@ -31,16 +35,18 @@ import javax.sql.DataSource;
  * (e.g. a remote MySQL server going down) is not reflected here; that would
  * need a periodic background health check, which is future work.
  */
-public final class StorageService {
+public final class JdbcStorageService implements StorageService {
 
     /** How long {@link Connection#isValid(int)} may take before the pool is considered unreachable. */
     private static final int VALIDATION_TIMEOUT_SECONDS = 5;
 
     private final DataSource dataSource;
+    private final DatabaseType type;
     private final MigrationRunner migrationRunner;
     private final AtomicReference<DatabaseHealth> health = new AtomicReference<>(DatabaseHealth.DISCONNECTED);
 
-    public StorageService(DatabaseConfig config, Path dataFolder, Logger logger) {
+    public JdbcStorageService(DatabaseConfig config, Path dataFolder, Logger logger) {
+        this.type = config.type();
         health.set(DatabaseHealth.CONNECTING);
         try {
             this.dataSource = DataSourceFactory.create(config, dataFolder);
@@ -63,15 +69,23 @@ public final class StorageService {
         }
     }
 
+    @Override
     public DataSource dataSource() {
         return dataSource;
     }
 
+    @Override
+    public DatabaseType type() {
+        return type;
+    }
+
+    @Override
     public MigrationRunner migrations() {
         return migrationRunner;
     }
 
     /** See the class-level "Health" section above. */
+    @Override
     public DatabaseHealth health() {
         return health.get();
     }

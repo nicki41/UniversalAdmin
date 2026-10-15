@@ -22,6 +22,7 @@ import dev.universaladmin.command.paper.ShortcutCommands;
 import dev.universaladmin.config.ConfigMigrationRunner;
 import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.core.UniversalAdmin;
+import dev.universaladmin.core.UniversalAdminProvider;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiListener;
 import dev.universaladmin.gui.GuiRegistry;
@@ -59,7 +60,7 @@ import dev.universaladmin.settings.SettingRegistry;
 import dev.universaladmin.settings.SettingsService;
 import dev.universaladmin.settings.YamlSettingsService;
 import dev.universaladmin.storage.DatabaseConfig;
-import dev.universaladmin.storage.StorageService;
+import dev.universaladmin.storage.jdbc.JdbcStorageService;
 import dev.universaladmin.telemetry.PlayerCounts;
 import dev.universaladmin.telemetry.TelemetryBootstrap;
 import dev.universaladmin.telemetry.TelemetryEnvironment;
@@ -72,7 +73,7 @@ import java.util.random.RandomGenerator;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -125,8 +126,11 @@ public final class UniversalAdminPlugin extends JavaPlugin {
     private static final List<String> BUNDLED_LOCALES = List.of("en_US", "de_DE");
 
     private TaskScheduler scheduler;
-    private StorageService storage;
+    private JdbcStorageService storage;
     private ModuleManager moduleManager;
+    private UniversalAdmin platform;
+    private DefaultExtensionManager extensions;
+    private BukkitPermissionSync permissionSync;
     private TelemetryBootstrap telemetry;
     private UpdateCheckBootstrap updateChecks;
 
@@ -147,6 +151,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         UniversalAdmin platform;
         try {
             platform = bootstrapCore(startedAt);
+            this.platform = platform;
         } catch (Exception e) {
             getLogger().log(Level.SEVERE,
                     "UniversalAdmin failed to start: a critical core component could not be "
@@ -156,6 +161,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         }
 
         moduleManager = new ModuleManager(platform);
+        extensions.attach(moduleManager);
         registerBuiltInModules(moduleManager, platform.settings());
         moduleManager.loadAll();
 
@@ -179,7 +185,12 @@ public final class UniversalAdminPlugin extends JavaPlugin {
 
         moduleManager.enableAll();
 
-        syncPermissions(platform.permissions());
+        permissionSync.sync();
+        // Extensions (plugins with depend: [UniversalAdmin]) enable after
+        // this point and register their modules through the provider/API.
+        getServer().getPluginManager().registerEvents(extensions, this);
+        UniversalAdminProvider.register(platform);
+        getServer().getServicesManager().register(UniversalAdmin.class, platform, this, ServicePriority.Normal);
         registerCommand(platform);
         getServer().getPluginManager().registerEvents(new StartupSummaryListener(platform), this);
 
@@ -190,6 +201,10 @@ public final class UniversalAdminPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (platform != null) {
+            UniversalAdminProvider.unregister(platform);
+            getServer().getServicesManager().unregisterAll(this);
+        }
         if (updateChecks != null) {
             updateChecks.close();
         }
@@ -238,7 +253,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
 
         scheduler = new PaperTaskScheduler(this);
         DatabaseConfig databaseConfig = CoreSettings.readDatabaseConfig(settingsService);
-        storage = new StorageService(databaseConfig, getDataFolder().toPath(), getLogger());
+        storage = new JdbcStorageService(databaseConfig, getDataFolder().toPath(), getLogger());
         storage.migrations().register(new AuditSchemaMigration());
         storage.migrations().register(new AuditSchemaMigrationV2());
 
@@ -251,6 +266,8 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GuiListener(guiSessions, this), this);
         PermissionRegistry permissions = new PermissionRegistry();
         ModuleRegistry moduleRegistry = new ModuleRegistry();
+        permissionSync = new BukkitPermissionSync(getServer().getPluginManager(), permissions);
+        extensions = new DefaultExtensionManager(moduleRegistry, storage.migrations(), permissionSync, getLogger());
         AuditService auditService =
                 new DefaultAuditService(new JdbcAuditEventRepository(storage.dataSource(), scheduler), settingsService);
         ActionExecutor actionExecutor = new ActionExecutor(actions, auditService, getLogger());
@@ -261,7 +278,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         UniversalAdmin platform = new UniversalAdminPlatform(
                 this, getPluginMeta().getVersion(), startedAt, getLogger(), settingRegistry, settingsService,
                 scheduler, storage, services, actions, actionExecutor, guiPages, guiFramework, new PlayerMenuRegistry(),
-                new CommandRegistry(), permissions, moduleRegistry, auditService, messages, notifications);
+                new CommandRegistry(), extensions, permissions, moduleRegistry, auditService, messages, notifications);
 
         // First of two runPending() calls (see the second one in onEnable(),
         // after moduleManager.enableAll()): this one only covers the two
@@ -343,13 +360,6 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         }
     }
 
-    private void syncPermissions(PermissionRegistry permissions) {
-        for (PermissionDefinition definition : permissions.all()) {
-            var bukkitPermission = new org.bukkit.permissions.Permission(
-                    definition.node().value(), definition.description(), map(definition.defaultValue()));
-            getServer().getPluginManager().addPermission(bukkitPermission);
-        }
-    }
 
     /**
      * Wires {@code /admin} (plugin.yml) to the dispatcher and registers the
@@ -431,12 +441,4 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         }
     }
 
-    private static PermissionDefault map(dev.universaladmin.permission.PermissionDefault value) {
-        return switch (value) {
-            case TRUE -> PermissionDefault.TRUE;
-            case FALSE -> PermissionDefault.FALSE;
-            case OP -> PermissionDefault.OP;
-            case NOT_OP -> PermissionDefault.NOT_OP;
-        };
-    }
 }

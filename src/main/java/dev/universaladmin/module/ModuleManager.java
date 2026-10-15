@@ -140,6 +140,76 @@ public final class ModuleManager {
         contexts.clear();
     }
 
+    /**
+     * Registers, loads and enables one module after startup - how an
+     * extension's module joins a running platform. {@code beforeEnable} runs
+     * between {@code onLoad} and {@code onEnable} (the caller applies the
+     * module's freshly registered migrations there, mirroring the startup
+     * order). Failure isolation is the same as for {@link #loadAll}/{@link
+     * #enableAll}: a failing module ends up {@code FAILED}, logged, and the
+     * rest of the platform is untouched.
+     *
+     * @return the module's state afterwards - {@code ENABLED} or {@code FAILED}
+     */
+    public ModuleState loadAndEnable(Module module, Runnable beforeEnable) {
+        register(module);
+        ModuleId id = module.descriptor().id();
+        Set<ModuleId> unsatisfied = unsatisfiedDependencies(module);
+        if (!unsatisfied.isEmpty()) {
+            logger.severe(() -> "Module " + id + " cannot enable - dependency/dependencies not enabled: " + unsatisfied);
+            registry.transition(id, ModuleState.FAILED);
+            return ModuleState.FAILED;
+        }
+        ModuleContext context = ModuleContext.of(id, platform);
+        contexts.put(id, context);
+        try {
+            module.onLoad(context);
+            registry.transition(id, ModuleState.LOADED);
+            beforeEnable.run();
+            module.onEnable(context);
+            registry.transition(id, ModuleState.ENABLED);
+            enabledOrder.add(id);
+            logger.info(() -> module.descriptor().displayName() + " module enabled (" + id + ")");
+            return ModuleState.ENABLED;
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Module " + id + " failed to start - marking it FAILED.", e);
+            registry.transition(id, ModuleState.FAILED);
+            context.resources().closeAll(logger);
+            contexts.remove(id);
+            return ModuleState.FAILED;
+        }
+    }
+
+    /**
+     * Disables one {@code ENABLED} module (and releases its resources) -
+     * used when the plugin that contributed it is disabled. Modules that
+     * declared a dependency on it are disabled first. A no-op for a module
+     * that is not enabled.
+     */
+    public void disable(ModuleId id) {
+        if (registry.get(id).isEmpty() || registry.state(id) != ModuleState.ENABLED) {
+            return;
+        }
+        for (Module dependent : List.copyOf(registry.withState(ModuleState.ENABLED))) {
+            if (dependent.descriptor().dependencies().contains(id)) {
+                disable(dependent.descriptor().id());
+            }
+        }
+        Module module = registry.get(id).orElseThrow();
+        ModuleContext context = contexts.get(id);
+        try {
+            module.onDisable(context);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Module " + id + " threw while disabling - continuing cleanup.", e);
+        } finally {
+            context.resources().closeAll(logger);
+            registry.transition(id, ModuleState.DISABLED);
+            enabledOrder.remove(id);
+            contexts.remove(id);
+        }
+        logger.info(() -> module.descriptor().displayName() + " module disabled (" + id + ")");
+    }
+
     private Set<ModuleId> unknownDependencies(Module module) {
         Set<ModuleId> unknown = new LinkedHashSet<>();
         for (ModuleId dependency : module.descriptor().dependencies()) {

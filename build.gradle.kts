@@ -23,6 +23,11 @@ repositories {
 }
 
 dependencies {
+    // The public extension API (api/) - shaded into the plugin jar
+    // unrelocated, because extensions compile against these exact class
+    // names. See settings.gradle.kts.
+    implementation(project(":universaladmin-api"))
+
     // Paper API - provided by the server at runtime, never shaded.
     compileOnly("io.papermc.paper:paper-api:26.2.build.115-stable")
 
@@ -97,6 +102,9 @@ tasks.named<ShadowJar>("shadowJar") {
     minimize {
         exclude(dependency("org.xerial:sqlite-jdbc:.*"))
         exclude(dependency("org.mariadb.jdbc:mariadb-java-client:.*"))
+        // Every API class must ship, used by the core or not: extensions
+        // load them from this jar at runtime.
+        exclude(project(":universaladmin-api"))
     }
 }
 

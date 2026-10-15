@@ -2,6 +2,7 @@ package dev.universaladmin.module;
 
 import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.ActionEventListener;
+import dev.universaladmin.audit.AuditListener;
 import dev.universaladmin.command.AdminCommand;
 import dev.universaladmin.core.UniversalAdmin;
 import dev.universaladmin.gui.GuiPage;
@@ -85,6 +86,12 @@ public record ModuleContext(ModuleId moduleId, UniversalAdmin platform, Logger l
 
     public void registerListener(Listener listener) {
         resources.listener(listener);
+    }
+
+    /** Observes every recorded audit event - see {@link dev.universaladmin.audit.AuditService#subscribe}. */
+    public void subscribeAudit(AuditListener listener) {
+        platform.auditService().subscribe(listener);
+        resources.closeable(() -> platform.auditService().unsubscribe(listener));
     }
 
     /** Observes every action execution - see {@link dev.universaladmin.action.ActionEvent}. */

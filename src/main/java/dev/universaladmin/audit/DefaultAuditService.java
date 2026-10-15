@@ -7,11 +7,17 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class DefaultAuditService implements AuditService {
 
+    private static final Logger LOGGER = Logger.getLogger(DefaultAuditService.class.getName());
+
     private final AuditEventRepository repository;
     private final SettingsService settings;
+    private final List<AuditListener> listeners = new CopyOnWriteArrayList<>();
 
     public DefaultAuditService(AuditEventRepository repository, SettingsService settings) {
         this.repository = repository;
@@ -23,7 +29,27 @@ public final class DefaultAuditService implements AuditService {
         if (!settings.get(CoreSettings.AUDIT_ENABLED)) {
             return CompletableFuture.completedFuture(null);
         }
-        return repository.save(entry).thenApply(event -> null);
+        return repository.save(entry).thenAccept(this::publish);
+    }
+
+    @Override
+    public void subscribe(AuditListener listener) {
+        listeners.add(listener);
+    }
+
+    @Override
+    public void unsubscribe(AuditListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void publish(AuditEvent stored) {
+        for (AuditListener listener : listeners) {
+            try {
+                listener.onAuditEvent(stored);
+            } catch (RuntimeException e) {
+                LOGGER.log(Level.WARNING, "Audit listener " + listener.getClass().getName() + " threw", e);
+            }
+        }
     }
 
     @Override

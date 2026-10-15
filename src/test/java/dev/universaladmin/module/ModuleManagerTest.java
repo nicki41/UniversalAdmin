@@ -13,6 +13,7 @@ import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.bootstrap.UniversalAdminPlatform;
 import dev.universaladmin.command.CommandRegistry;
 import dev.universaladmin.core.UniversalAdmin;
+import dev.universaladmin.extension.ExtensionManager;
 import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiRegistry;
@@ -58,6 +59,7 @@ class ModuleManagerTest {
                 new GuiFramework(new GuiSessionManager(), new MaterialIconProvider(Logger.getLogger("ModuleManagerTest"))),
                 new PlayerMenuRegistry(),
                 new CommandRegistry(),
+                mock(ExtensionManager.class),
                 new PermissionRegistry(),
                 registry,
                 mock(AuditService.class),

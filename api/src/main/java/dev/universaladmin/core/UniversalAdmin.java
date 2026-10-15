@@ -4,6 +4,7 @@ import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.audit.AuditService;
 import dev.universaladmin.command.CommandRegistry;
+import dev.universaladmin.extension.ExtensionManager;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.PlayerMenuRegistry;
@@ -83,6 +84,9 @@ public interface UniversalAdmin {
 
     /** Every {@code /admin} subcommand - see {@link CommandRegistry}. */
     CommandRegistry commands();
+
+    /** Where other plugins register their modules - see {@link ExtensionManager}. */
+    ExtensionManager extensions();
 
     PermissionRegistry permissions();
 

@@ -147,17 +147,19 @@ class RealLangFilesTest {
 
     private Set<String> messageKeyLiteralsInSource() throws IOException {
         Set<String> keys = new LinkedHashSet<>();
-        Path root = Path.of("src/main/java");
-        assertTrue(Files.exists(root), () -> root + " not found - run from the project root");
-        try (var paths = Files.walk(root)) {
-            List<Path> javaFiles = paths.filter(p -> p.toString().endsWith(".java")).toList();
-            for (Path file : javaFiles) {
-                String content = Files.readString(file, StandardCharsets.UTF_8);
-                Matcher calls = KEY_LOOKUP_CALL.matcher(content);
-                while (calls.find()) {
-                    Matcher literals = KEY_SHAPED_LITERAL.matcher(calls.group(1));
-                    while (literals.find()) {
-                        keys.add(literals.group(1));
+        // The core and the public API (api/) both resolve lang keys.
+        for (Path root : List.of(Path.of("src/main/java"), Path.of("api/src/main/java"))) {
+            assertTrue(Files.exists(root), () -> root + " not found - run from the project root");
+            try (var paths = Files.walk(root)) {
+                List<Path> javaFiles = paths.filter(p -> p.toString().endsWith(".java")).toList();
+                for (Path file : javaFiles) {
+                    String content = Files.readString(file, StandardCharsets.UTF_8);
+                    Matcher calls = KEY_LOOKUP_CALL.matcher(content);
+                    while (calls.find()) {
+                        Matcher literals = KEY_SHAPED_LITERAL.matcher(calls.group(1));
+                        while (literals.find()) {
+                            keys.add(literals.group(1));
+                        }
                     }
                 }
             }

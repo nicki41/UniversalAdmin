@@ -23,9 +23,15 @@ public final class ModuleRegistry {
     private final Map<ModuleId, Module> modules = new LinkedHashMap<>();
     private final Map<ModuleId, ModuleState> states = new ConcurrentHashMap<>();
 
+    /**
+     * @throws IllegalStateException if a module with the same id is registered and still active -
+     *                               a {@code DISABLED}/{@code FAILED} one (e.g. an extension whose plugin was
+     *                               reloaded) is replaced
+     */
     public synchronized void register(Module module) {
         ModuleId id = module.descriptor().id();
-        if (modules.containsKey(id)) {
+        ModuleState existing = states.get(id);
+        if (modules.containsKey(id) && existing != ModuleState.DISABLED && existing != ModuleState.FAILED) {
             throw new IllegalStateException("Module already registered: " + id);
         }
         modules.put(id, module);

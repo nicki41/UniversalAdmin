@@ -8,6 +8,7 @@ import dev.universaladmin.core.ComponentStatus;
 import dev.universaladmin.core.PluginStatus;
 import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.core.UniversalAdmin;
+import dev.universaladmin.extension.ExtensionManager;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.PlayerMenuRegistry;
@@ -48,6 +49,7 @@ public record UniversalAdminPlatform(
         GuiFramework guiFramework,
         PlayerMenuRegistry playerMenu,
         CommandRegistry commands,
+        ExtensionManager extensions,
         PermissionRegistry permissions,
         ModuleRegistry moduleRegistry,
         AuditService auditService,
@@ -70,6 +72,7 @@ public record UniversalAdminPlatform(
         Objects.requireNonNull(guiFramework, "guiFramework");
         Objects.requireNonNull(playerMenu, "playerMenu");
         Objects.requireNonNull(commands, "commands");
+        Objects.requireNonNull(extensions, "extensions");
         Objects.requireNonNull(permissions, "permissions");
         Objects.requireNonNull(moduleRegistry, "moduleRegistry");
         Objects.requireNonNull(auditService, "auditService");
