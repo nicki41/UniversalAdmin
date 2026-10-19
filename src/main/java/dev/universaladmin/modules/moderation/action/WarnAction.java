@@ -4,17 +4,15 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
-import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.moderation.ModerationPolicy;
 import dev.universaladmin.modules.moderation.Punishment;
 import dev.universaladmin.modules.moderation.PunishmentEnforcer;
 import dev.universaladmin.modules.moderation.PunishmentService;
 import dev.universaladmin.modules.moderation.PunishmentType;
+import dev.universaladmin.modules.moderation.TargetNames;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.util.concurrent.CompletableFuture;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 
 /** Records a warning - persistent, permanent (no expiry), removable one at a time via {@link RemoveWarnAction}. */
 public final class WarnAction implements Action<WarnInput, Punishment> {
@@ -25,12 +23,14 @@ public final class WarnAction implements Action<WarnInput, Punishment> {
     private final PunishmentService punishmentService;
     private final PunishmentEnforcer enforcer;
     private final ModerationPolicy policy;
+    private final TargetNames names;
 
-    public WarnAction(TaskScheduler scheduler, PunishmentService punishmentService, PunishmentEnforcer enforcer, ModerationPolicy policy) {
+    public WarnAction(TaskScheduler scheduler, PunishmentService punishmentService, PunishmentEnforcer enforcer, ModerationPolicy policy, TargetNames names) {
         this.scheduler = scheduler;
         this.punishmentService = punishmentService;
         this.enforcer = enforcer;
         this.policy = policy;
+        this.names = names;
     }
 
     @Override
@@ -46,11 +46,8 @@ public final class WarnAction implements Action<WarnInput, Punishment> {
         }
         CompletableFuture<ActionResult<Punishment>> future = new CompletableFuture<>();
         scheduler.runOnMainThread(() -> {
-            Player online = Bukkit.getPlayer(input.targetId());
-            String targetName = online != null ? online.getName() : PlayerNames.of(input.targetId());
-
-            punishmentService.issue(PunishmentType.WARN, input.targetId(), targetName, null,
-                            context.actor().playerId(), context.actor().displayName(), input.reason(), null)
+            names.nameOf(input.targetId()).thenCompose(targetName -> punishmentService.issue(PunishmentType.WARN, input.targetId(), targetName, null,
+                            context.actor().playerId(), context.actor().displayName(), input.reason(), null))
                     .whenComplete((punishment, error) -> {
                         if (error != null) {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));

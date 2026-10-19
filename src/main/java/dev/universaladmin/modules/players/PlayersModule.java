@@ -1,11 +1,13 @@
 package dev.universaladmin.modules.players;
 
-import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionTarget;
 import dev.universaladmin.action.AuditDetails;
+import dev.universaladmin.core.PlayerDirectory;
+import dev.universaladmin.core.PlayerNames;
+import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
 import dev.universaladmin.module.Module;
@@ -16,9 +18,9 @@ import dev.universaladmin.modules.players.action.ClearPlayerInventoryAction;
 import dev.universaladmin.modules.players.action.GetPlayerIpAddressAction;
 import dev.universaladmin.modules.players.action.GetPlayerProfileAction;
 import dev.universaladmin.modules.players.action.InventoryChangeSummary;
-import dev.universaladmin.modules.players.action.PlayerActionRegistrar;
 import dev.universaladmin.modules.players.action.InventoryEditRecord;
 import dev.universaladmin.modules.players.action.PlayerActionIds;
+import dev.universaladmin.modules.players.action.PlayerActionRegistrar;
 import dev.universaladmin.modules.players.action.RecordInventoryEditAction;
 import dev.universaladmin.modules.players.action.TeleportInput;
 import dev.universaladmin.modules.players.action.TeleportPlayerAction;
@@ -30,6 +32,8 @@ import dev.universaladmin.modules.players.jdbc.JdbcPlayerProfileRepository;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -75,6 +79,24 @@ public final class PlayersModule implements Module {
         PlayerSessionTracker sessionTracker = new PlayerSessionTracker();
         PlayerService playerService = new PlayerService(repository, scheduler, sessionTracker);
         context.platform().services().register(PlayerService.class, playerService);
+        // Name lookups for commands across the whole database - in network
+        // mode every player of every server (see PlayerDirectory).
+        context.registerService(PlayerDirectory.class, new PlayerDirectory() {
+            @Override
+            public CompletableFuture<Optional<PlayerRef>> findByName(String name) {
+                return playerService.search(new PlayerSearchQuery(name, PlayerSort.NAME_ASC, 25))
+                        .thenApply(profiles -> profiles.stream()
+                                .filter(profile -> profile.lastKnownName().equalsIgnoreCase(name))
+                                .findFirst()
+                                .map(profile -> new PlayerRef(profile.id(), profile.lastKnownName())));
+            }
+
+            @Override
+            public CompletableFuture<Optional<PlayerRef>> findById(UUID playerId) {
+                return playerService.findProfile(playerId)
+                        .thenApply(profile -> profile.map(found -> new PlayerRef(found.id(), found.lastKnownName())));
+            }
+        });
 
         context.resources().listener(new PlayerActivityListener(playerService, sessionTracker));
 

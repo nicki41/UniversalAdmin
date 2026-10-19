@@ -10,7 +10,7 @@ group = "dev.universaladmin"
 // breaking change without a major version - see
 // docs/architecture/decisions/0010-extension-api.md. The api/ and extension
 // projects take this same version.
-version = "1.0.0"
+version = "1.1.0"
 description = "UniversalAdmin - a universal admin platform for Paper servers"
 
 java {
@@ -31,7 +31,7 @@ dependencies {
     implementation(project(":universaladmin-api"))
 
     // Paper API - provided by the server at runtime, never shaded.
-    compileOnly("io.papermc.paper:paper-api:26.2.build.115-stable")
+    compileOnly("io.papermc.paper:paper-api:${property("paperApiVersion")}")
 
     // Storage: SQLite is the default database, bundled and shaded into the
     // plugin jar because Paper does not provide a JDBC driver.
@@ -51,7 +51,7 @@ dependencies {
     // Paper API types (e.g. org.bukkit.plugin.Plugin) are mocked, never run
     // against a real server, in tests that need them - see
     // docs/development/testing.md.
-    testImplementation("io.papermc.paper:paper-api:26.2.build.115-stable")
+    testImplementation("io.papermc.paper:paper-api:${property("paperApiVersion")}")
 }
 
 tasks.withType<JavaCompile>().configureEach {

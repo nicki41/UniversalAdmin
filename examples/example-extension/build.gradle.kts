@@ -30,7 +30,7 @@ repositories {
 
 dependencies {
     compileOnly(project(":universaladmin-api"))
-    compileOnly("io.papermc.paper:paper-api:26.2.build.115-stable")
+    compileOnly("io.papermc.paper:paper-api:${property("paperApiVersion")}")
 }
 
 tasks.withType<JavaCompile>().configureEach {

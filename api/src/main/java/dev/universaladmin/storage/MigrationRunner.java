@@ -7,7 +7,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
 
@@ -21,6 +25,9 @@ import javax.sql.DataSource;
  * migrations.
  */
 public final class MigrationRunner {
+
+    private static final String LOCK_NAME = "universaladmin_migrations";
+    private static final int LOCK_TIMEOUT_SECONDS = 120;
 
     private final DataSource dataSource;
     private final Logger logger;
@@ -52,27 +59,73 @@ public final class MigrationRunner {
     }
 
     /**
-     * Runs every migration whose version is newer than the current schema
-     * version. Blocking JDBC work - must be called from a background thread,
-     * never the Paper main thread. See docs/architecture/threading.md.
+     * Runs every registered migration that has not been applied yet, in
+     * version order. Blocking JDBC work - must be called from a background
+     * thread, never the Paper main thread. See docs/architecture/threading.md.
+     *
+     * <p>"Not applied yet" means: its version has no row in
+     * {@code schema_version} - not "newer than the highest version applied".
+     * A migration with a lower number can be added later (a new core
+     * migration after the module migrations 1000+ ran, or an extension
+     * installed afterwards) and must still run.
+     *
+     * <p>On MySQL/MariaDB several servers of a network may start at the same
+     * time against one database; a named database lock makes them run the
+     * migrations one after the other, so each one sees what the previous one
+     * applied.
      */
     public void runPending() {
         List<Migration> ordered = new ArrayList<>(migrations);
         ordered.sort(Comparator.comparingInt(Migration::version));
 
         try (Connection connection = dataSource.getConnection()) {
-            ensureSchemaVersionTable(connection);
-            int current = currentVersion(connection);
-            for (Migration migration : ordered) {
-                if (migration.version() <= current) {
-                    continue;
+            boolean locked = lock(connection);
+            try {
+                ensureSchemaVersionTable(connection);
+                Set<Integer> applied = appliedVersions(connection);
+                for (Migration migration : ordered) {
+                    if (applied.contains(migration.version())) {
+                        continue;
+                    }
+                    logger.info(() -> "Applying migration " + migration.version() + ": " + migration.description());
+                    migration.migrate(connection);
+                    recordVersion(connection, migration);
                 }
-                logger.info(() -> "Applying migration " + migration.version() + ": " + migration.description());
-                migration.migrate(connection);
-                recordVersion(connection, migration);
+            } finally {
+                if (locked) {
+                    unlock(connection);
+                }
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to run database migrations", e);
+        }
+    }
+
+    /** MySQL/MariaDB only - SQLite is one file for one server. */
+    private boolean lock(Connection connection) throws SQLException {
+        String product = connection.getMetaData().getDatabaseProductName().toLowerCase(Locale.ROOT);
+        if (!product.contains("mysql") && !product.contains("mariadb")) {
+            return false;
+        }
+        try (PreparedStatement statement = connection.prepareStatement("SELECT GET_LOCK(?, ?)")) {
+            statement.setString(1, LOCK_NAME);
+            statement.setInt(2, LOCK_TIMEOUT_SECONDS);
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next() || result.getInt(1) != 1) {
+                    throw new SQLException("Another server held the migration lock for more than " + LOCK_TIMEOUT_SECONDS + "s");
+                }
+            }
+        }
+        return true;
+    }
+
+    private void unlock(Connection connection) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT RELEASE_LOCK(?)")) {
+            statement.setString(1, LOCK_NAME);
+            statement.executeQuery().close();
+        } catch (SQLException e) {
+            // The lock also ends with the connection.
+            logger.log(Level.FINE, "Could not release the migration lock", e);
         }
     }
 
@@ -88,11 +141,15 @@ public final class MigrationRunner {
         }
     }
 
-    private int currentVersion(Connection connection) throws SQLException {
+    private Set<Integer> appliedVersions(Connection connection) throws SQLException {
+        Set<Integer> applied = new HashSet<>();
         try (Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery("SELECT MAX(version) FROM schema_version")) {
-            return resultSet.next() ? resultSet.getInt(1) : 0;
+                ResultSet resultSet = statement.executeQuery("SELECT version FROM schema_version")) {
+            while (resultSet.next()) {
+                applied.add(resultSet.getInt(1));
+            }
         }
+        return applied;
     }
 
     private void recordVersion(Connection connection, Migration migration) throws SQLException {

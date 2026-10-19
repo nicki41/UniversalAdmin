@@ -6,7 +6,10 @@ import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.Actor;
 import dev.universaladmin.action.Source;
+import dev.universaladmin.core.PlayerDirectory;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.PlayerRef;
+import dev.universaladmin.core.UniversalAdminProvider;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
@@ -23,6 +26,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -95,6 +99,38 @@ public final class CommandInvocation {
     /** The argument currently being completed (the last one), or {@code ""}. */
     public String currentArg() {
         return args.isEmpty() ? "" : args.get(args.size() - 1);
+    }
+
+    /**
+     * Resolves the player named at {@code index} and runs {@code then} with
+     * them on the main thread: someone online here, online on another server
+     * of the network, or anyone who ever joined a server sharing this
+     * database (see {@link PlayerDirectory}). Replies "no player named ..."
+     * if there is none. Prefer this over {@link #knownPlayer} - it also finds
+     * players who only ever played on another server.
+     */
+    public void withPlayer(int index, Consumer<PlayerRef> then) {
+        String name = args.get(index);
+        Optional<PlayerRef> known = Arguments.knownPlayer(name);
+        if (known.isPresent()) {
+            PlayerNames.remember(known.get().id(), known.get().name());
+            then.accept(known.get());
+            return;
+        }
+        Optional<PlayerDirectory> directory = UniversalAdminProvider.find()
+                .flatMap(platform -> platform.services().get(PlayerDirectory.class));
+        if (directory.isEmpty()) {
+            reply(CommandMessages.PLAYER_NOT_FOUND, name);
+            return;
+        }
+        directory.get().findByName(name).whenComplete((found, error) -> environment.scheduler().runOnMainThread(() -> {
+            if (error != null || found.isEmpty()) {
+                reply(CommandMessages.PLAYER_NOT_FOUND, name);
+            } else {
+                PlayerNames.remember(found.get().id(), found.get().name());
+                then.accept(found.get());
+            }
+        }));
     }
 
     /**
@@ -216,7 +252,13 @@ public final class CommandInvocation {
 
     /** Sends an already-built component. Safe to call from any thread. */
     public void send(Component component) {
-        environment.scheduler().runOnMainThread(() -> sender.sendMessage(component));
+        // Right away when we already are on the main thread: an RCON client
+        // only sees what is sent while its command is still running.
+        if (Bukkit.isPrimaryThread()) {
+            sender.sendMessage(component);
+        } else {
+            environment.scheduler().runOnMainThread(() -> sender.sendMessage(component));
+        }
     }
 
     /** Replies with "Usage: /label {@code command}'s synopsis". */

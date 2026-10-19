@@ -29,8 +29,8 @@ import dev.universaladmin.modules.moderation.action.UnbanInput;
 import dev.universaladmin.modules.moderation.action.UnfreezeInput;
 import dev.universaladmin.modules.moderation.action.UnmuteInput;
 import dev.universaladmin.modules.moderation.action.WarnInput;
-import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
 import dev.universaladmin.modules.moderation.gui.ModeratePlayerPage;
+import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
 import dev.universaladmin.permission.PermissionNode;
 import dev.universaladmin.settings.SettingsService;
 import java.time.Duration;
@@ -151,44 +151,42 @@ public final class ModerationCommands {
                 invocation.usage(this);
                 return;
             }
-            Optional<PlayerRef> target = invocation.knownPlayer(0);
-            if (target.isEmpty()) {
-                return;
-            }
+            invocation.withPlayer(0, target -> {
 
-            Instant expiresAt = null;
-            int reasonIndex = 1;
-            if (kind.acceptsDuration && invocation.argCount() > 1) {
-                String candidate = invocation.args().get(1);
-                try {
-                    Optional<Duration> duration = DurationParser.parse(candidate);
-                    expiresAt = duration.map(Instant.now()::plus).orElse(null);
-                    reasonIndex = 2;
-                } catch (DurationParseException notADuration) {
-                    if (kind.requiresDuration) {
-                        invocation.reply("command.error.invalid-duration", candidate);
-                        return;
+                Instant expiresAt = null;
+                int reasonIndex = 1;
+                if (kind.acceptsDuration && invocation.argCount() > 1) {
+                    String candidate = invocation.args().get(1);
+                    try {
+                        Optional<Duration> duration = DurationParser.parse(candidate);
+                        expiresAt = duration.map(Instant.now()::plus).orElse(null);
+                        reasonIndex = 2;
+                    } catch (DurationParseException notADuration) {
+                        if (kind.requiresDuration) {
+                            invocation.reply("command.error.invalid-duration", candidate);
+                            return;
+                        }
                     }
                 }
-            }
-            if (kind.requiresDuration && expiresAt == null) {
-                invocation.reply("moderation.action.duration-required");
-                return;
-            }
+                if (kind.requiresDuration && expiresAt == null) {
+                    invocation.reply("moderation.action.duration-required");
+                    return;
+                }
 
-            String reason = reason(invocation, reasonIndex);
-            PlayerRef player = target.get();
-            UUID id = player.id();
-            switch (kind) {
-                case KICK -> invocation.run(ModerationActionIds.KICK, new KickInput(id, reason));
-                case BAN, TEMPBAN -> invocation.run(expiresAt != null ? ModerationActionIds.TEMP_BAN : ModerationActionIds.BAN,
-                        new BanInput(id, reason, expiresAt));
-                case IPBAN -> invocation.run(ModerationActionIds.IP_BAN, new IpBanInput(id, reason, expiresAt));
-                case MUTE, TEMPMUTE -> invocation.run(expiresAt != null ? ModerationActionIds.TEMP_MUTE : ModerationActionIds.MUTE,
-                        new MuteInput(id, reason, expiresAt));
-                case WARN -> invocation.run(ModerationActionIds.WARN, new WarnInput(id, reason));
-                case FREEZE -> invocation.run(ModerationActionIds.FREEZE, new FreezeInput(id, reason));
-            }
+                String reason = reason(invocation, reasonIndex);
+                PlayerRef player = target;
+                UUID id = player.id();
+                switch (kind) {
+                    case KICK -> invocation.run(ModerationActionIds.KICK, new KickInput(id, reason));
+                    case BAN, TEMPBAN -> invocation.run(expiresAt != null ? ModerationActionIds.TEMP_BAN : ModerationActionIds.BAN,
+                            new BanInput(id, reason, expiresAt));
+                    case IPBAN -> invocation.run(ModerationActionIds.IP_BAN, new IpBanInput(id, reason, expiresAt));
+                    case MUTE, TEMPMUTE -> invocation.run(expiresAt != null ? ModerationActionIds.TEMP_MUTE : ModerationActionIds.MUTE,
+                            new MuteInput(id, reason, expiresAt));
+                    case WARN -> invocation.run(ModerationActionIds.WARN, new WarnInput(id, reason));
+                    case FREEZE -> invocation.run(ModerationActionIds.FREEZE, new FreezeInput(id, reason));
+                }
+            });
         }
 
         @Override
@@ -254,7 +252,7 @@ public final class ModerationCommands {
                 invocation.usage(this);
                 return;
             }
-            invocation.knownPlayer(0).ifPresent(player -> invocation.run(action, input.apply(player.id())));
+            invocation.withPlayer(0, player -> invocation.run(action, input.apply(player.id())));
         }
 
         @Override
@@ -319,37 +317,35 @@ public final class ModerationCommands {
                 invocation.usage(this);
                 return;
             }
-            Optional<PlayerRef> target = invocation.knownPlayer(0);
-            if (target.isEmpty()) {
-                return;
-            }
-            int requestedPage = invocation.argCount() > 1 ? Arguments.integer(invocation.args().get(1)).orElse(1) : 1;
-            PlayerRef player = target.get();
-            deps.punishments().history(PunishmentQuery.forTarget(player.id(), 500)).whenComplete((history, error) -> {
-                if (error != null) {
-                    invocation.reply("command.error.internal");
-                    return;
-                }
-                if (history.isEmpty()) {
-                    invocation.reply("commands.history.empty", player.name());
-                    return;
-                }
-                int pages = (history.size() + HISTORY_PAGE_SIZE - 1) / HISTORY_PAGE_SIZE;
-                int page = Math.max(1, Math.min(requestedPage, pages));
-                invocation.line("commands.history.header", player.name(), history.size(), page, pages);
-                history.stream()
-                        .skip((long) (page - 1) * HISTORY_PAGE_SIZE)
-                        .limit(HISTORY_PAGE_SIZE)
-                        .forEach(punishment -> invocation.line("commands.history.entry",
-                                punishment.id(),
-                                typeName(deps.messages(), punishment.type()),
-                                punishment.reason() == null ? "-" : punishment.reason(),
-                                punishment.actorName() == null ? "CONSOLE" : punishment.actorName(),
-                                ModerationFormat.instant(punishment.createdAt(), deps.settings()),
-                                MessageService.markup(status(deps.messages(), punishment))));
-                if (page < pages) {
-                    invocation.line("commands.history.more", invocation.label(), player.name(), page + 1);
-                }
+            invocation.withPlayer(0, target -> {
+                int requestedPage = invocation.argCount() > 1 ? Arguments.integer(invocation.args().get(1)).orElse(1) : 1;
+                PlayerRef player = target;
+                deps.punishments().history(PunishmentQuery.forTarget(player.id(), 500)).whenComplete((history, error) -> {
+                    if (error != null) {
+                        invocation.reply("command.error.internal");
+                        return;
+                    }
+                    if (history.isEmpty()) {
+                        invocation.reply("commands.history.empty", player.name());
+                        return;
+                    }
+                    int pages = (history.size() + HISTORY_PAGE_SIZE - 1) / HISTORY_PAGE_SIZE;
+                    int page = Math.max(1, Math.min(requestedPage, pages));
+                    invocation.line("commands.history.header", player.name(), history.size(), page, pages);
+                    history.stream()
+                            .skip((long) (page - 1) * HISTORY_PAGE_SIZE)
+                            .limit(HISTORY_PAGE_SIZE)
+                            .forEach(punishment -> invocation.line("commands.history.entry",
+                                    punishment.id(),
+                                    typeName(deps.messages(), punishment.type()),
+                                    punishment.reason() == null ? "-" : punishment.reason(),
+                                    punishment.actorName() == null ? "CONSOLE" : punishment.actorName(),
+                                    ModerationFormat.instant(punishment.createdAt(), deps.settings()),
+                                    MessageService.markup(status(deps.messages(), punishment))));
+                    if (page < pages) {
+                        invocation.line("commands.history.more", invocation.label(), player.name(), page + 1);
+                    }
+                });
             });
         }
 
@@ -378,7 +374,7 @@ public final class ModerationCommands {
                 invocation.usage(this);
                 return;
             }
-            invocation.knownPlayer(0).ifPresent(player -> {
+            invocation.withPlayer(0, player -> {
                 PunishmentService punishments = deps.punishments();
                 var ban = punishments.activeBan(player.id());
                 var mute = punishments.activeMute(player.id());
@@ -512,7 +508,7 @@ public final class ModerationCommands {
                 return;
             }
             Player viewer = invocation.player().orElseThrow();
-            invocation.knownPlayer(0).ifPresent(target ->
+            invocation.withPlayer(0, target ->
                     new ModeratePlayerPage(deps.gui(), target.id(), target.name()).open(viewer));
         }
 

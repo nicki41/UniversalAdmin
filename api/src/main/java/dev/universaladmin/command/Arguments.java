@@ -1,6 +1,7 @@
 package dev.universaladmin.command;
 
 import dev.universaladmin.core.PlayerRef;
+import dev.universaladmin.core.UniversalAdminProvider;
 import dev.universaladmin.core.time.DurationParseException;
 import dev.universaladmin.core.time.DurationParser;
 import java.time.Duration;
@@ -48,7 +49,11 @@ public final class Arguments {
         if (cached != null && (cached.hasPlayedBefore() || cached.isOnline())) {
             return Optional.of(new PlayerRef(cached.getUniqueId(), cached.getName() != null ? cached.getName() : name));
         }
-        return Optional.empty();
+        // Network mode: online on another server.
+        return UniversalAdminProvider.find()
+                .flatMap(platform -> platform.network().player(name))
+                .filter(player -> player.id() != null)
+                .map(player -> new PlayerRef(player.id(), player.name()));
     }
 
     /** Names of online players {@code viewer} can see - vanished staff never leak through tab completion. */

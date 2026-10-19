@@ -45,12 +45,9 @@ public final class ReportCommands {
                 invocation.usage(this);
                 return;
             }
-            Optional<PlayerRef> target = invocation.knownPlayer(0);
-            if (target.isEmpty()) {
-                return;
-            }
-            PlayerRef player = target.get();
-            invocation.run(ReportActionIds.CREATE, new CreateReportAction.Input(player.id(), player.name(), invocation.joinArgs(1)));
+            invocation.withPlayer(0, player -> {
+                invocation.run(ReportActionIds.CREATE, new CreateReportAction.Input(player.id(), player.name(), invocation.joinArgs(1)));
+            });
         }
 
         @Override

@@ -244,7 +244,9 @@ public final class UniversalAdminPlugin extends JavaPlugin {
             // Only ever written once - an editable copy for the server owner.
             // New keys in later versions still resolve from the jar's own
             // copy, see YamlLocaleMessageService.
-            saveResource("lang/" + locale + ".yml", false);
+            if (!getDataFolder().toPath().resolve("lang").resolve(locale + ".yml").toFile().exists()) {
+                saveResource("lang/" + locale + ".yml", false);
+            }
         }
 
         // config-version migration runs before anything reads the file, so

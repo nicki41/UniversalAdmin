@@ -34,18 +34,20 @@ public final class AuditCommand extends BaseAdminCommand {
 
     @Override
     public void execute(CommandInvocation invocation) {
-        AuditQuery.Builder query = AuditQuery.builder().pageSize(PAGE_SIZE);
-        int pageArgIndex = 0;
-        String actorName = null;
         if (invocation.argCount() > 0 && Arguments.integer(invocation.args().get(0)).isEmpty()) {
-            Optional<PlayerRef> actor = invocation.knownPlayer(0);
-            if (actor.isEmpty()) {
-                return;
-            }
-            query.actorId(actor.get().id());
-            actorName = actor.get().name();
-            pageArgIndex = 1;
+            invocation.withPlayer(0, actor -> list(invocation, actor, 1));
+        } else {
+            list(invocation, null, 0);
         }
+    }
+
+    /** @param actor whose entries to show, {@code null} for everyone's */
+    private void list(CommandInvocation invocation, PlayerRef actor, int pageArgIndex) {
+        AuditQuery.Builder query = AuditQuery.builder().pageSize(PAGE_SIZE);
+        if (actor != null) {
+            query.actorId(actor.id());
+        }
+        String actorName = actor == null ? null : actor.name();
         int page = invocation.arg(pageArgIndex).map(Arguments::integer)
                 .filter(java.util.OptionalInt::isPresent)
                 .map(java.util.OptionalInt::getAsInt)

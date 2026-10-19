@@ -28,7 +28,7 @@ repositories {
 dependencies {
     // Provided by the server at runtime; part of the API's surface (Player,
     // Component, ...), so consumers get it on their compile classpath too.
-    compileOnlyApi("io.papermc.paper:paper-api:26.2.build.115-stable")
+    compileOnlyApi("io.papermc.paper:paper-api:${property("paperApiVersion")}")
 }
 
 tasks.withType<JavaCompile>().configureEach {

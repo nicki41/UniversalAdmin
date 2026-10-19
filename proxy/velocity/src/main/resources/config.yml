@@ -1,0 +1,34 @@
+# UniversalAdmin for Velocity.
+#
+# Turns players banned with UniversalAdmin away at the proxy - before they
+# reach any server, including servers that do not run UniversalAdmin. It
+# reads the same MySQL/MariaDB database as your servers (their
+# config.yml -> database) and never writes to it. Setup guide:
+# https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
+#
+# /uavelocity shows whether the check runs (permission:
+# universaladmin.velocity.status). Changes here need a proxy restart.
+
+database:
+  host: localhost
+  port: 3306
+  database: universaladmin
+  username: universaladmin
+  password: ""
+  ssl: true
+  # The proxy only reads one row per login - a small pool is plenty.
+  pool-size: 3
+
+ban-check:
+  enabled: true
+  # If the database cannot be reached during a login: let the player in
+  # (true - the servers still check on join) or keep everyone out (false).
+  allow-on-error: true
+
+messages:
+  # MiniMessage. <reason>, <expires> and <remaining> are filled in as plain text.
+  banned-permanent: "<red><bold>You are banned from this network.</bold></red>\n\n<gray>Reason: <white><reason>"
+  banned-temporary: "<red><bold>You are banned from this network.</bold></red>\n\n<gray>Reason: <white><reason>\n<gray>Until: <white><expires> <dark_gray>(<remaining> left)"
+  no-reason: "No reason given"
+  # java.time pattern for <expires>.
+  date-pattern: "yyyy-MM-dd HH:mm"

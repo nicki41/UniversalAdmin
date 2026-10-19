@@ -93,7 +93,7 @@ public final class PlayerCommands {
                 return;
             }
             Player viewer = invocation.player().orElseThrow();
-            invocation.knownPlayer(0).ifPresent(target -> gui.get().openProfile(viewer, target));
+            invocation.withPlayer(0, target -> gui.get().openProfile(viewer, target));
         }
 
         @Override
@@ -122,7 +122,7 @@ public final class PlayerCommands {
                 invocation.usage(this);
                 return;
             }
-            invocation.knownPlayer(0).ifPresent(target -> players.snapshot(target.id()).whenComplete((snapshot, error) -> {
+            invocation.withPlayer(0, target -> players.snapshot(target.id()).whenComplete((snapshot, error) -> {
                 if (error != null) {
                     invocation.reply("command.error.internal");
                 } else if (snapshot.isEmpty()) {

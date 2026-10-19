@@ -102,30 +102,27 @@ public final class NotesSupport {
                 invocation.integer(1).ifPresent(id -> invocation.run(NoteActions.REMOVE, (long) id));
                 return;
             }
-            Optional<PlayerRef> target = invocation.knownPlayer(0);
-            if (target.isEmpty()) {
-                return;
-            }
-            PlayerRef player = target.get();
-            if (invocation.argCount() > 2 && invocation.args().get(1).equalsIgnoreCase("add")) {
-                String text = invocation.joinArgs(2);
-                if (text.length() > NoteActions.MAX_LENGTH) {
-                    invocation.reply("moderation.notes.too-long", NoteActions.MAX_LENGTH);
+            invocation.withPlayer(0, player -> {
+                if (invocation.argCount() > 2 && invocation.args().get(1).equalsIgnoreCase("add")) {
+                    String text = invocation.joinArgs(2);
+                    if (text.length() > NoteActions.MAX_LENGTH) {
+                        invocation.reply("moderation.notes.too-long", NoteActions.MAX_LENGTH);
+                        return;
+                    }
+                    invocation.run(NoteActions.ADD, new NoteActions.AddInput(player.id(), player.name(), text));
                     return;
                 }
-                invocation.run(NoteActions.ADD, new NoteActions.AddInput(player.id(), player.name(), text));
-                return;
-            }
-            ctx.notes().findByTarget(player.id(), 20).whenComplete((list, error) -> {
-                if (error != null) {
-                    invocation.reply("command.error.internal");
-                } else if (list.isEmpty()) {
-                    invocation.reply("moderation.notes.none", player.name());
-                } else {
-                    invocation.line("moderation.notes.header", player.name(), list.size());
-                    list.forEach(note -> invocation.line("moderation.notes.entry", String.valueOf(note.id()), note.text(),
-                            note.authorName(), TIME.format(note.createdAt())));
-                }
+                ctx.notes().findByTarget(player.id(), 20).whenComplete((list, error) -> {
+                    if (error != null) {
+                        invocation.reply("command.error.internal");
+                    } else if (list.isEmpty()) {
+                        invocation.reply("moderation.notes.none", player.name());
+                    } else {
+                        invocation.line("moderation.notes.header", player.name(), list.size());
+                        list.forEach(note -> invocation.line("moderation.notes.entry", String.valueOf(note.id()), note.text(),
+                                note.authorName(), TIME.format(note.createdAt())));
+                    }
+                });
             });
         }
 

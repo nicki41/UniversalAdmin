@@ -24,13 +24,13 @@ repositories {
 
 dependencies {
     compileOnly(project(":universaladmin-api"))
-    compileOnly("io.papermc.paper:paper-api:26.2.build.115-stable")
+    compileOnly("io.papermc.paper:paper-api:${property("paperApiVersion")}")
 
     testImplementation(platform("org.junit:junit-bom:5.12.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation(project(":universaladmin-api"))
-    testImplementation("io.papermc.paper:paper-api:26.2.build.115-stable")
+    testImplementation("io.papermc.paper:paper-api:${property("paperApiVersion")}")
 }
 
 tasks.withType<JavaCompile>().configureEach {

@@ -4,18 +4,16 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
-import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.moderation.ModerationPolicy;
 import dev.universaladmin.modules.moderation.Punishment;
 import dev.universaladmin.modules.moderation.PunishmentEnforcer;
 import dev.universaladmin.modules.moderation.PunishmentService;
 import dev.universaladmin.modules.moderation.PunishmentType;
+import dev.universaladmin.modules.moderation.TargetNames;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 
 /**
  * Backs both {@code BAN} and {@code TEMP_BAN} - one instance is registered
@@ -36,15 +34,17 @@ public final class BanAction implements Action<BanInput, Punishment> {
     private final PunishmentService punishmentService;
     private final PunishmentEnforcer enforcer;
     private final ModerationPolicy policy;
+    private final TargetNames names;
 
     public BanAction(
             ActionId id, TaskScheduler scheduler, PunishmentService punishmentService, PunishmentEnforcer enforcer,
-            ModerationPolicy policy) {
+            ModerationPolicy policy, TargetNames names) {
         this.id = id;
         this.scheduler = scheduler;
         this.punishmentService = punishmentService;
         this.enforcer = enforcer;
         this.policy = policy;
+        this.names = names;
     }
 
     @Override
@@ -65,11 +65,8 @@ public final class BanAction implements Action<BanInput, Punishment> {
 
         CompletableFuture<ActionResult<Punishment>> future = new CompletableFuture<>();
         scheduler.runOnMainThread(() -> {
-            Player online = Bukkit.getPlayer(input.targetId());
-            String targetName = online != null ? online.getName() : PlayerNames.of(input.targetId());
-
-            punishmentService.issue(type, input.targetId(), targetName, null,
-                            context.actor().playerId(), context.actor().displayName(), input.reason(), expiresAt)
+            names.nameOf(input.targetId()).thenCompose(targetName -> punishmentService.issue(type, input.targetId(), targetName, null,
+                            context.actor().playerId(), context.actor().displayName(), input.reason(), expiresAt))
                     .whenComplete((punishment, error) -> {
                         if (error != null) {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));

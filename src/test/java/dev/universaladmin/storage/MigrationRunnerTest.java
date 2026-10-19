@@ -88,6 +88,48 @@ class MigrationRunnerTest {
         };
     }
 
+    @Test
+    void aMigrationWithALowerVersionAddedLaterStillRuns(@TempDir Path dir) throws Exception {
+        // The upgrade case: a server already applied 1 and 2 (think: module
+        // migrations 1000+), then an update brings a new migration whose
+        // number is lower than the highest one applied (a new core migration).
+        DataSource dataSource = DataSourceFactory.create(DatabaseConfig.sqlite("test.db"), dir);
+        try {
+            MigrationRunner first = new MigrationRunner(dataSource, Logger.getLogger("test"));
+            first.register(createTableMigration());
+            first.register(new Migration() {
+                @Override
+                public int version() {
+                    return 1000;
+                }
+
+                @Override
+                public String description() {
+                    return "a module table";
+                }
+
+                @Override
+                public void migrate(Connection connection) {
+                }
+            });
+            first.runPending();
+
+            MigrationRunner afterUpdate = new MigrationRunner(dataSource, Logger.getLogger("test"));
+            afterUpdate.register(createTableMigration());
+            afterUpdate.register(insertRowMigration());
+            afterUpdate.runPending();
+
+            try (Connection connection = dataSource.getConnection();
+                    Statement statement = connection.createStatement();
+                    ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM widgets")) {
+                resultSet.next();
+                assertEquals(1, resultSet.getInt(1), "migration 2 must run although 1000 was applied before it existed");
+            }
+        } finally {
+            ((AutoCloseable) dataSource).close();
+        }
+    }
+
     @org.junit.jupiter.api.Test
     void refusesTwoDifferentMigrationsWithTheSameVersionButIgnoresARepeat() {
         MigrationRunner runner = new MigrationRunner(null, java.util.logging.Logger.getLogger("test"));
