@@ -4,12 +4,26 @@
 
 | UniversalAdmin | Server | Java |
 |---|---|---|
-| 1.0.x | **Paper 26.2** | 25 |
+| 1.1.x | **Paper 1.21.7 - 1.21.11, 26.1.1 - 26.3** (and Purpur on those) | 21+ (26.x needs 25, like Paper itself) |
 
-UniversalAdmin is built and tested against Paper 26.2. Its `plugin.yml`
-declares `api-version: '26.2'`, so older servers refuse to load it. Newer
-Paper versions may work, but are only listed here (and on Modrinth) once
-they have been tested. Spigot, CraftBukkit and Folia are not supported.
+One jar for all of them. It is Java 21 bytecode with `api-version: '1.21.7'`
+and only uses API that exists on every listed version (the build compiles
+against the oldest and the newest). Every version is boot-tested with a
+smoke test before it is listed. The exact list is
+[`supported-versions.txt`](../../supported-versions.txt) - Modrinth shows the
+same.
+
+**New Paper versions** are picked up automatically: a weekly workflow tests
+every new Paper version (no pre-releases or release candidates) and, if UniversalAdmin runs on it, adds it to
+the current release on Modrinth right away (see
+[docs/release/releasing.md](../release/releasing.md#compatibility)).
+
+Below 1.21.7 the dialog API the menus' text input uses does not exist, so
+older servers refuse to load the plugin. Spigot, CraftBukkit and Folia are
+not supported.
+
+Networks (Velocity, BungeeCord): install UniversalAdmin on every server -
+see [network.md](network.md).
 
 ## Install
 
@@ -31,6 +45,7 @@ Optional:
   general), then `/admin reload`.
 - Discord logging: install the official extension, see
   [docs/extensions/discord.md](../extensions/discord.md).
+- A proxy network: [network.md](network.md).
 
 ## Updating
 

@@ -4,7 +4,8 @@
 
 - JDK 25 (auto-provisioned via the `foojay-resolver-convention` Gradle
   plugin if no local Java 25 installation is found - no manual JDK
-  management needed).
+  management needed). The jars it builds are Java 21 bytecode and run on
+  Paper 1.21.7 and newer.
 - No locally installed Gradle needed, the wrapper (`gradlew`/`gradlew.bat`)
   is enough.
 

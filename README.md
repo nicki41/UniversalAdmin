@@ -7,7 +7,8 @@
 **The free, all-in-one admin plugin for Paper.** Moderation, reports, staff
 chat, vanish, staff mode, player tools, inventories, worlds, whitelist,
 maintenance, performance and a full audit log - in clean in-game menus *and*
-commands, with no dependencies and no paywall. Open source, extensible, made
+commands, on a single server or a whole Velocity/BungeeCord network, with no
+dependencies and no paywall. Open source, extensible, made
 to be the one admin plugin your server needs.
 
 ```
@@ -28,6 +29,9 @@ to be the one admin plugin your server needs.
 - **Safe by design.** Dangerous actions ask for confirmation, double clicks
   are ignored, player input can't inject formatting or click events, and an
   invalid config value never crashes your server.
+- **Made for networks too.** Behind Velocity or BungeeCord, every server
+  sees every other one: who is where, teleports across servers, bans and
+  mutes that apply everywhere at once, network-wide staff chat and alerts.
 - **No dependencies.** No Vault, ProtocolLib, PlaceholderAPI or Essentials
   required. SQLite works out of the box, MySQL/MariaDB optional.
 - **English and German** out of the box - every text is editable.
@@ -48,14 +52,18 @@ to be the one admin plugin your server needs.
 | **Whitelist** | With reasons, notes and **temporary** access that expires on its own. |
 | **Performance** | TPS/MSPT/memory dashboard, per-world stats, entity overview, staff alerts, and a careful entity clear that never touches players or protected mobs. |
 | **Audit log** | Every admin action, filterable by player, module and time, with details. |
+| **Network** | Velocity/BungeeCord: every server and its players in one menu, `/admin find`, cross-server teleports and `/admin send`, network-wide bans, staff chat, alerts and audit log. Optional Velocity plugin that keeps banned players out at the proxy. |
 | **Settings** | Edit every setting in-game - validated, saved with comments intact. |
 | **Extensions** | A public API for other plugins - see below. Official: **Discord logging**. |
 
 ## Requirements
 
-- **Paper 26.2** (Spigot/CraftBukkit are not supported)
-- **Java 25**
-- Optional: MySQL or MariaDB to share data between servers
+- **Paper 1.21.7 - 1.21.11 or 26.1.1 - 26.3** (or Purpur) - one jar for
+  all of them; new Paper versions are tested and added automatically.
+  Spigot/CraftBukkit and Folia are not supported.
+- **Java 21** or newer (Paper 26.x itself needs Java 25)
+- Optional: MySQL or MariaDB - to share data between servers, and for
+  [network mode](docs/user/network.md)
 
 ## Quick start
 
@@ -104,8 +112,13 @@ Templates: [permissions.md](docs/user/permissions.md#role-templates).
 **MySQL?** Set `database.type: mysql` and the connection details in
 `config.yml`. See [docs/user/database.md](docs/user/database.md).
 
-**Folia / Spigot / older Minecraft versions?** Not supported - UniversalAdmin
-targets current Paper.
+**Velocity / BungeeCord network?** Yes - install UniversalAdmin on every
+server, give them one MySQL database and set `network.enabled: true`.
+Optionally add the UniversalAdmin Velocity plugin to the proxy. Guide:
+[docs/user/network.md](docs/user/network.md).
+
+**Folia / Spigot / Minecraft below 1.21.7?** Not supported - UniversalAdmin
+targets Paper 1.21.7 and newer.
 
 **Can I import bans from another plugin?** Not yet - it is on the
 [roadmap](ROADMAP.md).
@@ -149,6 +162,7 @@ all. Exactly what is sent: [docs/user/telemetry.md](docs/user/telemetry.md).
 - **Server owners:** [installation](docs/user/installation.md) ·
   [commands](docs/user/commands.md) · [permissions](docs/user/permissions.md) ·
   [configuration](docs/user/configuration.md) · [database](docs/user/database.md) ·
+  [network](docs/user/network.md) ·
   [audit log](docs/user/audit-log.md) · [telemetry](docs/user/telemetry.md)
 - **Modules:** [players](docs/user/modules/players.md) ·
   [moderation](docs/user/modules/moderation.md) ·

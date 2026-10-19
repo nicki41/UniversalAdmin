@@ -6,15 +6,17 @@ touches plus "Smoke test".
 
 ## Setup
 
-- Paper 26.2, Java 25, a fresh `plugins/` folder.
+- Paper 26.3 (newest) and once more on Paper 1.21.7 (oldest), a fresh
+  `plugins/` folder. `scripts/paper-smoke-test.sh <version>` covers the
+  console part of section 1 on any version automatically.
 - Two accounts: **Admin** (op) and **Player** (no op, no permissions). A
   third account (**Helper**) for permission tests is ideal; otherwise
   de-op the second account and grant nodes with LuckPerms.
 - LuckPerms installed for the permission tests; EssentialsX for the
   shortcut-clash test (separate run).
 - Build: `./gradlew clean build`, then copy
-  `build/libs/universaladmin-core-1.0.0.jar` and
-  `extensions/discord/build/libs/universaladmin-discord-1.0.0.jar`.
+  `build/libs/universaladmin-core-1.1.0.jar` and
+  `extensions/discord/build/libs/universaladmin-discord-1.1.0.jar`.
 
 Legend: **[A]** as Admin, **[P]** as Player, **[H]** as Helper, **[C]** in
 the console.
@@ -22,7 +24,7 @@ the console.
 ## 1. Smoke test
 
 - [ ] Server starts without a stack trace; the startup banner lists 10 modules.
-- [ ] `plugins/UniversalAdmin/` contains `config.yml` (config-version 2),
+- [ ] `plugins/UniversalAdmin/` contains `config.yml` (config-version 3),
       `lang/en_US.yml`, `lang/de_DE.yml`, `data.db`.
 - [ ] [C] `/admin` prints the status report; `/admin modules` lists all
       modules as enabled.
@@ -238,7 +240,7 @@ settings, issue some bans, then upgrade):
 
 ## 18. Example extension (API check)
 
-- [ ] Install `examples/example-extension/build/libs/example-extension-1.0.0.jar`.
+- [ ] Install `examples/example-extension/build/libs/example-extension-1.1.0.jar`.
 - [ ] Main menu has a "Greetings" button; profiles have "Greet"; `/admin greet`
       and `/greet` work; `example.greeting` appears in Settings; greeting
       shows in the audit log; German texts with `de_DE`.
@@ -251,5 +253,35 @@ settings, issue some bans, then upgrade):
 
 ## 20. Update check
 
-- [ ] On 1.0.0 with no newer release: no update notice.
+- [ ] On 1.1.0 with no newer release: no update notice.
 - [ ] `/admin update` → "already the latest version".
+
+## 21. Network (Velocity)
+
+Setup: Velocity with `player-info-forwarding-mode = "modern"`, two Paper
+servers `lobby` and `survival` with the forwarding secret, one MariaDB,
+`network.enabled: true` and `network.server-name` on both,
+`universaladmin-velocity-1.1.0.jar` on the proxy. Admin on lobby, Player on
+survival.
+
+- [ ] Both logs: `Network mode: this server is '...'`; `/admin status` shows
+      the network line; `/uavelocity` on the proxy: ban check active.
+- [ ] [A] `/admin` → Network: both servers with players, TPS, version; a
+      third server in `velocity.toml` without UniversalAdmin is listed too.
+      Clicking a server lists its players; clicking a player opens their
+      network profile.
+- [ ] [A] `/admin find Player` → "Player is on survival".
+- [ ] [A] `/admin tp Player` → Admin lands on survival right next to Player;
+      back on lobby, `/admin tphere Player` → Player lands next to Admin.
+- [ ] [A] `/admin send Player lobby`, `/admin connect survival`.
+- [ ] [A] on lobby: `/ban Player 10m test` → Player is removed from the
+      whole network with the ban screen; reconnecting is refused by the
+      proxy (Velocity ban screen) - also with the Velocity plugin removed,
+      then by the server on join.
+- [ ] [A] on lobby: `/mute Player 10m` → Player on survival cannot chat;
+      `/freeze Player` → frozen on survival, still frozen after switching
+      servers.
+- [ ] Staff chat, staff notifications and a `/report` on survival appear on
+      lobby with `[survival]`; `/admin alert hello` appears on both.
+- [ ] Audit log on lobby shows survival's entries with the server tag.
+- [ ] Stop survival → after ~20 s it shows as offline in the network list.

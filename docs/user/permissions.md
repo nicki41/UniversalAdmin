@@ -37,6 +37,8 @@ universaladmin.moderation.vanish
 universaladmin.bypass.vanish
 universaladmin.players.view
 universaladmin.players.teleport
+universaladmin.network.view
+universaladmin.network.goto
 ```
 
 **Moderator** - everything a helper can, plus bans, staff mode and inventories:
@@ -53,7 +55,12 @@ universaladmin.players.enderchest.view
 universaladmin.audit.view
 universaladmin.whitelist.view
 universaladmin.whitelist.add
+universaladmin.network.view
+universaladmin.network.goto
+universaladmin.network.send
 ```
+
+The `network.*` nodes only matter with [network mode](network.md).
 
 **Admin** - everything:
 
@@ -130,8 +137,15 @@ universaladmin.*
 | **Audit log** | | |
 | `universaladmin.audit.view` | op | Audit log list, `/admin audit` |
 | `universaladmin.audit.details` | op | Full detail of an entry (old/new values, metadata) |
+| **Network** (only with [network mode](network.md)) | | |
+| `universaladmin.network.view` | op | Network menu, `/admin network`, `/admin find` |
+| `universaladmin.network.goto` | op | Go to another server or to a player there (`/admin tp`, `/admin connect`) |
+| `universaladmin.network.send` | op | Move other players between servers (`/admin tphere`, `/admin send`) |
+| `universaladmin.network.alert` | op | `/admin alert` on every server |
 | **Discord extension** | | |
 | `universaladmin.discord.manage` | op | `/admin discord` |
+| **Velocity plugin** (on the proxy) | | |
+| `universaladmin.velocity.status` | - | `/uavelocity` |
 
 ## How checks work
 

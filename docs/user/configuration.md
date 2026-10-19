@@ -92,6 +92,18 @@ Requires a restart: modules are only registered once, at plugin startup.
 `/report` and `/staffchat` are always registered; `/universaladmin:<label>`
 always works. See [commands.md](commands.md).
 
+## `network`
+
+Only for servers behind a Velocity or BungeeCord proxy that share one MySQL
+database - the setup is in [network.md](network.md).
+
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `network.enabled` | boolean | `false` | Network mode. Needs `database.type: mysql`. Restart required. |
+| `network.server-name` | string | `""` | This server's name exactly as the proxy knows it. Empty: asked from the proxy when the first player joins. Restart required. |
+| `network.poll-interval` | duration | `1s` | How often messages from the other servers are fetched (250ms - 10s). Restart required. |
+| `network.list-other-servers` | boolean | `true` | Also list servers without UniversalAdmin, as the proxy reports them. |
+
 ## Module sections
 
 Each module keeps its settings in its own section - `players.*`,
@@ -178,7 +190,9 @@ existing `config.yml`; when the config's shape changes, a migration adjusts
 your file in place. Version 2 (UniversalAdmin 1.0) moved module settings
 under their module (`vanish.*` → `moderation.vanish.*`, `countdown.*` →
 `server.countdown.*`, `gui.max-results` → `players.gui.max-results`, ...)
-and added the `commands` section. See
+and added the `commands` section. Version 3 (UniversalAdmin 1.1) added the
+`network` section and raised the staff-mode target range from 40 to 128
+blocks if you still had the old default. See
 [docs/development/settings.md](../development/settings.md#config-file-versioning).
 
 ## Localization

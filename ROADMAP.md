@@ -5,7 +5,7 @@ a recommendation. Every item builds on the structure in
 [ARCHITECTURE.md](ARCHITECTURE.md), not around it. Ideas and votes are
 welcome as [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues).
 
-## Done - 1.0.0
+## Done - 1.1.0
 
 - [x] Modular core: modules with lifecycle and dependencies, actions with
       central authorization/validation/audit, typed settings, layered
@@ -23,8 +23,15 @@ welcome as [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues).
       developer guide and example
       ([ADR 0010](docs/architecture/decisions/0010-extension-api.md))
 - [x] Official extension: Discord logging
-- [x] Releases: GitHub (plugin, Discord extension, API jars), Modrinth,
-      update checker, anonymous statistics with opt-out
+- [x] **Network mode** (Velocity/BungeeCord): network overview, find,
+      cross-server teleports, network-wide punishments, staff chat, reports,
+      alerts and audit log over one shared MySQL database, plus a Velocity
+      plugin that refuses banned players at the proxy
+      ([ADR 0013](docs/architecture/decisions/0013-network-mode.md))
+- [x] One jar for Paper 1.21.7 - 26.3, new Paper versions tested and
+      published automatically
+- [x] Releases: GitHub (plugin, Discord extension, Velocity plugin, API
+      jars), Modrinth, update checker, anonymous statistics with opt-out
 
 ## Next - 1.x
 
@@ -47,11 +54,12 @@ Additive, no breaking changes.
 - [ ] Audit log export (CSV) and per-module retention
 - [ ] Loading/unloading worlds from the Worlds module
 - [ ] A curated extension list in the docs
+- [ ] Network: maintenance mode and whitelist for several servers at once,
+      a BungeeCord proxy plugin next to the Velocity one, network-wide
+      vanish
 
 ## Later - 2.0 candidates
 
-- [ ] **Proxy support** (Velocity/BungeeCord): network-wide bans, mutes,
-      staff chat and reports across servers sharing one MySQL database
 - [ ] **Web panel**: REST API over the same actions, live dashboard via
       WebSockets, web logins separate from Minecraft accounts - see
       [docs/architecture/web-future.md](docs/architecture/web-future.md)
@@ -63,4 +71,4 @@ Additive, no breaking changes.
   keeps the door open.
 - Packet-level features (ProtocolLib, NMS) in the core - those belong in an
   extension, see [docs/development/architecture-rules.md](docs/development/architecture-rules.md).
-- Spigot/CraftBukkit or old Minecraft versions.
+- Spigot/CraftBukkit or Minecraft versions below 1.21.7.

@@ -11,7 +11,6 @@ import org.bukkit.WorldBorder;
  */
 public final class WorldInfoService {
 
-    private static final int TICKS_PER_SECOND = 20;
 
     public WorldSummary summary(World world) {
         return new WorldSummary(
@@ -27,11 +26,11 @@ public final class WorldInfoService {
                 world.getDifficulty(), world.getTime(), world.hasStorm(), world.isThundering());
     }
 
-    /** {@link WorldBorderSnapshot#warningTime()} is in seconds - converted from {@link WorldBorder#getWarningTimeTicks()} (the ticks-based getter is current; the seconds one is deprecated for removal). */
+    /** {@link WorldBorderSnapshot#warningTime()} is in seconds - see {@link WorldBorderWarnings} for why it is read through a helper. */
     public WorldBorderSnapshot border(World world) {
         WorldBorder border = world.getWorldBorder();
         return new WorldBorderSnapshot(
                 border.getCenter(), border.getSize(), border.getDamageAmount(), border.getDamageBuffer(),
-                border.getWarningDistance(), border.getWarningTimeTicks() / TICKS_PER_SECOND);
+                border.getWarningDistance(), WorldBorderWarnings.seconds(border));
     }
 }

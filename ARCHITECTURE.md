@@ -87,6 +87,18 @@ entries (`ModuleDescriptor#menu`), pages, profile buttons
 core knows a module by name. All texts come from `lang/<locale>.yml`; message
 arguments are escaped ([ADR 0012](docs/architecture/decisions/0012-safe-messages.md)).
 
+## Network mode
+
+Servers behind a Velocity/BungeeCord proxy that share one MySQL database
+see each other through `NetworkService` (`dev.universaladmin.network`):
+heartbeats, online players and messages between servers live in three
+tables that every server polls; moving players goes through the proxy's
+BungeeCord plugin messaging channel. Cross-server operations are ordinary
+actions of the `network` module. Without network mode the service is a
+no-op. The optional `proxy/velocity` plugin refuses banned players at the
+proxy. See [docs/user/network.md](docs/user/network.md) and
+[ADR 0013](docs/architecture/decisions/0013-network-mode.md).
+
 ## Extensions
 
 Extensions are ordinary Paper plugins (`depend: [UniversalAdmin]`) that
@@ -106,3 +118,8 @@ still planned - [docs/architecture/web-future.md](docs/architecture/web-future.m
 | `universaladmin-core` | `/` | The plugin: bootstrap, implementations, built-in modules; shades the API |
 | `universaladmin-discord` | `extensions/discord/` | Official Discord extension (own plugin jar) |
 | `example-extension` | `examples/example-extension/` | Template extension, built in CI only |
+| `universaladmin-velocity` | `proxy/velocity/` | Optional Velocity plugin for network mode (own jar) |
+
+Every jar is Java 21 bytecode with `api-version: '1.21.7'` and runs on
+every version in [supported-versions.txt](supported-versions.txt) - see
+[ADR 0014](docs/architecture/decisions/0014-version-compatibility.md).

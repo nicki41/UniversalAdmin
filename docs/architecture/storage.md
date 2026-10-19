@@ -126,7 +126,13 @@ public interface Migration {
 ```
 
 `MigrationRunner` runs every registered migration in version order and
-tracks progress in a `schema_version` table. Versions are globally unique
+tracks progress in a `schema_version` table. It applies every migration
+whose version is not recorded there yet - not only those above the highest
+applied one - so a migration added in a later release with a lower number
+(e.g. a core migration after module migrations already ran) still runs. On
+MySQL/MariaDB the whole run holds a named database lock
+(`GET_LOCK('universaladmin_migrations')`), so servers of a network that
+start at the same time against one database migrate one after another. Versions are globally unique
 across the whole database, not per module:
 
 - **1-999**: core migrations (e.g. `AuditSchemaMigration`, version 1),
@@ -138,9 +144,11 @@ across the whole database, not per module:
   document it. A collision is detected at startup (same version, different
   migration) and refused.
 
-Used versions: 1-2 audit, 1000-1001 players, 1002-1003 punishments,
-1004 vanish state, 1005 staff-mode snapshots, 1006 maintenance state,
-1007 whitelist, 1008 `ua_player_notes`, 1009 `ua_reports`.
+Used versions: 1-2 audit, 3 network tables (`ua_network_servers`,
+`ua_network_players`, `ua_network_messages`), 1000-1001 players, 1002-1003
+punishments, 1004 vanish state, 1005 staff-mode snapshots, 1006
+maintenance state, 1007 whitelist, 1008 `ua_player_notes`, 1009
+`ua_reports`, 1010 `ua_reports.server`.
 
 Migrations run at plugin start (`storage.migrations().runPending()` in
 `UniversalAdminPlugin#onEnable`, between every module's `onLoad` and

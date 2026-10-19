@@ -14,8 +14,8 @@ everything on this page (texts, gallery, links) is maintained by hand.
 | Summary | see below |
 | Categories | Management, Utility (additional: Social) |
 | Environment | Server-side only |
-| Loaders | Paper |
-| Game versions | 26.2 |
+| Loaders | Paper, Purpur (plugin); Velocity (the `-velocity` versions) |
+| Game versions | everything in [`supported-versions.txt`](../../supported-versions.txt) - set by `release.yml`, extended by `compatibility.yml` |
 | License | Apache-2.0 |
 | Icon | `assets/icon.png` |
 | Source | https://github.com/nicki41/UniversalAdmin |
@@ -25,7 +25,7 @@ everything on this page (texts, gallery, links) is maintained by hand.
 
 ## Summary
 
-> The free all-in-one admin plugin for Paper: moderation, reports, staff mode, vanish, staff chat, inventories, worlds, whitelist, maintenance and a full audit log - in clean menus and commands, no dependencies.
+> The free all-in-one admin plugin for Paper and Velocity networks: moderation, reports, staff mode, vanish, staff chat, live inventories, worlds, maintenance and a full audit log - in clean menus and commands.
 
 ## Description
 
@@ -38,7 +38,11 @@ Paste everything between the lines into Modrinth's description editor.
 **The free, all-in-one admin plugin for Paper.** Everything your staff team
 needs - moderation, reports, staff mode, player tools, worlds, maintenance,
 performance and a complete audit log - in clean in-game menus *and*
-commands. No dependencies, no premium version, open source.
+commands, on one server or a whole **Velocity/BungeeCord network**. No
+dependencies, no premium version, open source.
+
+Runs on **Paper and Purpur 1.21.7 - 1.21.11 and 26.1.1 - 26.3** - one jar for
+all of them, and new Minecraft versions are tested and added automatically.
 
 ## ✨ Highlights
 
@@ -54,8 +58,30 @@ commands. No dependencies, no premium version, open source.
   LuckPerms role templates included.
 - **Safe** - confirmations for dangerous actions, no double clicks, player
   input can't inject formatting, an invalid config never crashes the server.
+- **Network-ready** - behind Velocity or BungeeCord, see every server and
+  player in one menu, teleport across servers, and ban once for the whole
+  network.
 - **No dependencies** - SQLite out of the box, MySQL/MariaDB optional.
 - **English & German** - every text editable.
+
+## 🌐 Networks (Velocity / BungeeCord)
+
+Install UniversalAdmin on every server, give them one MySQL/MariaDB database
+and set `network.enabled: true`:
+
+- a **Network** menu with every server - also those without UniversalAdmin -
+  their players, TPS and version;
+- `/admin find Steve` - "Steve is on survival";
+- `/admin tp Steve` takes you to Steve's server, right next to him;
+  `/admin tphere`, `/admin send`, `/admin connect`;
+- **bans, mutes, warnings, kicks and freezes apply on every server at once**;
+- staff chat, staff notifications, report alerts and `/admin alert` across
+  all servers, tagged with the server name;
+- one audit log for the whole network.
+
+Optional: the **UniversalAdmin Velocity** plugin (the `-velocity` version on
+this page) keeps banned players out at the proxy, before they reach any
+server. [Network guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md).
 
 ## 🛡️ Moderation
 
@@ -119,8 +145,12 @@ release). Developers: see the
 
 ## 📦 Requirements
 
-- Paper 26.2, Java 25
-- Nothing else. Optional: MySQL/MariaDB, LuckPerms (any permission plugin works).
+- Paper or Purpur 1.21.7 - 1.21.11 or 26.1.1 - 26.3, Java 21+ (Paper 26.x
+  itself needs Java 25)
+- Nothing else. Optional: MySQL/MariaDB (needed for network mode),
+  LuckPerms (any permission plugin works).
+- Networks: Velocity 3.4+ or BungeeCord/Waterfall; the UniversalAdmin
+  Velocity plugin is optional.
 
 ## 🚀 Getting started
 
@@ -179,15 +209,24 @@ resource packs off). Title / description for each:
     moderation section.
 13. **Discord** - "Punishments in your Discord" - a Discord channel with 2-3
     embeds from the Discord extension.
+14. **Network** - "Your whole network in one menu" - Network page with 2-3
+    servers and their player heads, plus `/admin find` in chat.
 
 Optional: a 20-30 s clip (main menu → player → moderate → ban → audit log)
 for the description, uploaded to YouTube and embedded.
 
 ## Version uploads
 
-Automatic - every GitHub release uploads `universaladmin-core-<v>.jar` as a
-Modrinth version with the changelog section as notes; the type is derived
-from the version (`1.0.0` → release, `-beta`/`-rc` → beta, `-alpha` →
-alpha). The Discord extension is not uploaded to this project; create a
-separate Modrinth project for it if wanted (then add a second
-`mc-publish` step in `release.yml`).
+Automatic - every GitHub release uploads two Modrinth versions with the
+changelog section as notes:
+
+- `<v>` - `universaladmin-core-<v>.jar`, loaders Paper and Purpur, every
+  game version in `supported-versions.txt`;
+- `<v>-velocity` - `universaladmin-velocity-<v>.jar`, loader Velocity.
+
+The type is derived from the version (`1.1.0` -> release, `-beta`/`-rc` ->
+beta, `-alpha` -> alpha). When a new Paper version passes the weekly
+compatibility check, it is added to the newest release on both versions
+(see [releasing.md](releasing.md#compatibility)). The Discord extension is
+not uploaded to this project; create a separate Modrinth project for it if
+wanted (then add another `mc-publish` step in `release.yml`).

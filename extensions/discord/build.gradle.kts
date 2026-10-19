@@ -15,6 +15,11 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))
     }
+    // The Paper 26 API is published for Java 25 (its servers run 25), but the
+    // jars are Java 21 bytecode so Paper 1.21.x servers on Java 21 load them
+    // too - see gradle.properties. Without this, Gradle would refuse the
+    // Java 25 dependency for a Java 21 target.
+    disableAutoTargetJvm()
 }
 
 repositories {
@@ -35,6 +40,9 @@ dependencies {
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
+    // Java 21 bytecode: Paper 1.21.x servers commonly run Java 21. The
+    // toolchain stays 25; see gradle.properties for the supported versions.
+    options.release.set(21)
     options.compilerArgs.add("-parameters")
 }
 

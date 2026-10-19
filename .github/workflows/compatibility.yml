@@ -1,0 +1,161 @@
+name: Compatibility
+
+# Keeps "runs on the newest Minecraft version" true without waiting for a
+# release. Every Monday (or on demand) this looks for stable Paper versions
+# newer than the oldest supported one that supported-versions.txt does not
+# list yet, and for each one:
+#
+#   1. compiles UniversalAdmin against that version's API,
+#   2. boots a real Paper server of that version with the built jars and runs
+#      the smoke test (scripts/paper-smoke-test.sh),
+#   3. if both pass: adds the version to the newest UniversalAdmin release on
+#      Modrinth (so servers on it can download the release right away) and
+#      opens a pull request adding it to supported-versions.txt, which the
+#      next release then uses;
+#   4. if anything fails: opens an issue with the details.
+#
+# Secrets: MODRINTH_TOKEN (the same token release.yml uses; needs the
+# "Write versions" scope to edit an existing version).
+
+on:
+  schedule:
+    - cron: '23 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Test this Paper version only (e.g. 26.4); empty = every untested one"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: compatibility
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Test new Paper versions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 25 (build toolchain, runs Paper) and 21 (runs Gradle)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: |
+            21
+            25
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Find untested Paper versions
+        id: find
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.version }}" ]; then
+            NEW="${{ inputs.version }}"
+          else
+            # Every stable version PaperMC lists (no -pre/-rc), oldest first,
+            # from the oldest supported one on, minus the ones already listed.
+            KNOWN="$(grep -vE '^\s*(#|$)' supported-versions.txt)"
+            OLDEST="$(head -1 <<< "$KNOWN")"
+            NEW="$(curl -fsS -A 'nicki41/UniversalAdmin compatibility' https://fill.papermc.io/v3/projects/paper \
+              | jq -r '.versions[][]' | grep -E '^[0-9]+(\.[0-9]+)+$' \
+              | { cat; echo "$OLDEST"; } | sort -uV | sed -n "/^${OLDEST//./\\.}\$/,\$p" \
+              | grep -vxF -f <(echo "$KNOWN") || true)"
+          fi
+          NEW="$(echo $NEW)"
+          echo "Untested: ${NEW:-none}"
+          echo "versions=$NEW" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        if: steps.find.outputs.versions != ''
+        run: ./gradlew clean build --console=plain -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64
+
+      - name: Compile against and boot each new version
+        id: test
+        if: steps.find.outputs.versions != ''
+        run: |
+          set -uo pipefail
+          chmod +x scripts/paper-smoke-test.sh
+          PASSED=""
+          FAILED=""
+          for VERSION in ${{ steps.find.outputs.versions }}; do
+            echo "::group::Paper $VERSION"
+            API="$(curl -fsS https://repo.papermc.io/repository/maven-public/io/papermc/paper/paper-api/maven-metadata.xml \
+              | grep -oE "<version>${VERSION//./\\.}(\.build\.[0-9]+-stable|-R0\.1-SNAPSHOT)</version>" \
+              | sed -E 's/<\/?version>//g' | sort -V | tail -1)"
+            OK=1
+            if [ -n "$API" ]; then
+              ./gradlew compileJava compileTestJava --console=plain -PpaperApiVersion="$API" \
+                -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64 || OK=0
+            fi
+            if [ "$OK" = 1 ]; then
+              PATH="$JAVA_HOME_25_X64/bin:$PATH" scripts/paper-smoke-test.sh "$VERSION" || OK=0
+            fi
+            echo "::endgroup::"
+            if [ "$OK" = 1 ]; then PASSED="$PASSED $VERSION"; else FAILED="$FAILED $VERSION"; fi
+          done
+          echo "passed=$(echo $PASSED)" >> "$GITHUB_OUTPUT"
+          echo "failed=$(echo $FAILED)" >> "$GITHUB_OUTPUT"
+
+      - name: Add passing versions to the newest Modrinth release
+        if: steps.test.outputs.passed != ''
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          set -euo pipefail
+          UA='nicki41/UniversalAdmin compatibility'
+          VERSIONS="$(curl -fsS -A "$UA" "https://api.modrinth.com/v2/project/wGP5uSse/version")"
+          # The newest release-type version per loader family (Paper plugin, Velocity plugin).
+          for LOADER in paper velocity; do
+            ID="$(jq -r --arg loader "$LOADER" '[.[] | select(.version_type == "release" and (.loaders | index($loader)))][0].id // empty' <<< "$VERSIONS")"
+            [ -z "$ID" ] && continue
+            CURRENT="$(jq -c --arg id "$ID" '.[] | select(.id == $id) | .game_versions' <<< "$VERSIONS")"
+            UPDATED="$(jq -c --arg add "${{ steps.test.outputs.passed }}" '. + ($add | split(" ")) | unique' <<< "$CURRENT")"
+            curl -fsS -X PATCH -A "$UA" -H "Authorization: $MODRINTH_TOKEN" -H 'Content-Type: application/json' \
+              -d "{\"game_versions\": $UPDATED}" "https://api.modrinth.com/v2/version/$ID"
+            echo "Modrinth version $ID ($LOADER): $UPDATED"
+          done
+
+      - name: Open a pull request for supported-versions.txt
+        if: steps.test.outputs.passed != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH=automation/supported-versions
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          for VERSION in ${{ steps.test.outputs.passed }}; do
+            grep -qx "$VERSION" supported-versions.txt || echo "$VERSION" >> supported-versions.txt
+          done
+          git add supported-versions.txt
+          git commit -m "chore: support Paper ${{ steps.test.outputs.passed }}"
+          git push --force origin "$BRANCH"
+          gh pr view "$BRANCH" > /dev/null 2>&1 || gh pr create --head "$BRANCH" \
+            --title "Support Paper ${{ steps.test.outputs.passed }}" \
+            --body "Compiled against and smoke-tested on Paper ${{ steps.test.outputs.passed }} by the compatibility workflow. Already added to the newest release on Modrinth; merging lists it for every future release."
+
+      - name: Report failing versions
+        if: steps.test.outputs.failed != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for VERSION in ${{ steps.test.outputs.failed }}; do
+            TITLE="UniversalAdmin does not work on Paper $VERSION yet"
+            if ! gh issue list --state open --search "\"$TITLE\" in:title" --json number -q '.[0].number' | grep -q .; then
+              gh issue create --title "$TITLE" --body "The compatibility workflow could not compile against or boot UniversalAdmin on Paper $VERSION. Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            fi
+          done
+          exit 1

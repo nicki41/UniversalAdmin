@@ -7,12 +7,14 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-10-15
+## [1.1.0] - 2026-10-20
 
 The first stable release: commands for everything, a report system, chat
-tools, staff notes, an in-game settings editor, a public extension API and
-the first official extension. Upgrading from an alpha is automatic - see
-"Upgrading" below.
+tools, staff notes, an in-game settings editor, network mode for Velocity
+and BungeeCord networks, a public extension API and the first official
+extensions. One jar runs on Paper 1.21.7 - 1.21.11 and 26.1.1 - 26.3.
+Upgrading from an alpha is automatic - see "Upgrading" below. (1.0.0 was
+never published on its own; everything planned for it is part of 1.1.0.)
 
 ### Added
 
@@ -67,6 +69,25 @@ the first official extension. Upgrading from an alpha is automatic - see
   what staff change lands in the player's inventory. Laid out like the
   player's own screen (storage, hotbar, armor, offhand); one audit entry
   per editing session with the number of changed slots.
+- **Network mode** for servers behind a Velocity or BungeeCord proxy that
+  share one MySQL database (`network.enabled`): a Network menu with every
+  server - also those without UniversalAdmin - and its players, `/admin
+  network`, `/admin find <player>`, cross-server `/admin tp` and `tphere`
+  (you land right next to the player), `/admin send`, `/admin connect`,
+  network-wide `/admin alert`; bans, mutes, warnings, kicks and freezes
+  take effect on every server at once; staff chat, staff notifications and
+  report alerts across all servers, tagged with the server; one audit log
+  for the network, every entry tagged with its server; commands find every
+  player of the network. See [docs/user/network.md](docs/user/network.md).
+- **UniversalAdmin Velocity** - an optional proxy plugin that turns banned
+  players away at the proxy, before they reach any server (also servers
+  without UniversalAdmin), with a configurable ban screen and
+  `/uavelocity`. Published next to the plugin on GitHub and Modrinth.
+- **One jar for many Minecraft versions**: Paper (and Purpur) 1.21.7 -
+  1.21.11 and 26.1.1 - 26.3, Java 21 or newer. Every listed version is
+  compiled against and boot-tested; a weekly check tests new Paper
+  versions and adds them to the newest release on Modrinth as soon as
+  they pass ([docs/user/installation.md](docs/user/installation.md)).
 - An example extension (`examples/example-extension`) as a template.
 - Ready-made LuckPerms role templates (helper, moderator, admin) in
   [docs/user/permissions.md](docs/user/permissions.md).
@@ -94,8 +115,14 @@ the first official extension. Upgrading from an alpha is automatic - see
   more purple italic lore lines).
 - The update check and `/admin update` compare versions properly and never
   offer an older release.
-- Releases on GitHub additionally carry the Discord extension and the API
-  jars; Modrinth versions are marked as release instead of alpha.
+- Releases on GitHub additionally carry the Discord extension, the
+  Velocity plugin and the API jars; Modrinth versions are marked as
+  release instead of alpha and list every supported Minecraft version.
+- Built for Java 21 (was 25), so servers on 1.21.x run it too.
+- Extensions: `UniversalAdmin.network()` (servers, players, messages
+  between servers, moving players), the `PlayerDirectory` service (find a
+  player by name or UUID network-wide) and `CommandInvocation.withPlayer`
+  for commands that take any known player.
 
 ### Fixed
 
@@ -120,6 +147,13 @@ the first official extension. Upgrading from an alpha is automatic - see
 - Punishing a player who was offline stored their UUID instead of their
   name in the history.
 - The Freeze Tool could freeze and immediately unfreeze with one click.
+- Several servers starting at the same time on a new MySQL database could
+  run the same schema migration twice; migrations now run under a
+  database lock, and a migration added later is applied even if newer
+  ones already ran.
+- Console commands sent over RCON got no reply.
+- "Could not save lang/en_US.yml ... already exists" warnings on every
+  start.
 
 ### Security
 
@@ -133,16 +167,19 @@ the first official extension. Upgrading from an alpha is automatic - see
 ### Upgrading from 0.1.0-alpha
 
 - Replace the jar and restart. `config.yml` is migrated automatically
-  (config version 2): module settings move under their module's section
-  and the new sections are added. Nothing you set is lost or overwritten.
+  (config version 3): module settings move under their module's section
+  and the new sections (`commands`, `network`, ...) are added. Nothing you
+  set is lost or overwritten.
 - New database tables (`ua_reports`, `ua_player_notes`) are created
   automatically.
 - Your `lang/*.yml` files are kept; every text you did not change now comes
   from the plugin itself, so new texts appear automatically.
 - New permissions to hand out: `universaladmin.reports.*`,
   `universaladmin.chat.*`, `universaladmin.moderation.notes`,
-  `universaladmin.moderation.notify`, `universaladmin.status` - and
-  `universaladmin.reports.create` is granted to everyone by default.
+  `universaladmin.moderation.notify`, `universaladmin.status`,
+  `universaladmin.network.*` - and `universaladmin.reports.create` is
+  granted to everyone by default.
+- Running a network? See [docs/user/network.md](docs/user/network.md).
 
 ## [0.1.0-alpha.5] - 2026-08-26
 

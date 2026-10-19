@@ -106,7 +106,9 @@ template - see
 - Gradle projects: `universaladmin-api` (`api/`, the public extension API),
   `universaladmin-core` (the repository root: bootstrap, implementations,
   built-in modules), `universaladmin-discord` (`extensions/discord`, the
-  official Discord extension) and `example-extension`
+  official Discord extension), `universaladmin-velocity` (`proxy/velocity`,
+  the optional Velocity plugin for network mode - a Velocity plugin, it
+  depends on neither the API nor the core) and `example-extension`
   (`examples/example-extension`). The API and the core share package names;
   an API class must never import a core class (the build enforces it - the
   API project does not see the core). See
@@ -305,10 +307,17 @@ along with a feature PR.
 
 ```bash
 ./gradlew build   # every project: tests, shaded plugin jar (build/libs/universaladmin-core-*.jar),
-                  # API jars (api/build/libs), Discord extension (extensions/discord/build/libs)
+                  # API jars (api/build/libs), Discord extension (extensions/discord/build/libs),
+                  # Velocity plugin (proxy/velocity/build/libs)
 ./gradlew test    # tests only
 ```
 
 The Java toolchain is 25 (auto-provisioned via `foojay-resolver-convention`
-if not present locally). Target server: current stable Paper API (see
-`build.gradle.kts` for the exact version).
+if not present locally); every jar is **Java 21 bytecode**
+(`options.release.set(21)`) with `api-version: '1.21.7'`, so one jar runs
+on every version in `supported-versions.txt`. The project compiles against
+the newest Paper API (`paperApiVersion` in `gradle.properties`); **code may
+only use API that also exists on Paper 1.21.7** - CI compiles against both
+ends (`-PpaperApiVersion=<version>`). An API that changed in between is
+reached through a small reflective helper (see `WorldBorderWarnings`). See
+[ADR 0014](../architecture/decisions/0014-version-compatibility.md).

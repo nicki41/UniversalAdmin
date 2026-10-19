@@ -5,17 +5,17 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.localization.MessageKey;
+import dev.universaladmin.modules.worlds.WorldBorderWarnings;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
 
-/** {@code timeSeconds} is converted to ticks (20/s) for {@link WorldBorder#setWarningTimeTicks(int)} - the seconds-based overload is deprecated for removal. */
+/** Sets warning distance and time - the time through {@link WorldBorderWarnings}, which works on every supported Paper version. */
 public final class SetWorldBorderWarningAction implements Action<SetWorldBorderWarningInput, Void> {
 
     public static final ActionId ID = WorldActionIds.SET_BORDER_WARNING;
-    private static final int TICKS_PER_SECOND = 20;
 
     private final TaskScheduler scheduler;
 
@@ -39,7 +39,7 @@ public final class SetWorldBorderWarningAction implements Action<SetWorldBorderW
             }
             WorldBorder border = world.getWorldBorder();
             border.setWarningDistance(input.distance());
-            border.setWarningTimeTicks(input.timeSeconds() * TICKS_PER_SECOND);
+            WorldBorderWarnings.setSeconds(border, input.timeSeconds());
             future.complete(ActionResult.success(null, MessageKey.of("worlds.result.border-warning"),
                     world.getName(), Integer.toString(input.distance()), Integer.toString(input.timeSeconds())));
         });

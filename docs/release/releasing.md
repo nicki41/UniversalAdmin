@@ -5,11 +5,15 @@ checks that the tag matches the project version, builds, runs every test,
 and publishes:
 
 - a GitHub release with `universaladmin-core-<v>.jar` (+ `.sha256`),
-  `universaladmin-discord-<v>.jar` (+ `.sha256`) and
+  `universaladmin-discord-<v>.jar` (+ `.sha256`),
+  `universaladmin-velocity-<v>.jar` (+ `.sha256`) and
   `universaladmin-api-<v>.jar` with `-sources.jar` and `-javadoc.jar`,
   release notes from the matching `CHANGELOG.md` section;
-- the plugin jar as a new version on the Modrinth project (id `wGP5uSse`,
-  game version `26.2`, loader `paper`) - see [Modrinth](#modrinth).
+- on the Modrinth project (id `wGP5uSse`): the plugin jar as version `<v>`
+  (loaders `paper`, `purpur`; every game version in
+  [`supported-versions.txt`](../../supported-versions.txt)) and the Velocity
+  plugin as version `<v>-velocity` (loader `velocity`) - see
+  [Modrinth](#modrinth).
 
 Nothing is published if a single test fails.
 
@@ -38,7 +42,7 @@ What a version number promises from 1.0 on:
 - **major** (`2.0.0`): may contain breaking changes, documented under
   "Upgrading" in the changelog.
 
-## Releasing 1.0.0 (and any stable version)
+## Releasing a stable version
 
 1. Make sure `CHANGELOG.md` has the section `## [<version>] - <date>` with
    today's date, and `[Unreleased]` above it is empty.
@@ -50,14 +54,14 @@ What a version number promises from 1.0 on:
 
    ```bash
    git checkout main && git pull
-   git tag v1.0.0
-   git push origin v1.0.0
+   git tag v1.1.0
+   git push origin v1.1.0
    ```
 
 6. Watch the "Release" workflow; afterwards check the GitHub release assets
    and the new version on Modrinth.
 7. Start the next cycle: bump to the next version with a pre-release suffix
-   (e.g. `1.1.0-alpha`) in a normal commit, and add a fresh `## [Unreleased]`.
+   (e.g. `1.2.0-alpha`) in a normal commit, and add a fresh `## [Unreleased]`.
 
 ## Automatic pre-releases
 
@@ -72,20 +76,58 @@ trigger another release.
 ## Modrinth
 
 Every release is mirrored by `Kira-NT/mc-publish` using the `MODRINTH_TOKEN`
-repository secret (a Modrinth personal access token with version-create
-rights for the project). `fail-mode: warn` - a Modrinth hiccup never fails
-the GitHub release. The version type (release/beta/alpha) is derived from
-the version string. To claim another game version after testing it, extend
-`game-versions` in `release.yml` (e.g. `"26.2\n26.3"`) and the supported
-versions in [docs/user/installation.md](../user/installation.md#supported-versions).
+repository secret (a Modrinth personal access token with the scopes
+"Create versions" and "Write versions" - the second lets the compatibility
+workflow add game versions to an existing version). `fail-mode: warn` - a
+Modrinth hiccup never fails the GitHub release. The version type
+(release/beta/alpha) is derived from the version string.
 
 Project page content (description, gallery, links) is maintained by hand -
 see [modrinth.md](modrinth.md).
 
+## Compatibility
+
+[`supported-versions.txt`](../../supported-versions.txt) lists every
+Minecraft version UniversalAdmin runs on, in Modrinth's naming. It is the
+only list: `release.yml` publishes each release for exactly those versions,
+and [installation.md](../user/installation.md#supported-versions) points to
+it.
+
+`compatibility.yml` keeps it current - every Monday, or by hand (Actions ->
+Compatibility -> Run workflow, optionally with one version):
+
+1. finds Paper versions (no pre-releases or release candidates) newer than
+   the oldest listed one that the file does not list yet, from PaperMC's
+   download API;
+2. compiles against that version's API and boots a real Paper server of
+   that version with the built jars
+   ([`scripts/paper-smoke-test.sh`](../../scripts/paper-smoke-test.sh): all
+   modules enabled, a list of console commands, no errors, no missing
+   texts);
+3. if it passes: adds the version to the newest release-type Modrinth
+   versions (plugin and Velocity) right away, and opens a pull request from
+   `automation/supported-versions` that adds it to the file - merge it so
+   the next release lists it too;
+4. if it fails: opens an issue "UniversalAdmin does not work on Paper
+   <version> yet" with a link to the run.
+
+The same smoke test locally:
+
+```bash
+./gradlew build && scripts/paper-smoke-test.sh 26.3
+```
+
+The build also compiles against the oldest supported (1.21.7) and the
+newest Paper API on every push (`build.yml`, job `api-compat`). Raising
+the floor means: change `api-version` in every `plugin.yml`, the first line
+of `supported-versions.txt` and the oldest API in `build.yml`, and note it
+in the changelog
+([ADR 0014](../architecture/decisions/0014-version-compatibility.md)).
+
 ## When something goes wrong
 
 - **Tag/version mismatch:** the workflow stops before building. Delete the
-  tag (`git push --delete origin v1.0.0`), fix the version, tag again.
+  tag (`git push --delete origin v1.1.0`), fix the version, tag again.
 - **A test fails:** nothing is published. Fix, merge, tag again.
 - **A broken release went out:** never move or reuse a tag. Publish a fixed
-  patch version (`1.0.1`) and mention it in the changelog.
+  patch version (`1.1.1`) and mention it in the changelog.

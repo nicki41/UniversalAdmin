@@ -11,8 +11,10 @@ feature below is used there, in about 250 lines.
 
 ## 1. Build setup
 
-Java 25, Paper 26.2. Add the API as a `compileOnly` dependency (it is
-provided at runtime by the UniversalAdmin plugin jar):
+Java 21 bytecode, Paper 1.21.7 or newer - like UniversalAdmin itself, so
+your extension runs on every version UniversalAdmin supports (compile with
+Java 21 or `options.release.set(21)`). Add the API as a `compileOnly`
+dependency (it is provided at runtime by the UniversalAdmin plugin jar):
 
 ```kotlin
 repositories {
@@ -22,8 +24,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.2.build.115-stable")
-    compileOnly("com.github.nicki41.UniversalAdmin:universaladmin-api:v1.0.0")
+    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+    compileOnly("com.github.nicki41.UniversalAdmin:universaladmin-api:v1.1.0")
 }
 ```
 
@@ -31,10 +33,10 @@ Alternatives if you prefer:
 
 - the plugin jar from Modrinth's Maven:
   `maven("https://api.modrinth.com/maven")` +
-  `compileOnly("maven.modrinth:universaladmin:1.0.0")`,
-- or `universaladmin-api-1.0.0.jar` (with sources and javadoc) from the
+  `compileOnly("maven.modrinth:universaladmin:1.1.0")`,
+- or `universaladmin-api-1.1.0.jar` (with sources and javadoc) from the
   [GitHub release](https://github.com/nicki41/UniversalAdmin/releases),
-  added via `compileOnly(files("libs/universaladmin-api-1.0.0.jar"))`.
+  added via `compileOnly(files("libs/universaladmin-api-1.1.0.jar"))`.
 
 Never shade the API into your jar.
 
@@ -44,7 +46,7 @@ Never shade the API into your jar.
 name: MyExtension
 version: '1.0.0'
 main: com.example.myextension.MyExtensionPlugin
-api-version: '26.2'
+api-version: '1.21.7'
 depend: [UniversalAdmin]
 ```
 
@@ -138,8 +140,19 @@ public final class TicketsModule implements Module {
   executed, failed) including the input object.
 - `context.platform().services().get(SomeService.class)` - services other
   modules published, e.g. the Reports module's `ReportService`.
+- `ua.network()` - the other servers of a Velocity/BungeeCord network
+  (`servers()`, `players()`, `player(name)`), messages between servers
+  (`publish(topic, payload)` / `subscribe(topic, listener)`) and moving
+  players (`connect`, `sendTo`). Without network mode it is a harmless
+  no-op (`enabled()` is false), so you never need to branch on it.
+- `PlayerDirectory` (a service, `services().get(PlayerDirectory.class)`) -
+  find any player who ever joined, on this server or another server of the
+  network, by name or UUID. In commands, `CommandInvocation#withPlayer(index,
+  player -> ...)` does that lookup for an argument and reports "unknown
+  player" for you.
 - `UniversalAdminProvider.API_VERSION` - check before relying on API added
-  in a later minor version.
+  in a later minor version (`network()`, `PlayerDirectory` and
+  `withPlayer` are 1.1).
 
 ## Reference
 

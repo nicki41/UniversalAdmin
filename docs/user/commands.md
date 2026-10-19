@@ -71,13 +71,15 @@ permission listed is checked by the action itself, not just by the command.
 | `/admin fly [player]` | `/fly` | `players.fly.toggle` | Toggle flight |
 | `/admin gamemode <mode> [player]` | `/gm` | `players.gamemode` | `survival`/`creative`/`adventure`/`spectator`, `s`/`c`/`a`/`sp`, `0`-`3` |
 | `/admin speed <fly\|walk> <0-10> [player]` | `/speed` | `players.fly.speed` / `players.walk-speed` | 1 = default fly, 2 = default walk speed |
-| `/admin tp <player> [destination]` | `/tpto` | `players.teleport` | To a player, or one player to another |
-| `/admin tphere <player>` | `/tphere` | `players.teleport` | Bring a player to you |
+| `/admin tp <player> [destination]` | `/tpto` | `players.teleport` | To a player, or one player to another. Network mode: a player on another server - you are sent there, next to them (`network.goto`) |
+| `/admin tphere <player>` | `/tphere` | `players.teleport` | Bring a player to you. Network mode: also from another server (`network.send`) |
 | `/admin invsee <player>` | `/invsee` | `players.inventory.view` (`.edit` to change) | Live inventory editor |
 | `/admin endersee <player>` | `/endersee` | `players.enderchest.view` (`.edit` to change) | Live ender chest editor |
 | `/admin clearinv <player> confirm` | `/clearinv` | `players.inventory.edit` | Empty a player's inventory |
 
-`[player]` defaults to yourself.
+`[player]` defaults to yourself. In network mode every command that takes a
+player name finds players of the whole network - also ones who only ever
+played on another server.
 
 ## Reports
 
@@ -154,6 +156,18 @@ Leave out `[world]` to use the world you are in.
 | Command | Permission | What it does |
 |---|---|---|
 | `/admin audit [player] [page]` | `audit.view` | Newest entries, optionally only one player's |
+
+## Network
+
+Only in network mode - see [network.md](network.md).
+
+| Command | Permission | What it does |
+|---|---|---|
+| `/admin network [server]` (`/admin net`) | `network.view` | All servers with players and TPS, or the players on one |
+| `/admin find <player>` | `network.view` | Which server a player is on |
+| `/admin send <player> <server>` | `network.send` | Move a player to another server |
+| `/admin connect <server>` | `network.goto` | Go to another server |
+| `/admin alert <message>` | `network.alert` | Broadcast on every server (MiniMessage) |
 
 ## Extensions
 

@@ -42,6 +42,8 @@ implementations, ...) are internal and may change in any release.
 | Observing every audit entry | `AuditListener` | `subscribeAudit` |
 | Notifications | `NotificationService` | - |
 | Threading | `TaskScheduler` (`supplyAsync`, `runOnMainThread`, `supplyOnMainThread`) | - |
+| Other servers of a network (1.1) | `NetworkService` (`UniversalAdmin#network`): servers, players, messages, moving players - a no-op without network mode | `subscribe`/`unsubscribe` on the service |
+| Any known player, network-wide (1.1) | `PlayerDirectory` service, `CommandInvocation#withPlayer` | - |
 
 Every `register*` call undoes itself when the module is disabled - which
 happens automatically when the owning plugin is disabled.

@@ -13,7 +13,9 @@ same logic can later be reused by the GUI, a command, and a web API.
 
 You need:
 
-- **Java 25.** The Gradle wrapper auto-provisions a matching toolchain via
+- **Java 25** to build (the jars are Java 21 bytecode, see
+  [architecture-rules.md](docs/development/architecture-rules.md#build--test)).
+  The Gradle wrapper auto-provisions a matching toolchain via
   `foojay-resolver-convention` if none is installed locally - so a different
   local JDK is enough to get the build started.
 - **No Gradle install required** - use the bundled wrapper (`./gradlew`, on
@@ -100,7 +102,7 @@ Full conventions: [docs/development/testing.md](docs/development/testing.md).
 
 ## Code Style
 
-- Java 25, 4-space indentation, UTF-8, no tabs.
+- Java 21 language level, 4-space indentation, UTF-8, no tabs.
 - Interfaces without a prefix/suffix (`Repository`, `Module`, `Action`),
   concrete implementations with a descriptive prefix
   (`JdbcPlayerProfileRepository`).

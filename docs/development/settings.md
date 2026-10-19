@@ -128,9 +128,13 @@ schema change to `config.yml` (renaming a key, restructuring a section)
 gets a new `ConfigMigration` (mirrors `storage.Migration` for the
 database) instead of assuming every user's file already matches the new
 shape - see [`ConfigMigration`](../../src/main/java/dev/universaladmin/config/ConfigMigration.java).
-There is nothing to migrate *from* yet (version 1 is the baseline), so
-none exist today; the runner still stamps `config-version: 1` into a file
-that predates this system entirely (no `config-version` key at all).
+Version 1 is the baseline (the runner stamps it into a file that
+predates this system entirely). Existing migrations:
+`ModuleSettingsLayoutMigration` (2 - module settings moved under their
+module, `commands` section) and `NetworkSettingsMigration` (3 - `network`
+section, staff tool range 40 -> 128 only if it still was the old
+default). A migration only adds or moves keys; a value the server owner
+set is never overwritten.
 
 ## Localization
 

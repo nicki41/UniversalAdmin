@@ -80,6 +80,13 @@ jobs:
           path: api/build/libs/*.jar
           if-no-files-found: error
 
+      - name: Upload Velocity plugin jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: UniversalAdminVelocity-${{ steps.version.outputs.version }}
+          path: proxy/velocity/build/libs/universaladmin-velocity-${{ steps.version.outputs.version }}.jar
+          if-no-files-found: error
+
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v7
@@ -88,4 +95,50 @@ jobs:
           path: |
             build/reports/tests/test
             extensions/discord/build/reports/tests/test
+            proxy/velocity/build/reports/tests/test
           if-no-files-found: ignore
+
+  # One jar for every supported Paper version (supported-versions.txt) only
+  # works if the code uses nothing newer than the oldest one, and nothing the
+  # newest one removed. Compiles everything against both ends.
+  api-compat:
+    name: Compile against Paper ${{ matrix.paper }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        paper: [oldest, newest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 25 (build toolchain) and 21 (runs Gradle)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: |
+            25
+            21
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Pick the Paper API version
+        id: api
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.paper }}" = "oldest" ]; then
+            echo "version=1.21.7-R0.1-SNAPSHOT" >> "$GITHUB_OUTPUT"
+          else
+            # Newest stable build of the newest Paper version.
+            curl -fsS https://repo.papermc.io/repository/maven-public/io/papermc/paper/paper-api/maven-metadata.xml \
+              | grep -oE '<version>[0-9.]+\.build\.[0-9]+-stable</version>' | sed -E 's/<\/?version>//g' \
+              | sort -V | tail -1 | sed 's/^/version=/' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compile against ${{ steps.api.outputs.version }}
+        run: >-
+          ./gradlew compileJava compileTestJava --console=plain
+          -PpaperApiVersion=${{ steps.api.outputs.version }}
+          -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64
