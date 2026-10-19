@@ -9,17 +9,18 @@ import static org.mockito.Mockito.mock;
 import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.audit.AuditService;
-import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.bootstrap.UniversalAdminPlatform;
 import dev.universaladmin.command.CommandRegistry;
+import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.core.UniversalAdmin;
 import dev.universaladmin.extension.ExtensionManager;
-import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.GuiSessionManager;
 import dev.universaladmin.gui.MaterialIconProvider;
+import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.localization.MessageService;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.permission.PermissionRegistry;
 import dev.universaladmin.scheduler.TaskScheduler;
@@ -64,7 +65,8 @@ class ModuleManagerTest {
                 registry,
                 mock(AuditService.class),
                 mock(MessageService.class),
-                mock(NotificationService.class));
+                mock(NotificationService.class),
+                mock(NetworkService.class));
         return new ModuleManager(platform);
     }
 

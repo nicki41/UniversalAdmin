@@ -4,19 +4,18 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
-import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
-import dev.universaladmin.localization.MessageService;
-import dev.universaladmin.modules.moderation.ModerationFormat;
 import dev.universaladmin.modules.moderation.ModerationPolicy;
 import dev.universaladmin.modules.moderation.Punishment;
+import dev.universaladmin.modules.moderation.PunishmentEnforcer;
 import dev.universaladmin.modules.moderation.PunishmentService;
 import dev.universaladmin.modules.moderation.PunishmentType;
+import dev.universaladmin.network.NetworkPlayer;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.scheduler.TaskScheduler;
-import dev.universaladmin.settings.SettingsService;
 import java.net.InetSocketAddress;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -33,18 +32,18 @@ public final class IpBanAction implements Action<IpBanInput, Punishment> {
 
     private final TaskScheduler scheduler;
     private final PunishmentService punishmentService;
-    private final MessageService messages;
+    private final PunishmentEnforcer enforcer;
     private final ModerationPolicy policy;
-    private final SettingsService settings;
+    private final NetworkService network;
 
     public IpBanAction(
-            TaskScheduler scheduler, PunishmentService punishmentService, MessageService messages,
-            ModerationPolicy policy, SettingsService settings) {
+            TaskScheduler scheduler, PunishmentService punishmentService, PunishmentEnforcer enforcer, ModerationPolicy policy,
+            NetworkService network) {
         this.scheduler = scheduler;
         this.punishmentService = punishmentService;
-        this.messages = messages;
+        this.enforcer = enforcer;
         this.policy = policy;
-        this.settings = settings;
+        this.network = network;
     }
 
     @Override
@@ -63,8 +62,13 @@ public final class IpBanAction implements Action<IpBanInput, Punishment> {
             Player target = Bukkit.getPlayer(input.targetId());
             InetSocketAddress address = target != null ? target.getAddress() : null;
             if (target == null || address == null || address.getAddress() == null) {
-                future.complete(ActionResult.failure(
-                        ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.no-ip-address")));
+                // The address is only known while the player is connected
+                // here - on another server of the network, say where.
+                Optional<NetworkPlayer> elsewhere = network.player(input.targetId());
+                future.complete(elsewhere.isPresent()
+                        ? ActionResult.failure(ActionResult.FailureReason.CONFLICT, MessageKey.of("moderation.action.ipban-other-server"),
+                                elsewhere.get().name(), elsewhere.get().server())
+                        : ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.no-ip-address")));
                 return;
             }
             String ip = address.getAddress().getHostAddress();
@@ -77,17 +81,10 @@ public final class IpBanAction implements Action<IpBanInput, Punishment> {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));
                             return;
                         }
-                        scheduler.runOnMainThread(() -> target.kick(banMessage(punishment)));
+                        scheduler.runOnMainThread(() -> enforcer.enforce(punishment));
                         future.complete(ModerationResults.issued(punishment));
                     });
         });
         return future;
-    }
-
-    private Component banMessage(Punishment punishment) {
-        String key = punishment.permanent() ? "moderation.enforcement.banned-permanent" : "moderation.enforcement.banned-temp";
-        return punishment.permanent()
-                ? ComponentMessages.render(messages.get(MessageKey.of(key), punishment.reason()))
-                : ComponentMessages.render(messages.get(MessageKey.of(key), punishment.reason(), ModerationFormat.expiry(punishment.expiresAt(), settings, messages)));
     }
 }

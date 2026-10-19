@@ -10,6 +10,7 @@ import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.module.ModuleRegistry;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.permission.PermissionRegistry;
 import dev.universaladmin.scheduler.TaskScheduler;
@@ -97,6 +98,13 @@ public interface UniversalAdmin {
     MessageService messages();
 
     NotificationService notifications();
+
+    /**
+     * UniversalAdmin across a proxy network - which servers exist, who is
+     * where, and messages between servers. Always present; with network
+     * mode off {@link NetworkService#enabled()} is {@code false}.
+     */
+    NetworkService network();
 
     /**
      * A fresh snapshot of plugin health - see {@link PluginStatus}. Reads

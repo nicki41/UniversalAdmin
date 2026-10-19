@@ -13,12 +13,14 @@ import dev.universaladmin.modules.reports.ReportService;
 import dev.universaladmin.modules.reports.ReportService.CreateResult;
 import dev.universaladmin.modules.reports.ReportsPermissions;
 import dev.universaladmin.modules.reports.ReportsSettings;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.Notification;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Bukkit;
@@ -42,20 +44,25 @@ public final class CreateReportAction implements Action<CreateReportAction.Input
     public record Input(UUID targetId, String targetName, String reason) {
     }
 
+    /** The network channel new reports are announced on to the staff of the other servers. */
+    public static final String NETWORK_TOPIC = "reports.created";
+
     private final ReportService reports;
     private final SettingsService settings;
     private final NotificationService notifications;
     private final MessageService messages;
     private final TaskScheduler scheduler;
+    private final NetworkService network;
 
     public CreateReportAction(
             ReportService reports, SettingsService settings, NotificationService notifications,
-            MessageService messages, TaskScheduler scheduler) {
+            MessageService messages, TaskScheduler scheduler, NetworkService network) {
         this.reports = reports;
         this.settings = settings;
         this.notifications = notifications;
         this.messages = messages;
         this.scheduler = scheduler;
+        this.network = network;
     }
 
     @Override
@@ -82,19 +89,23 @@ public final class CreateReportAction implements Action<CreateReportAction.Input
                 .thenCompose(location -> reports.create(draft(reporterId, reporterName, input, location), cooldown, maxOpen))
                 .thenApply(result -> switch (result) {
                     case CreateResult.Created created -> {
-                        notifyStaff(created.report());
+                        Report report = created.report();
+                        announce(report.reporterName(), report.targetName(), report.reason(), report.id(), null);
+                        network.publish(NETWORK_TOPIC, Map.of("id", Long.toString(report.id()), "reporter", report.reporterName(),
+                                "target", report.targetName(), "reason", report.reason()));
                         yield ActionResult.success(created.report(), MessageKey.of("reports.filed"), created.report().targetName());
                     }
                     case CreateResult.Rejected rejected -> rejection(rejected);
                 });
     }
 
-    private static Report draft(UUID reporterId, String reporterName, Input input, Location location) {
+    private Report draft(UUID reporterId, String reporterName, Input input, Location location) {
         return Report.open(reporterId, reporterName, input.targetId(), input.targetName(), input.reason().trim(),
                 location == null || location.getWorld() == null ? null : location.getWorld().getName(),
                 location == null ? null : location.getX(),
                 location == null ? null : location.getY(),
                 location == null ? null : location.getZ(),
+                network.enabled() ? network.serverName() : null,
                 Instant.now());
     }
 
@@ -108,12 +119,21 @@ public final class CreateReportAction implements Action<CreateReportAction.Input
         };
     }
 
-    private void notifyStaff(Report report) {
-        String text = messages.get(MessageKey.of("reports.notify.new"),
-                report.reporterName(), report.targetName(), report.reason(), String.valueOf(report.id()));
+    /**
+     * The clickable alert for the staff online here - {@code /admin reports
+     * view <id>} works on every server, the database is shared.
+     *
+     * @param server where it was filed, {@code null} for this server
+     */
+    public void announce(String reporter, String target, String reason, long id, String server) {
+        String text = messages.get(MessageKey.of("reports.notify.new"), reporter, target, reason, Long.toString(id));
+        if (server != null) {
+            text = messages.get(MessageKey.of("reports.notify.from-server"), server) + text;
+        }
+        String finalText = text;
         boolean sound = settings.get(ReportsSettings.NOTIFY_SOUND);
         scheduler.runOnMainThread(() -> {
-            notifications.notifyStaff(ReportsPermissions.VIEW, Notification.info(text));
+            notifications.notifyStaff(ReportsPermissions.VIEW, Notification.info(finalText));
             if (sound) {
                 Bukkit.getOnlinePlayers().stream()
                         .filter(player -> player.hasPermission(ReportsPermissions.VIEW.value()))

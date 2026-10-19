@@ -20,7 +20,7 @@ import org.bukkit.configuration.file.FileConfiguration;
  */
 public final class ConfigMigrationRunner {
 
-    public static final int CURRENT_VERSION = 2;
+    public static final int CURRENT_VERSION = 3;
 
     private final List<ConfigMigration> migrations = new ArrayList<>();
     private final Logger logger;
@@ -33,6 +33,7 @@ public final class ConfigMigrationRunner {
     public static ConfigMigrationRunner withBuiltInMigrations(Logger logger) {
         ConfigMigrationRunner runner = new ConfigMigrationRunner(logger);
         runner.register(new ModuleSettingsLayoutMigration());
+        runner.register(new NetworkSettingsMigration());
         return runner;
     }
 

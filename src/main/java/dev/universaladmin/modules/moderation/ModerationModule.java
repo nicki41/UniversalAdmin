@@ -1,12 +1,12 @@
 package dev.universaladmin.modules.moderation;
 
-import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionTarget;
 import dev.universaladmin.action.ActionValidator;
 import dev.universaladmin.action.ValidationError;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
@@ -40,17 +40,18 @@ import dev.universaladmin.modules.moderation.action.VanishAction;
 import dev.universaladmin.modules.moderation.action.WarnAction;
 import dev.universaladmin.modules.moderation.action.WarnInput;
 import dev.universaladmin.modules.moderation.command.ModerationCommands;
+import dev.universaladmin.modules.moderation.gui.ModeratePlayerMenuEntry;
 import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
 import dev.universaladmin.modules.moderation.gui.ModerationHomePage;
-import dev.universaladmin.modules.moderation.gui.ModeratePlayerMenuEntry;
+import dev.universaladmin.modules.moderation.jdbc.JdbcPlayerNoteRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcPunishmentRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcStaffModeSnapshotRepository;
-import dev.universaladmin.modules.moderation.jdbc.JdbcPlayerNoteRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcVanishRepository;
 import dev.universaladmin.modules.moderation.notes.NoteActions;
 import dev.universaladmin.modules.moderation.notes.NotesSupport;
 import dev.universaladmin.modules.moderation.notes.PlayerNoteRepository;
 import dev.universaladmin.modules.moderation.notes.PlayerNotesMigration;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
@@ -146,8 +147,11 @@ public final class ModerationModule implements Module {
         StaffModeService staffModeService = new StaffModeService(staffModeSnapshotRepository, staffModeState, godmodeState,
                 collisionState, vanishService, toolItems, context.platform().settings(), scheduler);
 
-        context.resources().listener(new ModerationJoinListener(punishmentService, freezeRuntimeState, messages, context.platform().settings()));
-        context.resources().listener(new ModerationChatListener(punishmentService, messages, context.platform().settings()));
+        NetworkService network = context.platform().network();
+        PunishmentEnforcer enforcer = new PunishmentEnforcer(messages, context.platform().settings(), network, freezeRuntimeState);
+
+        context.resources().listener(new ModerationJoinListener(punishmentService, freezeRuntimeState, enforcer));
+        context.resources().listener(new ModerationChatListener(punishmentService, enforcer));
         context.resources().listener(new VanishReconnectListener(vanishService, vanishRuntimeState));
         context.resources().listener(new VanishEnforcementListener(vanishRuntimeState, context.platform().settings()));
         context.resources().listener(new FreezeGuardListener(freezeRuntimeState, context.platform().settings()));
@@ -159,7 +163,7 @@ public final class ModerationModule implements Module {
 
         registerActions(context.platform().actions(), scheduler, punishmentService, messages, policy,
                 freezeRuntimeState, vanishService, godmodeState, collisionState, staffModeState,
-                context.platform().settings(), staffModeService, context.platform().notifications());
+                context.platform().settings(), staffModeService, context.platform().notifications(), enforcer, network);
         ModerationGuiContext guiContext = registerGui(context, punishmentService, vanishService, godmodeState, collisionState, staffModeState);
 
         // StaffModeGuardListener needs the GUI context (Player Inspector/
@@ -173,7 +177,15 @@ public final class ModerationModule implements Module {
                 .forEach(context::registerCommand);
 
         registerNotes(context);
-        context.subscribe(new StaffPunishmentNotifier(messages, context.platform().settings(), scheduler));
+        StaffPunishmentNotifier notifier = new StaffPunishmentNotifier(messages, context.platform().settings(), scheduler);
+        context.subscribe(notifier);
+        // Network mode: punishments issued on another server take effect
+        // here too (kick, ban screen, mute notice, freeze) and are announced
+        // to the staff on this server.
+        NetworkModerationBridge bridge = new NetworkModerationBridge(network, punishmentService, enforcer, notifier, scheduler);
+        context.subscribe(bridge);
+        network.subscribe(NetworkModerationBridge.TOPIC, bridge);
+        context.resources().closeable(() -> network.unsubscribe(NetworkModerationBridge.TOPIC, bridge));
 
         scheduleExpirySweep(context, punishmentService);
         scheduleStaffModeTracker(context, staffModeState, toolItems, freezeRuntimeState, vanishService, context.platform().settings(), messages);
@@ -184,10 +196,10 @@ public final class ModerationModule implements Module {
             ActionRegistry actions, TaskScheduler scheduler, PunishmentService punishmentService, MessageService messages,
             ModerationPolicy policy, FreezeRuntimeState freezeRuntimeState, VanishService vanishService, GodmodeState godmodeState,
             CollisionState collisionState, StaffModeState staffModeState, SettingsService settings,
-            StaffModeService staffModeService, NotificationService notifications) {
+            StaffModeService staffModeService, NotificationService notifications, PunishmentEnforcer enforcer, NetworkService network) {
         String module = ID.key().name();
 
-        actions.register(ActionDefinition.builder(new KickAction(scheduler, punishmentService, messages, policy))
+        actions.register(ActionDefinition.builder(new KickAction(scheduler, punishmentService, enforcer, policy, network))
                 .permission(ModerationPermissions.KICK)
                 .module(module)
                 .target(ModerationModule::targetOf)
@@ -196,7 +208,7 @@ public final class ModerationModule implements Module {
                 .auditSummary(in -> "Kicked " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
-        actions.register(ActionDefinition.builder(new BanAction(ModerationActionIds.BAN, scheduler, punishmentService, messages, policy, settings))
+        actions.register(ActionDefinition.builder(new BanAction(ModerationActionIds.BAN, scheduler, punishmentService, enforcer, policy))
                 .permission(ModerationPermissions.BAN)
                 .module(module)
                 .target(ModerationModule::banTargetOf)
@@ -204,7 +216,7 @@ public final class ModerationModule implements Module {
                 .validator(reasonRequired(BanInput::reason))
                 .auditSummary(in -> "Banned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
-        actions.register(ActionDefinition.builder(new BanAction(ModerationActionIds.TEMP_BAN, scheduler, punishmentService, messages, policy, settings))
+        actions.register(ActionDefinition.builder(new BanAction(ModerationActionIds.TEMP_BAN, scheduler, punishmentService, enforcer, policy))
                 .permission(ModerationPermissions.TEMPBAN)
                 .module(module)
                 .target(ModerationModule::banTargetOf)
@@ -212,7 +224,7 @@ public final class ModerationModule implements Module {
                 .validator(and(reasonRequired(BanInput::reason), durationRequired(BanInput::expiresAt)))
                 .auditSummary(in -> "Temp-banned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
-        actions.register(ActionDefinition.builder(new IpBanAction(scheduler, punishmentService, messages, policy, settings))
+        actions.register(ActionDefinition.builder(new IpBanAction(scheduler, punishmentService, enforcer, policy, network))
                 .permission(ModerationPermissions.IPBAN)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
@@ -221,7 +233,7 @@ public final class ModerationModule implements Module {
                 .auditSummary(in -> "IP-banned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
-        actions.register(ActionDefinition.builder(new MuteAction(ModerationActionIds.MUTE, scheduler, punishmentService, messages, policy, settings))
+        actions.register(ActionDefinition.builder(new MuteAction(ModerationActionIds.MUTE, scheduler, punishmentService, enforcer, policy))
                 .permission(ModerationPermissions.MUTE)
                 .module(module)
                 .target(ModerationModule::muteTargetOf)
@@ -229,7 +241,7 @@ public final class ModerationModule implements Module {
                 .validator(reasonRequired(MuteInput::reason))
                 .auditSummary(in -> "Muted " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
-        actions.register(ActionDefinition.builder(new MuteAction(ModerationActionIds.TEMP_MUTE, scheduler, punishmentService, messages, policy, settings))
+        actions.register(ActionDefinition.builder(new MuteAction(ModerationActionIds.TEMP_MUTE, scheduler, punishmentService, enforcer, policy))
                 .permission(ModerationPermissions.TEMPMUTE)
                 .module(module)
                 .target(ModerationModule::muteTargetOf)
@@ -238,7 +250,7 @@ public final class ModerationModule implements Module {
                 .auditSummary(in -> "Temp-muted " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
-        actions.register(ActionDefinition.builder(new WarnAction(scheduler, punishmentService, messages, policy))
+        actions.register(ActionDefinition.builder(new WarnAction(scheduler, punishmentService, enforcer, policy))
                 .permission(ModerationPermissions.WARN)
                 .module(module)
                 .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
@@ -247,7 +259,7 @@ public final class ModerationModule implements Module {
                 .auditSummary(in -> "Warned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
                 .build());
 
-        actions.register(ActionDefinition.builder(new FreezeAction(scheduler, punishmentService, freezeRuntimeState, policy, messages))
+        actions.register(ActionDefinition.builder(new FreezeAction(scheduler, punishmentService, enforcer, policy))
                 .permission(ModerationPermissions.FREEZE)
                 .module(module)
                 .target(ModerationModule::freezeTargetOf)

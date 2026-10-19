@@ -126,9 +126,12 @@ final class ReportDetailPage extends AbstractGuiPage {
         if (report.resolution() != null) {
             lore.add(text("reports.gui.field.resolution", report.resolution()));
         }
+        if (report.server() != null) {
+            lore.add(text("reports.gui.field.server", report.server()));
+        }
         if (report.hasLocation()) {
             lore.add(text("reports.gui.field.location", report.world(),
-                    Math.round(report.x()), Math.round(report.y()), Math.round(report.z())));
+                    Long.toString(Math.round(report.x())), Long.toString(Math.round(report.y())), Long.toString(Math.round(report.z()))));
         }
         return GuiItem.playerHead(Bukkit.getOfflinePlayer(report.targetId()),
                 Component.text(report.targetName(), NamedTextColor.GOLD), lore);

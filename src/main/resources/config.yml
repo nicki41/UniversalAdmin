@@ -11,7 +11,7 @@
 #
 # config-version is managed by UniversalAdmin (old files are upgraded
 # automatically). Don't edit it.
-config-version: 2
+config-version: 3
 
 general:
   # Active language. Ships with en_US and de_DE; any key missing in a
@@ -43,6 +43,26 @@ gui:
   page-size: 45
   # Ask for confirmation before destructive GUI actions.
   confirmations: true
+
+# Network mode for proxy networks (Velocity, BungeeCord). Every server with
+# UniversalAdmin shares the MySQL/MariaDB database (database.type: mysql)
+# and sees the others: a network menu with all servers and players, where a
+# player is (/admin find), teleports across servers, bans and mutes that
+# apply everywhere at once, staff chat and reports across servers, network
+# alerts. Setup guide: docs/user/network.md.
+network:
+  # Requires a restart.
+  enabled: false
+  # This server's name exactly as in the proxy's config (velocity.toml
+  # [servers]), e.g. lobby. Empty: asked from the proxy when the first player
+  # joins. Requires a restart.
+  server-name: ""
+  # How often messages from the other servers (staff chat, bans, reports)
+  # are fetched. 250ms - 10s. Requires a restart.
+  poll-interval: 1s
+  # Also list servers without UniversalAdmin (and their players), as the
+  # proxy reports them.
+  list-other-servers: true
 
 commands:
   shortcuts:

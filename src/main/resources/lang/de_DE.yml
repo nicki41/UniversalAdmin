@@ -198,6 +198,7 @@ moderation:
     unmute: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <green>hat die Stummschaltung von</green> <white>{1}</white> <green>aufgehoben</green>"
     unfreeze: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <green>hat</green> <white>{1}</white> <green>freigegeben</green>"
     removewarn: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <green>hat eine Verwarnung von</green> <white>{1}</white> <green>entfernt</green>"
+    from-server: "<dark_gray>[<gray>{0}</gray>]</dark_gray> "
   notes:
     added: "<green>Notiz über <white>{0}</white> gespeichert <dark_gray>(#{1})</dark_gray>."
     removed: "<yellow>Notiz <white>#{0}</white> über <white>{1}</white> gelöscht."
@@ -238,6 +239,7 @@ moderation:
     staffmode-already-active: "<red>Du befindest dich bereits im Staff-Modus."
     staffmode-not-active: "<red>Du befindest dich nicht im Staff-Modus."
     staffmode-no-snapshot: "<red>Für diesen Spieler gibt es keinen wiederherzustellenden Staff-Modus-Snapshot."
+    ipban-other-server: "<red>Ein IP-Bann braucht den Spieler auf diesem Server - <white>{0}</white> ist auf <white>{1}</white>. Erst <white>/admin tp {0}</white>, oder per Name bannen."
   enforcement:
     no-reason: "Kein Grund angegeben."
     kicked: "<red>Du wurdest gekickt.\n<gray>Grund: {0}"
@@ -748,6 +750,8 @@ command:
     modules-active: "<gray>Aktive Module ({0}): <white>{1}"
     modules-failed: "<red>Fehlgeschlagene Module: {0}"
     database-web: "<gray>Datenbank: <white>{0}</white>  Web: <white>{1}"
+    network: "<gray>Netzwerk: <white>{0}</white> <dark_gray>({1} Server, {2} Spieler)</dark_gray>"
+    network-off: "<gray>Netzwerk: <white>aus</white>"
   modules:
     usage: ""
     description: "Listet alle Module und Erweiterungen mit ihrem Status."
@@ -1005,6 +1009,21 @@ commands:
     entry-failed: "<dark_gray>{0}</dark_gray> <white>{1}</white> <red>(fehlgeschlagen)</red> <gray>{3}"
     more: "<gray>Weiter: <white>/{0} {1}{2}"
     empty: "<gray>Keine Audit-Einträge gefunden."
+  network:
+    usage: "[server]"
+    description: "Listet alle Server des Netzwerks oder die Spieler auf einem."
+  find:
+    usage: "<spieler>"
+    description: "Zeigt, auf welchem Server ein Spieler ist."
+  send:
+    usage: "<spieler> <server>"
+    description: "Schickt einen Spieler auf einen anderen Server des Netzwerks."
+  connect:
+    usage: "<server>"
+    description: "Bringt dich auf einen anderen Server des Netzwerks."
+  alert:
+    usage: "<nachricht>"
+    description: "Sendet eine Nachricht auf allen Servern des Netzwerks."
 
 # Hauptmenü-Beschriftungen der Module. Erweiterungen können eigene unter
 # menu.<namespace>.<modul>.name/description ergänzen.
@@ -1040,6 +1059,9 @@ menu:
     settings:
       name: "<gray>Einstellungen"
       description: "<gray>UniversalAdmin-Einstellungen im Spiel ändern."
+    network:
+      name: "<dark_aqua>Netzwerk"
+      description: "<gray>Alle Server, wo Spieler sind, Spieler zwischen Servern verschieben."
 
 settings:
   changed: "<gray>Einstellung <white>{0}</white> geändert: <dark_gray>{1}</dark_gray> → <aqua>{2}</aqua>"
@@ -1093,6 +1115,7 @@ reports:
     reminder: "<gold>[Meldungen]</gold> <white>{0}</white> <gray>Meldung(en) warten auf Bearbeitung.</gray> <click:run_command:''/admin reports''><yellow><u>[Öffnen]</u></yellow></click>"
     reporter-resolved: "<green>Deine Meldung über <white>{0}</white> wurde vom Team bearbeitet. Danke!"
     reporter-rejected: "<gray>Deine Meldung über <white>{0}</white> wurde geprüft - diesmal war nichts zu tun. Danke für deine Hilfe!"
+    from-server: "<dark_gray>[<gray>{0}</gray>]</dark_gray> "
   gui:
     profile-button: "<gold>Meldungen"
     status:
@@ -1108,6 +1131,7 @@ reports:
       handler: "<gray>Bearbeitet von: <white>{0}"
       resolution: "<gray>Team-Notiz: <white>{0}"
       location: "<gray>Ort: <white>{0}</white> {1}, {2}, {3}"
+      server: "<gray>Server: <aqua>{0}"
     list:
       title: "<gold><bold>Meldungen"
       title-about: "<gold>Meldungen über {0}"
@@ -1126,6 +1150,7 @@ reports:
       prompt-note: "Optionale Notiz (wird bei der Meldung gespeichert)"
   teleported-target: "<gray>Zu <white>{1}</white> teleportiert <dark_gray>(Report #{0} · {2})</dark_gray>."
   teleported-location: "<gray>Zum Ort von Report <white>#{0}</white> über <white>{1}</white> teleportiert <dark_gray>({2})</dark_gray>."
+  teleported-remote: "<gray>Du wirst für Meldung <white>#{0}</white> über <white>{1}</white> zu <aqua>{2}</aqua> geschickt..."
 
 chat:
   locked-broadcast: "<red>Der Chat wurde von <white>{0}</white> gesperrt."
@@ -1146,6 +1171,7 @@ chat:
   staff:
     format: "<dark_aqua>[Team]</dark_aqua> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
     toggled: "<aqua>Team-Chat-Modus: {0} <gray>- solange er an ist, geht alles, was du schreibst, in den Team-Chat."
+    format-network: "<dark_aqua>[Team]</dark_aqua> <dark_gray>[{2}]</dark_gray> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
   gui:
     title: "<gold><bold>Chat"
     lock: "<red>Chat sperren"
@@ -1165,3 +1191,77 @@ chat:
 
 update:
   available: "<yellow>Eine neue UniversalAdmin-Version ist verfügbar: {0} (aktuell läuft {1}). Führe /admin update aus, um sie herunterzuladen, und starte den Server neu, um sie anzuwenden."
+network:
+  list:
+    header: "<gradient:#55ddff:#3399ff><bold>Netzwerk</bold></gradient> <gray>{0} Server, {1} Spieler online"
+    you-are-here: " <dark_gray>(hier bist du)</dark_gray>"
+    server: "<green>●</green> <white>{0}</white> <gray>{1}/{2} Spieler · TPS {3}</gray>{4}"
+    server-offline: "<red>●</red> <white>{0}</white> <gray>seit {1} offline</gray>{2}"
+    server-other: "<white>○</white> <white>{0}</white> <gray>{1} Spieler · ohne UniversalAdmin</gray>{2}"
+    players-header: "<gold>{0}</gold> <gray>({1} Spieler):"
+    players: "<white>{0}"
+  find:
+    found: "<white>{0}</white> <gray>ist auf</gray> <aqua>{1}</aqua><gray>.</gray>"
+    found-since: "<white>{0}</white> <gray>ist auf</gray> <aqua>{1}</aqua> <dark_gray>(seit {2})</dark_gray>"
+  action:
+    player-not-found: "<red><white>{0}</white> ist nirgends im Netzwerk online."
+    no-proxy: "<red>Dieser Server läuft nicht hinter einem Proxy - Spieler können nicht zwischen Servern verschoben werden."
+    unknown-server: "<red>Unbekannter Server: <white>{0}</white>"
+    already-there: "<yellow><white>{0}</white> ist schon auf <white>{1}</white>."
+    you-are-there: "<yellow>Du bist schon auf <white>{0}</white>."
+    no-carrier: "<red>Auf diesem Server ist niemand online, über den die Anfrage zum Proxy gehen kann - probier es im Spiel."
+  result:
+    goto: "<gray>Du wirst zu <aqua>{1}</aqua> geschickt, direkt zu <white>{0}</white>..."
+    goto-here: "<gray>Zu <white>{0}</white> teleportiert."
+    goto-server-only: "<gray>Du wirst zu <aqua>{1}</aqua> geschickt - dort ist <white>{0}</white> <dark_gray>(ohne UniversalAdmin auf dem Server, daher kein Teleport direkt zu ihm)</dark_gray>."
+    bring: "<gray><white>{0}</white> wird von <aqua>{1}</aqua> zu dir geholt..."
+    send: "<gray><white>{0}</white> wird zu <aqua>{1}</aqua> geschickt..."
+    connect: "<gray>Du wirst mit <aqua>{0}</aqua> verbunden..."
+    alert: "<gray>Alarm an das ganze Netzwerk gesendet <dark_gray>({0} Server mit UniversalAdmin)</dark_gray>."
+  alert:
+    format: "<dark_red>[<red><bold>Alarm</bold></red>]</dark_red> <white>{0}"
+  gui:
+    title: "<dark_aqua><bold>Netzwerk"
+    summary: "<white>Netzwerk"
+    summary-servers: "<gray>Server: <white>{0}</white> <dark_gray>({1} mit UniversalAdmin)</dark_gray>"
+    summary-players: "<gray>Spieler online: <white>{0}"
+    summary-here: "<gray>Du bist auf: <aqua>{0}"
+    alert: "<red>Alarm"
+    alert-lore: "<gray>Eine Nachricht auf allen Servern senden."
+    alert-prompt: "Alarmtext (MiniMessage-Formatierung erlaubt)"
+    server:
+      name-online: "<green>● <white>{0}"
+      name-offline: "<red>● <white>{0} <red>(offline)"
+      name-other: "<white>○ {0}"
+      players: "<gray>Spieler: <white>{0}</white>/<white>{1}"
+      players-only: "<gray>Spieler: <white>{0}"
+      tps: "<gray>TPS: {0}"
+      version: "<gray>UniversalAdmin <white>{0}"
+      no-ua: "<dark_gray>Ohne UniversalAdmin - Spielerliste vom Proxy"
+      last-seen: "<gray>Letztes Lebenszeichen: vor <white>{0}"
+      here: "<aqua>Du bist auf diesem Server."
+      click: "<yellow>Klick: Spieler anzeigen"
+      right-click: "<yellow>Rechtsklick: dorthin wechseln"
+    server-title: "<dark_aqua>Netzwerk · {0}"
+    connect: "<light_purple>Zu {0} wechseln"
+    connect-lore: "<gray>Schickt dich über den Proxy zu <white>{0}</white>."
+    player:
+      name: "<white>{0}"
+      title: "<dark_aqua>Netzwerk · {0}"
+      on-server: "<gray>Server: <aqua>{0}"
+      since: "<gray>Dort online seit <white>{0}"
+      no-ua: "<dark_gray>Server ohne UniversalAdmin"
+      click: "<yellow>Klick: Optionen"
+      goto: "<light_purple>Zum Spieler teleportieren"
+      goto-lore: "<gray>Bringt dich zu <white>{0}</white>, direkt neben den Spieler."
+      goto-here: "<gray>Der Spieler ist auf diesem Server - teleportiert dich zu ihm."
+      bring: "<gold>Zu mir holen"
+      bring-lore: "<gray>Holt den Spieler nach <white>{0}</white>, direkt neben dich."
+      send: "<aqua>Auf Server schicken..."
+      send-lore: "<gray>Server wählen, auf den der Spieler wechseln soll."
+      send-title: "<dark_aqua>{0} schicken nach..."
+      profile: "<white>Profil"
+      profile-lore: "<gray>Strafen, Notizen und Meldungen - für alle Server gemeinsam."
+    profile:
+      on-server: "<light_purple>Online auf {0}"
+      click: "<gray>Klick: zu <white>{0}</white> auf diesen Server teleportieren"

@@ -71,7 +71,7 @@ class ModerationActionsWiringTest {
                 new StaffModeService(null, new StaffModeState(), new GodmodeState(), new CollisionState(), vanishServiceNeverInvoked, null, null, NEVER_INVOKED);
         ModerationModule.registerActions(registry, NEVER_INVOKED, punishmentServiceNeverInvoked(), NOOP_MESSAGES, ModerationPolicy.allowAll(),
                 new FreezeRuntimeState(), vanishServiceNeverInvoked, new GodmodeState(), new CollisionState(), new StaffModeState(),
-                null, staffModeServiceNeverInvoked, null);
+                null, staffModeServiceNeverInvoked, null, null, null);
     }
 
     @Test

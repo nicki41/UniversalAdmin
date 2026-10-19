@@ -19,15 +19,19 @@ import dev.universaladmin.modules.players.action.SetGamemodeInput;
 import dev.universaladmin.modules.players.action.TeleportInput;
 import dev.universaladmin.modules.players.action.TeleportKind;
 import dev.universaladmin.modules.players.gui.PlayersGui;
+import dev.universaladmin.network.NetworkPlayer;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.permission.PermissionNode;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
@@ -50,7 +54,7 @@ public final class PlayerCommands {
     }
 
     /** {@code gui} is looked up lazily - the Players GUI is built after the commands in {@code PlayersModule#onEnable}. */
-    public static List<AdminCommand> all(PlayerService players, Supplier<PlayersGui> gui, MessageService messages) {
+    public static List<AdminCommand> all(PlayerService players, Supplier<PlayersGui> gui, MessageService messages, NetworkService network) {
         return List.of(
                 new Profile(gui),
                 new Info(players, messages),
@@ -63,8 +67,8 @@ public final class PlayerCommands {
                 new Fly(),
                 new Gamemode(),
                 new Speed(),
-                new Teleport(),
-                new TeleportHere(),
+                new Teleport(network),
+                new TeleportHere(network),
                 new OpenInventory("invsee", PlayerPermissions.INVENTORY_VIEW, gui, false),
                 new OpenInventory("endersee", PlayerPermissions.ENDERCHEST_VIEW, gui, true),
                 new ClearInventory());
@@ -285,8 +289,11 @@ public final class PlayerCommands {
     /** {@code /admin tp <player> [destination]} - to a player, or one player to another. */
     static final class Teleport extends BaseAdminCommand {
 
-        Teleport() {
+        private final NetworkService network;
+
+        Teleport(NetworkService network) {
             super("tp", PlayerPermissions.TELEPORT, MessageKey.of("commands.tp.usage"), MessageKey.of("commands.tp.description"));
+            this.network = network;
             aliases("teleport", "goto");
             shortcuts("tpto");
         }
@@ -295,6 +302,11 @@ public final class PlayerCommands {
         public void execute(CommandInvocation invocation) {
             if (invocation.argCount() < 1) {
                 invocation.usage(this);
+                return;
+            }
+            if (invocation.argCount() == 1 && onOtherServer(network, invocation.args().get(0))) {
+                // Network mode: the player is on another server - go there.
+                invocation.run(NETWORK_GOTO, invocation.args().get(0));
                 return;
             }
             Optional<Player> target = invocation.onlinePlayer(0);
@@ -315,15 +327,18 @@ public final class PlayerCommands {
 
         @Override
         public List<String> complete(CommandInvocation invocation) {
-            return invocation.argCount() <= 2 ? Arguments.visiblePlayerNames(invocation.sender()) : List.of();
+            return invocation.argCount() <= 2 ? withNetworkPlayers(network, invocation) : List.of();
         }
     }
 
     /** {@code /admin tphere <player>} - brings a player to you. */
     static final class TeleportHere extends BaseAdminCommand {
 
-        TeleportHere() {
+        private final NetworkService network;
+
+        TeleportHere(NetworkService network) {
             super("tphere", PlayerPermissions.TELEPORT, MessageKey.of("commands.tphere.usage"), MessageKey.of("commands.tphere.description"));
+            this.network = network;
             aliases("bring");
             shortcuts("tphere");
             playersOnly();
@@ -335,13 +350,18 @@ public final class PlayerCommands {
                 invocation.usage(this);
                 return;
             }
+            if (onOtherServer(network, invocation.args().get(0))) {
+                // Network mode: fetch them from their server.
+                invocation.run(NETWORK_BRING, invocation.args().get(0));
+                return;
+            }
             invocation.onlinePlayer(0).ifPresent(target -> invocation.run(PlayerActionIds.TELEPORT,
                     TeleportInput.of(TeleportKind.BRING_TO_ADMIN, target.getUniqueId())));
         }
 
         @Override
         public List<String> complete(CommandInvocation invocation) {
-            return invocation.argCount() <= 1 ? Arguments.visiblePlayerNames(invocation.sender()) : List.of();
+            return invocation.argCount() <= 1 ? withNetworkPlayers(network, invocation) : List.of();
         }
     }
 
@@ -418,5 +438,25 @@ public final class PlayerCommands {
                 default -> List.of();
             };
         }
+    }
+
+    /** The Network module's actions - referenced by id only, the module may not be loaded (network mode off). */
+    private static final ActionId NETWORK_GOTO = ActionId.core("network.goto");
+    private static final ActionId NETWORK_BRING = ActionId.core("network.bring");
+
+    /** Whether {@code name} is not here but online on another server of the network. */
+    private static boolean onOtherServer(NetworkService network, String name) {
+        return network.enabled() && Bukkit.getPlayerExact(name) == null
+                && network.player(name).filter(player -> !player.server().equalsIgnoreCase(network.serverName())).isPresent();
+    }
+
+    /** Local names plus, in network mode, everyone on the other servers. */
+    private static List<String> withNetworkPlayers(NetworkService network, CommandInvocation invocation) {
+        List<String> names = new ArrayList<>(Arguments.visiblePlayerNames(invocation.sender()));
+        if (network.enabled()) {
+            network.players().stream().map(NetworkPlayer::name)
+                    .filter(name -> !names.contains(name)).forEach(names::add);
+        }
+        return names;
     }
 }

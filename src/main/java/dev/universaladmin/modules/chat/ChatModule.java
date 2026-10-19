@@ -13,6 +13,7 @@ import dev.universaladmin.module.ModuleId;
 import dev.universaladmin.modules.chat.action.ChatActions;
 import dev.universaladmin.modules.chat.command.ChatCommands;
 import dev.universaladmin.modules.chat.gui.ChatHomePage;
+import dev.universaladmin.network.NetworkListener;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -62,9 +63,15 @@ public final class ChatModule implements Module {
         context.registerAction(ActionDefinition.builder(new ChatActions.Clear(platform.messages(), platform.settings(), platform.scheduler()))
                 .permission(ChatPermissions.MANAGE).module(module).auditSummary(input -> "Cleared the chat").build());
         // Staff chat itself is not audited - it is conversation, not an admin action.
-        context.registerAction(ActionDefinition.builder(new ChatActions.StaffMessage(
-                        platform.messages(), platform.settings(), platform.scheduler(), context.logger()))
+        ChatActions.StaffMessage staffMessage = new ChatActions.StaffMessage(
+                platform.messages(), platform.settings(), platform.scheduler(), context.logger(), platform.network());
+        context.registerAction(ActionDefinition.builder(staffMessage)
                 .permission(ChatPermissions.STAFF_CHAT).module(module).notAudited().build());
+        // Network mode: staff chat from the other servers.
+        NetworkListener remoteStaffChat = message -> staffMessage.deliver(
+                message.get("sender", "?"), message.get("message", ""), message.source());
+        platform.network().subscribe(ChatActions.StaffMessage.NETWORK_TOPIC, remoteStaffChat);
+        context.resources().closeable(() -> platform.network().unsubscribe(ChatActions.StaffMessage.NETWORK_TOPIC, remoteStaffChat));
         context.registerAction(ActionDefinition.builder(new ChatActions.ToggleStaffChat(chat))
                 .permission(ChatPermissions.STAFF_CHAT).module(module).notAudited().build());
 

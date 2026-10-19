@@ -5,18 +5,15 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.core.PlayerNames;
-import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
-import dev.universaladmin.localization.MessageService;
-import dev.universaladmin.modules.moderation.ModerationFormat;
 import dev.universaladmin.modules.moderation.ModerationPolicy;
 import dev.universaladmin.modules.moderation.Punishment;
+import dev.universaladmin.modules.moderation.PunishmentEnforcer;
 import dev.universaladmin.modules.moderation.PunishmentService;
 import dev.universaladmin.modules.moderation.PunishmentType;
 import dev.universaladmin.scheduler.TaskScheduler;
-import dev.universaladmin.settings.SettingsService;
+import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -28,27 +25,26 @@ import org.bukkit.entity.Player;
  * the input is ignored - permanent means permanent regardless of what was
  * passed in), so misuse of the shared {@link BanInput} can't silently ban
  * someone permanently through the temp-ban permission or vice versa.
- * Immediately kicks the target if they're currently online - a ban with no
- * live effect on an online player would be surprising.
+ * Removes the target right away if they are online here
+ * ({@link PunishmentEnforcer}); on another server of the network the
+ * {@code NetworkModerationBridge} does the same there.
  */
 public final class BanAction implements Action<BanInput, Punishment> {
 
     private final ActionId id;
     private final TaskScheduler scheduler;
     private final PunishmentService punishmentService;
-    private final MessageService messages;
+    private final PunishmentEnforcer enforcer;
     private final ModerationPolicy policy;
-    private final SettingsService settings;
 
     public BanAction(
-            ActionId id, TaskScheduler scheduler, PunishmentService punishmentService, MessageService messages,
-            ModerationPolicy policy, SettingsService settings) {
+            ActionId id, TaskScheduler scheduler, PunishmentService punishmentService, PunishmentEnforcer enforcer,
+            ModerationPolicy policy) {
         this.id = id;
         this.scheduler = scheduler;
         this.punishmentService = punishmentService;
-        this.messages = messages;
+        this.enforcer = enforcer;
         this.policy = policy;
-        this.settings = settings;
     }
 
     @Override
@@ -59,7 +55,7 @@ public final class BanAction implements Action<BanInput, Punishment> {
     @Override
     public CompletableFuture<ActionResult<Punishment>> execute(ActionContext context, BanInput input) {
         boolean temporary = id.equals(ModerationActionIds.TEMP_BAN);
-        java.time.Instant expiresAt = temporary ? input.expiresAt() : null;
+        Instant expiresAt = temporary ? input.expiresAt() : null;
         PunishmentType type = temporary ? PunishmentType.TEMP_BAN : PunishmentType.BAN;
 
         if (!policy.canPunish(context.actor(), type, input.targetId())) {
@@ -79,19 +75,10 @@ public final class BanAction implements Action<BanInput, Punishment> {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));
                             return;
                         }
-                        if (online != null) {
-                            scheduler.runOnMainThread(() -> online.kick(banMessage(punishment)));
-                        }
+                        scheduler.runOnMainThread(() -> enforcer.enforce(punishment));
                         future.complete(ModerationResults.issued(punishment));
                     });
         });
         return future;
-    }
-
-    private Component banMessage(Punishment punishment) {
-        String key = punishment.permanent() ? "moderation.enforcement.banned-permanent" : "moderation.enforcement.banned-temp";
-        return punishment.permanent()
-                ? ComponentMessages.render(messages.get(MessageKey.of(key), punishment.reason()))
-                : ComponentMessages.render(messages.get(MessageKey.of(key), punishment.reason(), ModerationFormat.expiry(punishment.expiresAt(), settings, messages)));
     }
 }

@@ -5,11 +5,10 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.core.PlayerNames;
-import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
-import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.moderation.ModerationPolicy;
 import dev.universaladmin.modules.moderation.Punishment;
+import dev.universaladmin.modules.moderation.PunishmentEnforcer;
 import dev.universaladmin.modules.moderation.PunishmentService;
 import dev.universaladmin.modules.moderation.PunishmentType;
 import dev.universaladmin.scheduler.TaskScheduler;
@@ -24,13 +23,13 @@ public final class WarnAction implements Action<WarnInput, Punishment> {
 
     private final TaskScheduler scheduler;
     private final PunishmentService punishmentService;
-    private final MessageService messages;
+    private final PunishmentEnforcer enforcer;
     private final ModerationPolicy policy;
 
-    public WarnAction(TaskScheduler scheduler, PunishmentService punishmentService, MessageService messages, ModerationPolicy policy) {
+    public WarnAction(TaskScheduler scheduler, PunishmentService punishmentService, PunishmentEnforcer enforcer, ModerationPolicy policy) {
         this.scheduler = scheduler;
         this.punishmentService = punishmentService;
-        this.messages = messages;
+        this.enforcer = enforcer;
         this.policy = policy;
     }
 
@@ -57,10 +56,7 @@ public final class WarnAction implements Action<WarnInput, Punishment> {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));
                             return;
                         }
-                        if (online != null) {
-                            scheduler.runOnMainThread(() -> online.sendMessage(ComponentMessages.render(
-                                    messages.get(MessageKey.of("moderation.enforcement.warned"), input.reason()))));
-                        }
+                        scheduler.runOnMainThread(() -> enforcer.enforce(punishment));
                         future.complete(ModerationResults.issued(punishment));
                     });
         });

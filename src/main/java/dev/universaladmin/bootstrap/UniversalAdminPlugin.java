@@ -39,6 +39,7 @@ import dev.universaladmin.module.ModuleRegistry;
 import dev.universaladmin.modules.auditlog.AuditLogModule;
 import dev.universaladmin.modules.chat.ChatModule;
 import dev.universaladmin.modules.moderation.ModerationModule;
+import dev.universaladmin.modules.network.NetworkModule;
 import dev.universaladmin.modules.performance.PerformanceModule;
 import dev.universaladmin.modules.players.PlayersModule;
 import dev.universaladmin.modules.reports.ReportsModule;
@@ -46,6 +47,10 @@ import dev.universaladmin.modules.server.ServerModule;
 import dev.universaladmin.modules.settings.SettingsModule;
 import dev.universaladmin.modules.whitelist.WhitelistModule;
 import dev.universaladmin.modules.worlds.WorldsModule;
+import dev.universaladmin.network.DefaultNetworkService;
+import dev.universaladmin.network.NetworkPresenceListener;
+import dev.universaladmin.network.NetworkSchemaMigration;
+import dev.universaladmin.network.jdbc.JdbcNetworkRepository;
 import dev.universaladmin.notification.InGameNotificationService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.permission.PermissionDefinition;
@@ -60,6 +65,7 @@ import dev.universaladmin.settings.SettingRegistry;
 import dev.universaladmin.settings.SettingsService;
 import dev.universaladmin.settings.YamlSettingsService;
 import dev.universaladmin.storage.DatabaseConfig;
+import dev.universaladmin.storage.DatabaseType;
 import dev.universaladmin.storage.jdbc.JdbcStorageService;
 import dev.universaladmin.telemetry.PlayerCounts;
 import dev.universaladmin.telemetry.TelemetryBootstrap;
@@ -69,9 +75,9 @@ import dev.universaladmin.update.HttpGitHubReleaseClient;
 import dev.universaladmin.update.UpdateCheckBootstrap;
 import java.time.Instant;
 import java.util.List;
-import java.util.random.RandomGenerator;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import java.util.random.RandomGenerator;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -133,6 +139,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
     private BukkitPermissionSync permissionSync;
     private TelemetryBootstrap telemetry;
     private UpdateCheckBootstrap updateChecks;
+    private DefaultNetworkService network;
 
     @Override
     public void onLoad() {
@@ -214,6 +221,9 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         if (moduleManager != null) {
             moduleManager.disableAll();
         }
+        if (network != null) {
+            network.stop();
+        }
         if (storage != null) {
             storage.close();
         }
@@ -256,6 +266,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         storage = new JdbcStorageService(databaseConfig, getDataFolder().toPath(), getLogger());
         storage.migrations().register(new AuditSchemaMigration());
         storage.migrations().register(new AuditSchemaMigrationV2());
+        storage.migrations().register(new NetworkSchemaMigration());
 
         ServiceRegistry services = new ServiceRegistry();
         ActionRegistry actions = new ActionRegistry();
@@ -268,8 +279,10 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         ModuleRegistry moduleRegistry = new ModuleRegistry();
         permissionSync = new BukkitPermissionSync(getServer().getPluginManager(), permissions);
         extensions = new DefaultExtensionManager(moduleRegistry, storage.migrations(), permissionSync, getLogger());
-        AuditService auditService =
-                new DefaultAuditService(new JdbcAuditEventRepository(storage.dataSource(), scheduler), settingsService);
+        network = createNetwork(settingsService);
+        DefaultNetworkService networkService = network;
+        AuditService auditService = new DefaultAuditService(new JdbcAuditEventRepository(storage.dataSource(), scheduler),
+                settingsService, () -> networkService.enabled() ? networkService.serverName() : null);
         ActionExecutor actionExecutor = new ActionExecutor(actions, auditService, getLogger());
         MessageService messages = new YamlLocaleMessageService(
                 getDataFolder().toPath().resolve("lang"), this::getResource, BUNDLED_LOCALES, settingsService, getLogger());
@@ -278,7 +291,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         UniversalAdmin platform = new UniversalAdminPlatform(
                 this, getPluginMeta().getVersion(), startedAt, getLogger(), settingRegistry, settingsService,
                 scheduler, storage, services, actions, actionExecutor, guiPages, guiFramework, new PlayerMenuRegistry(),
-                new CommandRegistry(), extensions, permissions, moduleRegistry, auditService, messages, notifications);
+                new CommandRegistry(), extensions, permissions, moduleRegistry, auditService, messages, notifications, network);
 
         // First of two runPending() calls (see the second one in onEnable(),
         // after moduleManager.enableAll()): this one only covers the two
@@ -291,6 +304,11 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         // no module can safely trust the schema, so it must abort startup
         // (this method is called from the critical bootstrap try/catch).
         storage.migrations().runPending();
+
+        // After the migrations: the network tables exist now. Modules
+        // subscribe to network topics during their own onEnable.
+        network.start();
+        getServer().getPluginManager().registerEvents(new NetworkPresenceListener(network), this);
 
         platform.permissions().register(new PermissionDefinition(
                 PermissionNode.core("reload"), "Reload UniversalAdmin's configuration",
@@ -325,6 +343,22 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         return platform;
     }
 
+    /**
+     * Network mode needs a database every server shares - with SQLite each
+     * server has its own file, so it stays off (and says why).
+     */
+    private DefaultNetworkService createNetwork(SettingsService settings) {
+        boolean requested = settings.get(CoreSettings.NETWORK_ENABLED);
+        boolean shared = storage.type() == DatabaseType.MYSQL;
+        if (requested && !shared) {
+            getLogger().severe("network.enabled is true, but network mode needs a MySQL/MariaDB database shared by all "
+                    + "servers (database.type: mysql) - network mode stays off.");
+        }
+        return new DefaultNetworkService(this, new JdbcNetworkRepository(storage.dataSource(), scheduler), scheduler, getLogger(),
+                getPluginMeta().getVersion(), requested && shared, settings.get(CoreSettings.NETWORK_SERVER_NAME),
+                settings.get(CoreSettings.NETWORK_POLL_INTERVAL), settings.get(CoreSettings.NETWORK_PROXY_SERVER_LIST));
+    }
+
     /** The core's own {@code /admin} subcommands; every module adds its own in its {@code onEnable}. */
     private void registerCoreCommands(UniversalAdmin platform) {
         CorePermissions.registerAll(platform.permissions());
@@ -349,6 +383,11 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_SETTINGS_ENABLED, SettingsModule::new);
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_REPORTS_ENABLED, ReportsModule::new);
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_CHAT_ENABLED, ChatModule::new);
+        // Network mode on (network.enabled + a shared MySQL database): the
+        // network menu and commands. Off: nothing to show.
+        if (network.enabled()) {
+            moduleManager.register(new NetworkModule());
+        }
     }
 
     private void registerIfEnabled(

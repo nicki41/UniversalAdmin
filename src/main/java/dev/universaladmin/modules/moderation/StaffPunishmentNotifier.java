@@ -23,7 +23,9 @@ import org.bukkit.entity.Player;
  * so the whole team sees what happens without reading the audit log. Driven
  * by the action pipeline's {@link ActionEvent.Executed} events, so a
  * punishment from a command, the GUI or an extension is announced the same
- * way. Switch off with {@code moderation.notify-staff}.
+ * way; in network mode {@link NetworkModerationBridge} announces the ones
+ * from other servers too, tagged with the server's name. Switch off with
+ * {@code moderation.notify-staff}.
  */
 public final class StaffPunishmentNotifier implements ActionEventListener {
 
@@ -51,25 +53,41 @@ public final class StaffPunishmentNotifier implements ActionEventListener {
         this.scheduler = scheduler;
     }
 
+    /** Whether {@code id} is one of the actions this notifier announces. */
+    static boolean announces(ActionId id) {
+        return KEYS.containsKey(id);
+    }
+
     @Override
     public void onActionEvent(ActionEvent event) {
         if (!(event instanceof ActionEvent.Executed<?, ?> executed)) {
             return;
         }
-        String key = KEYS.get(executed.id());
-        if (key == null || !settings.get(ModerationSettings.NOTIFY_STAFF)) {
-            return;
-        }
         Punishment punishment = punishmentOf(executed.result().value());
-        if (punishment == null) {
+        if (punishment != null) {
+            announce(executed.id(), punishment, executed.context().actor().displayName(), executed.context().actor().playerId(), null);
+        }
+    }
+
+    /**
+     * Sends the announcement to every staff member online here except the
+     * one who acted.
+     *
+     * @param server the server it happened on, {@code null} for this one
+     */
+    void announce(ActionId id, Punishment punishment, String actorName, UUID actorId, String server) {
+        String key = KEYS.get(id);
+        if (key == null || !settings.get(ModerationSettings.NOTIFY_STAFF)) {
             return;
         }
         String duration = punishment.expiresAt() == null
                 ? messages.get(MessageKey.of("moderation.gui.permanent"))
                 : DurationParser.formatRemaining(punishment.expiresAt());
-        String text = messages.get(MessageKey.of(key), executed.context().actor().displayName(),
+        String text = messages.get(MessageKey.of(key), actorName,
                 punishment.targetLastKnownName(), punishment.reason() == null ? "-" : punishment.reason(), duration);
-        UUID actorId = executed.context().actor().playerId();
+        if (server != null) {
+            text = messages.get(MessageKey.of("moderation.notify.from-server"), server) + text;
+        }
         Component rendered = ComponentMessages.render(text);
         scheduler.runOnMainThread(() -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
@@ -81,7 +99,7 @@ public final class StaffPunishmentNotifier implements ActionEventListener {
     }
 
     /** A punishing action returns the {@link Punishment}; a pardoning one the list of punishments it lifted. */
-    private static Punishment punishmentOf(Object value) {
+    static Punishment punishmentOf(Object value) {
         if (value instanceof Punishment punishment) {
             return punishment;
         }

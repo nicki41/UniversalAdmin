@@ -38,7 +38,7 @@ class ModuleSettingsLayoutMigrationTest {
         boolean changed = ConfigMigrationRunner.withBuiltInMigrations(Logger.getLogger("test")).run(config);
 
         assertTrue(changed);
-        assertEquals(2, config.getInt("config-version"));
+        assertEquals(ConfigMigrationRunner.CURRENT_VERSION, config.getInt("config-version"));
         assertEquals(45, config.getInt("gui.page-size"));
         assertFalse(config.isSet("gui.max-results"));
         assertEquals(120, config.getInt("players.gui.max-results"));
@@ -83,12 +83,33 @@ class ModuleSettingsLayoutMigrationTest {
 
     @Test
     void aCurrentConfigIsLeftAlone() throws InvalidConfigurationException {
-        YamlConfiguration config = load("config-version: 2\nmodules:\n  chat: false\n");
+        YamlConfiguration config = load("config-version: 3\nmodules:\n  chat: false\n");
 
         boolean changed = ConfigMigrationRunner.withBuiltInMigrations(Logger.getLogger("test")).run(config);
 
         assertFalse(changed);
         assertFalse(config.getBoolean("modules.chat"));
+    }
+
+    @Test
+    void version3AddsTheNetworkSectionAndRaisesTheOldToolRange() throws InvalidConfigurationException {
+        YamlConfiguration config = load("config-version: 2\nmoderation:\n  staffmode:\n    target-range-blocks: 40\n");
+
+        boolean changed = ConfigMigrationRunner.withBuiltInMigrations(Logger.getLogger("test")).run(config);
+
+        assertTrue(changed);
+        assertFalse(config.getBoolean("network.enabled"));
+        assertEquals("", config.getString("network.server-name"));
+        assertEquals(128, config.getInt("moderation.staffmode.target-range-blocks"));
+    }
+
+    @Test
+    void version3KeepsAToolRangeTheOwnerChose() throws InvalidConfigurationException {
+        YamlConfiguration config = load("config-version: 2\nmoderation:\n  staffmode:\n    target-range-blocks: 64\n");
+
+        ConfigMigrationRunner.withBuiltInMigrations(Logger.getLogger("test")).run(config);
+
+        assertEquals(64, config.getInt("moderation.staffmode.target-range-blocks"));
     }
 
     private static YamlConfiguration load(String yaml) throws InvalidConfigurationException {

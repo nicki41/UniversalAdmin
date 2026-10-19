@@ -12,9 +12,11 @@ import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.chat.ChatPermissions;
 import dev.universaladmin.modules.chat.ChatService;
 import dev.universaladmin.modules.chat.ChatSettings;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
 import java.time.Duration;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
@@ -139,19 +141,28 @@ public final class ChatActions {
         }
     }
 
-    /** Sends one staff chat message to every online player with {@link ChatPermissions#STAFF_CHAT}. */
+    /**
+     * Sends one staff chat message to every online player with
+     * {@link ChatPermissions#STAFF_CHAT} - in network mode on every server,
+     * tagged there with the name of the server it came from.
+     */
     public static final class StaffMessage implements Action<String, Void> {
+
+        /** The network channel staff chat travels on between servers. */
+        public static final String NETWORK_TOPIC = "chat.staff";
 
         private final MessageService messages;
         private final SettingsService settings;
         private final TaskScheduler scheduler;
         private final Logger logger;
+        private final NetworkService network;
 
-        public StaffMessage(MessageService messages, SettingsService settings, TaskScheduler scheduler, Logger logger) {
+        public StaffMessage(MessageService messages, SettingsService settings, TaskScheduler scheduler, Logger logger, NetworkService network) {
             this.messages = messages;
             this.settings = settings;
             this.scheduler = scheduler;
             this.logger = logger;
+            this.network = network;
         }
 
         @Override
@@ -161,7 +172,17 @@ public final class ChatActions {
 
         @Override
         public CompletableFuture<ActionResult<Void>> execute(ActionContext context, String message) {
-            String text = messages.get(MessageKey.of("chat.staff.format"), context.actor().displayName(), message.trim());
+            String sender = context.actor().displayName();
+            deliver(sender, message.trim(), null);
+            network.publish(NETWORK_TOPIC, Map.of("sender", sender, "message", message.trim()));
+            return CompletableFuture.completedFuture(ActionResult.success(null));
+        }
+
+        /** Shows a staff chat line to the staff on this server; {@code server} is where it was written, {@code null} for here. */
+        public void deliver(String sender, String message, String server) {
+            String text = server == null
+                    ? messages.get(MessageKey.of("chat.staff.format"), sender, message)
+                    : messages.get(MessageKey.of("chat.staff.format-network"), sender, message, server);
             Component rendered = ComponentMessages.render(text);
             boolean console = settings.get(ChatSettings.STAFF_CHAT_CONSOLE);
             scheduler.runOnMainThread(() -> {
@@ -171,10 +192,9 @@ public final class ChatActions {
                     }
                 }
                 if (console) {
-                    logger.info("[Staff] " + context.actor().displayName() + ": " + message.trim());
+                    logger.info("[Staff]" + (server == null ? "" : " [" + server + "]") + " " + sender + ": " + message);
                 }
             });
-            return CompletableFuture.completedFuture(ActionResult.success(null));
         }
     }
 

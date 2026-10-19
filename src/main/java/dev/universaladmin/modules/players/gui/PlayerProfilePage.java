@@ -1,8 +1,8 @@
 package dev.universaladmin.modules.players.gui;
 
 import dev.universaladmin.action.ActionResult;
-import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.core.PlayerRef;
+import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
@@ -169,7 +169,7 @@ public final class PlayerProfilePage extends AbstractGuiPage {
         }
         PlayerRef target = new PlayerRef(targetId, targetName);
         for (PlayerMenuEntry entry : ctx.playerMenu().entries()) {
-            if (entry.requiresOnline() && !snapshot.online()) {
+            if (entry.requiresOnline() && !snapshot.online() || !entry.visible(viewer, target)) {
                 continue;
             }
             buttons.add(new GuiButton(entry.icon(viewer, target), entry.permission(), clickCtx -> entry.onClick(clickCtx, target)));

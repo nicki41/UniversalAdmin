@@ -1,11 +1,6 @@
 package dev.universaladmin.modules.moderation;
 
-import dev.universaladmin.localization.ComponentMessages;
-import dev.universaladmin.localization.MessageKey;
-import dev.universaladmin.localization.MessageService;
-import dev.universaladmin.settings.SettingsService;
 import java.util.Optional;
-import net.kyori.adventure.text.Component;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -19,21 +14,19 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
  * fires off the main thread (before a {@code Player} object even exists),
  * which is exactly what a DB-backed ban lookup needs - blocking on {@link
  * java.util.concurrent.CompletableFuture#join()} here is the standard idiom
- * for this event, not a main-thread stall.
+ * for this event, not a main-thread stall. In network mode the database is
+ * shared, so a ban from any server applies here as well.
  */
 public final class ModerationJoinListener implements Listener {
 
     private final PunishmentService punishmentService;
     private final FreezeRuntimeState freezeRuntimeState;
-    private final MessageService messages;
-    private final SettingsService settings;
+    private final PunishmentEnforcer enforcer;
 
-    public ModerationJoinListener(
-            PunishmentService punishmentService, FreezeRuntimeState freezeRuntimeState, MessageService messages, SettingsService settings) {
+    public ModerationJoinListener(PunishmentService punishmentService, FreezeRuntimeState freezeRuntimeState, PunishmentEnforcer enforcer) {
         this.punishmentService = punishmentService;
         this.freezeRuntimeState = freezeRuntimeState;
-        this.messages = messages;
-        this.settings = settings;
+        this.enforcer = enforcer;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -46,28 +39,15 @@ public final class ModerationJoinListener implements Listener {
             ban = punishmentService.activeIpBan(event.getAddress().getHostAddress()).join();
         }
         if (ban.isPresent()) {
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, banMessage(ban.get()));
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, enforcer.banScreen(ban.get()));
             return;
         }
         // Populates FreezeRuntimeState here (async-safe context) so
         // FreezeGuardListener's hot-path checks never need to query the
-        // database themselves - see that class's javadoc.
+        // database themselves - see that class's javadoc. Also how a freeze
+        // follows a player who switches servers in network mode.
         if (punishmentService.activeFreeze(event.getUniqueId()).join().isPresent()) {
             freezeRuntimeState.setFrozen(event.getUniqueId(), true);
         }
-    }
-
-    private Component banMessage(Punishment punishment) {
-        String key = punishment.permanent() ? "moderation.enforcement.banned-permanent" : "moderation.enforcement.banned-temp";
-        String reason = reasonOrDefault(punishment);
-        return punishment.permanent()
-                ? ComponentMessages.render(messages.get(MessageKey.of(key), reason))
-                : ComponentMessages.render(messages.get(MessageKey.of(key), reason, ModerationFormat.expiry(punishment.expiresAt(), settings, messages)));
-    }
-
-    private String reasonOrDefault(Punishment punishment) {
-        return punishment.reason() == null || punishment.reason().isBlank()
-                ? messages.get(MessageKey.of("moderation.enforcement.no-reason"))
-                : punishment.reason();
     }
 }

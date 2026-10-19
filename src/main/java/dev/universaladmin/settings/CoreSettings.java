@@ -65,6 +65,12 @@ public final class CoreSettings {
     public static final SettingKey<Boolean> COMMAND_SHORTCUTS_ENABLED = SettingKey.of("core", "commands.shortcuts.enabled");
     public static final SettingKey<List<String>> COMMAND_SHORTCUTS_DISABLED = SettingKey.of("core", "commands.shortcuts.disabled");
 
+    /** Network mode - see {@code network.DefaultNetworkService} and docs/user/network.md. */
+    public static final SettingKey<Boolean> NETWORK_ENABLED = SettingKey.of("core", "network.enabled");
+    public static final SettingKey<String> NETWORK_SERVER_NAME = SettingKey.of("core", "network.server-name");
+    public static final SettingKey<Duration> NETWORK_POLL_INTERVAL = SettingKey.of("core", "network.poll-interval");
+    public static final SettingKey<Boolean> NETWORK_PROXY_SERVER_LIST = SettingKey.of("core", "network.list-other-servers");
+
     public static void registerAll(SettingRegistry registry) {
         registry.register(SettingDefinition.builder(LANGUAGE, SettingTypes.STRING, "en_US")
                 .description("Active locale; any key missing there falls back to en_US, then to a visible marker.")
@@ -128,6 +134,30 @@ public final class CoreSettings {
         registry.register(SettingDefinition.builder(COMMAND_SHORTCUTS_DISABLED, SettingTypes.STRING_LIST, List.of())
                 .description("Shortcut labels to skip (e.g. [ban, mute]) - for clashes with another plugin you want to keep.")
                 .requiresRestart(true)
+                .build());
+
+        registerNetworkSettings(registry);
+    }
+
+    /** Network mode: every server of a proxy network shares the MySQL/MariaDB database - see docs/user/network.md. */
+    private static void registerNetworkSettings(SettingRegistry registry) {
+        registry.register(SettingDefinition.builder(NETWORK_ENABLED, SettingTypes.BOOLEAN, false)
+                .description("Connect this server with the other servers of your proxy network (Velocity/BungeeCord). "
+                        + "Needs database.type: mysql, shared by all servers.")
+                .requiresRestart(true)
+                .build());
+        registry.register(SettingDefinition.builder(NETWORK_SERVER_NAME, SettingTypes.STRING, "")
+                .description("This server's name exactly as in the proxy config (e.g. lobby). Empty: ask the proxy when the first player joins.")
+                .validator(SettingValidators.matches("[A-Za-z0-9_.\\-]{0,64}", "letters, digits, '.', '_' or '-' (at most 64)"))
+                .requiresRestart(true)
+                .build());
+        registry.register(SettingDefinition.builder(NETWORK_POLL_INTERVAL, SettingTypes.DURATION, Duration.ofSeconds(1))
+                .description("How often messages from the other servers (staff chat, bans, reports) are fetched.")
+                .validator(SettingValidators.durationRange(Duration.ofMillis(250), Duration.ofSeconds(10)))
+                .requiresRestart(true)
+                .build());
+        registry.register(SettingDefinition.builder(NETWORK_PROXY_SERVER_LIST, SettingTypes.BOOLEAN, true)
+                .description("Also list servers without UniversalAdmin (and their players), asked from the proxy.")
                 .build());
     }
 

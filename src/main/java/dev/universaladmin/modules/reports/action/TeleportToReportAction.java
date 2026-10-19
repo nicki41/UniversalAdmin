@@ -8,7 +8,10 @@ import dev.universaladmin.action.ActionResult.FailureReason;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.reports.Report;
 import dev.universaladmin.modules.reports.ReportService;
+import dev.universaladmin.network.NetworkPlayer;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.scheduler.TaskScheduler;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Bukkit;
@@ -29,10 +32,12 @@ public final class TeleportToReportAction implements Action<TeleportToReportActi
 
     private final ReportService reports;
     private final TaskScheduler scheduler;
+    private final NetworkService network;
 
-    public TeleportToReportAction(ReportService reports, TaskScheduler scheduler) {
+    public TeleportToReportAction(ReportService reports, TaskScheduler scheduler, NetworkService network) {
         this.reports = reports;
         this.scheduler = scheduler;
+        this.network = network;
     }
 
     @Override
@@ -61,23 +66,38 @@ public final class TeleportToReportAction implements Action<TeleportToReportActi
         if (staff == null) {
             return ActionResult.failure(FailureReason.VALIDATION, MessageKey.of("command.error.player-only"));
         }
-        Location destination;
+        String id = Long.toString(report.id());
         if (toTarget) {
             Player target = Bukkit.getPlayer(report.targetId());
-            if (target == null) {
+            if (target != null) {
+                staff.teleportAsync(target.getLocation());
+                return ActionResult.success(null, MessageKey.of("reports.teleported-target"), id, report.targetName(), where(target.getLocation()));
+            }
+            // Network mode: the reported player may be on another server.
+            Optional<NetworkPlayer> elsewhere = network.player(report.targetId());
+            if (elsewhere.isEmpty()) {
                 return ActionResult.failure(FailureReason.VALIDATION, MessageKey.of("command.error.player-not-online"), report.targetName());
             }
-            destination = target.getLocation();
-        } else {
-            World world = report.hasLocation() ? Bukkit.getWorld(report.world()) : null;
-            if (world == null) {
-                return ActionResult.failure(FailureReason.VALIDATION, MessageKey.of("reports.action.no-location"));
-            }
-            destination = new Location(world, report.x(), report.y(), report.z());
+            network.sendTo(staff, elsewhere.get().server(), new NetworkService.ArrivalTarget.ToPlayer(report.targetId()));
+            return ActionResult.success(null, MessageKey.of("reports.teleported-remote"), id, report.targetName(), elsewhere.get().server());
         }
+        if (!report.hasLocation()) {
+            return ActionResult.failure(FailureReason.VALIDATION, MessageKey.of("reports.action.no-location"));
+        }
+        if (report.server() != null && network.enabled() && !report.server().equalsIgnoreCase(network.serverName())) {
+            network.sendTo(staff, report.server(), new NetworkService.ArrivalTarget.ToLocation(report.world(), report.x(), report.y(), report.z()));
+            return ActionResult.success(null, MessageKey.of("reports.teleported-remote"), id, report.targetName(), report.server());
+        }
+        World world = Bukkit.getWorld(report.world());
+        if (world == null) {
+            return ActionResult.failure(FailureReason.VALIDATION, MessageKey.of("reports.action.no-location"));
+        }
+        Location destination = new Location(world, report.x(), report.y(), report.z());
         staff.teleportAsync(destination);
-        String where = destination.getWorld().getName() + " " + destination.getBlockX() + " " + destination.getBlockY() + " " + destination.getBlockZ();
-        return ActionResult.success(null, MessageKey.of(toTarget ? "reports.teleported-target" : "reports.teleported-location"),
-                Long.toString(report.id()), report.targetName(), where);
+        return ActionResult.success(null, MessageKey.of("reports.teleported-location"), id, report.targetName(), where(destination));
+    }
+
+    private static String where(Location location) {
+        return location.getWorld().getName() + " " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ();
     }
 }

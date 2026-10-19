@@ -87,7 +87,8 @@ public final class PlayersModule implements Module {
         // Other modules (e.g. the Staff Mode inspectors) open the players'
         // inventory/ender chest editors through this.
         context.registerService(PlayersGui.class, homePage.gui());
-        PlayerCommands.all(playerService, homePage::gui, context.platform().messages()).forEach(context::registerCommand);
+        PlayerCommands.all(playerService, homePage::gui, context.platform().messages(), context.platform().network())
+                .forEach(context::registerCommand);
     }
 
     /** The live inventory editors sync once per tick; every open editor is closed (and recorded) on disable. */

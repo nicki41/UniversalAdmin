@@ -5,16 +5,13 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.core.PlayerNames;
-import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
-import dev.universaladmin.localization.MessageService;
-import dev.universaladmin.modules.moderation.ModerationFormat;
 import dev.universaladmin.modules.moderation.ModerationPolicy;
 import dev.universaladmin.modules.moderation.Punishment;
+import dev.universaladmin.modules.moderation.PunishmentEnforcer;
 import dev.universaladmin.modules.moderation.PunishmentService;
 import dev.universaladmin.modules.moderation.PunishmentType;
 import dev.universaladmin.scheduler.TaskScheduler;
-import dev.universaladmin.settings.SettingsService;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Bukkit;
@@ -23,27 +20,26 @@ import org.bukkit.entity.Player;
 /**
  * Backs both {@code MUTE} and {@code TEMP_MUTE} - same shared-class-two-
  * registrations shape as {@link BanAction}. Enforcement itself happens at
- * chat time ({@code ModerationChatListener}), not here - this only persists
- * the record and, if the target is online, sends them the mute notice.
+ * chat time ({@code ModerationChatListener}, against the database every
+ * server shares), not here - this only persists the record and tells the
+ * target, if they are online here ({@link PunishmentEnforcer}).
  */
 public final class MuteAction implements Action<MuteInput, Punishment> {
 
     private final ActionId id;
     private final TaskScheduler scheduler;
     private final PunishmentService punishmentService;
-    private final MessageService messages;
+    private final PunishmentEnforcer enforcer;
     private final ModerationPolicy policy;
-    private final SettingsService settings;
 
     public MuteAction(
-            ActionId id, TaskScheduler scheduler, PunishmentService punishmentService, MessageService messages,
-            ModerationPolicy policy, SettingsService settings) {
+            ActionId id, TaskScheduler scheduler, PunishmentService punishmentService, PunishmentEnforcer enforcer,
+            ModerationPolicy policy) {
         this.id = id;
         this.scheduler = scheduler;
         this.punishmentService = punishmentService;
-        this.messages = messages;
+        this.enforcer = enforcer;
         this.policy = policy;
-        this.settings = settings;
     }
 
     @Override
@@ -74,19 +70,10 @@ public final class MuteAction implements Action<MuteInput, Punishment> {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));
                             return;
                         }
-                        if (online != null) {
-                            scheduler.runOnMainThread(() -> online.sendMessage(muteMessage(punishment)));
-                        }
+                        scheduler.runOnMainThread(() -> enforcer.enforce(punishment));
                         future.complete(ModerationResults.issued(punishment));
                     });
         });
         return future;
-    }
-
-    private net.kyori.adventure.text.Component muteMessage(Punishment punishment) {
-        String key = punishment.permanent() ? "moderation.enforcement.muted-permanent" : "moderation.enforcement.muted-temp";
-        return punishment.permanent()
-                ? ComponentMessages.render(messages.get(MessageKey.of(key), punishment.reason()))
-                : ComponentMessages.render(messages.get(MessageKey.of(key), punishment.reason(), ModerationFormat.expiry(punishment.expiresAt(), settings, messages)));
     }
 }

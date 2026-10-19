@@ -32,6 +32,16 @@ public interface PlayerMenuEntry {
         return false;
     }
 
+    /**
+     * Whether the button shows on {@code target}'s profile at all - e.g. a
+     * "go to their server" button only while they are on another server.
+     * {@code true} by default; checked after {@link #permission()} and
+     * {@link #requiresOnline()}.
+     */
+    default boolean visible(Player viewer, PlayerRef target) {
+        return true;
+    }
+
     /** The button's icon and label for {@code viewer}, looking at {@code target}'s profile. */
     GuiItem icon(Player viewer, PlayerRef target);
 

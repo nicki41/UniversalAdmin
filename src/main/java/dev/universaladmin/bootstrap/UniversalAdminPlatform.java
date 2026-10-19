@@ -16,6 +16,7 @@ import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.module.ModuleId;
 import dev.universaladmin.module.ModuleRegistry;
 import dev.universaladmin.module.ModuleState;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.permission.PermissionRegistry;
 import dev.universaladmin.scheduler.TaskScheduler;
@@ -54,7 +55,8 @@ public record UniversalAdminPlatform(
         ModuleRegistry moduleRegistry,
         AuditService auditService,
         MessageService messages,
-        NotificationService notifications) implements UniversalAdmin {
+        NotificationService notifications,
+        NetworkService network) implements UniversalAdmin {
 
     public UniversalAdminPlatform {
         Objects.requireNonNull(plugin, "plugin");
@@ -78,6 +80,7 @@ public record UniversalAdminPlatform(
         Objects.requireNonNull(auditService, "auditService");
         Objects.requireNonNull(messages, "messages");
         Objects.requireNonNull(notifications, "notifications");
+        Objects.requireNonNull(network, "network");
     }
 
     @Override

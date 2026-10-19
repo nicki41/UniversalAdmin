@@ -21,6 +21,7 @@ import dev.universaladmin.modules.reports.gui.ReportsGui;
 import dev.universaladmin.modules.reports.gui.ReportsGuiContext;
 import dev.universaladmin.modules.reports.gui.ReportsPlayerMenuEntry;
 import dev.universaladmin.modules.reports.jdbc.JdbcReportRepository;
+import dev.universaladmin.network.NetworkListener;
 import dev.universaladmin.settings.SettingsService;
 import java.util.Optional;
 
@@ -53,6 +54,7 @@ public final class ReportsModule implements Module {
     @Override
     public void onLoad(ModuleContext context) {
         context.registerMigration(new ReportsMigration());
+        context.registerMigration(new ReportsServerMigration());
     }
 
     @Override
@@ -66,8 +68,14 @@ public final class ReportsModule implements Module {
         context.registerService(ReportService.class, reports);
 
         String module = ID.key().name();
-        context.registerAction(ActionDefinition.builder(new CreateReportAction(
-                        reports, settings, platform.notifications(), platform.messages(), platform.scheduler()))
+        CreateReportAction create = new CreateReportAction(
+                reports, settings, platform.notifications(), platform.messages(), platform.scheduler(), platform.network());
+        // Network mode: reports filed on the other servers alert the staff here too.
+        NetworkListener remoteReports = message -> create.announce(message.get("reporter", "?"), message.get("target", "?"),
+                message.get("reason", ""), Long.parseLong(message.get("id", "0")), message.source());
+        platform.network().subscribe(CreateReportAction.NETWORK_TOPIC, remoteReports);
+        context.resources().closeable(() -> platform.network().unsubscribe(CreateReportAction.NETWORK_TOPIC, remoteReports));
+        context.registerAction(ActionDefinition.builder(create)
                 .permission(ReportsPermissions.CREATE)
                 .module(module)
                 .target(input -> Optional.of(ActionTarget.player(input.targetId(), input.targetName())))
@@ -90,7 +98,7 @@ public final class ReportsModule implements Module {
                     .auditDetails((input, result) -> AuditDetails.builder().correlationId("report#" + input.reportId()).build())
                     .build());
         }
-        context.registerAction(ActionDefinition.builder(new TeleportToReportAction(reports, platform.scheduler()))
+        context.registerAction(ActionDefinition.builder(new TeleportToReportAction(reports, platform.scheduler(), platform.network()))
                 .permission(ReportsPermissions.MANAGE)
                 .module(module)
                 .notAudited()

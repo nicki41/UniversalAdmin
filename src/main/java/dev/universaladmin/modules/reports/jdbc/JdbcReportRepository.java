@@ -25,7 +25,7 @@ import javax.sql.DataSource;
 public final class JdbcReportRepository implements ReportRepository {
 
     private static final String COLUMNS = "reporter_id, reporter_name, target_id, target_name, reason, status, "
-            + "handler_id, handler_name, resolution, world, x, y, z, created_at, updated_at";
+            + "handler_id, handler_name, resolution, world, x, y, z, created_at, updated_at, server";
 
     private final DataSource dataSource;
     private final TaskScheduler scheduler;
@@ -112,7 +112,7 @@ public final class JdbcReportRepository implements ReportRepository {
 
     private Report insert(Connection connection, Report report) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO ua_reports (" + COLUMNS + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO ua_reports (" + COLUMNS + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS)) {
             bind(statement, report);
             statement.executeUpdate();
@@ -126,11 +126,11 @@ public final class JdbcReportRepository implements ReportRepository {
         try (PreparedStatement statement = connection.prepareStatement("""
                 UPDATE ua_reports SET reporter_id = ?, reporter_name = ?, target_id = ?, target_name = ?, reason = ?,
                     status = ?, handler_id = ?, handler_name = ?, resolution = ?, world = ?, x = ?, y = ?, z = ?,
-                    created_at = ?, updated_at = ?
+                    created_at = ?, updated_at = ?, server = ?
                 WHERE id = ?
                 """)) {
             bind(statement, report);
-            statement.setLong(16, report.id());
+            statement.setLong(17, report.id());
             statement.executeUpdate();
             return report;
         }
@@ -152,6 +152,7 @@ public final class JdbcReportRepository implements ReportRepository {
         setNullableDouble(statement, 13, report.z());
         statement.setLong(14, report.createdAt().toEpochMilli());
         statement.setLong(15, report.updatedAt().toEpochMilli());
+        statement.setString(16, report.server());
     }
 
     private static void setNullableDouble(PreparedStatement statement, int index, Double value) throws SQLException {
@@ -211,6 +212,7 @@ public final class JdbcReportRepository implements ReportRepository {
                 nullableDouble(resultSet, "x"),
                 nullableDouble(resultSet, "y"),
                 nullableDouble(resultSet, "z"),
+                resultSet.getString("server"),
                 Instant.ofEpochMilli(resultSet.getLong("created_at")),
                 Instant.ofEpochMilli(resultSet.getLong("updated_at")));
     }

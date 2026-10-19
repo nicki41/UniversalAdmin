@@ -1,12 +1,7 @@
 package dev.universaladmin.modules.moderation;
 
-import dev.universaladmin.localization.ComponentMessages;
-import dev.universaladmin.localization.MessageKey;
-import dev.universaladmin.localization.MessageService;
-import dev.universaladmin.settings.SettingsService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import java.util.Optional;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,18 +12,18 @@ import org.bukkit.event.Listener;
  * translation (see {@link ModerationJoinListener}'s javadoc for the same
  * rule). Uses the modern Paper {@link AsyncChatEvent}, not the deprecated
  * Bukkit {@code AsyncPlayerChatEvent} - it already fires off the main
- * thread, same blocking-{@code join()} idiom as the join check.
+ * thread, same blocking-{@code join()} idiom as the join check. Reads the
+ * database on every message, so a mute from another server of the network
+ * applies immediately.
  */
 public final class ModerationChatListener implements Listener {
 
     private final PunishmentService punishmentService;
-    private final MessageService messages;
-    private final SettingsService settings;
+    private final PunishmentEnforcer enforcer;
 
-    public ModerationChatListener(PunishmentService punishmentService, MessageService messages, SettingsService settings) {
+    public ModerationChatListener(PunishmentService punishmentService, PunishmentEnforcer enforcer) {
         this.punishmentService = punishmentService;
-        this.messages = messages;
-        this.settings = settings;
+        this.enforcer = enforcer;
     }
 
     // ignoreCancelled: a message the Chat module already routed to staff
@@ -40,21 +35,7 @@ public final class ModerationChatListener implements Listener {
         Optional<Punishment> mute = punishmentService.activeMute(player.getUniqueId()).join();
         mute.ifPresent(punishment -> {
             event.setCancelled(true);
-            player.sendMessage(muteMessage(punishment));
+            player.sendMessage(enforcer.muteNotice(punishment));
         });
-    }
-
-    private Component muteMessage(Punishment punishment) {
-        String key = punishment.permanent() ? "moderation.enforcement.muted-permanent" : "moderation.enforcement.muted-temp";
-        String reason = reasonOrDefault(punishment);
-        return punishment.permanent()
-                ? ComponentMessages.render(messages.get(MessageKey.of(key), reason))
-                : ComponentMessages.render(messages.get(MessageKey.of(key), reason, ModerationFormat.expiry(punishment.expiresAt(), settings, messages)));
-    }
-
-    private String reasonOrDefault(Punishment punishment) {
-        return punishment.reason() == null || punishment.reason().isBlank()
-                ? messages.get(MessageKey.of("moderation.enforcement.no-reason"))
-                : punishment.reason();
     }
 }

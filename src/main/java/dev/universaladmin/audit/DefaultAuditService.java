@@ -4,10 +4,13 @@ import dev.universaladmin.settings.CoreSettings;
 import dev.universaladmin.settings.SettingsService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,11 +20,23 @@ public final class DefaultAuditService implements AuditService {
 
     private final AuditEventRepository repository;
     private final SettingsService settings;
+    private final Supplier<String> serverName;
     private final List<AuditListener> listeners = new CopyOnWriteArrayList<>();
 
     public DefaultAuditService(AuditEventRepository repository, SettingsService settings) {
+        this(repository, settings, () -> null);
+    }
+
+    /**
+     * @param serverName in network mode the name of this server, stored with
+     *                   every entry as {@code server} metadata (the database -
+     *                   and with it the audit log - is shared by all servers);
+     *                   {@code null} otherwise
+     */
+    public DefaultAuditService(AuditEventRepository repository, SettingsService settings, Supplier<String> serverName) {
         this.repository = repository;
         this.settings = settings;
+        this.serverName = serverName;
     }
 
     @Override
@@ -29,7 +44,19 @@ public final class DefaultAuditService implements AuditService {
         if (!settings.get(CoreSettings.AUDIT_ENABLED)) {
             return CompletableFuture.completedFuture(null);
         }
-        return repository.save(entry).thenAccept(this::publish);
+        return repository.save(withServer(entry)).thenAccept(this::publish);
+    }
+
+    private AuditEvent withServer(AuditEvent entry) {
+        String server = serverName.get();
+        if (server == null || entry.metadata().containsKey("server")) {
+            return entry;
+        }
+        Map<String, Object> metadata = new HashMap<>(entry.metadata());
+        metadata.put("server", server);
+        return new AuditEvent(entry.id(), entry.timestamp(), entry.actor(), entry.type(), entry.module(), entry.target(),
+                entry.source(), entry.success(), entry.reason(), entry.oldValue(), entry.newValue(), entry.world(),
+                entry.position(), entry.summary(), metadata, entry.correlationId());
     }
 
     @Override

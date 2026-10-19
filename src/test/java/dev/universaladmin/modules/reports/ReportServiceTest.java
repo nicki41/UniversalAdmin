@@ -111,7 +111,7 @@ class ReportServiceTest {
     }
 
     private Report draft(UUID reporter, UUID target) {
-        return Report.open(reporter, "Reporter", target, "Target", "griefing", "world", 1.0, 64.0, 1.0, clock.instant());
+        return Report.open(reporter, "Reporter", target, "Target", "griefing", "world", 1.0, 64.0, 1.0, null, clock.instant());
     }
 
     private static final class MutableClock extends Clock {

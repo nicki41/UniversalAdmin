@@ -31,6 +31,7 @@ public record Report(
         Double x,
         Double y,
         Double z,
+        String server,
         Instant createdAt,
         Instant updatedAt) {
 
@@ -45,22 +46,26 @@ public record Report(
         Objects.requireNonNull(updatedAt, "updatedAt");
     }
 
-    /** A new, unsaved, {@link ReportStatus#OPEN} report. */
+    /**
+     * A new, unsaved, {@link ReportStatus#OPEN} report.
+     *
+     * @param server the network server it was filed on, {@code null} outside network mode
+     */
     public static Report open(
             UUID reporterId, String reporterName, UUID targetId, String targetName, String reason,
-            String world, Double x, Double y, Double z, Instant now) {
+            String world, Double x, Double y, Double z, String server, Instant now) {
         return new Report(0, reporterId, reporterName, targetId, targetName, reason, ReportStatus.OPEN,
-                null, null, null, world, x, y, z, now, now);
+                null, null, null, world, x, y, z, server, now, now);
     }
 
     public Report withId(long newId) {
         return new Report(newId, reporterId, reporterName, targetId, targetName, reason, status,
-                handlerId, handlerName, resolution, world, x, y, z, createdAt, updatedAt);
+                handlerId, handlerName, resolution, world, x, y, z, server, createdAt, updatedAt);
     }
 
     public Report claim(UUID staffId, String staffName, Instant now) {
         return new Report(id, reporterId, reporterName, targetId, targetName, reason, ReportStatus.CLAIMED,
-                staffId, staffName, resolution, world, x, y, z, createdAt, now);
+                staffId, staffName, resolution, world, x, y, z, server, createdAt, now);
     }
 
     /** Resolves or rejects the report. */
@@ -69,7 +74,7 @@ public record Report(
             throw new IllegalArgumentException("Not a closing status: " + closedStatus);
         }
         return new Report(id, reporterId, reporterName, targetId, targetName, reason, closedStatus,
-                staffId, staffName, note, world, x, y, z, createdAt, now);
+                staffId, staffName, note, world, x, y, z, server, createdAt, now);
     }
 
     public boolean hasLocation() {
