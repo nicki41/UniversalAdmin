@@ -139,6 +139,10 @@ jobs:
           for VERSION in ${{ steps.test.outputs.passed }}; do
             grep -qx "$VERSION" supported-versions.txt || echo "$VERSION" >> supported-versions.txt
           done
+          if git diff --quiet supported-versions.txt; then
+            echo "Already listed - nothing to propose."
+            exit 0
+          fi
           git add supported-versions.txt
           git commit -m "chore: support Paper ${{ steps.test.outputs.passed }}"
           git push --force origin "$BRANCH"
