@@ -101,7 +101,7 @@ public final class PlayersModule implements Module {
 
     @Override
     public void onLoad(ModuleContext context) {
-        context.platform().storage().migrations().register(new PlayerProfileMigration());
+        context.registerMigration(new PlayerProfileMigration());
     }
 
     @Override
@@ -109,11 +109,11 @@ public final class PlayersModule implements Module {
         var repository = new JdbcPlayerProfileRepository(
                 context.platform().storage().dataSource(), context.platform().scheduler());
         var service = new PlayerService(repository);
-        context.platform().services().register(PlayerService.class, service);
+        context.registerService(PlayerService.class, service);
 
-        context.platform().permissions().register(new PermissionDefinition(
+        context.registerPermission(new PermissionDefinition(
                 PermissionNode.core("players.view"), "View player profiles", PermissionDefault.OP));
-        context.platform().actions().register(ActionDefinition.builder(new GetPlayerProfileAction(service))
+        context.registerAction(ActionDefinition.builder(new GetPlayerProfileAction(service))
                 .permission(PermissionNode.core("players.view"))
                 .notAudited()
                 .build());
@@ -126,14 +126,17 @@ present"): `.dependsOn(OtherModule.ID)` on the builder. Don't declare a
 dependency without a real reason - see
 [modules.md](../architecture/modules.md#dependencies-and-ordering).
 
-If the module registers a Bukkit listener, a scheduler task, or a registry
-entry in `onEnable` that should disappear again on disable, that goes
-through `context.resources()` instead of manual bookkeeping in
-`onDisable` - see
+Prefer `ModuleContext`'s `register*` methods (`registerAction`,
+`registerPage`, `registerCommand`, `registerPermission`, `registerSetting`,
+`registerService`, `registerPlayerMenuEntry`, `registerListener`,
+`subscribe`, `subscribeAudit`): each registers *and* removes itself again
+when the module is disabled. Anything else that must not outlive the module
+goes through `context.resources()` - see
 [modules.md](../architecture/modules.md#resource-cleanup):
 
 ```java
-context.resources().listener(new MyJoinListener(service));
+context.registerListener(new MyJoinListener(service));
+context.resources().task(myRepeatingBukkitTask);
 ```
 
 ## 8. Register in `UniversalAdminPlugin#registerBuiltInModules()`
@@ -155,24 +158,33 @@ covered by
 [`ModuleManagerTest`](../../src/test/java/dev/universaladmin/module/ModuleManagerTest.java)
 - a new module doesn't need its own test for that.
 
-## 10. GUI/Command Frontend
+## 10. GUI and Command Frontends
 
-`players` is by now the complete template for this too: see
+`players` is the complete template: see
 [`dev.universaladmin.modules.players.gui`](../../src/main/java/dev/universaladmin/modules/players/gui)
-(`PlayerBrowserHomePage` as the entry page, further pages like
-`AuditLogDetailPage`) and [gui-framework.md](gui-framework.md). Short
-version: a page extends `AbstractGuiPage`/`AbstractListGuiPage` instead of
-implementing `GuiPage` by hand, gets its services through the constructor
-(plus `GuiFramework`), and registers itself in `onEnable` under the same
-`GuiPageId` a `PlaceholderGuiPage` currently occupies
-(`core:<module>.home`, see `UniversalAdminPlugin#registerMainMenu`) - that
-placeholder registration then has to be removed for the respective module
-(see the removal of the `players.home` line there as an example). The rule
-stays the same: the click handler/command executor only calls the
-service/action.
+and [`...players.command`](../../src/main/java/dev/universaladmin/modules/players/command),
+plus [gui-framework.md](gui-framework.md).
+
+- **Main menu:** declare it in the descriptor -
+  `.menu(MyHomePage.ID, MyPermissions.VIEW).menuOrder(45)` - and register the
+  page with `context.registerPage(...)`. Add `menu.core.<module>.name` and
+  `.description` to both language files for a translated button.
+- **Profile buttons:** implement `PlayerMenuEntry` and
+  `context.registerPlayerMenuEntry(...)` - the Players module renders it on
+  every profile without knowing your module.
+- **Commands:** extend `BaseAdminCommand`, set aliases/shortcuts in the
+  constructor, parse arguments with `CommandInvocation` helpers
+  (`knownPlayer`, `onlinePlayer`, `duration`, `confirmed`, ...) and finish
+  with `invocation.run(actionId, input, successKey, args...)`. Register with
+  `context.registerCommand(...)`. Usage/description keys go under
+  `commands.<name>.*` in both language files.
+
+The rule stays the same: a click handler or command only parses input and
+calls a service/action.
 
 ## 11. Update Documentation
 
-`docs/architecture/modules.md` (the module's status row), `ROADMAP.md`
-(the checked-off item), and `docs/user/permissions.md` if applicable (a
-new permission node).
+`docs/architecture/modules.md` (the module's status row), a page under
+`docs/user/modules/`, `docs/user/commands.md` and `docs/user/permissions.md`
+for new commands/nodes, the shipped `config.yml` for new settings, and
+`CHANGELOG.md` under `[Unreleased]`.

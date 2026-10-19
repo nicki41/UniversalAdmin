@@ -121,3 +121,9 @@ UniversalAdmin-managed whitelist entry: `player_id` (primary key),
 `reason` (nullable), `notes` (nullable), `expires_at` (nullable - `NULL`
 means permanent). Never the source of truth for whitelist *membership* -
 see "Ownership & the expiry sweep" above.
+
+## Commands
+
+`/admin whitelist on|off|add <player> [duration] [reason]|remove <player>|list`
+(alias and shortcut `/wl`). `add` also works for players who never joined
+(online-mode servers). See [commands.md](../commands.md#whitelist).

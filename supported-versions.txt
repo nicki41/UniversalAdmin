@@ -1,0 +1,17 @@
+# Minecraft (Paper) versions UniversalAdmin runs on - one per line, as
+# Modrinth names them. The release workflow publishes every release for
+# exactly these versions; the compatibility workflow tests each new Paper
+# version and adds it here (and to the current Modrinth release) once
+# UniversalAdmin boots and runs its smoke test on it.
+#
+# Floor: 1.21.7 - the first Paper with the dialog API the GUIs' text input
+# uses (plugin.yml api-version 1.21.7).
+1.21.7
+1.21.8
+1.21.9
+1.21.10
+1.21.11
+26.1.1
+26.1.2
+26.2
+26.3

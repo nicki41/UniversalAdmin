@@ -16,7 +16,7 @@ public final class WhitelistSettings {
     }
 
     /** Upper bound on one "Search Offline Player" query - mirrors {@code PlayersSettings.GUI_MAX_RESULTS}'s precedent. */
-    public static final SettingKey<Integer> SEARCH_MAX_RESULTS = SettingKey.of("whitelist", "gui.search-max-results");
+    public static final SettingKey<Integer> SEARCH_MAX_RESULTS = SettingKey.of("whitelist", "whitelist.gui.search-max-results");
 
     public static void registerAll(SettingRegistry registry) {
         registry.register(SettingDefinition.builder(SEARCH_MAX_RESULTS, SettingTypes.INTEGER, 50)

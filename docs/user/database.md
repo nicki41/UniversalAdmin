@@ -49,8 +49,9 @@ no separate `mariadb` value to set.
 **When to use this instead of SQLite:**
 
 - Several Paper servers (e.g. a proxy network) need to share the same
-  UniversalAdmin data (player profiles, audit log) instead of each server
-  having its own isolated SQLite file.
+  UniversalAdmin data (player profiles, punishments, audit log) instead of
+  each server having its own isolated SQLite file. With
+  [network mode](network.md) they also see each other live.
 - You already operate a MySQL/MariaDB server for other plugins and prefer
   one centrally-managed database over a growing set of per-plugin SQLite
   files.

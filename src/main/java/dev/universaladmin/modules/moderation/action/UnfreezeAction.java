@@ -36,7 +36,7 @@ public final class UnfreezeAction implements Action<UnfreezeInput, List<Punishme
                 return ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.not-frozen"));
             }
             freezeState.setFrozen(input.targetId(), false);
-            return ActionResult.success(revoked);
+            return ModerationResults.lifted(revoked, "moderation.result.unfreeze");
         });
     }
 }

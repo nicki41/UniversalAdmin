@@ -72,7 +72,7 @@ public final class ApplyUpdateAction implements Action<Void, UpdateApplyResult> 
         return scheduler.supplyAsync(() -> {
             try {
                 GitHubRelease release = releaseClient.fetchLatest();
-                if (release.version().equals(currentVersion)) {
+                if (!SemanticVersion.isNewer(release.version(), currentVersion)) {
                     return ActionResult.success(new UpdateApplyResult(false, currentVersion));
                 }
 

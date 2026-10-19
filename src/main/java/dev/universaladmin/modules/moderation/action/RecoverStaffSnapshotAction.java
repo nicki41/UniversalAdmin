@@ -4,6 +4,7 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.moderation.StaffModeService;
 import java.util.UUID;
@@ -34,7 +35,7 @@ public final class RecoverStaffSnapshotAction implements Action<UUID, StaffModeS
     @Override
     public CompletableFuture<ActionResult<StaffModeService.RecoveryOutcome>> execute(ActionContext context, UUID targetId) {
         return staffModeService.recover(targetId).thenApply(outcome -> switch (outcome) {
-            case RECOVERED -> ActionResult.success(outcome);
+            case RECOVERED -> ActionResult.success(outcome, MessageKey.of("moderation.result.staff-recovered"), PlayerNames.of(targetId));
             case NOT_ONLINE -> ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.offline"));
             case NO_SNAPSHOT -> ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.staffmode-no-snapshot"));
         });

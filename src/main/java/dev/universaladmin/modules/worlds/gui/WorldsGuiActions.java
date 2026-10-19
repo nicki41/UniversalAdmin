@@ -5,11 +5,11 @@ import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.Actor;
 import dev.universaladmin.action.Source;
+import dev.universaladmin.gui.GuiActions;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.permission.bukkit.PermissiblePermissionEvaluator;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 /**
@@ -42,22 +42,12 @@ final class WorldsGuiActions {
                 }));
     }
 
+    /** Tells {@code viewer} what the action did (or why it failed) - see {@link GuiActions#report}. */
     static void notifyResult(Player viewer, MessageService messages, ActionResult<?> result) {
-        Component message = switch (result) {
-            case ActionResult.Success<?> success -> ComponentMessages.render(messages.get(MessageKey.of("worlds.gui.action.success")));
-            case ActionResult.Failure<?> failure -> ComponentMessages.render(failureText(messages, failure));
-        };
-        viewer.sendMessage(message);
+        GuiActions.report(viewer, messages, result, MessageKey.of("worlds.gui.action.success"));
     }
 
     static void notifyError(Player viewer, MessageService messages) {
         viewer.sendMessage(ComponentMessages.render(messages.get(MessageKey.of("worlds.gui.action.error"))));
-    }
-
-    private static String failureText(MessageService messages, ActionResult.Failure<?> failure) {
-        if (failure.messageKey() != null) {
-            return messages.get(failure.messageKey(), failure.messageArgs().toArray());
-        }
-        return failure.message() != null ? failure.message() : failure.reason().name();
     }
 }

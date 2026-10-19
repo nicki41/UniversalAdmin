@@ -7,6 +7,180 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-20
+
+The first stable release: commands for everything, a report system, chat
+tools, staff notes, an in-game settings editor, network mode for Velocity
+and BungeeCord networks, a public extension API and the first official
+extensions. One jar runs on Paper 1.21.7 - 1.21.11 and 26.1.1 - 26.3.
+Upgrading from an alpha is automatic - see "Upgrading" below. (1.0.0 was
+never published on its own; everything planned for it is part of 1.1.0.)
+
+### Added
+
+- **Commands for every module** under `/admin` (aliases `/ua`, `/uadmin`),
+  with tab completion and a clickable `/admin help`. Optional top-level
+  shortcuts such as `/kick`, `/ban`, `/mute`, `/warn`, `/history`,
+  `/vanish`, `/heal`, `/gm`, `/invsee`, `/broadcast`, `/maintenance`, `/lag`
+  (`commands.shortcuts.enabled`/`disabled`; `/universaladmin:<label>` always
+  works). Full list: [docs/user/commands.md](docs/user/commands.md).
+  - Moderation: kick, ban/tempban/ipban (`/ban Steve 7d griefing`),
+    mute/tempmute, warn/unwarn, freeze/unfreeze, unban/unmute, history,
+    check, moderate, vanish, godmode, nocollision, staff [recover], notes.
+  - Players: player, info (`/seen`), heal, feed, extinguish, fly, gamemode,
+    speed, tp, tphere, invsee, endersee, clearinv.
+  - Server: broadcast, server status/title/actionbar/shutdown/restart/cancel,
+    maintenance on/off/allow/deny/list.
+  - Worlds: worlds, world info/tp/time/weather/difficulty/setspawn/border/
+    gamerule. Whitelist: on/off/add (also players who never joined, with an
+    optional duration)/remove/list. Performance: perf, entities [clear].
+    Audit: audit [player] [page]. Core: status, modules, reload, update.
+- **Reports module**: `/report <player> <reason>` for everyone (cooldown and
+  open-report limit), instant clickable staff notifications with a sound, a
+  reminder on join, a reports GUI with claim/resolve/reject and teleports to
+  the player or the report location, a "Reports" button on every profile,
+  and a thank-you to the reporter. See
+  [docs/user/modules/reports.md](docs/user/modules/reports.md).
+- **Chat module**: staff chat (`/sc`, toggle mode, or a `#` prefix), chat
+  lock, slow mode and clear chat - commands, GUI page, audited. See
+  [docs/user/modules/chat.md](docs/user/modules/chat.md).
+- **Staff notes** about players (profile button, `/admin notes`, a hint for
+  staff when a player with notes joins).
+- **Team notifications**: every punishment and pardon is announced to online
+  staff with `universaladmin.moderation.notify`.
+- **Settings editor**: every setting of the core, every module and every
+  extension is editable in-game (`/admin` → Settings, `/admin settings
+  get|set|reset|list`); changes are validated, written to `config.yml` with
+  its comments intact, applied live where possible and audited. Sensitive
+  values (database password) stay file-only.
+- **Extension API** (`universaladmin-api`): extensions are ordinary Paper
+  plugins with `depend: [UniversalAdmin]` that register modules through
+  `UniversalAdminProvider.get().extensions()` - with commands, GUI pages,
+  main-menu entries, profile buttons, audited actions, permissions,
+  settings, translations, database migrations and audit/action listeners,
+  all cleaned up automatically when the extension is disabled. Published
+  with every release (binary, sources, javadoc). Developer guide:
+  [docs/extensions/getting-started.md](docs/extensions/getting-started.md).
+- **UniversalAdmin Discord** - the first official extension: posts
+  punishments, reports, restarts, maintenance and whitelist changes to a
+  Discord channel via a webhook ([docs/extensions/discord.md](docs/extensions/discord.md)).
+- **Live inventory and ender chest editor**: changes show up in both
+  directions within a tick - what the player does appears in the editor,
+  what staff change lands in the player's inventory. Laid out like the
+  player's own screen (storage, hotbar, armor, offhand); one audit entry
+  per editing session with the number of changed slots.
+- **Network mode** for servers behind a Velocity or BungeeCord proxy that
+  share one MySQL database (`network.enabled`): a Network menu with every
+  server - also those without UniversalAdmin - and its players, `/admin
+  network`, `/admin find <player>`, cross-server `/admin tp` and `tphere`
+  (you land right next to the player), `/admin send`, `/admin connect`,
+  network-wide `/admin alert`; bans, mutes, warnings, kicks and freezes
+  take effect on every server at once; staff chat, staff notifications and
+  report alerts across all servers, tagged with the server; one audit log
+  for the network, every entry tagged with its server; commands find every
+  player of the network. See [docs/user/network.md](docs/user/network.md).
+- **UniversalAdmin Velocity** - an optional proxy plugin that turns banned
+  players away at the proxy, before they reach any server (also servers
+  without UniversalAdmin), with a configurable ban screen and
+  `/uavelocity`. Published next to the plugin on GitHub and Modrinth.
+- **One jar for many Minecraft versions**: Paper (and Purpur) 1.21.7 -
+  1.21.11 and 26.1.1 - 26.3, Java 21 or newer. Every listed version is
+  compiled against and boot-tested; a weekly check tests new Paper
+  versions and adds them to the newest release on Modrinth as soon as
+  they pass ([docs/user/installation.md](docs/user/installation.md)).
+- An example extension (`examples/example-extension`) as a template.
+- Ready-made LuckPerms role templates (helper, moderator, admin) in
+  [docs/user/permissions.md](docs/user/permissions.md).
+- The main menu and module names are translated (`menu.*` keys).
+
+### Changed
+
+- The shipped `config.yml` lists every setting of every module, with
+  comments, grouped by module (`moderation.vanish.*`, `server.countdown.*`,
+  `players.gui.*`, ...).
+- The audit log shows player names instead of UUIDs in targets and
+  summaries.
+- **Precise feedback everywhere**: every command and every GUI button says
+  exactly what it did - "Spawn of world set to 120 64 -30", "Banned Steve
+  for 7d. Reason: griefing #42", "Removed 37 entities in world" - instead
+  of "Done.", and command and GUI show the same text. Extensions get the
+  same through `ActionResult.success(value, key, args...)`.
+- Every reply carries a short `[UA]` prefix (`command.prefix`, may be set
+  to `""`) - in chat after a GUI click too.
+- **Staff mode tools work at range**: aim at a player and right-click - the
+  tool acts on the player the actionbar names, up to
+  `moderation.staffmode.target-range-blocks` (now 128 blocks, through
+  walls), not only on someone close enough to click directly.
+- Menu item texts are consistently styled (white names, gray lore - no
+  more purple italic lore lines).
+- The update check and `/admin update` compare versions properly and never
+  offer an older release.
+- Releases on GitHub additionally carry the Discord extension, the
+  Velocity plugin and the API jars; Modrinth versions are marked as
+  release instead of alpha and list every supported Minecraft version.
+- Built for Java 21 (was 25), so servers on 1.21.x run it too.
+- Extensions: `UniversalAdmin.network()` (servers, players, messages
+  between servers, moving players), the `PlayerDirectory` service (find a
+  player by name or UUID network-wide) and `CommandInvocation.withPlayer`
+  for commands that take any known player.
+
+### Fixed
+
+- Settings of modules (vanish, freeze, staff mode, reports, ...) were only
+  read from `config.yml` after an `/admin reload`; they now apply from the
+  start.
+- New texts added in an update showed up as `[missing: ...]` because the
+  copied language files were never updated; the bundled texts are now the
+  fallback for every key.
+- A typo in a language file stopped the whole plugin from starting; the
+  file is now skipped with an error in the log.
+- Staff notifications (performance alerts, update notices, frozen-player
+  disconnects) showed raw `<yellow>` tags instead of colours.
+- Confirmation dialogs went back to the wrong page on "cancel", and a
+  quick double click could confirm a dangerous action twice; GUI buttons
+  now ignore double clicks.
+- `/admin update` could "update" to an older version on a server running a
+  newer build.
+- The inventory editor did not show the player's own changes while it was
+  open and could overwrite them with its outdated copy; it also wrote an
+  audit entry for every single click.
+- Punishing a player who was offline stored their UUID instead of their
+  name in the history.
+- The Freeze Tool could freeze and immediately unfreeze with one click.
+- Several servers starting at the same time on a new MySQL database could
+  run the same schema migration twice; migrations now run under a
+  database lock, and a migration added later is applied even if newer
+  ones already ran.
+- Console commands sent over RCON got no reply.
+- "Could not save lang/en_US.yml ... already exists" warnings on every
+  start.
+
+### Security
+
+- Text typed by players and staff (reasons, report texts, chat, notes,
+  filters) can no longer inject MiniMessage formatting, hover or click
+  events into messages other players see - every message argument is
+  escaped ([ADR 0012](docs/architecture/decisions/0012-safe-messages.md)).
+- Discord messages never ping anyone (`allowed_mentions` disabled), and the
+  webhook URL is never logged.
+
+### Upgrading from 0.1.0-alpha
+
+- Replace the jar and restart. `config.yml` is migrated automatically
+  (config version 3): module settings move under their module's section
+  and the new sections (`commands`, `network`, ...) are added. Nothing you
+  set is lost or overwritten.
+- New database tables (`ua_reports`, `ua_player_notes`) are created
+  automatically.
+- Your `lang/*.yml` files are kept; every text you did not change now comes
+  from the plugin itself, so new texts appear automatically.
+- New permissions to hand out: `universaladmin.reports.*`,
+  `universaladmin.chat.*`, `universaladmin.moderation.notes`,
+  `universaladmin.moderation.notify`, `universaladmin.status`,
+  `universaladmin.network.*` - and `universaladmin.reports.create` is
+  granted to everyone by default.
+- Running a network? See [docs/user/network.md](docs/user/network.md).
+
 ## [0.1.0-alpha.5] - 2026-08-26
 
 ### Added

@@ -45,7 +45,8 @@ public final class TeleportAdminToWorldSpawnAction implements Action<String, Voi
                 return;
             }
             admin.teleportAsync(world.getSpawnLocation()).thenAccept(success -> future.complete(Boolean.TRUE.equals(success)
-                    ? ActionResult.success(null)
+                    ? ActionResult.success(null, MessageKey.of("worlds.result.teleported-spawn"),
+                            world.getName(), WorldActionSupport.blockCoordinates(world.getSpawnLocation()))
                     : ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, "Teleport did not complete")));
         });
         return future;

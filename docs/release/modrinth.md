@@ -1,240 +1,232 @@
 # Modrinth Page
 
-The content below is live on the `universaladmin` Modrinth project (id
-`wGP5uSse`, still in "draft" status there pending submission for review) -
-title, summary, description, categories, license, links, and icon are all
-set. This document is now the source to edit when that content needs to
-change, not a draft awaiting a first upload.
+Source of truth for the `universaladmin` Modrinth project (id `wGP5uSse`).
+Edit here first, then copy into Modrinth. Versions are uploaded
+automatically by `release.yml` - see [releasing.md](releasing.md#modrinth);
+everything on this page (texts, gallery, links) is maintained by hand.
 
-## Project Title
+## Metadata
 
-**UniversalAdmin**
-
-## Project Metadata
-
-- **Name:** UniversalAdmin
-- **Slug:** `universaladmin` (check availability on Modrinth before creating
-  it)
-- **Category:** Admin Tools / Utility / Management
-- **Client/Server side:** Server-only (no client mod needed)
-- **License:** Apache-2.0 (decided, see [licensing.md](licensing.md);
-  `LICENSE` is in the repository root)
-- **Source:** https://github.com/nicki41/UniversalAdmin
+| Field | Value |
+|---|---|
+| Name | UniversalAdmin |
+| Slug | `universaladmin` |
+| Summary | see below |
+| Categories | Management, Utility (additional: Social) |
+| Environment | Server-side only |
+| Loaders | Paper, Purpur (plugin); Velocity (the `-velocity` versions) |
+| Game versions | everything in [`supported-versions.txt`](../../supported-versions.txt) - set by `release.yml`, extended by `compatibility.yml` |
+| License | Apache-2.0 |
+| Icon | `assets/icon.png` |
+| Source | https://github.com/nicki41/UniversalAdmin |
+| Issues | https://github.com/nicki41/UniversalAdmin/issues |
+| Wiki | https://github.com/nicki41/UniversalAdmin/tree/main/docs |
+| Discord | none - only list one once it exists |
 
 ## Summary
 
-> A dependency-free administration platform for Paper servers: full in-game
-> GUIs for players, moderation, worlds, whitelist and performance, every action
-> permission-checked and audited.
-
-(Modrinth's summary field is length-limited - shorten to this if needed: "A
-dependency-free admin platform for Paper servers with full in-game GUIs and a
-complete audit trail.")
+> The free all-in-one admin plugin for Paper and Velocity networks: moderation, reports, staff mode, vanish, staff chat, live inventories, worlds, maintenance and a full audit log - in clean menus and commands.
 
 ## Description
 
-> **UniversalAdmin** is a universal admin platform for Paper servers - not
-> another pile of unrelated commands, but a core with a clean layered
-> architecture (GUI/Commands → Services → Actions → Repositories →
-> Paper/Database) built to grow into a full extension ecosystem and, later, an
-> optional web dashboard.
->
-> Everything - kicking a player, changing a gamerule, clearing a filtered set
-> of lagging entities - runs through the same permission-checked, audited
-> pipeline whether it's triggered from the in-game GUI or (soon) a command or a
-> future REST API. No feature reimplements its own permission handling, its own
-> SQL, or its own audit logging.
->
-> **Status: alpha.** Six of the eight built-in modules are fully usable. There
-> is no public extension API yet and no web app - both are planned.
+Paste everything between the lines into Modrinth's description editor.
 
-## Features
+---
 
-- **Players** - browser (online/offline/last-seen/search), profile page,
-  ~20 actions (teleport, heal, effects, gamemode, inventory/ender chest
-  editor).
-- **Moderation** - kick/ban/tempban/IP-ban/mute/tempmute/warn/unban/
-  unmute/remove-warn, join/chat enforcement, GUI wizard, plus vanish/
-  godmode/no-collision/staff mode with crash-safe snapshot/recovery.
-- **Server** - live dashboard, broadcast (message/title/actionbar),
-  maintenance mode with an allow-list, shutdown/restart with confirmation
-  and a configurable countdown.
-- **Worlds** - world browser/profile, teleport/spawn/time/weather/
-  difficulty, world border management, a dynamic gamerule GUI that reads
-  every gamerule at runtime (no hardcoded list).
-- **Whitelist** - native whitelist wrapping plus its own metadata (reason,
-  notes, expiration), ownership model, join check with an hourly sweep.
-- **Performance** - TPS/MSPT/memory dashboard, per-world breakdown,
-  entity overview grouped by type/world, short in-memory history,
-  staff alerts on configurable thresholds, and a deliberately narrow
-  Entity Clear (never players, protected types excluded by default,
-  live preview, confirmation, fully audited) - **not** an aggressive lag
-  cleaner.
-- **Audit Log** - every mutating action is audited automatically; a
-  filterable, paginated in-game log with a detail view.
-- **Full audit trail, typed permissions, typed/validated settings,
-  bilingual (English/German) out of the box.**
+# UniversalAdmin
 
-## Requirements
+**The free, all-in-one admin plugin for Paper.** Everything your staff team
+needs - moderation, reports, staff mode, player tools, worlds, maintenance,
+performance and a complete audit log - in clean in-game menus *and*
+commands, on one server or a whole **Velocity/BungeeCord network**. No
+dependencies, no premium version, open source.
 
-- Paper (Spigot/CraftBukkit are not supported)
-- Java 25 on the server
-- No required plugin dependencies
-- Optional: MySQL/MariaDB for multi-server setups
+Runs on **Paper and Purpur 1.21.7 - 1.21.11 and 26.1.1 - 26.3** - one jar for
+all of them, and new Minecraft versions are tested and added automatically.
 
-## Supported Minecraft/Paper Versions
+## ✨ Highlights
 
-- Built and tested against Paper API `26.2.build.115-stable` (see
-  `build.gradle.kts` for the exact pinned version at any given time).
-- Requires Java 25 on the server.
-- **TODO before release:** decide and state the actual supported Minecraft
-  version range (currently only the single Paper API build above is verified in
-  CI) - confirm whether older Paper builds also work, or whether the plugin is
-  pinned to the exact API version it compiles against. Modrinth requires
-  explicit game versions per upload, so this must be answered before the first
-  listing.
+- **One menu for everything** - type `/admin` and click through players,
+  moderation, reports, chat, server, worlds, whitelist, performance, audit
+  log and settings.
+- **Commands too** - `/ban Steve 7d griefing`, `/mute`, `/warn`, `/history`,
+  `/vanish`, `/invsee`, `/heal`, `/gm` ... with tab completion. Already use
+  EssentialsX? Turn off any shortcut you want to keep there.
+- **Every action is logged** - who banned whom, who changed which gamerule,
+  who opened whose inventory. Searchable in-game.
+- **Fine-grained permissions** - give helpers kick and mute, but not ban.
+  LuckPerms role templates included.
+- **Safe** - confirmations for dangerous actions, no double clicks, player
+  input can't inject formatting, an invalid config never crashes the server.
+- **Network-ready** - behind Velocity or BungeeCord, see every server and
+  player in one menu, teleport across servers, and ban once for the whole
+  network.
+- **No dependencies** - SQLite out of the box, MySQL/MariaDB optional.
+- **English & German** - every text editable.
 
-## Dependencies
+## 🌐 Networks (Velocity / BungeeCord)
 
-**None required.** No mandatory dependency on Vault, LuckPerms,
-PlaceholderAPI, or ProtocolLib - see [README.md](../../README.md#requirements).
-Works with any standard permission plugin (or plain server-operator status)
-since permission nodes are registered through Bukkit's own `PluginManager`.
+Install UniversalAdmin on every server, give them one MySQL/MariaDB database
+and set `network.enabled: true`:
 
-The jar bundles its own database drivers (SQLite, MariaDB/MySQL) and connection
-pool, so nothing has to be installed alongside it.
+- a **Network** menu with every server - also those without UniversalAdmin -
+  their players, TPS and version;
+- `/admin find Steve` - "Steve is on survival";
+- `/admin tp Steve` takes you to Steve's server, right next to him;
+  `/admin tphere`, `/admin send`, `/admin connect`;
+- **bans, mutes, warnings, kicks and freezes apply on every server at once**;
+- staff chat, staff notifications, report alerts and `/admin alert` across
+  all servers, tagged with the server name;
+- one audit log for the whole network.
 
-## Installation
+Optional: the **UniversalAdmin Velocity** plugin (the `-velocity` version on
+this page) keeps banned players out at the proxy, before they reach any
+server. [Network guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md).
 
-1. Download the jar (or build it yourself - see
-   [README.md](../../README.md#installation)).
-2. Drop it into the server's `plugins/` folder.
-3. Start the server. `config.yml` and `lang/en_US.yml`/`lang/de_DE.yml` are
-   created automatically in `plugins/UniversalAdmin/`.
-4. Runs immediately on the bundled SQLite database - no setup required.
+## 🛡️ Moderation
 
-Full instructions: [docs/user/installation.md](../user/installation.md).
+Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn and freeze - with reason
+and duration presets, a step-by-step GUI wizard, full history (`/history`),
+current status (`/checkban`) and **team notifications** for every
+punishment. **Staff notes** let your team leave private notes about players.
 
-## Database
+## 📣 Reports
 
-SQLite by default (zero setup, created inside the plugin's own data folder) -
-optional MySQL/MariaDB for multi-server setups that want to share data. See
-[docs/user/database.md](../user/database.md) for the full explanation,
-including backup guidance and the security notes on credential handling.
+Players type `/report <player> <reason>`; staff get an instant, clickable
+alert. The reports GUI shows open reports - claim, resolve or reject them,
+teleport to the player or to where the report was made. Built-in spam
+protection.
 
-## Commands
+## 🕵️ Staff tools
 
-| Command | Purpose |
-|---|---|
-| `/admin` (aliases `/ua`, `/uadmin`) | Opens the main menu for a player; console/command blocks get a status report |
-| `/admin reload` | Reloads UniversalAdmin's own `config.yml` (never Bukkit's global `/reload`) |
-| `/admin server broadcast\|shutdown\|restart\|cancel …` | Server control from the console |
-| `/admin staff recover` | Manually restores a stuck staff-mode snapshot |
+Vanish, godmode, no-collision and a **staff mode** with its own toolbar:
+player inspector, freeze stick, live inventory & ender chest inspectors,
+teleport picker - and your own inventory comes back even after a crash.
+**Staff chat** with `/sc` or a `#` in front of your message.
 
-Most functionality is GUI-driven today; the underlying actions already run
-through the same executor and are command-ready, only the command frontends are
-still missing.
+## 👤 Players
 
-## Permissions
+Browse online and offline players, search, open profiles with play time and
+location, heal, feed, fly, gamemode, speed, effects, teleports - and edit
+inventories and ender chests **live**.
 
-Every protected action has its own `universaladmin.<module>.<node>` permission
-node, registered at runtime and compatible with any standard permission plugin.
-All nodes default to `op`. The complete, current list lives in
-[docs/user/permissions.md](../user/permissions.md) - link to it from the
-Modrinth page rather than duplicating it there (it would go stale).
+## 🌍 Server & worlds
 
-## Telemetry Disclosure
+Dashboard, broadcasts (chat, title, action bar), maintenance mode with an
+allow-list, shutdown/restart with countdown. Per-world time, weather,
+difficulty, spawn, world border and a full gamerule editor. Chat lock, slow
+mode and clear chat.
 
-Must appear on the project page if the Modrinth rules in effect at the time
-of publishing require a telemetry disclosure (check against the then-current
-rules before uploading - no platform compliance is claimed here). Suggested
-text:
+## 📋 Whitelist
 
-> **Anonymous statistics**
->
-> UniversalAdmin can send an anonymous heartbeat so the project can see how
-> many installations are active, how many players are online across them, and
-> how versions are distributed.
->
-> **In this version nothing is sent:** there is no official statistics endpoint
-> yet and none is preconfigured, so no request is made and no installation id
-> is even generated.
->
-> When an endpoint is configured, a heartbeat contains exactly six values: a
-> random installation id, the UniversalAdmin version, the Minecraft version,
-> the Java major version, the number of online players, and the server's player
-> slot count.
->
-> Never collected: server IP, hostname, domain, port, player names, player
-> UUIDs, player IPs, chat, commands, world names, coordinates, other installed
-> plugins, file or database contents, hardware identifiers, MAC addresses, OS
-> user names, or file paths. The installation id is 128 random bits and is not
-> derived from anything about the machine.
->
-> Switch it off completely with `telemetry.enabled: false` in `config.yml` -
-> then no request of any kind is made. Full documentation:
-> https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/telemetry.md
+Reasons, notes and **temporary access** that expires by itself - also for
+players who have never joined.
 
-## Links
+## 📈 Performance
 
-| Link type | URL |
-|---|---|
-| Source | https://github.com/nicki41/UniversalAdmin |
-| Issue tracker | https://github.com/nicki41/UniversalAdmin/issues |
-| Wiki / Documentation | https://github.com/nicki41/UniversalAdmin/tree/main/docs |
-| Discord | none - don't list one until one actually exists |
+TPS, MSPT and memory at a glance (`/lag`), per-world stats, an entity
+overview and staff alerts. The entity clear never touches players, villagers,
+item frames or other protected entities - always with preview and
+confirmation.
 
-## Screenshots
+## ⚙️ Settings in-game
 
-None captured yet - needed before the first public listing:
+Change any setting from a menu - validated, applied right away, saved to
+`config.yml` with your comments intact.
 
-- [ ] Server dashboard (TPS/MSPT/memory/players/modules tile view)
-- [ ] Player browser + profile page
-- [ ] Moderation punishment wizard (kick/ban/mute flow)
-- [ ] Performance dashboard
-- [ ] Performance entity overview (by type)
-- [ ] Worlds browser + gamerule GUI
-- [ ] Whitelist member list
-- [ ] Audit log list + detail view
-- [ ] A short (10-20s) clip of the main menu navigation flow
+## 🧩 Extensions
 
-## Versioning
+Other plugins can add modules to UniversalAdmin: commands, menu pages,
+profile buttons, settings, database tables - all audited and permissioned
+like the built-ins. **Official: UniversalAdmin Discord** posts bans, mutes,
+reports and restarts to your Discord channel (download from the GitHub
+release). Developers: see the
+[extension guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/getting-started.md).
 
-- Version number, release type, and tag scheme come from the GitHub release
-  - see [releasing.md](releasing.md). A Modrinth upload uses exactly the
-  same version number as the corresponding GitHub release.
-- Versions with `-alpha`/`-beta`/`-rc` are uploaded to Modrinth as **Alpha**
-  or **Beta**, never as a Release.
-- Only the installable, shaded jar (`universaladmin-core-<version>.jar`) is
-  uploaded - no sources or javadoc jar. The SHA-256 file from the GitHub
-  release can be linked for verification.
+## 📦 Requirements
 
-## Release Checklist
+- Paper or Purpur 1.21.7 - 1.21.11 or 26.1.1 - 26.3, Java 21+ (Paper 26.x
+  itself needs Java 25)
+- Nothing else. Optional: MySQL/MariaDB (needed for network mode),
+  LuckPerms (any permission plugin works).
+- Networks: Velocity 3.4+ or BungeeCord/Waterfall; the UniversalAdmin
+  Velocity plugin is optional.
 
-Before the first Modrinth upload:
+## 🚀 Getting started
 
-- [x] License decided and `LICENSE` in the repository (Apache-2.0, see
-      [licensing.md](licensing.md)).
-- [x] Public GitHub repository with CI and automated releases.
-- [x] Telemetry documented ([docs/user/telemetry.md](../user/telemetry.md))
-      and the disclosure text above prepared.
-- [ ] Screenshots/gallery captured (list above).
-- [ ] Supported Minecraft/Paper version range confirmed and stated (not just
-      "whatever was last compiled against").
-- [ ] A real Paper server run with the release jar (GUI navigation,
-      moderation edge cases) - see
-      [RELEASE_READINESS.md](../../RELEASE_READINESS.md).
-- [ ] `./gradlew clean build` green, including tests.
-- [ ] `CHANGELOG.md` has a dated version section (not just `[Unreleased]`).
-- [ ] Version in `build.gradle.kts` matches the tag being published.
-- [ ] GitHub release exists and contains the jar + SHA-256.
-- [x] Modrinth project created (id `wGP5uSse`, still in "draft" status);
-      title/summary/description/categories/license/links/icon are live, set
-      from this document's content.
-- [x] Telemetry disclosure pasted in as the "Anonymous statistics" section of
-      the live description - not yet re-checked against Modrinth's
-      then-current rules before the project is actually submitted for review.
-- [x] Every GitHub release is automatically mirrored to Modrinth as a new
-      version - see [releasing.md](releasing.md#modrinth).
-- [ ] Screenshots/gallery still not captured (see the list above) - the only
-      remaining page-content gap before submitting for review.
+1. Put the jar into `plugins/`, restart.
+2. Type `/admin`.
+3. Give your team permissions:
+   [permissions & role templates](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/permissions.md).
+
+All commands: [command reference](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/commands.md) ·
+Full docs: [GitHub](https://github.com/nicki41/UniversalAdmin/tree/main/docs)
+
+## 📊 Anonymous statistics
+
+UniversalAdmin sends a small anonymous heartbeat every 30 minutes so we know
+how many servers use it: a random installation id, the UniversalAdmin,
+Minecraft and Java version, and the online/maximum player count. **Never**
+sent: IPs, server names, player names or UUIDs, chat, commands, world data,
+other plugins or hardware identifiers. The id is random and derived from
+nothing. Turn it off with `telemetry.enabled: false` in `config.yml` - then
+no request is made at all.
+[Exactly what is sent](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/telemetry.md).
+
+## 💬 Support
+
+Bugs and ideas: [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues) -
+please include `/admin status`.
+
+---
+
+## Gallery
+
+Images (1920×1080 or 1280×720 PNG, GUI scale 3 or "auto" in a clean world,
+resource packs off). Title / description for each:
+
+1. **Main menu** - "Everything in one menu" - `/admin`, an operator with all
+   permissions, every module visible.
+2. **Punishment wizard** - "Ban, mute or warn in three clicks" - Moderate →
+   Temp Ban → reason list (and the confirmation dialog as a second shot).
+3. **Punishment history in chat** - "Full history with one command" -
+   `/history <player>` with 4-6 mixed entries, plus `/checkban`.
+4. **Report alert** - "Reports arrive instantly" - chat showing the
+   clickable `[Report #3] ... [View]` line, then the report detail page
+   with claim/resolve/teleport buttons.
+5. **Staff mode** - "Staff mode with its own toolbar" - hotbar with the
+   tools, action bar "Looking at: <player>".
+6. **Player profile** - "Every player at a glance" - profile page with the
+   Moderate/Notes/Reports buttons.
+7. **Live inventory editor** - "Edit inventories live" - `/invsee`.
+8. **Server dashboard** - "Your server at a glance" - Server home page.
+9. **Performance** - "Find lag fast" - performance dashboard and the
+   entity-by-type page.
+10. **Gamerule editor** - "Every gamerule, per world" - Worlds → Gamerules.
+11. **Audit log** - "Know who did what" - audit list with filters, plus a
+    detail page.
+12. **Settings** - "Change settings without touching files" - Settings →
+    moderation section.
+13. **Discord** - "Punishments in your Discord" - a Discord channel with 2-3
+    embeds from the Discord extension.
+14. **Network** - "Your whole network in one menu" - Network page with 2-3
+    servers and their player heads, plus `/admin find` in chat.
+
+Optional: a 20-30 s clip (main menu → player → moderate → ban → audit log)
+for the description, uploaded to YouTube and embedded.
+
+## Version uploads
+
+Automatic - every GitHub release uploads two Modrinth versions with the
+changelog section as notes:
+
+- `<v>` - `universaladmin-core-<v>.jar`, loaders Paper and Purpur, every
+  game version in `supported-versions.txt`;
+- `<v>-velocity` - `universaladmin-velocity-<v>.jar`, loader Velocity.
+
+The type is derived from the version (`1.1.0` -> release, `-beta`/`-rc` ->
+beta, `-alpha` -> alpha). When a new Paper version passes the weekly
+compatibility check, it is added to the newest release on both versions
+(see [releasing.md](releasing.md#compatibility)). The Discord extension is
+not uploaded to this project; create a separate Modrinth project for it if
+wanted (then add another `mc-publish` step in `release.yml`).

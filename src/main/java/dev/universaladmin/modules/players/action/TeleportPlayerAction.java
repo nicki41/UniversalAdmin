@@ -50,17 +50,21 @@ public final class TeleportPlayerAction implements Action<TeleportInput, Void> {
             return;
         }
         switch (input.kind()) {
-            case ADMIN_TO_PLAYER -> withActor(context, future, admin -> teleport(admin, target.getLocation(), future));
-            case BRING_TO_ADMIN -> withActor(context, future, admin -> teleport(target, admin.getLocation(), future));
+            case ADMIN_TO_PLAYER -> withActor(context, future, admin -> teleport(admin, target.getLocation(), future,
+                    "players.result.teleport.to-player", target.getName()));
+            case BRING_TO_ADMIN -> withActor(context, future, admin -> teleport(target, admin.getLocation(), future,
+                    "players.result.teleport.bring", target.getName()));
             case PLAYER_TO_PLAYER -> {
                 Player reference = input.referenceId() != null ? Bukkit.getPlayer(input.referenceId()) : null;
                 if (reference == null) {
                     future.complete(offline());
                     return;
                 }
-                teleport(target, reference.getLocation(), future);
+                teleport(target, reference.getLocation(), future,
+                        "players.result.teleport.player-to-player", target.getName(), reference.getName());
             }
-            case WORLD_SPAWN -> teleport(target, target.getWorld().getSpawnLocation(), future);
+            case WORLD_SPAWN -> teleport(target, target.getWorld().getSpawnLocation(), future,
+                    "players.result.teleport.spawn", target.getName());
             case BED_RESPAWN -> {
                 Location respawn = target.getBedSpawnLocation();
                 if (respawn == null) {
@@ -68,7 +72,7 @@ public final class TeleportPlayerAction implements Action<TeleportInput, Void> {
                             ActionResult.FailureReason.VALIDATION, MessageKey.of("players.action.no-respawn-location")));
                     return;
                 }
-                teleport(target, respawn, future);
+                teleport(target, respawn, future, "players.result.teleport.respawn", target.getName());
             }
             case COORDINATES -> {
                 World world = input.worldName() != null ? Bukkit.getWorld(input.worldName()) : target.getWorld();
@@ -77,7 +81,8 @@ public final class TeleportPlayerAction implements Action<TeleportInput, Void> {
                             ActionResult.FailureReason.VALIDATION, MessageKey.of("players.action.unknown-world"), input.worldName()));
                     return;
                 }
-                teleport(target, new Location(world, input.x(), input.y(), input.z()), future);
+                teleport(target, new Location(world, input.x(), input.y(), input.z()), future,
+                        "players.result.teleport.coordinates", target.getName());
             }
         }
     }
@@ -93,9 +98,14 @@ public final class TeleportPlayerAction implements Action<TeleportInput, Void> {
         onActor.accept(admin);
     }
 
-    private void teleport(Player player, Location destination, CompletableFuture<ActionResult<Void>> future) {
+    /** @param messageKey the success message; its arguments are {@code names} followed by the destination ("world 120 64 -30") */
+    private void teleport(Player player, Location destination, CompletableFuture<ActionResult<Void>> future,
+            String messageKey, String... names) {
+        Object[] args = new Object[names.length + 1];
+        System.arraycopy(names, 0, args, 0, names.length);
+        args[names.length] = PlayerResults.location(destination);
         player.teleportAsync(destination).thenAccept(success -> future.complete(Boolean.TRUE.equals(success)
-                ? ActionResult.success(null)
+                ? ActionResult.success(null, MessageKey.of(messageKey), args)
                 : ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, "Teleport did not complete")));
     }
 

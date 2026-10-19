@@ -13,7 +13,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 /**
  * Backs {@code /admin reload} (see {@link dev.universaladmin.command.UniversalAdminCommand}).
  * Never touches Bukkit's global reload - this only re-reads UniversalAdmin's
- * own {@code config.yml}, migrates it if needed, and re-resolves settings.
+ * own {@code config.yml}, migrates it if needed, re-resolves settings, and
+ * re-reads the server owner's {@code lang/*.yml} overrides.
  * See docs/architecture/threading.md for why this runs off the main thread
  * even though the migration-at-startup equivalent is allowed to block it:
  * this is not a one-time startup gate anything else waits on.
@@ -26,6 +27,7 @@ public final class ReloadConfigAction implements Action<Void, ConfigReloadResult
     private final Runnable configSaver;
     private final ConfigMigrationRunner migrationRunner;
     private final SettingsService settingsService;
+    private final Runnable messagesReloader;
     private final TaskScheduler scheduler;
 
     public ReloadConfigAction(
@@ -33,11 +35,13 @@ public final class ReloadConfigAction implements Action<Void, ConfigReloadResult
             Runnable configSaver,
             ConfigMigrationRunner migrationRunner,
             SettingsService settingsService,
+            Runnable messagesReloader,
             TaskScheduler scheduler) {
         this.configReloader = configReloader;
         this.configSaver = configSaver;
         this.migrationRunner = migrationRunner;
         this.settingsService = settingsService;
+        this.messagesReloader = messagesReloader;
         this.scheduler = scheduler;
     }
 
@@ -54,7 +58,9 @@ public final class ReloadConfigAction implements Action<Void, ConfigReloadResult
                 if (migrationRunner.run(config)) {
                     configSaver.run();
                 }
-                return ActionResult.<ConfigReloadResult>success(settingsService.reload());
+                ConfigReloadResult result = settingsService.reload();
+                messagesReloader.run();
+                return ActionResult.<ConfigReloadResult>success(result);
             } catch (RuntimeException e) {
                 return ActionResult.<ConfigReloadResult>failure(
                         ActionResult.FailureReason.INTERNAL_ERROR, "Failed to reload configuration: " + e.getMessage());

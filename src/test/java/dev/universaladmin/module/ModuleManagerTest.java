@@ -9,13 +9,18 @@ import static org.mockito.Mockito.mock;
 import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.audit.AuditService;
+import dev.universaladmin.bootstrap.UniversalAdminPlatform;
+import dev.universaladmin.command.CommandRegistry;
 import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.core.UniversalAdmin;
+import dev.universaladmin.extension.ExtensionManager;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.GuiSessionManager;
 import dev.universaladmin.gui.MaterialIconProvider;
+import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.localization.MessageService;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.permission.PermissionRegistry;
 import dev.universaladmin.scheduler.TaskScheduler;
@@ -39,7 +44,7 @@ import org.junit.jupiter.api.Test;
 class ModuleManagerTest {
 
     private ModuleManager managerWithRegistry(ModuleRegistry registry) {
-        UniversalAdmin platform = new UniversalAdmin(
+        UniversalAdmin platform = new UniversalAdminPlatform(
                 mock(Plugin.class),
                 "0.1.0-TEST",
                 Instant.now(),
@@ -53,11 +58,15 @@ class ModuleManagerTest {
                 mock(ActionExecutor.class),
                 new GuiRegistry(),
                 new GuiFramework(new GuiSessionManager(), new MaterialIconProvider(Logger.getLogger("ModuleManagerTest"))),
+                new PlayerMenuRegistry(),
+                new CommandRegistry(),
+                mock(ExtensionManager.class),
                 new PermissionRegistry(),
                 registry,
                 mock(AuditService.class),
                 mock(MessageService.class),
-                mock(NotificationService.class));
+                mock(NotificationService.class),
+                mock(NetworkService.class));
         return new ModuleManager(platform);
     }
 

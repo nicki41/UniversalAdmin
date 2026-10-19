@@ -24,7 +24,7 @@ always through `TaskScheduler`.
 
 `PaperTaskScheduler` (the default implementation) uses
 `Executors.newVirtualThreadPerTaskExecutor()` (virtual threads, stable
-since Java 21; the project runs on Java 25) for the background path.
+since Java 21, the bytecode level the project targets) for the background path.
 Blocking JDBC calls are the textbook example virtual threads were built
 for: every database call gets its own cheap thread instead of sharing a
 small fixed pool - without any repository code having to do anything

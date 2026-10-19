@@ -9,11 +9,8 @@ import org.bukkit.configuration.file.FileConfiguration;
  * {@link dev.universaladmin.storage.Migration} for the database schema, but
  * operates on the YAML config instead of SQL.
  *
- * <p>Nothing implements this yet - {@code config-version} is 1 and there is
- * no prior version to migrate from. It exists so a future config change
- * doesn't have to silently overwrite (or worse, corrupt) an existing user's
- * {@code config.yml}; see {@link ConfigMigrationRunner} and
- * docs/user/configuration.md.
+ * <p>See {@link ModuleSettingsLayoutMigration} (version 2) for an example,
+ * {@link ConfigMigrationRunner} and docs/user/configuration.md.
  */
 public interface ConfigMigration {
 

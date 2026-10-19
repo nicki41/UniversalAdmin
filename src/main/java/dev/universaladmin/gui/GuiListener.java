@@ -59,8 +59,10 @@ public final class GuiListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        view.buttonAt(event.getSlot()).ifPresent(button -> button.handle(new GuiClickContext(
-                player, GuiClickType.from(event.getClick()), sessions.sessionFor(player.getUniqueId()), view)));
+        view.buttonAt(event.getSlot())
+                .filter(button -> view.acceptButtonClick(System.nanoTime()))
+                .ifPresent(button -> button.handle(new GuiClickContext(
+                        player, GuiClickType.from(event.getClick()), sessions.sessionFor(player.getUniqueId()), view)));
     }
 
     @EventHandler

@@ -1,10 +1,10 @@
 package dev.universaladmin.modules.players.gui;
 
 import dev.universaladmin.action.ActionExecutor;
-import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiFramework;
+import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
@@ -12,6 +12,7 @@ import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.players.PlayerService;
+import dev.universaladmin.modules.players.inventory.LiveInventoryService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
 import java.util.List;
@@ -37,9 +38,10 @@ public final class PlayerBrowserHomePage extends AbstractGuiPage {
 
     public PlayerBrowserHomePage(
             GuiFramework framework, MessageService messages, TaskScheduler scheduler,
-            PlayerService playerService, ActionExecutor actionExecutor, SettingsService settings, ServiceRegistry services) {
+            PlayerService playerService, ActionExecutor actionExecutor, SettingsService settings, PlayerMenuRegistry playerMenu,
+            LiveInventoryService liveInventory) {
         super(ID, framework, messages);
-        this.ctx = new PlayerGuiContext(framework, messages, scheduler, playerService, actionExecutor, settings, services);
+        this.ctx = new PlayerGuiContext(framework, messages, scheduler, playerService, actionExecutor, settings, playerMenu, liveInventory);
     }
 
     @Override
@@ -70,5 +72,10 @@ public final class PlayerBrowserHomePage extends AbstractGuiPage {
         view.place(slot, GuiButton.of(
                 GuiItem.of(Material.COMPASS, text("players.gui.home.search"), List.of(text("players.gui.home.search-lore"))),
                 clickCtx -> clickCtx.open(new OfflinePlayersListPage(ctx))), viewer);
+    }
+
+    /** Opens pages of this module for a specific player - used by the Players commands. */
+    public PlayersGui gui() {
+        return new PlayersGui(ctx);
     }
 }

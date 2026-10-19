@@ -4,6 +4,7 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.server.MaintenanceService;
 import dev.universaladmin.modules.server.MaintenanceState;
 import java.util.concurrent.CompletableFuture;
@@ -26,6 +27,7 @@ public final class DisableMaintenanceAction implements Action<Void, MaintenanceS
 
     @Override
     public CompletableFuture<ActionResult<MaintenanceState>> execute(ActionContext context, Void input) {
-        return maintenanceService.disable(context.actor()).thenApply(ActionResult::success);
+        return maintenanceService.disable(context.actor())
+                .thenApply(state -> ActionResult.success(state, MessageKey.of("server.result.maintenance-off")));
     }
 }

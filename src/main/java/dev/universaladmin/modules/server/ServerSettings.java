@@ -21,10 +21,10 @@ public final class ServerSettings {
     }
 
     /** Whether shutdown/restart broadcast a staged countdown before executing, or run immediately after confirmation. */
-    public static final SettingKey<Boolean> COUNTDOWN_ENABLED = SettingKey.of("server", "countdown.enabled");
+    public static final SettingKey<Boolean> COUNTDOWN_ENABLED = SettingKey.of("server", "server.countdown.enabled");
 
     /** Remaining-seconds marks a countdown broadcasts a warning at, largest first - e.g. {@code 60,30,10,5,4,3,2,1}. */
-    public static final SettingKey<List<String>> COUNTDOWN_BROADCAST_STEPS = SettingKey.of("server", "countdown.broadcast-steps");
+    public static final SettingKey<List<String>> COUNTDOWN_BROADCAST_STEPS = SettingKey.of("server", "server.countdown.broadcast-steps");
 
     public static void registerAll(SettingRegistry registry) {
         registry.register(SettingDefinition.builder(COUNTDOWN_ENABLED, SettingTypes.BOOLEAN, true)

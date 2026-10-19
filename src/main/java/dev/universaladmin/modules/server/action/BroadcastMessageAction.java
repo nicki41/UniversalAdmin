@@ -5,9 +5,11 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.localization.ComponentMessages;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.util.concurrent.CompletableFuture;
+import org.bukkit.Bukkit;
 
 /**
  * Sends a chat message to every online player - admin-authored text, rendered
@@ -38,7 +40,8 @@ public final class BroadcastMessageAction implements Action<String, Void> {
         CompletableFuture<ActionResult<Void>> future = new CompletableFuture<>();
         scheduler.runOnMainThread(() -> {
             notifications.broadcast(ComponentMessages.render(message));
-            future.complete(ActionResult.success(null));
+            future.complete(ActionResult.success(null, MessageKey.of("server.result.broadcast"),
+                    Integer.toString(Bukkit.getOnlinePlayers().size())));
         });
         return future;
     }

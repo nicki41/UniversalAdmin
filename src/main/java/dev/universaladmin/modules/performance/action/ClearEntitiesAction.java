@@ -10,10 +10,12 @@ import dev.universaladmin.modules.performance.PerformanceSettings;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -90,6 +92,10 @@ public final class ClearEntitiesAction implements Action<ClearEntitiesInput, Int
                 }
             }
         }
-        return ActionResult.success(removed, Map.of("removed", removed));
+        String types = effectiveTargets.stream().map(type -> type.name().toLowerCase(Locale.ROOT)).sorted()
+                .collect(Collectors.joining(", "));
+        return new ActionResult.Success<>(removed, Map.of("removed", removed), MessageKey.of("performance.result.entities-cleared"),
+                List.of(Integer.toString(removed), types,
+                        worldName == null ? MessageKey.of("performance.result.all-worlds") : worldName));
     }
 }

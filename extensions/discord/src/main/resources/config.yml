@@ -1,0 +1,42 @@
+# UniversalAdmin Discord - posts admin actions to a Discord channel.
+#
+# 1. In Discord: Server Settings -> Integrations -> Webhooks -> New Webhook,
+#    pick the channel (a staff-only channel is recommended), "Copy Webhook URL".
+# 2. Paste it below and run /admin discord reload, then /admin discord test.
+#
+# Treat the webhook URL like a password: anyone who has it can post into
+# that channel. It is never logged or shown in-game.
+webhook-url: ""
+
+# Which audit events to post. A pattern matches the event type; * matches
+# anything. Every type is listed in the audit log (/admin audit) and in
+# docs/user/audit-log.md.
+events:
+  - "core:moderation.*"
+  - "core:reports.*"
+  - "core:server.shutdown"
+  - "core:server.restart"
+  - "core:server.maintenance.*"
+  - "core:whitelist.*"
+  - "core:chat.lock"
+  - "core:chat.unlock"
+  - "core:chat.clear"
+
+# Events never posted, even if they match "events" - by default the noisy
+# or private ones (staff notes, vanish/godmode toggles, staff mode).
+exclude:
+  - "core:moderation.notes.*"
+  - "core:moderation.vanish"
+  - "core:moderation.godmode"
+  - "core:moderation.no-collision"
+  - "core:moderation.staffmode.*"
+  - "core:moderation.freeze.disconnect-notice"
+
+# Also post attempts that failed or were denied (e.g. a ban without permission).
+include-failures: false
+
+# How the messages look in Discord.
+username: "UniversalAdmin"
+avatar-url: ""
+# Shown in every message's footer - useful with several servers in one channel.
+server-name: "Minecraft Server"

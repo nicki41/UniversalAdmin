@@ -5,9 +5,11 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.localization.ComponentMessages;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.util.concurrent.CompletableFuture;
+import org.bukkit.Bukkit;
 
 /** Shows a message in the action bar of every online player. Raw {@code String} input - see {@link BroadcastMessageAction}'s javadoc. */
 public final class BroadcastActionbarAction implements Action<String, Void> {
@@ -32,7 +34,8 @@ public final class BroadcastActionbarAction implements Action<String, Void> {
         CompletableFuture<ActionResult<Void>> future = new CompletableFuture<>();
         scheduler.runOnMainThread(() -> {
             notifications.broadcastActionBar(ComponentMessages.render(message));
-            future.complete(ActionResult.success(null));
+            future.complete(ActionResult.success(null, MessageKey.of("server.result.actionbar"),
+                    Integer.toString(Bukkit.getOnlinePlayers().size())));
         });
         return future;
     }

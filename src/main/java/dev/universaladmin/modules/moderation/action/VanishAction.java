@@ -42,7 +42,8 @@ public final class VanishAction implements Action<Void, Boolean> {
                 if (error != null) {
                     future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));
                 } else {
-                    future.complete(ActionResult.success(newState));
+                    future.complete(ActionResult.success(newState, MessageKey.of(Boolean.TRUE.equals(newState)
+                            ? "moderation.result.vanish-on" : "moderation.result.vanish-off")));
                 }
             });
         });

@@ -54,7 +54,7 @@ public final class NoCollisionAction implements Action<Void, Boolean> {
             collisionState.setManuallyDisabled(player.getUniqueId(), newState);
             collisionState.refresh(player, vanishService.isVanished(player.getUniqueId()),
                     staffModeState.isActive(player.getUniqueId()) && settings.get(ModerationSettings.STAFFMODE_AUTO_NOCOLLISION));
-            future.complete(ActionResult.success(newState));
+            future.complete(ActionResult.success(newState, MessageKey.of("moderation.result.collision"), ModerationResults.status(newState)));
         });
         return future;
     }

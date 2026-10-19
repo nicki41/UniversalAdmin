@@ -4,6 +4,7 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.server.MaintenanceService;
 import dev.universaladmin.modules.server.MaintenanceState;
 import java.util.Set;
@@ -27,6 +28,8 @@ public final class SetMaintenanceAllowedPlayersAction implements Action<Set<Stri
 
     @Override
     public CompletableFuture<ActionResult<MaintenanceState>> execute(ActionContext context, Set<String> input) {
-        return maintenanceService.setAllowedPlayers(input, context.actor()).thenApply(ActionResult::success);
+        return maintenanceService.setAllowedPlayers(input, context.actor())
+                .thenApply(state -> ActionResult.success(state, MessageKey.of("server.result.maintenance-allowed"),
+                        Integer.toString(state.allowedPlayers().size())));
     }
 }

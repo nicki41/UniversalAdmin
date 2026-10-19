@@ -1,36 +1,27 @@
 package dev.universaladmin.gui;
 
+import dev.universaladmin.localization.ComponentMessages;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleDescriptor;
-import dev.universaladmin.module.ModuleId;
 import dev.universaladmin.module.ModuleRegistry;
 import dev.universaladmin.module.ModuleState;
-import dev.universaladmin.permission.PermissionNode;
+import java.util.Comparator;
 import java.util.List;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 /**
- * {@code /admin}'s home screen: one button per built-in module, each
- * gated on that module actually being {@link ModuleState#ENABLED} (config-
- * disabled or failed modules are skipped entirely, not shown disabled) and
- * on the viewer holding the module's permission (hidden, per
- * {@link GuiButton} - see docs/development/gui-framework.md).
- *
- * <p>References each built-in module only by its {@link ModuleId} literal
- * (matching the {@code ModuleId.core(...)} each module class already
- * defines for itself), never by importing the concrete {@code modules.*}
- * class - this package is generic GUI framework and must not depend
- * upward on specific built-in modules; see docs/development/architecture-rules.md's "Package Rules"
- * section (built-in modules live under {@code dev.universaladmin.modules.*},
- * separate from the platform-wide abstractions under {@code dev.universaladmin.*}
- * that this class belongs to).
- *
- * <p>Every target page is a {@link PlaceholderGuiPage} today (see ROADMAP.md
- * Phase 1/2) - a module's real GUI later takes over the same
- * {@link GuiPageId} by registering its own page there instead.
+ * {@code /admin}'s home screen: one button per {@link ModuleState#ENABLED}
+ * module that declares a main-menu entry ({@link ModuleDescriptor#homePage()}),
+ * ordered by {@link ModuleDescriptor#menuOrder()} - built-in modules and
+ * extensions alike, nothing here knows a module by name. A button is hidden
+ * (not shown disabled) when the viewer lacks the module's
+ * {@link ModuleDescriptor#menuPermission()}, and a module whose home page is
+ * not registered (yet) is skipped rather than shown as a dead button.
  */
 public final class MainMenuPage extends AbstractGuiPage {
 
@@ -38,21 +29,11 @@ public final class MainMenuPage extends AbstractGuiPage {
 
     private final ModuleRegistry moduleRegistry;
     private final GuiRegistry guiPages;
-    private final List<Entry> entries;
 
     public MainMenuPage(GuiFramework framework, MessageService messages, ModuleRegistry moduleRegistry, GuiRegistry guiPages) {
         super(ID, framework, messages);
         this.moduleRegistry = moduleRegistry;
         this.guiPages = guiPages;
-        this.entries = List.of(
-                new Entry(ModuleId.core("players"), PermissionNode.core("players.view"), "players.home"),
-                new Entry(ModuleId.core("moderation"), PermissionNode.core("moderation.use"), "moderation.home"),
-                new Entry(ModuleId.core("server"), PermissionNode.core("server.view"), "server.home"),
-                new Entry(ModuleId.core("worlds"), PermissionNode.core("worlds.view"), "worlds.home"),
-                new Entry(ModuleId.core("whitelist"), PermissionNode.core("whitelist.view"), "whitelist.home"),
-                new Entry(ModuleId.core("performance"), PermissionNode.core("performance.view"), "performance.home"),
-                new Entry(ModuleId.core("audit-log"), PermissionNode.core("audit.view"), "audit-log.home"),
-                new Entry(ModuleId.core("settings"), PermissionNode.core("settings.manage"), "settings.home"));
     }
 
     @Override
@@ -64,35 +45,46 @@ public final class MainMenuPage extends AbstractGuiPage {
     protected void renderContent(GuiRenderContext context) {
         GuiView view = context.view();
         Player viewer = context.viewer();
-        int slot = GuiLayout.CONTENT_START_SLOT;
+        List<ModuleDescriptor> entries = moduleRegistry.withState(ModuleState.ENABLED).stream()
+                .map(Module::descriptor)
+                .filter(descriptor -> descriptor.homePage() != null && guiPages.get(descriptor.homePage()).isPresent())
+                .sorted(Comparator.comparingInt(ModuleDescriptor::menuOrder).thenComparing(ModuleDescriptor::displayName))
+                .toList();
 
-        for (Entry entry : entries) {
-            if (!isEnabled(entry.moduleId()) || !viewer.hasPermission(entry.permission().value())) {
+        int index = 0;
+        for (ModuleDescriptor descriptor : entries) {
+            if (index >= GuiLayout.contentSize()) {
+                break;
+            }
+            GuiButton button = new GuiButton(item(descriptor), descriptor.menuPermission(),
+                    ctx -> guiPages.get(descriptor.homePage()).ifPresent(ctx::open));
+            if (!button.isVisibleTo(viewer)) {
                 continue;
             }
-            Module module = moduleRegistry.get(entry.moduleId()).orElseThrow();
-            ModuleDescriptor descriptor = module.descriptor();
-            Material material = descriptor.icon() != null ? framework.icons().resolve(descriptor.icon()) : Material.PAPER;
-            GuiItem item = GuiItem.of(material, Component.text(descriptor.displayName()),
-                    List.of(Component.text(descriptor.description())));
-
-            view.place(slot++, new GuiButton(item, entry.permission(),
-                    ctx -> guiPages.get(entry.targetPage()).ifPresent(ctx::open)), viewer);
+            view.place(GuiLayout.contentSlot(index++), button, viewer);
         }
 
-        if (slot == GuiLayout.CONTENT_START_SLOT) {
+        if (index == 0) {
             view.place(GuiLayout.contentSlot(GuiLayout.contentSize() / 2),
                     GuiItem.of(framework.icons().empty(), text("gui.empty")));
         }
     }
 
-    private boolean isEnabled(ModuleId id) {
-        return moduleRegistry.get(id).isPresent() && moduleRegistry.state(id) == ModuleState.ENABLED;
+    /**
+     * Name and description come from {@code menu.<namespace>.<module>.name}/
+     * {@code .description} when the active locale (or an extension's bundled
+     * defaults) has them, otherwise from the descriptor's own English text.
+     */
+    private GuiItem item(ModuleDescriptor descriptor) {
+        Material material = descriptor.icon() != null ? framework.icons().resolve(descriptor.icon()) : Material.PAPER;
+        String base = "menu." + descriptor.id().key().namespace() + "." + descriptor.id().key().name();
+        Component name = localizedOr(base + ".name", descriptor.displayName()).colorIfAbsent(NamedTextColor.GOLD);
+        Component description = localizedOr(base + ".description", descriptor.description()).colorIfAbsent(NamedTextColor.GRAY);
+        return GuiItem.of(material, name, List.of(description));
     }
 
-    private record Entry(ModuleId moduleId, PermissionNode permission, String targetPageName) {
-        GuiPageId targetPage() {
-            return GuiPageId.core(targetPageName);
-        }
+    private Component localizedOr(String key, String fallback) {
+        MessageKey messageKey = MessageKey.of(key);
+        return messages.has(messageKey) ? ComponentMessages.render(messages.get(messageKey)) : Component.text(fallback);
     }
 }

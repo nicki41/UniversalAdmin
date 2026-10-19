@@ -20,13 +20,21 @@ import org.bukkit.configuration.file.FileConfiguration;
  */
 public final class ConfigMigrationRunner {
 
-    public static final int CURRENT_VERSION = 1;
+    public static final int CURRENT_VERSION = 3;
 
     private final List<ConfigMigration> migrations = new ArrayList<>();
     private final Logger logger;
 
     public ConfigMigrationRunner(Logger logger) {
         this.logger = logger;
+    }
+
+    /** A runner with every built-in migration registered - what the plugin itself uses. */
+    public static ConfigMigrationRunner withBuiltInMigrations(Logger logger) {
+        ConfigMigrationRunner runner = new ConfigMigrationRunner(logger);
+        runner.register(new ModuleSettingsLayoutMigration());
+        runner.register(new NetworkSettingsMigration());
+        return runner;
     }
 
     public void register(ConfigMigration migration) {

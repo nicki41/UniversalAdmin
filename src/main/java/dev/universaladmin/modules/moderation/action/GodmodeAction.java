@@ -46,7 +46,7 @@ public final class GodmodeAction implements Action<Void, Boolean> {
             boolean newState = !state.isEnabled(player.getUniqueId());
             state.setEnabled(player.getUniqueId(), newState);
             player.setInvulnerable(newState);
-            future.complete(ActionResult.success(newState));
+            future.complete(ActionResult.success(newState, MessageKey.of("moderation.result.godmode"), ModerationResults.status(newState)));
         });
         return future;
     }

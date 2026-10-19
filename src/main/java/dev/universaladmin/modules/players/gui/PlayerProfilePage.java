@@ -1,6 +1,7 @@
 package dev.universaladmin.modules.players.gui;
 
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiItem;
@@ -8,12 +9,11 @@ import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiView;
-import dev.universaladmin.modules.moderation.ModerationPlayerLink;
+import dev.universaladmin.gui.PlayerMenuEntry;
 import dev.universaladmin.modules.players.PlayerPermissions;
 import dev.universaladmin.modules.players.PlayerSnapshot;
 import dev.universaladmin.modules.players.action.GetPlayerIpAddressAction;
 import dev.universaladmin.modules.players.action.PlayerTargetInput;
-import dev.universaladmin.permission.PermissionNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -143,43 +143,47 @@ public final class PlayerProfilePage extends AbstractGuiPage {
         placeNavigationButtons(view, viewer, snapshot);
     }
 
+    /**
+     * The profile's button rows: the Players module's own pages first, then
+     * every {@link PlayerMenuEntry} other modules and extensions contributed
+     * (e.g. Moderation's "Moderate"), in their declared order. Starts at the
+     * last content row and continues into the bottom row this page doesn't
+     * otherwise use.
+     */
     private void placeNavigationButtons(GuiView view, Player viewer, PlayerSnapshot snapshot) {
-        int slot = GuiLayout.CONTENT_END_SLOT - 4;
-        slot = placeModerateButton(view, viewer, slot);
-        view.place(slot++, GuiButton.of(GuiItem.of(Material.COMMAND_BLOCK, text("players.gui.profile.actions")),
-                clickCtx -> clickCtx.open(new PlayerActionsPage(ctx, targetId, targetName))), viewer);
-        view.place(slot++, GuiButton.of(GuiItem.of(Material.BREWING_STAND, text("players.gui.profile.effects")),
-                clickCtx -> clickCtx.open(new PlayerEffectsPage(ctx, targetId, targetName))), viewer);
+        List<GuiButton> buttons = new ArrayList<>();
+        buttons.add(GuiButton.of(GuiItem.of(Material.COMMAND_BLOCK, text("players.gui.profile.actions")),
+                clickCtx -> clickCtx.open(new PlayerActionsPage(ctx, targetId, targetName))));
+        buttons.add(GuiButton.of(GuiItem.of(Material.BREWING_STAND, text("players.gui.profile.effects")),
+                clickCtx -> clickCtx.open(new PlayerEffectsPage(ctx, targetId, targetName))));
         // Inventory/Ender Chest need a live PlayerInventory - hidden (not
         // disabled) when the target is offline, per "hide (don't disable) a
         // GUI button whose action needs an online player".
         if (snapshot.online()) {
-            if (viewer.hasPermission(PlayerPermissions.INVENTORY_VIEW.value())) {
-                view.place(slot++, GuiButton.of(GuiItem.of(Material.CHEST, text("players.gui.profile.inventory")),
-                        clickCtx -> clickCtx.open(new PlayerInventoryPage(ctx, targetId, targetName))), viewer);
-            }
-            if (viewer.hasPermission(PlayerPermissions.ENDERCHEST_VIEW.value())) {
-                view.place(slot, GuiButton.of(GuiItem.of(Material.ENDER_CHEST, text("players.gui.profile.enderchest")),
-                        clickCtx -> clickCtx.open(new PlayerEnderChestPage(ctx, targetId, targetName))), viewer);
-            }
+            buttons.add(new GuiButton(GuiItem.of(Material.CHEST, text("players.gui.profile.inventory")),
+                    PlayerPermissions.INVENTORY_VIEW,
+                    clickCtx -> clickCtx.open(new PlayerInventoryPage(ctx, targetId, targetName))));
+            buttons.add(new GuiButton(GuiItem.of(Material.ENDER_CHEST, text("players.gui.profile.enderchest")),
+                    PlayerPermissions.ENDERCHEST_VIEW,
+                    clickCtx -> clickCtx.open(new PlayerEnderChestPage(ctx, targetId, targetName))));
         }
-    }
+        PlayerRef target = new PlayerRef(targetId, targetName);
+        for (PlayerMenuEntry entry : ctx.playerMenu().entries()) {
+            if (entry.requiresOnline() && !snapshot.online() || !entry.visible(viewer, target)) {
+                continue;
+            }
+            buttons.add(new GuiButton(entry.icon(viewer, target), entry.permission(), clickCtx -> entry.onClick(clickCtx, target)));
+        }
 
-    /**
-     * Optional "Moderate" button - present only if the Moderation module is
-     * enabled and published a {@link ModerationPlayerLink} (see that
-     * interface's javadoc for why this is a {@code ServiceRegistry} lookup
-     * rather than a direct import of anything moderation-internal). Returns
-     * the next free slot, whether or not the button was actually placed.
-     */
-    private int placeModerateButton(GuiView view, Player viewer, int slot) {
-        Optional<ModerationPlayerLink> link = ctx.services().get(ModerationPlayerLink.class);
-        if (link.isEmpty() || !viewer.hasPermission(PermissionNode.core("moderation.use").value())) {
-            return slot;
+        int slot = GuiLayout.CONTENT_END_SLOT - (GuiLayout.COLUMNS - 1);
+        for (GuiButton button : buttons) {
+            if (slot >= GuiLayout.SIZE) {
+                break;
+            }
+            if (button.isVisibleTo(viewer)) {
+                view.place(slot++, button, viewer);
+            }
         }
-        view.place(slot, GuiButton.of(GuiItem.of(Material.IRON_SWORD, text("players.gui.profile.moderate")),
-                clickCtx -> clickCtx.open(link.get().moderationPage(targetId, targetName))), viewer);
-        return slot + 1;
     }
 
     private GuiItem header(PlayerSnapshot snapshot) {

@@ -30,6 +30,6 @@ public final class UnmuteAction implements Action<UnmuteInput, List<Punishment>>
     public CompletableFuture<ActionResult<List<Punishment>>> execute(ActionContext context, UnmuteInput input) {
         return punishmentService.unmute(input.targetId(), context.actor().displayName()).thenApply(revoked -> revoked.isEmpty()
                 ? ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.not-muted"))
-                : ActionResult.success(revoked));
+                : ModerationResults.lifted(revoked, "moderation.result.unmute"));
     }
 }

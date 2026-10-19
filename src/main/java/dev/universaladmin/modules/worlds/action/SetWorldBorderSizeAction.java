@@ -4,6 +4,7 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Bukkit;
@@ -49,10 +50,13 @@ public final class SetWorldBorderSizeAction implements Action<SetWorldBorderSize
             long transitionSeconds = input.transitionSeconds() != null ? input.transitionSeconds() : 0L;
             if (transitionSeconds > 0) {
                 border.setSize(input.size(), transitionSeconds);
+                future.complete(ActionResult.success(null, MessageKey.of("worlds.result.border-size-transition"),
+                        world.getName(), WorldActionSupport.number(input.size()), Long.toString(transitionSeconds)));
             } else {
                 border.setSize(input.size());
+                future.complete(ActionResult.success(null, MessageKey.of("worlds.result.border-size"),
+                        world.getName(), WorldActionSupport.number(input.size())));
             }
-            future.complete(ActionResult.success(null));
         });
         return future;
     }

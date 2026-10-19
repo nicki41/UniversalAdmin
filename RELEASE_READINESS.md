@@ -1,115 +1,78 @@
-# Release Readiness
+# Release Readiness - 1.1.0
 
-Project status with respect to publication. Updated as part of making the
-repository public (Apache-2.0, CI, automated releases, anonymous usage
-statistics).
+Status of the 1.1.0 release - the first stable release (1.0.0 was folded
+into it). What a manual pass covers is in the
+[test plan](docs/release/test-plan.md).
 
 ## Overview
 
 | Item | Status |
 |---|---|
-| **Current version** | `0.1.0-alpha` (`build.gradle.kts`, single source of truth; `./gradlew -q printVersion`) |
-| **Build** | green - `./gradlew clean build` including `verifyShadedJarDrivers` (opens a real SQLite connection through the finished jar) |
-| **Tests** | green - 245 tests across 51 test classes, 0 failures, 0 errors, 0 skipped |
-| **GitHub** | public repository, default branch `main`, issues enabled, issue/PR templates present |
-| **License** | Apache-2.0, `LICENSE` with the unmodified official text; rationale in [docs/release/licensing.md](docs/release/licensing.md) |
-| **CI** | `.github/workflows/build.yml` - build and tests on every push/PR against `main`, jar as an Actions artifact, `contents: read` |
-| **Automatic releases** | `.github/workflows/release.yml` - a `v*` tag (pushed manually, or by `auto-release.yml` after a notable push to `main`) triggers a tag/version check, build, tests, a GitHub release with the jar and its SHA-256, `contents: write`, only `GITHUB_TOKEN`. Never flagged "Pre-release" - see [docs/release/releasing.md](docs/release/releasing.md#version-scheme). |
-| **Telemetry implementation** | fully implemented and tested (`dev.universaladmin.telemetry`), documented in [docs/user/telemetry.md](docs/user/telemetry.md) |
-| **Telemetry endpoint** | Fixed to `https://telemetry.0nicki.de/v1/telemetry` (the official `nicki41-telemetry` instance), not configurable - a fresh install reports by default; `telemetry.enabled: false` is the only way to turn it off. |
-| **Modrinth** | project created (id `wGP5uSse`, still "draft"); every GitHub release is automatically mirrored to it as a new version (`MODRINTH_TOKEN` secret, `Kira-NT/mc-publish`) - see [docs/release/releasing.md](docs/release/releasing.md#modrinth). Page content (title, summary, description, categories, license, links, icon) is live - see [docs/release/modrinth.md](docs/release/modrinth.md). Screenshots are the only remaining gap before submitting for review. |
-| **Extension API** | not implemented - next major milestone ([ROADMAP.md](ROADMAP.md) Phase 4) |
-| **Dependabot** | deliberately **not** set up; dependencies are updated manually |
+| **Version** | `1.1.0` (`build.gradle.kts`; `./gradlew -q printVersion`) |
+| **Build** | `./gradlew clean build` green - all projects, including `verifyShadedJarDrivers` (real SQLite connection through the finished jar) |
+| **Tests** | unit and integration tests for services, actions, migrations (real SQLite), settings, localization, commands' building blocks, live inventory sync, the network repository, the Discord extension and the Velocity plugin |
+| **Supported server** | Paper/Purpur 1.21.7 - 1.21.11 and 26.1.1 - 26.3, Java 21+ - see [installation.md](docs/user/installation.md#supported-versions) and [supported-versions.txt](supported-versions.txt) |
+| **Modules** | Players, Moderation (+ staff tools, notes), Reports, Chat, Server, Worlds, Whitelist, Performance, Audit Log, Settings; Network (with network mode) |
+| **Commands** | every module, `/admin help`, shortcuts - [commands.md](docs/user/commands.md) |
+| **Extension API** | `universaladmin-api` 1.1, semantically versioned - [ADR 0010](docs/architecture/decisions/0010-extension-api.md) |
+| **Official extensions** | UniversalAdmin Discord; proxy plugin UniversalAdmin Velocity |
+| **Release pipeline** | tag → GitHub release (plugin, Discord extension, Velocity plugin, API jars, checksums) + Modrinth versions for every supported game version; new Paper versions tested weekly - [releasing.md](docs/release/releasing.md) |
+| **Telemetry** | on by default, fully documented, single switch `telemetry.enabled` - [telemetry.md](docs/user/telemetry.md) |
+| **Upgrade path** | 0.1.0-alpha → 1.1.0 automatic: config migration v3, new tables, layered language files - see the changelog |
 
-## What Was Added in This Step
+## Verified
 
-- **Apache-2.0 licensing.** `LICENSE` with the unmodified official license
-  text (no invented copyright holder in the appendix placeholder), the
-  decision and its rationale, and its implications for the extension API,
-  community extensions, and a possible marketplace backend in
-  [docs/release/licensing.md](docs/release/licensing.md).
-- **Anonymous usage statistics.** Installation id (128 bits from
-  `SecureRandom`, derived from nothing), a payload with exactly six fields,
-  an HTTP client with short timeouts, a scheduler with a delayed start and
-  jitter, full opt-out without a restart. No field is collected that isn't
-  in [docs/user/telemetry.md](docs/user/telemetry.md) - a test enforces
-  that.
-- **Automated releases.** Tag-driven, with a check that the tag matches the
-  project version before anything is built or published.
-- **Public developer documentation.** The binding project rules now live as
-  regular documentation under
-  [docs/development/architecture-rules.md](docs/development/architecture-rules.md);
-  all references in source code and docs point there.
-- **README/CONTRIBUTING/SECURITY** brought to a public-facing state,
-  including private vulnerability reporting and the telemetry disclosure.
+Automated tests:
 
-## Telemetry in Detail
+- Message escaping (no MiniMessage injection through arguments), layered
+  language files, broken language files do not stop startup, de_DE has every
+  en_US key, no `MessageFormat` apostrophe traps, every key used in code
+  exists, success messages of actions.
+- Settings: lazy resolution of module settings, in-game set/reset with
+  validation, restart-required handling, config migrations v2 and v3.
+- Every migration together against a fresh and an upgraded SQLite database;
+  a migration added later still runs.
+- Reports rules, chat rules, SemVer ordering for the update check, click
+  throttle, Discord payload escaping/mentions/URL check, the three-way
+  merge of the live inventory editor, the network tables (heartbeats,
+  players, messages), the Velocity ban lookup and ban screen.
 
-| Question | Answer |
-|---|---|
-| Is anything sent? | Yes, by default. Every heartbeat goes to the fixed, official `nicki41-telemetry` instance - see "Telemetry endpoint" above. |
-| Is an id generated? | Only if telemetry is enabled. Otherwise not even a file is created. |
-| Which fields? | `pluginId`, `installationId`, `pluginVersion`, `minecraftVersion`, `javaMajorVersion`, `onlinePlayers`, `maxPlayers`. Nothing more. |
-| Player-related data? | None. Just two numbers. No names, UUIDs, IPs. |
-| Hardware fingerprint? | No. Pure randomness. |
-| Opt-out? | `telemetry.enabled: false`, effective after `/admin reload`, no restart. The endpoint itself isn't configurable, so this is the only switch. |
-| Impact of a backend outage? | None. No retry, no queue, a single warning per server run. |
-| Main thread? | Never. Player counts are read on the main thread, the request runs in the background. |
-| Open | No published privacy policy or retention decision yet for `nicki41-telemetry`; opt-in-vs-opt-out to be revisited before a stable release. |
+On real servers (boot test: every module enabled, about 20 console
+commands, no errors, no missing texts):
 
-## Known Limitations
+- Paper 1.21.7, 1.21.8, 1.21.9, 1.21.10, 1.21.11, 26.1.1, 26.1.2, 26.2,
+  26.3. Paper 1.21.4 refuses the plugin cleanly (`api-version`).
+- A network of two Paper 26.2 servers behind Velocity 4.3 on one MariaDB:
+  network list with TPS, `/admin find`, staff chat and `/admin alert`
+  across servers, a ban issued on one server for a player known only on the
+  other, audit entries tagged with the server, servers starting together on
+  an empty database, the Velocity plugin starting before the database.
 
-Still-valid limitations from the previous readiness pass, plus the new ones:
+## Not verifiable without game clients
 
-- **No test against a running Paper server in this pass.** The build is
-  green and `verifyShadedJarDrivers` checks the finished jar against a real
-  database, but GUI navigation (back/close/pagination/empty-state/
-  confirmations) and the moderation edge cases (expired ban/mute, restart,
-  disconnect during freeze, staff-mode/vanish reconnect, inventory
-  restoration) are still only code-reviewed. Prior experience in this
-  project: a green build was once **not** sufficient - an actual server
-  start uncovered two shading bugs no test suite could see (which is why
-  `verifyShadedJarDrivers` exists).
-- **Telemetry's real HTTP round trip is still only verified against the
-  `nicki41-telemetry` deployment itself, not from inside UniversalAdmin.**
-  The unit tests cover enable/disable, the payload, the failure path,
-  jitter, and cleanup without any network.
-- **Confirmation dialog history:** `ConfirmationDialog.open(...)` doesn't
-  push its own entry onto the navigation stack, so `confirmCtx.back()`
-  returns to whatever page's redraw callback is on top, not necessarily the
-  page the dialog was opened from. A pre-existing, repo-wide pattern; the
-  Performance dialogs work around it with `this.open(viewer)`. Not fixed, to
-  avoid a wide, behavior-changing edit without live testing.
-- **Two low-severity security items tracked as backlog:** no path-traversal
-  validator on `database.file` (admin-only input, same trust level as the
-  rest of `config.yml`), and no click-debounce on GUI confirmation buttons.
-- **Architecture nitpick:** `ModerationPlayerLink` (a cross-module extension
-  point) lives in the moderation module's own package instead of a neutral
-  location; the lookup itself correctly goes through `ServiceRegistry`.
-- **Known, unrelated bug:** `InGameNotificationService` renders a
-  `Notification`'s message as literal text instead of parsing MiniMessage,
-  so tags like `<yellow>` in a few lang keys show up unrendered in chat.
-- **Supported Minecraft/Paper version range is not explicitly stated** -
-  only "whatever API version `build.gradle.kts` currently pins". Needs an
-  answer before a Modrinth upload.
-- **No screenshots** for the README/Modrinth.
-- **Settings GUI/commands are missing** (the service exists), as are the
-  command frontends for Players/Moderation/Worlds/Whitelist/Performance.
+These need the manual pass in the [test plan](docs/release/test-plan.md):
 
-## Recommended Next Steps
+- Every GUI page and dialog (Paper dialog API), the live inventory editor
+  with two players.
+- Proxy messaging with players online: moving players between servers,
+  arrival teleports, kicking from the whole network, the list of servers
+  without UniversalAdmin, the Velocity ban screen.
+- Shortcut registration clashes with other plugins (EssentialsX),
+  permission sync into LuckPerms, chat-formatting plugins.
+- Real Discord webhook delivery and rate limiting.
 
-1. **Run a real Paper server** against the built jar and walk the GUI/
-   moderation checklist above by hand.
-2. **Capture screenshots** (list in
-   [docs/release/modrinth.md](docs/release/modrinth.md)).
-3. **Decide the supported version range** (which Paper/Minecraft versions
-   are actually supported).
-4. **Tag the first alpha release** following
-   [docs/release/releasing.md](docs/release/releasing.md) - the workflow
-   handles build, tests, release, jar, and SHA-256.
-5. After that: the **public extension API** (ROADMAP.md Phase 4). The core
-   has enough feature depth now; more built-in features increasingly compete
-   with "make the existing surface extensible" for priority.
-6. Independently: a **telemetry backend** with a privacy policy, retention,
-   and a deliberate opt-in-vs-opt-out decision before any endpoint goes
-   live.
+## Known limitations
+
+- Shortcuts are registered once at startup; `commands.shortcuts.*` needs a
+  restart.
+- Chat lock and slow mode are not persisted across restarts (by design).
+- Report cooldowns are in memory and reset on restart.
+- Existing tables from the alpha (`punishments`, `player_profiles`, ...) keep
+  their unprefixed names; only new tables use `ua_`.
+- `/admin whitelist add` resolves unknown names through Mojang; offline-mode
+  servers should whitelist players after their first join.
+- Network mode: proxy requests need one player online on the sending
+  server; IP bans need the player on the issuing server; maintenance,
+  whitelist, vanish and staff mode stay per server - see
+  [network.md](docs/user/network.md#limits).
+- No import from other ban plugins yet ([roadmap](ROADMAP.md)).

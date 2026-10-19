@@ -8,18 +8,28 @@ import dev.universaladmin.audit.AuditSchemaMigrationV2;
 import dev.universaladmin.audit.AuditService;
 import dev.universaladmin.audit.DefaultAuditService;
 import dev.universaladmin.audit.jdbc.JdbcAuditEventRepository;
+import dev.universaladmin.command.CommandInvocation;
+import dev.universaladmin.command.CommandRegistry;
 import dev.universaladmin.command.UniversalAdminCommand;
+import dev.universaladmin.command.builtin.CorePermissions;
+import dev.universaladmin.command.builtin.HelpCommand;
+import dev.universaladmin.command.builtin.MenuCommand;
+import dev.universaladmin.command.builtin.ModulesCommand;
+import dev.universaladmin.command.builtin.ReloadCommand;
+import dev.universaladmin.command.builtin.StatusCommand;
+import dev.universaladmin.command.builtin.UpdateCommand;
+import dev.universaladmin.command.paper.ShortcutCommands;
 import dev.universaladmin.config.ConfigMigrationRunner;
 import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.core.UniversalAdmin;
+import dev.universaladmin.core.UniversalAdminProvider;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiListener;
-import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.GuiSessionManager;
 import dev.universaladmin.gui.MainMenuPage;
 import dev.universaladmin.gui.MaterialIconProvider;
-import dev.universaladmin.gui.PlaceholderGuiPage;
+import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.localization.YamlLocaleMessageService;
@@ -27,13 +37,20 @@ import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleManager;
 import dev.universaladmin.module.ModuleRegistry;
 import dev.universaladmin.modules.auditlog.AuditLogModule;
+import dev.universaladmin.modules.chat.ChatModule;
 import dev.universaladmin.modules.moderation.ModerationModule;
+import dev.universaladmin.modules.network.NetworkModule;
 import dev.universaladmin.modules.performance.PerformanceModule;
 import dev.universaladmin.modules.players.PlayersModule;
+import dev.universaladmin.modules.reports.ReportsModule;
 import dev.universaladmin.modules.server.ServerModule;
 import dev.universaladmin.modules.settings.SettingsModule;
 import dev.universaladmin.modules.whitelist.WhitelistModule;
 import dev.universaladmin.modules.worlds.WorldsModule;
+import dev.universaladmin.network.DefaultNetworkService;
+import dev.universaladmin.network.NetworkPresenceListener;
+import dev.universaladmin.network.NetworkSchemaMigration;
+import dev.universaladmin.network.jdbc.JdbcNetworkRepository;
 import dev.universaladmin.notification.InGameNotificationService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.permission.PermissionDefinition;
@@ -48,7 +65,8 @@ import dev.universaladmin.settings.SettingRegistry;
 import dev.universaladmin.settings.SettingsService;
 import dev.universaladmin.settings.YamlSettingsService;
 import dev.universaladmin.storage.DatabaseConfig;
-import dev.universaladmin.storage.StorageService;
+import dev.universaladmin.storage.DatabaseType;
+import dev.universaladmin.storage.jdbc.JdbcStorageService;
 import dev.universaladmin.telemetry.PlayerCounts;
 import dev.universaladmin.telemetry.TelemetryBootstrap;
 import dev.universaladmin.telemetry.TelemetryEnvironment;
@@ -56,11 +74,12 @@ import dev.universaladmin.update.ApplyUpdateAction;
 import dev.universaladmin.update.HttpGitHubReleaseClient;
 import dev.universaladmin.update.UpdateCheckBootstrap;
 import java.time.Instant;
-import java.util.random.RandomGenerator;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import java.util.random.RandomGenerator;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -109,11 +128,18 @@ public final class UniversalAdminPlugin extends JavaPlugin {
     /** Shared between {@link #bootstrapCore} (permission registration) and {@link #startUpdateChecks} (who gets notified). */
     private static final PermissionNode UPDATE_NOTIFY_PERMISSION = PermissionNode.core("update.notify");
 
+    /** Locales shipped inside the jar - see {@link YamlLocaleMessageService} for the override layering. */
+    private static final List<String> BUNDLED_LOCALES = List.of("en_US", "de_DE");
+
     private TaskScheduler scheduler;
-    private StorageService storage;
+    private JdbcStorageService storage;
     private ModuleManager moduleManager;
+    private UniversalAdmin platform;
+    private DefaultExtensionManager extensions;
+    private BukkitPermissionSync permissionSync;
     private TelemetryBootstrap telemetry;
     private UpdateCheckBootstrap updateChecks;
+    private DefaultNetworkService network;
 
     @Override
     public void onLoad() {
@@ -132,6 +158,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         UniversalAdmin platform;
         try {
             platform = bootstrapCore(startedAt);
+            this.platform = platform;
         } catch (Exception e) {
             getLogger().log(Level.SEVERE,
                     "UniversalAdmin failed to start: a critical core component could not be "
@@ -141,6 +168,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         }
 
         moduleManager = new ModuleManager(platform);
+        extensions.attach(moduleManager);
         registerBuiltInModules(moduleManager, platform.settings());
         moduleManager.loadAll();
 
@@ -164,7 +192,12 @@ public final class UniversalAdminPlugin extends JavaPlugin {
 
         moduleManager.enableAll();
 
-        syncPermissions(platform.permissions());
+        permissionSync.sync();
+        // Extensions (plugins with depend: [UniversalAdmin]) enable after
+        // this point and register their modules through the provider/API.
+        getServer().getPluginManager().registerEvents(extensions, this);
+        UniversalAdminProvider.register(platform);
+        getServer().getServicesManager().register(UniversalAdmin.class, platform, this, ServicePriority.Normal);
         registerCommand(platform);
         getServer().getPluginManager().registerEvents(new StartupSummaryListener(platform), this);
 
@@ -175,6 +208,10 @@ public final class UniversalAdminPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (platform != null) {
+            UniversalAdminProvider.unregister(platform);
+            getServer().getServicesManager().unregisterAll(this);
+        }
         if (updateChecks != null) {
             updateChecks.close();
         }
@@ -183,6 +220,9 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         }
         if (moduleManager != null) {
             moduleManager.disableAll();
+        }
+        if (network != null) {
+            network.stop();
         }
         if (storage != null) {
             storage.close();
@@ -200,14 +240,20 @@ public final class UniversalAdminPlugin extends JavaPlugin {
      */
     private UniversalAdmin bootstrapCore(Instant startedAt) {
         saveDefaultConfig();
-        saveResource("lang/en_US.yml", false);
-        saveResource("lang/de_DE.yml", false);
+        for (String locale : BUNDLED_LOCALES) {
+            // Only ever written once - an editable copy for the server owner.
+            // New keys in later versions still resolve from the jar's own
+            // copy, see YamlLocaleMessageService.
+            if (!getDataFolder().toPath().resolve("lang").resolve(locale + ".yml").toFile().exists()) {
+                saveResource("lang/" + locale + ".yml", false);
+            }
+        }
 
         // config-version migration runs before anything reads the file, so
         // an old user config.yml is upgraded in place rather than silently
         // reinterpreted (or overwritten) under the current schema. Reused by
         // /admin reload - see ReloadConfigAction.
-        ConfigMigrationRunner migrationRunner = new ConfigMigrationRunner(getLogger());
+        ConfigMigrationRunner migrationRunner = ConfigMigrationRunner.withBuiltInMigrations(getLogger());
         reloadConfig();
         if (migrationRunner.run(getConfig())) {
             saveConfig();
@@ -215,13 +261,14 @@ public final class UniversalAdminPlugin extends JavaPlugin {
 
         SettingRegistry settingRegistry = new SettingRegistry();
         CoreSettings.registerAll(settingRegistry);
-        SettingsService settingsService = new YamlSettingsService(settingRegistry, this::getConfig, getLogger());
+        SettingsService settingsService = new YamlSettingsService(settingRegistry, this::getConfig, this::saveConfig, getLogger());
 
         scheduler = new PaperTaskScheduler(this);
         DatabaseConfig databaseConfig = CoreSettings.readDatabaseConfig(settingsService);
-        storage = new StorageService(databaseConfig, getDataFolder().toPath(), getLogger());
+        storage = new JdbcStorageService(databaseConfig, getDataFolder().toPath(), getLogger());
         storage.migrations().register(new AuditSchemaMigration());
         storage.migrations().register(new AuditSchemaMigrationV2());
+        storage.migrations().register(new NetworkSchemaMigration());
 
         ServiceRegistry services = new ServiceRegistry();
         ActionRegistry actions = new ActionRegistry();
@@ -232,17 +279,21 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GuiListener(guiSessions, this), this);
         PermissionRegistry permissions = new PermissionRegistry();
         ModuleRegistry moduleRegistry = new ModuleRegistry();
-        AuditService auditService =
-                new DefaultAuditService(new JdbcAuditEventRepository(storage.dataSource(), scheduler), settingsService);
+        permissionSync = new BukkitPermissionSync(getServer().getPluginManager(), permissions);
+        extensions = new DefaultExtensionManager(moduleRegistry, storage.migrations(), permissionSync, getLogger());
+        network = createNetwork(settingsService);
+        DefaultNetworkService networkService = network;
+        AuditService auditService = new DefaultAuditService(new JdbcAuditEventRepository(storage.dataSource(), scheduler),
+                settingsService, () -> networkService.enabled() ? networkService.serverName() : null);
         ActionExecutor actionExecutor = new ActionExecutor(actions, auditService, getLogger());
         MessageService messages = new YamlLocaleMessageService(
-                getDataFolder().toPath().resolve("lang"), settingsService, getLogger());
+                getDataFolder().toPath().resolve("lang"), this::getResource, BUNDLED_LOCALES, settingsService, getLogger());
         NotificationService notifications = new InGameNotificationService();
 
-        UniversalAdmin platform = new UniversalAdmin(
+        UniversalAdmin platform = new UniversalAdminPlatform(
                 this, getPluginMeta().getVersion(), startedAt, getLogger(), settingRegistry, settingsService,
-                scheduler, storage, services, actions, actionExecutor, guiPages, guiFramework, permissions,
-                moduleRegistry, auditService, messages, notifications);
+                scheduler, storage, services, actions, actionExecutor, guiPages, guiFramework, new PlayerMenuRegistry(),
+                new CommandRegistry(), extensions, permissions, moduleRegistry, auditService, messages, notifications, network);
 
         // First of two runPending() calls (see the second one in onEnable(),
         // after moduleManager.enableAll()): this one only covers the two
@@ -256,6 +307,11 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         // (this method is called from the critical bootstrap try/catch).
         storage.migrations().runPending();
 
+        // After the migrations: the network tables exist now. Modules
+        // subscribe to network topics during their own onEnable.
+        network.start();
+        getServer().getPluginManager().registerEvents(new NetworkPresenceListener(network), this);
+
         platform.permissions().register(new PermissionDefinition(
                 PermissionNode.core("reload"), "Reload UniversalAdmin's configuration",
                 dev.universaladmin.permission.PermissionDefault.OP));
@@ -264,7 +320,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
             return getConfig();
         };
         actions.register(ActionDefinition.builder(new ReloadConfigAction(
-                        configReloader, this::saveConfig, migrationRunner, settingsService, scheduler))
+                        configReloader, this::saveConfig, migrationRunner, settingsService, messages::reload, scheduler))
                 .permission(PermissionNode.core("reload"))
                 .build());
 
@@ -283,40 +339,39 @@ public final class UniversalAdminPlugin extends JavaPlugin {
                         () -> getFile().toPath(), getPluginMeta().getVersion()))
                 .permission(PermissionNode.core("update.apply"))
                 .build());
-        registerMainMenu(platform, guiFramework, messages, guiPages, moduleRegistry);
+        guiPages.register(new MainMenuPage(guiFramework, messages, moduleRegistry, guiPages));
+        registerCoreCommands(platform);
 
         return platform;
     }
 
     /**
-     * Registers the main menu and one {@link PlaceholderGuiPage} per
-     * built-in module that doesn't yet have a real GUI - see
-     * docs/development/gui-framework.md. A module with a real GUI registers
-     * its own page under the same {@link GuiPageId} in its own {@code
-     * onEnable} instead (which runs after this method, during {@code
-     * moduleManager.enableAll()}) - {@link GuiRegistry} allows exactly one
-     * owner per id, so this method must not also register a placeholder for
-     * that id. No placeholder for {@code players.home}: {@code
-     * PlayersModule} registers its own {@code PlayerBrowserHomePage} there
-     * (same precedent as {@code audit-log.home} below). No placeholder for
-     * {@code moderation.home} either: {@code ModerationModule} registers its
-     * own {@code ModerationHomePage} there. No placeholder for {@code
-     * server.home} either: {@code ServerModule} registers its own {@code
-     * ServerHomePage} there. No placeholder for {@code worlds.home} either:
-     * {@code WorldsModule} registers its own {@code WorldsHomePage} there.
-     * No placeholder for {@code whitelist.home} either: {@code
-     * WhitelistModule} registers its own {@code WhitelistHomePage} there.
-     * No placeholder for {@code performance.home} either: {@code
-     * PerformanceModule} registers its own {@code PerformanceHomePage} there.
+     * Network mode needs a database every server shares - with SQLite each
+     * server has its own file, so it stays off (and says why).
      */
-    private void registerMainMenu(
-            UniversalAdmin platform, GuiFramework guiFramework, MessageService messages, GuiRegistry guiPages,
-            ModuleRegistry moduleRegistry) {
-        // No placeholder for audit-log.home: AuditLogModule registers its own
-        // AuditLogListPage under that id in onEnable (see docs/development/adding-module.md
-        // step 10) - GuiRegistry allows exactly one owner per id.
-        guiPages.register(new PlaceholderGuiPage(GuiPageId.core("settings.home"), guiFramework, messages, "Settings"));
-        guiPages.register(new MainMenuPage(guiFramework, messages, moduleRegistry, guiPages));
+    private DefaultNetworkService createNetwork(SettingsService settings) {
+        boolean requested = settings.get(CoreSettings.NETWORK_ENABLED);
+        boolean shared = storage.type() == DatabaseType.MYSQL;
+        if (requested && !shared) {
+            getLogger().severe("network.enabled is true, but network mode needs a MySQL/MariaDB database shared by all "
+                    + "servers (database.type: mysql) - network mode stays off.");
+        }
+        return new DefaultNetworkService(this, new JdbcNetworkRepository(storage.dataSource(), scheduler), scheduler, getLogger(),
+                getPluginMeta().getVersion(), requested && shared, settings.get(CoreSettings.NETWORK_SERVER_NAME),
+                settings.get(CoreSettings.NETWORK_POLL_INTERVAL), settings.get(CoreSettings.NETWORK_PROXY_SERVER_LIST));
+    }
+
+    /** The core's own {@code /admin} subcommands; every module adds its own in its {@code onEnable}. */
+    private void registerCoreCommands(UniversalAdmin platform) {
+        CorePermissions.registerAll(platform.permissions());
+        CommandRegistry commands = platform.commands();
+        HelpCommand help = new HelpCommand(commands);
+        commands.register(help);
+        commands.register(new MenuCommand(platform, help));
+        commands.register(new StatusCommand(platform));
+        commands.register(new ModulesCommand(platform.moduleRegistry()));
+        commands.register(new ReloadCommand());
+        commands.register(new UpdateCommand());
     }
 
     private void registerBuiltInModules(ModuleManager moduleManager, SettingsService settings) {
@@ -328,6 +383,13 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_PERFORMANCE_ENABLED, PerformanceModule::new);
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_AUDIT_ENABLED, AuditLogModule::new);
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_SETTINGS_ENABLED, SettingsModule::new);
+        registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_REPORTS_ENABLED, ReportsModule::new);
+        registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_CHAT_ENABLED, ChatModule::new);
+        // Network mode on (network.enabled + a shared MySQL database): the
+        // network menu and commands. Off: nothing to show.
+        if (network.enabled()) {
+            moduleManager.register(new NetworkModule());
+        }
     }
 
     private void registerIfEnabled(
@@ -339,19 +401,21 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         }
     }
 
-    private void syncPermissions(PermissionRegistry permissions) {
-        for (PermissionDefinition definition : permissions.all()) {
-            var bukkitPermission = new org.bukkit.permissions.Permission(
-                    definition.node().value(), definition.description(), map(definition.defaultValue()));
-            getServer().getPluginManager().addPermission(bukkitPermission);
-        }
-    }
 
+    /**
+     * Wires {@code /admin} (plugin.yml) to the dispatcher and registers the
+     * optional top-level shortcuts ({@code /kick}, {@code /vanish}, ...)
+     * through Paper's command lifecycle - see {@link ShortcutCommands}.
+     */
     private void registerCommand(UniversalAdmin platform) {
+        UniversalAdminCommand dispatcher = new UniversalAdminCommand(platform.commands(), new CommandInvocation.CommandEnvironment(
+                platform.messages(), platform.actionExecutor(), platform.scheduler(), getLogger()));
         var command = getCommand("admin");
         if (command != null) {
-            command.setExecutor(new UniversalAdminCommand(platform));
+            command.setExecutor(dispatcher);
+            command.setTabCompleter(dispatcher);
         }
+        ShortcutCommands.install(this, dispatcher, platform.settings(), platform.messages(), getLogger());
     }
 
     /**
@@ -418,12 +482,4 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         }
     }
 
-    private static PermissionDefault map(dev.universaladmin.permission.PermissionDefault value) {
-        return switch (value) {
-            case TRUE -> PermissionDefault.TRUE;
-            case FALSE -> PermissionDefault.FALSE;
-            case OP -> PermissionDefault.OP;
-            case NOT_OP -> PermissionDefault.NOT_OP;
-        };
-    }
 }

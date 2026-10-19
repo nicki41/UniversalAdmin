@@ -13,7 +13,9 @@ same logic can later be reused by the GUI, a command, and a web API.
 
 You need:
 
-- **Java 25.** The Gradle wrapper auto-provisions a matching toolchain via
+- **Java 25** to build (the jars are Java 21 bytecode, see
+  [architecture-rules.md](docs/development/architecture-rules.md#build--test)).
+  The Gradle wrapper auto-provisions a matching toolchain via
   `foojay-resolver-convention` if none is installed locally - so a different
   local JDK is enough to get the build started.
 - **No Gradle install required** - use the bundled wrapper (`./gradlew`, on
@@ -30,6 +32,19 @@ cd UniversalAdmin
 and additionally checks via `verifyShadedJarDrivers` that the bundled
 database drivers actually work in the final jar. More detail:
 [docs/development/setup.md](docs/development/setup.md).
+
+## Project layout
+
+| Directory | Gradle project | |
+|---|---|---|
+| `api/` | `universaladmin-api` | Public extension API - semantically versioned, see [ADR 0010](docs/architecture/decisions/0010-extension-api.md) |
+| `/` (root) | `universaladmin-core` | The plugin: bootstrap, implementations, built-in modules |
+| `extensions/discord/` | `universaladmin-discord` | Official Discord extension |
+| `examples/example-extension/` | `example-extension` | Extension template |
+
+A change to anything in `api/` is an API change: keep it backwards
+compatible (add, deprecate - never remove or change a signature) unless the
+next release is a major version.
 
 ## Architecture
 
@@ -50,7 +65,8 @@ The points pull requests most often trip on:
   [docs/architecture/threading.md](docs/architecture/threading.md).
 - **No visible text in code.** Every user-facing string is a `MessageKey`,
   resolved through `MessageService` from `lang/<locale>.yml` - and added to
-  **both** shipped languages.
+  **both** shipped languages (a test fails otherwise). Commands are frontends
+  too: parse arguments, then `CommandInvocation#run` an action.
 - **No `config.getString(...)`.** Every configuration value is a typed,
   validated `SettingDefinition` - see
   [docs/development/settings.md](docs/development/settings.md).
@@ -86,7 +102,7 @@ Full conventions: [docs/development/testing.md](docs/development/testing.md).
 
 ## Code Style
 
-- Java 25, 4-space indentation, UTF-8, no tabs.
+- Java 21 language level, 4-space indentation, UTF-8, no tabs.
 - Interfaces without a prefix/suffix (`Repository`, `Module`, `Action`),
   concrete implementations with a descriptive prefix
   (`JdbcPlayerProfileRepository`).

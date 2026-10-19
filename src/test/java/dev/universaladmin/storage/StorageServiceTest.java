@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Logger;
+import dev.universaladmin.storage.jdbc.JdbcStorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -14,7 +15,7 @@ class StorageServiceTest {
 
     @Test
     void sqliteInitializesAndTracksHealthThroughItsLifecycle(@TempDir Path dir) {
-        StorageService storage = new StorageService(DatabaseConfig.sqlite("test.db"), dir, Logger.getLogger("test"));
+        JdbcStorageService storage = new JdbcStorageService(DatabaseConfig.sqlite("test.db"), dir, Logger.getLogger("test"));
         try {
             assertEquals(DatabaseHealth.READY, storage.health());
             assertTrue(Files.exists(dir.resolve("test.db")));
@@ -35,7 +36,7 @@ class StorageServiceTest {
         Path directoryAsDbFile = dir.resolve("not-a-file");
         Files.createDirectory(directoryAsDbFile);
 
-        assertThrows(RuntimeException.class, () -> new StorageService(
+        assertThrows(RuntimeException.class, () -> new JdbcStorageService(
                 DatabaseConfig.sqlite(directoryAsDbFile.getFileName().toString()), dir, Logger.getLogger("test")));
     }
 }

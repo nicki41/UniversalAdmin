@@ -23,35 +23,36 @@ public final class ModerationSettings {
     private ModerationSettings() {
     }
 
-    public static final SettingKey<List<String>> REASON_PRESETS = SettingKey.of("moderation", "reasons.presets");
-    public static final SettingKey<List<String>> DURATION_PRESETS = SettingKey.of("moderation", "durations.presets");
+    public static final SettingKey<List<String>> REASON_PRESETS = SettingKey.of("moderation", "moderation.reasons.presets");
+    public static final SettingKey<Boolean> NOTIFY_STAFF = SettingKey.of("moderation", "moderation.notify-staff");
+    public static final SettingKey<Boolean> NOTES_JOIN_ALERT = SettingKey.of("moderation", "moderation.notes.join-alert");
+    public static final SettingKey<List<String>> DURATION_PRESETS = SettingKey.of("moderation", "moderation.durations.presets");
 
-    public static final SettingKey<Boolean> VANISH_HIDE_JOIN_MESSAGE = SettingKey.of("moderation", "vanish.hide-join-message");
-    public static final SettingKey<Boolean> VANISH_HIDE_QUIT_MESSAGE = SettingKey.of("moderation", "vanish.hide-quit-message");
-    public static final SettingKey<Boolean> VANISH_BLOCK_ITEM_PICKUP = SettingKey.of("moderation", "vanish.block-item-pickup");
-    public static final SettingKey<Boolean> VANISH_RESTORE_ON_RECONNECT = SettingKey.of("moderation", "vanish.restore-on-reconnect");
+    public static final SettingKey<Boolean> VANISH_HIDE_JOIN_MESSAGE = SettingKey.of("moderation", "moderation.vanish.hide-join-message");
+    public static final SettingKey<Boolean> VANISH_HIDE_QUIT_MESSAGE = SettingKey.of("moderation", "moderation.vanish.hide-quit-message");
+    public static final SettingKey<Boolean> VANISH_BLOCK_ITEM_PICKUP = SettingKey.of("moderation", "moderation.vanish.block-item-pickup");
+    public static final SettingKey<Boolean> VANISH_RESTORE_ON_RECONNECT = SettingKey.of("moderation", "moderation.vanish.restore-on-reconnect");
     /** Both default {@code false} - opt-in, since the spec stresses these must never be misleading; the real audit entry is always recorded regardless. */
-    public static final SettingKey<Boolean> VANISH_FAKE_LEAVE_ON_VANISH = SettingKey.of("moderation", "vanish.fake-leave-on-vanish");
-    public static final SettingKey<Boolean> VANISH_FAKE_JOIN_ON_UNVANISH = SettingKey.of("moderation", "vanish.fake-join-on-unvanish");
+    public static final SettingKey<Boolean> VANISH_FAKE_LEAVE_ON_VANISH = SettingKey.of("moderation", "moderation.vanish.fake-leave-on-vanish");
+    public static final SettingKey<Boolean> VANISH_FAKE_JOIN_ON_UNVANISH = SettingKey.of("moderation", "moderation.vanish.fake-join-on-unvanish");
 
-    public static final SettingKey<Boolean> FREEZE_BLOCK_MOVEMENT = SettingKey.of("moderation", "freeze.block-movement");
-    public static final SettingKey<Boolean> FREEZE_BLOCK_TELEPORT = SettingKey.of("moderation", "freeze.block-teleport");
-    public static final SettingKey<Boolean> FREEZE_BLOCK_INTERACTION = SettingKey.of("moderation", "freeze.block-interaction");
-    public static final SettingKey<Boolean> FREEZE_BLOCK_INVENTORY = SettingKey.of("moderation", "freeze.block-inventory");
-    public static final SettingKey<Boolean> FREEZE_BLOCK_COMMANDS = SettingKey.of("moderation", "freeze.block-commands");
+    public static final SettingKey<Boolean> FREEZE_BLOCK_MOVEMENT = SettingKey.of("moderation", "moderation.freeze.block-movement");
+    public static final SettingKey<Boolean> FREEZE_BLOCK_TELEPORT = SettingKey.of("moderation", "moderation.freeze.block-teleport");
+    public static final SettingKey<Boolean> FREEZE_BLOCK_INTERACTION = SettingKey.of("moderation", "moderation.freeze.block-interaction");
+    public static final SettingKey<Boolean> FREEZE_BLOCK_INVENTORY = SettingKey.of("moderation", "moderation.freeze.block-inventory");
+    public static final SettingKey<Boolean> FREEZE_BLOCK_COMMANDS = SettingKey.of("moderation", "moderation.freeze.block-commands");
 
-    public static final SettingKey<Boolean> STAFFMODE_AUTO_FLY = SettingKey.of("moderation", "staffmode.auto-fly");
-    public static final SettingKey<Boolean> STAFFMODE_AUTO_VANISH = SettingKey.of("moderation", "staffmode.auto-vanish");
-    public static final SettingKey<Boolean> STAFFMODE_AUTO_NOCOLLISION = SettingKey.of("moderation", "staffmode.auto-nocollision");
+    public static final SettingKey<Boolean> STAFFMODE_AUTO_FLY = SettingKey.of("moderation", "moderation.staffmode.auto-fly");
+    public static final SettingKey<Boolean> STAFFMODE_AUTO_VANISH = SettingKey.of("moderation", "moderation.staffmode.auto-vanish");
+    public static final SettingKey<Boolean> STAFFMODE_AUTO_NOCOLLISION = SettingKey.of("moderation", "moderation.staffmode.auto-nocollision");
     /**
-     * How far (in blocks, straight-line, ignoring walls) {@code
-     * StaffModeTargetTracker} looks for who a staff member is aiming at -
-     * deliberately not the same value as the tools' own ~6-block right-click
-     * reach (a Minecraft client limit this plugin can't change either way),
-     * this only affects the passive "who am I looking at" indicator (held
-     * tool lore + actionbar).
+     * How far (in blocks, straight-line, ignoring walls) a staff member can
+     * aim at a player - for the "who am I looking at" indicator (held tool
+     * lore + actionbar) and for the tools themselves: a right-click in the
+     * air acts on that player at any distance up to this (see {@code
+     * StaffModeTargeting}).
      */
-    public static final SettingKey<Integer> STAFFMODE_TARGET_RANGE_BLOCKS = SettingKey.of("moderation", "staffmode.target-range-blocks");
+    public static final SettingKey<Integer> STAFFMODE_TARGET_RANGE_BLOCKS = SettingKey.of("moderation", "moderation.staffmode.target-range-blocks");
 
     /**
      * A {@link DateTimeFormatter} pattern for every absolute date/time this
@@ -61,9 +62,9 @@ public final class ModerationSettings {
      * two settings that could contradict each other: {@code "yyyy-MM-dd HH:mm"}
      * (default, 24h) or e.g. {@code "MM/dd/yyyy hh:mm a"} (12h, AM/PM).
      */
-    public static final SettingKey<String> EXPIRY_DATE_PATTERN = SettingKey.of("moderation", "expiry.date-pattern");
+    public static final SettingKey<String> EXPIRY_DATE_PATTERN = SettingKey.of("moderation", "moderation.expiry.date-pattern");
     /** Appends the server's {@code ZoneId} (e.g. "Europe/Berlin") after the formatted date - see {@link ModerationFormat}. */
-    public static final SettingKey<Boolean> EXPIRY_SHOW_TIMEZONE = SettingKey.of("moderation", "expiry.show-timezone");
+    public static final SettingKey<Boolean> EXPIRY_SHOW_TIMEZONE = SettingKey.of("moderation", "moderation.expiry.show-timezone");
 
     public static void registerAll(SettingRegistry registry) {
         registry.register(SettingDefinition.builder(REASON_PRESETS, SettingTypes.STRING_LIST,
@@ -74,6 +75,9 @@ public final class ModerationSettings {
                         List.of("10m", "30m", "1h", "6h", "1d", "3d", "7d", "30d", "permanent"))
                 .description("Preset durations offered in the moderation GUI for temporary punishments (see DurationParser), alongside a custom option.")
                 .build());
+
+        registry.register(bool(NOTIFY_STAFF, true, "Tell online staff (universaladmin.moderation.notify) whenever someone is punished or pardoned."));
+        registry.register(bool(NOTES_JOIN_ALERT, true, "Tell staff with universaladmin.moderation.notes when a player who has staff notes joins."));
 
         registry.register(bool(VANISH_HIDE_JOIN_MESSAGE, true, "Suppress the real join message when a persistently-vanished player reconnects."));
         registry.register(bool(VANISH_HIDE_QUIT_MESSAGE, true, "Suppress the real quit message when a vanished player disconnects."));
@@ -91,9 +95,9 @@ public final class ModerationSettings {
         registry.register(bool(STAFFMODE_AUTO_FLY, true, "Grant flight automatically when entering staff mode."));
         registry.register(bool(STAFFMODE_AUTO_VANISH, true, "Vanish automatically when entering staff mode."));
         registry.register(bool(STAFFMODE_AUTO_NOCOLLISION, true, "Disable collision automatically when entering staff mode."));
-        registry.register(SettingDefinition.builder(STAFFMODE_TARGET_RANGE_BLOCKS, SettingTypes.INTEGER, 40)
-                .description("How far (blocks, ignores walls) the Staff Mode 'who am I looking at' indicator (tool lore + actionbar) searches.")
-                .validator(SettingValidators.intRange(1, 500))
+        registry.register(SettingDefinition.builder(STAFFMODE_TARGET_RANGE_BLOCKS, SettingTypes.INTEGER, 128)
+                .description("How far (blocks, ignores walls) Staff Mode tools reach: right-click in the air acts on the player in your crosshair up to this distance.")
+                .validator(SettingValidators.intRange(1, 1000))
                 .build());
 
         registry.register(SettingDefinition.builder(EXPIRY_DATE_PATTERN, SettingTypes.STRING, "yyyy-MM-dd HH:mm")

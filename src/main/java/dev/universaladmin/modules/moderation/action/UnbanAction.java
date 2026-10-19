@@ -30,6 +30,6 @@ public final class UnbanAction implements Action<UnbanInput, List<Punishment>> {
     public CompletableFuture<ActionResult<List<Punishment>>> execute(ActionContext context, UnbanInput input) {
         return punishmentService.unban(input.targetId(), context.actor().displayName()).thenApply(revoked -> revoked.isEmpty()
                 ? ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.not-banned"))
-                : ActionResult.success(revoked));
+                : ModerationResults.lifted(revoked, "moderation.result.unban"));
     }
 }

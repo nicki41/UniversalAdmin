@@ -87,7 +87,7 @@ Temp Ban/Temp Mute/IP Ban) → **Confirmation** → the action runs.
   `DurationParser` (`10m`, `1h`, `3d`, compound forms like `1d12h`, or
   `permanent`/`perm`).
 - **Confirmation** - a summary of target/reason/expiry, skipped if
-  `core.gui.confirmations` is off (same setting every other confirmation in
+  `gui.confirmations` is off (same setting every other confirmation in
   the plugin respects).
 
 The Moderation home page (`/admin` → **Moderation**) lists **Active
@@ -99,16 +99,43 @@ other list page in this plugin uses). Clicking a row opens its detail page,
 which shows the full record and, if it's still active, an Unban/Unmute/
 Remove Warning button gated on the matching permission.
 
-## Cross-module link
+## Commands
+
+Every punishment is also a command - `/admin ban Steve 7d griefing` or just
+`/ban Steve 7d griefing` (a duration right after the name turns ban/mute/
+ipban temporary). `/history <player>` lists everything with ids,
+`/checkban <player>` shows what is active right now, `/unwarn <id>` removes
+a warning. Without a reason, the localized "No reason given" is used. Full
+list: [commands.md](../commands.md#moderation).
+
+## Team notifications
+
+Every punishment and pardon - from the GUI, a command or an extension - is
+announced to other online staff with `universaladmin.moderation.notify`:
+"Mod banned Steve (7d): griefing". Switch it off with
+`moderation.notify-staff: false`.
+
+## Staff notes
+
+Notes are short texts staff keep about a player ("verbal warning about
+spawn-camping", "probably an alt of X"). They are never shown to the player.
+
+- Profile → **Staff notes** lists them; **Add a note** writes one, right-click
+  deletes one.
+- `/admin notes <player>` lists, `/admin notes <player> add <text>` adds,
+  `/admin notes remove <id>` deletes.
+- When a player with notes joins, staff with `universaladmin.moderation.notes`
+  get a clickable hint (`moderation.notes.join-alert`).
+
+Adding and removing notes is audited.
+
+## Profile button
 
 The Players module's profile page shows a **Moderate** button that opens
-this module's wizard directly on that target - but only if the Moderation
-module is actually enabled. Neither module imports the other's internal
-classes: `ModerationModule` publishes a small `ModerationPlayerLink`
-interface through `ServiceRegistry`, and `PlayerProfilePage` looks it up
-optionally (`ServiceRegistry.get`, not `.require`) - if Moderation is
-disabled, the lookup returns empty and the button simply doesn't render.
-Players works completely standalone either way.
+this module's wizard for that player. It is contributed through the
+platform's `PlayerMenuRegistry` - neither module imports the other, and an
+extension can add its own profile buttons the same way. If Moderation is
+disabled, the button simply isn't there.
 
 ## Policy hook (staff hierarchy)
 
@@ -139,6 +166,8 @@ up automatically, with zero hierarchy logic shipped in this module itself.
 | `universaladmin.moderation.removewarn` | op | Remove a single warning |
 | `universaladmin.moderation.freeze` | op | Freeze a player |
 | `universaladmin.moderation.unfreeze` | op | Unfreeze a player |
+| `universaladmin.moderation.notes` | op | Read/write staff notes, get the join hint |
+| `universaladmin.moderation.notify` | op | Be told when staff punish or pardon someone |
 
 See [docs/user/permissions.md](../permissions.md) for how these fit into
 the platform-wide list, and [staff-tools.md](staff-tools.md#permissions)
@@ -149,11 +178,16 @@ for Vanish/Godmode/Collision/Staff Mode's nodes.
 | Setting | Default | Meaning |
 |---|---|---|
 | `moderation.reasons.presets` | Cheating, Griefing, Spam, Advertising, Harassment, Bug Abuse, Other | Reason presets offered in the GUI wizard |
-| `moderation.durations.presets` | 10m, 30m, 1h, 6h, 1d, 3d, 7d, 30d, permanent | Duration presets offered in the GUI wizard |
+| `moderation.durations.presets` | 10m, 30m, 1h, 6h, 1d, 3d, 7d, 30d, permanent | Duration presets offered in the GUI wizard (and in tab completion) |
+| `moderation.notify-staff` | true | Announce punishments/pardons to staff |
+| `moderation.notes.join-alert` | true | Hint for staff when a player with notes joins |
+| `moderation.expiry.date-pattern` | yyyy-MM-dd HH:mm | Date format for punishment times |
+| `moderation.expiry.show-timezone` | true | Append the server time zone to dates |
 
-Both are ordinary lists, editable in `config.yml` like any other setting -
-not a bespoke config surface. A custom reason/duration is always available
-alongside the presets.
+All of them are ordinary settings - editable in `config.yml` or in-game
+under `/admin` → Settings → moderation. A custom reason/duration is always
+available alongside the presets. Vanish, freeze and staff-mode settings are
+listed in [staff-tools.md](staff-tools.md).
 
 ## Database
 
@@ -163,7 +197,8 @@ revoked_by, metadata) - created by `ModerationPunishmentMigration` (version
 1002); `ModerationPunishmentIndexMigration` (version 1003) indexes
 `(target_id, type, active)` for the join/chat checks, `(active,
 expires_at)` for the housekeeping sweep, and `target_ip` for the IP-ban
-join check.
+join check. Staff notes live in `ua_player_notes` (`PlayerNotesMigration`,
+version 1008).
 
 ## Tests
 

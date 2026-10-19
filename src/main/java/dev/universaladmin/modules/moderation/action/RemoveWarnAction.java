@@ -28,7 +28,8 @@ public final class RemoveWarnAction implements Action<RemoveWarnInput, Punishmen
     @Override
     public CompletableFuture<ActionResult<Punishment>> execute(ActionContext context, RemoveWarnInput input) {
         return punishmentService.removeWarn(input.warnId(), context.actor().displayName()).thenApply(revoked -> revoked
-                .<ActionResult<Punishment>>map(ActionResult::success)
+                .<ActionResult<Punishment>>map(warn -> ActionResult.success(warn, MessageKey.of("moderation.result.removewarn"),
+                        warn.targetLastKnownName(), Long.toString(warn.id())))
                 .orElseGet(() -> ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.warn-not-found"))));
     }
 }

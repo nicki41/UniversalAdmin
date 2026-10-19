@@ -7,6 +7,7 @@ import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.modules.performance.command.PerformanceCommands;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -45,6 +46,8 @@ public final class PerformanceModule implements Module {
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Performance")
             .description("Performance monitoring: TPS/MSPT/memory dashboard, per-world and per-entity-type breakdown, staff alerts, confirmed Entity Clear.")
             .icon(new GuiIcon("comparator", "Performance"))
+            .menu(PerformanceHomePage.ID, PerformancePermissions.VIEW)
+            .menuOrder(60)
             .build();
 
     @Override
@@ -74,6 +77,7 @@ public final class PerformanceModule implements Module {
         scheduleSampling(context, plugin, settings, samplingService);
         registerActions(context.platform().actions(), scheduler, settings, context.logger());
         registerGui(context, samplingService);
+        PerformanceCommands.all(samplingService).forEach(context::registerCommand);
     }
 
     private void scheduleSampling(

@@ -34,7 +34,7 @@ public final class PlayerActionIds {
     public static final ActionId GRAVITY_TOGGLE = ActionId.core("players.gravity.toggle");
     public static final ActionId COLLISION_TOGGLE = ActionId.core("players.collision.toggle");
     public static final ActionId GAMEMODE = ActionId.core("players.gamemode");
-    public static final ActionId INVENTORY_SET = ActionId.core("players.inventory.set");
+    public static final ActionId INVENTORY_EDIT = ActionId.core("players.inventory.edit");
     public static final ActionId INVENTORY_CLEAR = ActionId.core("players.inventory.clear");
-    public static final ActionId ENDERCHEST_SET = ActionId.core("players.enderchest.set");
+    public static final ActionId ENDERCHEST_EDIT = ActionId.core("players.enderchest.edit");
 }

@@ -52,7 +52,9 @@ public final class ClearPlayerInventoryAction implements Action<PlayerTargetInpu
             inventory.setLeggings(null);
             inventory.setBoots(null);
             inventory.setItemInOffHand(null);
-            future.complete(ActionResult.success(InventoryChangeSummary.of(before, fullContents(inventory))));
+            InventoryChangeSummary summary = InventoryChangeSummary.of(before, fullContents(inventory));
+            future.complete(ActionResult.success(summary, MessageKey.of("players.result.inventory-cleared"),
+                    player.getName(), Integer.toString(summary.nonEmptyBefore())));
         });
         return future;
     }

@@ -1,5 +1,6 @@
 package dev.universaladmin.modules.players.action;
 
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult.FailureReason;
@@ -15,9 +16,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
-import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 
 /**
@@ -60,7 +59,8 @@ public final class PlayerActionRegistrar {
                     var maxHealth = player.getAttribute(Attribute.MAX_HEALTH);
                     player.setHealth(maxHealth != null ? maxHealth.getValue() : 20.0);
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.heal"),
+                        (player, in, result) -> new Object[] {player.getName(), PlayerResults.number(player.getHealth())});
         return simple(action, PlayerPermissions.HEAL, PlayerTargetInput::targetId);
     }
 
@@ -70,7 +70,7 @@ public final class PlayerActionRegistrar {
                     player.setFoodLevel(20);
                     player.setSaturation(20f);
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.feed"), (player, in, result) -> new Object[] {player.getName()});
         return simple(action, PlayerPermissions.FEED, PlayerTargetInput::targetId);
     }
 
@@ -79,16 +79,18 @@ public final class PlayerActionRegistrar {
                 PlayerActionIds.EXTINGUISH, scheduler, PlayerTargetInput::targetId, (player, in) -> {
                     player.setFireTicks(0);
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.extinguish"), (player, in, result) -> new Object[] {player.getName()});
         return simple(action, PlayerPermissions.EXTINGUISH, PlayerTargetInput::targetId);
     }
 
-    private static ActionDefinition<PlayerTargetInput, Void> clearEffects(TaskScheduler scheduler) {
-        var action = new OnlinePlayerAction<PlayerTargetInput, Void>(
+    private static ActionDefinition<PlayerTargetInput, Integer> clearEffects(TaskScheduler scheduler) {
+        var action = new OnlinePlayerAction<PlayerTargetInput, Integer>(
                 PlayerActionIds.EFFECTS_CLEAR, scheduler, PlayerTargetInput::targetId, (player, in) -> {
+                    int removed = player.getActivePotionEffects().size();
                     player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
-                    return null;
-                });
+                    return removed;
+                }).describedAs(MessageKey.of("players.result.effects-cleared"),
+                        (player, in, removed) -> new Object[] {player.getName(), Integer.toString(removed)});
         return simple(action, PlayerPermissions.EFFECTS_CLEAR, PlayerTargetInput::targetId);
     }
 
@@ -97,7 +99,9 @@ public final class PlayerActionRegistrar {
                 PlayerActionIds.EFFECTS_ADD, scheduler, AddEffectInput::targetId, (player, in) -> {
                     player.addPotionEffect(new PotionEffect(in.type(), in.durationTicks(), in.amplifier(), false, true, true));
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.effect-added"), (player, in, result) -> new Object[] {
+                        player.getName(), PlayerResults.effect(in.type()), Integer.toString(in.amplifier() + 1),
+                        PlayerResults.duration(in.durationTicks())});
         return ActionDefinition.builder(action)
                 .permission(PlayerPermissions.EFFECTS_ADD)
                 .module(MODULE)
@@ -105,7 +109,7 @@ public final class PlayerActionRegistrar {
                 .validator((context, in) -> in.durationTicks() <= 0
                         ? Optional.of(ValidationError.of(FailureReason.VALIDATION, MessageKey.of("players.action.invalid-duration")))
                         : Optional.empty())
-                .auditSummary(in -> "Added " + in.type().getName() + " " + (in.amplifier() + 1) + " to " + in.targetId())
+                .auditSummary(in -> "Added " + in.type().getName() + " " + (in.amplifier() + 1) + " to " + PlayerNames.of(in.targetId()))
                 .build();
     }
 
@@ -115,12 +119,13 @@ public final class PlayerActionRegistrar {
                 (player, in) -> {
                     player.removePotionEffect(in.type());
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.effect-removed"),
+                        (player, in, result) -> new Object[] {player.getName(), PlayerResults.effect(in.type())});
         return ActionDefinition.builder(action)
                 .permission(PlayerPermissions.EFFECTS_REMOVE)
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
-                .auditSummary(in -> "Removed " + in.type().getName() + " from " + in.targetId())
+                .auditSummary(in -> "Removed " + in.type().getName() + " from " + PlayerNames.of(in.targetId()))
                 .build();
     }
 
@@ -129,13 +134,14 @@ public final class PlayerActionRegistrar {
                 PlayerActionIds.SET_HEALTH, scheduler, SetDoubleValueInput::targetId, (player, in) -> {
                     player.setHealth(in.value());
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.health-set"),
+                        (player, in, result) -> new Object[] {player.getName(), PlayerResults.number(player.getHealth())});
         return ActionDefinition.builder(action)
                 .permission(PlayerPermissions.SET_HEALTH)
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(rangeValidator(SetDoubleValueInput::value, 0.0, 2048.0))
-                .auditSummary(in -> "Set health of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set health of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -144,13 +150,14 @@ public final class PlayerActionRegistrar {
                 PlayerActionIds.SET_FOOD, scheduler, SetIntValueInput::targetId, (player, in) -> {
                     player.setFoodLevel(in.value());
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.food-set"),
+                        (player, in, result) -> new Object[] {player.getName(), Integer.toString(player.getFoodLevel())});
         return ActionDefinition.builder(action)
                 .permission(PlayerPermissions.SET_FOOD)
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(intRangeValidator(SetIntValueInput::value, 0, 20))
-                .auditSummary(in -> "Set food of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set food of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -159,13 +166,14 @@ public final class PlayerActionRegistrar {
                 PlayerActionIds.SET_XP, scheduler, SetFloatValueInput::targetId, (player, in) -> {
                     player.setExp(in.value());
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.xp-set"),
+                        (player, in, result) -> new Object[] {player.getName(), Long.toString(Math.round(player.getExp() * 100.0))});
         return ActionDefinition.builder(action)
                 .permission(PlayerPermissions.SET_XP)
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(rangeValidator(in -> (double) in.value(), 0.0, 1.0))
-                .auditSummary(in -> "Set XP progress of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set XP progress of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -174,13 +182,14 @@ public final class PlayerActionRegistrar {
                 PlayerActionIds.SET_LEVEL, scheduler, SetIntValueInput::targetId, (player, in) -> {
                     player.setLevel(in.value());
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.level-set"),
+                        (player, in, result) -> new Object[] {player.getName(), Integer.toString(player.getLevel())});
         return ActionDefinition.builder(action)
                 .permission(PlayerPermissions.SET_LEVEL)
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(intRangeValidator(SetIntValueInput::value, 0, Integer.MAX_VALUE))
-                .auditSummary(in -> "Set level of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set level of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -193,7 +202,8 @@ public final class PlayerActionRegistrar {
                         player.setFlying(false);
                     }
                     return next;
-                });
+                }).describedAs(MessageKey.of("players.result.fly"),
+                        (player, in, enabled) -> new Object[] {player.getName(), PlayerResults.status(enabled)});
         return simple(action, PlayerPermissions.FLY_TOGGLE, PlayerTargetInput::targetId);
     }
 
@@ -202,13 +212,14 @@ public final class PlayerActionRegistrar {
                 PlayerActionIds.FLY_SPEED, scheduler, SetFloatValueInput::targetId, (player, in) -> {
                     player.setFlySpeed(in.value());
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.fly-speed"),
+                        (player, in, result) -> new Object[] {player.getName(), PlayerResults.number(in.value() * 10.0)});
         return ActionDefinition.builder(action)
                 .permission(PlayerPermissions.FLY_SPEED)
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(rangeValidator(in -> (double) in.value(), -1.0, 1.0))
-                .auditSummary(in -> "Set fly speed of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set fly speed of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -217,13 +228,14 @@ public final class PlayerActionRegistrar {
                 PlayerActionIds.WALK_SPEED, scheduler, SetFloatValueInput::targetId, (player, in) -> {
                     player.setWalkSpeed(in.value());
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.walk-speed"),
+                        (player, in, result) -> new Object[] {player.getName(), PlayerResults.number(in.value() * 10.0)});
         return ActionDefinition.builder(action)
                 .permission(PlayerPermissions.WALK_SPEED)
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
                 .validator(rangeValidator(in -> (double) in.value(), -1.0, 1.0))
-                .auditSummary(in -> "Set walk speed of " + in.targetId() + " to " + in.value())
+                .auditSummary(in -> "Set walk speed of " + PlayerNames.of(in.targetId()) + " to " + in.value())
                 .build();
     }
 
@@ -233,7 +245,8 @@ public final class PlayerActionRegistrar {
                     boolean next = !player.isGlowing();
                     player.setGlowing(next);
                     return next;
-                });
+                }).describedAs(MessageKey.of("players.result.glow"),
+                        (player, in, enabled) -> new Object[] {player.getName(), PlayerResults.status(enabled)});
         return simple(action, PlayerPermissions.GLOW, PlayerTargetInput::targetId);
     }
 
@@ -243,7 +256,8 @@ public final class PlayerActionRegistrar {
                     boolean next = !player.hasGravity();
                     player.setGravity(next);
                     return next;
-                });
+                }).describedAs(MessageKey.of("players.result.gravity"),
+                        (player, in, enabled) -> new Object[] {player.getName(), PlayerResults.status(enabled)});
         return simple(action, PlayerPermissions.GRAVITY, PlayerTargetInput::targetId);
     }
 
@@ -253,7 +267,8 @@ public final class PlayerActionRegistrar {
                     boolean next = !player.isCollidable();
                     player.setCollidable(next);
                     return next;
-                });
+                }).describedAs(MessageKey.of("players.result.collision"),
+                        (player, in, enabled) -> new Object[] {player.getName(), PlayerResults.status(enabled)});
         return simple(action, PlayerPermissions.COLLISION, PlayerTargetInput::targetId);
     }
 
@@ -262,12 +277,13 @@ public final class PlayerActionRegistrar {
                 PlayerActionIds.GAMEMODE, scheduler, SetGamemodeInput::targetId, (player, in) -> {
                     player.setGameMode(in.gamemode());
                     return null;
-                });
+                }).describedAs(MessageKey.of("players.result.gamemode"),
+                        (player, in, result) -> new Object[] {player.getName(), PlayerResults.gamemode(player.getGameMode())});
         return ActionDefinition.builder(action)
                 .permission(PlayerPermissions.GAMEMODE)
                 .module(MODULE)
                 .target(in -> Optional.of(target(in.targetId())))
-                .auditSummary(in -> "Set gamemode of " + in.targetId() + " to " + in.gamemode())
+                .auditSummary(in -> "Set gamemode of " + PlayerNames.of(in.targetId()) + " to " + in.gamemode())
                 .build();
     }
 
@@ -281,8 +297,7 @@ public final class PlayerActionRegistrar {
     }
 
     private static ActionTarget target(UUID playerId) {
-        Player online = Bukkit.getPlayer(playerId);
-        return ActionTarget.player(playerId, online != null ? online.getName() : playerId.toString());
+        return ActionTarget.player(playerId, PlayerNames.of(playerId));
     }
 
     private static <I> ActionValidator<I> rangeValidator(ToDoubleFunction<I> value, double min, double max) {

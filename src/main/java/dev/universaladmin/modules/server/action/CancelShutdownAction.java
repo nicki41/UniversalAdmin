@@ -34,7 +34,7 @@ public final class CancelShutdownAction implements Action<Void, Void> {
             boolean matches = lifecycleService.pending().action() == ServerLifecycleService.PendingAction.SHUTDOWN;
             boolean cancelled = matches && lifecycleService.cancel();
             future.complete(cancelled
-                    ? ActionResult.success(null)
+                    ? ActionResult.success(null, MessageKey.of("server.result.shutdown-cancelled"))
                     : ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("server.action.nothing-pending")));
         });
         return future;

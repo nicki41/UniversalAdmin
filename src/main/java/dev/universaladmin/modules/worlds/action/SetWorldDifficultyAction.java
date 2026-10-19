@@ -4,6 +4,8 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.localization.MessageKey;
+import java.util.Locale;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Bukkit;
@@ -34,7 +36,8 @@ public final class SetWorldDifficultyAction implements Action<SetWorldDifficulty
                 return;
             }
             world.setDifficulty(input.difficulty());
-            future.complete(ActionResult.success(null));
+            future.complete(ActionResult.success(null, MessageKey.of("worlds.result.difficulty-set"),
+                    world.getName(), MessageKey.of("worlds.difficulty." + input.difficulty().name().toLowerCase(Locale.ROOT))));
         });
         return future;
     }

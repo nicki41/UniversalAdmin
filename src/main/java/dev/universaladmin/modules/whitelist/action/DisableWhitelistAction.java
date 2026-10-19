@@ -4,6 +4,7 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Bukkit;
@@ -29,7 +30,7 @@ public final class DisableWhitelistAction implements Action<Void, Void> {
         CompletableFuture<ActionResult<Void>> future = new CompletableFuture<>();
         scheduler.runOnMainThread(() -> {
             Bukkit.setWhitelist(false);
-            future.complete(ActionResult.success(null));
+            future.complete(ActionResult.success(null, MessageKey.of("whitelist.result.disabled")));
         });
         return future;
     }

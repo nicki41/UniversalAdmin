@@ -1,31 +1,75 @@
 # Installation
 
-> UniversalAdmin is currently in alpha (see [ROADMAP.md](../../ROADMAP.md))
-> - there's no official release artifact on Modrinth/Hangar yet, this guide
-> describes the process with a self-built jar.
+## Supported versions
 
-## Requirements
+| UniversalAdmin | Server | Java |
+|---|---|---|
+| 1.1.x | **Paper 1.21.7 - 1.21.11, 26.1.1 - 26.3** (and Purpur on those) | 21+ (26.x needs 25, like Paper itself) |
 
-- A Paper server (version matching the Paper API version referenced in
-  `build.gradle.kts`).
-- Java 25 on the server.
+One jar for all of them. It is Java 21 bytecode with `api-version: '1.21.7'`
+and only uses API that exists on every listed version (the build compiles
+against the oldest and the newest). Every version is boot-tested with a
+smoke test before it is listed. The exact list is
+[`supported-versions.txt`](../../supported-versions.txt) - Modrinth shows the
+same.
 
-## Steps
+**New Paper versions** are picked up automatically: a weekly workflow tests
+every new Paper version (no pre-releases or release candidates) and, if UniversalAdmin runs on it, adds it to
+the current release on Modrinth right away (see
+[docs/release/releasing.md](../release/releasing.md#compatibility)).
 
-1. Build the plugin (see [docs/development/setup.md](../development/setup.md)):
-   ```bash
-   ./gradlew build
-   ```
-2. Copy `build/libs/universaladmin-core-<version>.jar` into the server's
-   `plugins/` folder.
-3. Start the server. On first start, `config.yml` and
-   `lang/en_US.yml`/`lang/de_DE.yml` are created in
-   `plugins/UniversalAdmin/` (see [configuration.md](configuration.md)).
-4. By default, UniversalAdmin runs immediately on SQLite - no further
-   setup needed. For MySQL/MariaDB, see [configuration.md](configuration.md).
+Below 1.21.7 the dialog API the menus' text input uses does not exist, so
+older servers refuse to load the plugin. Spigot, CraftBukkit and Folia are
+not supported.
 
-## Uninstallation
+Networks (Velocity, BungeeCord): install UniversalAdmin on every server -
+see [network.md](network.md).
 
-Remove the plugin jar from `plugins/`, restart the server. The database
-(`plugins/UniversalAdmin/data.db` for SQLite, or the configured
-MySQL/MariaDB database) is preserved and not automatically deleted.
+## Install
+
+1. Download `universaladmin-core-<version>.jar` from
+   [Modrinth](https://modrinth.com/plugin/universaladmin) or the
+   [GitHub releases](https://github.com/nicki41/UniversalAdmin/releases)
+   (each release lists a SHA-256 checksum).
+2. Put it into the server's `plugins/` folder and start (or restart) the
+   server - never use `/reload`.
+3. On first start UniversalAdmin creates `plugins/UniversalAdmin/` with
+   `config.yml`, `lang/en_US.yml`, `lang/de_DE.yml` and the SQLite database.
+4. Join as an operator and run `/admin`. Hand out permissions to your team -
+   templates: [permissions.md](permissions.md#role-templates).
+
+Optional:
+
+- MySQL/MariaDB instead of SQLite: [database.md](database.md).
+- German texts: `general.language: de_DE` (in-game: `/admin` → Settings →
+  general), then `/admin reload`.
+- Discord logging: install the official extension, see
+  [docs/extensions/discord.md](../extensions/discord.md).
+- A proxy network: [network.md](network.md).
+
+## Updating
+
+- `/admin update` downloads the newest stable release into
+  `plugins/update/`; the server applies it on the next restart. Staff with
+  `universaladmin.update.notify` are told when a new version is out.
+- Or replace the jar by hand and restart.
+
+Configuration, translations and the database are migrated automatically -
+nothing you configured is overwritten. Read the "Upgrading" notes in the
+[changelog](../../CHANGELOG.md) before a major version.
+
+## Building it yourself
+
+```bash
+./gradlew build
+```
+
+The plugin is `build/libs/universaladmin-core-<version>.jar` (database
+drivers included); the Discord extension is in `extensions/discord/build/libs/`.
+See [docs/development/setup.md](../development/setup.md).
+
+## Uninstalling
+
+Remove the jar from `plugins/` and restart. Your data
+(`plugins/UniversalAdmin/data.db` for SQLite, or the MySQL/MariaDB database)
+is kept and not deleted automatically.

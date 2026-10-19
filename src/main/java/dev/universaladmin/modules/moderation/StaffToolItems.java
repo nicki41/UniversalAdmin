@@ -159,7 +159,7 @@ public final class StaffToolItems {
 
     private Component statusLine(String labelKey, boolean value) {
         String status = messages.get(MessageKey.of(value ? "moderation.gui.status.on" : "moderation.gui.status.off"));
-        return ComponentMessages.render(messages.get(MessageKey.of(labelKey), status)).decoration(TextDecoration.ITALIC, false);
+        return ComponentMessages.render(messages.get(MessageKey.of(labelKey), MessageService.markup(status))).decoration(TextDecoration.ITALIC, false);
     }
 
     /** Which tool {@code item} is, if it's tagged as one at all. */

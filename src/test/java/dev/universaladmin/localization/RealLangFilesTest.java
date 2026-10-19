@@ -50,7 +50,7 @@ class RealLangFilesTest {
     // to contain at least one dot and use only lowercase/digits/./-/_ -
     // display strings passed to Component.text(...) essentially never look
     // like that.
-    private static final Pattern KEY_LOOKUP_CALL = Pattern.compile("(?:MessageKey\\.of|(?<![.\\w])text)\\(([^)]*)\\)");
+    private static final Pattern KEY_LOOKUP_CALL = Pattern.compile("(?:MessageKey\\.of|(?<![.\\w])text|\\.reply|\\.line)\\(([^)]*)\\)");
     private static final Pattern KEY_SHAPED_LITERAL = Pattern.compile("\"([a-z][a-z0-9_-]*(?:\\.[a-z0-9_-]+)+)\"");
 
     @Test
@@ -76,6 +76,39 @@ class RealLangFilesTest {
         // missing from getKeys(true), it was swallowed exactly this way.
         checkForRegressionRisk("en_US.yml");
         checkForRegressionRisk("de_DE.yml");
+    }
+
+    @Test
+    void deDeTranslatesEveryEnglishKey() throws IOException {
+        YamlConfiguration enUs = loadRealLangFile("en_US.yml");
+        YamlConfiguration deDe = loadRealLangFile("de_DE.yml");
+        Set<String> missing = new LinkedHashSet<>();
+        for (String key : enUs.getKeys(true)) {
+            if (enUs.isString(key) && !deDe.isString(key)) {
+                missing.add(key);
+            }
+        }
+        assertTrue(missing.isEmpty(), () -> "Keys in en_US.yml without a de_DE.yml translation: " + missing);
+    }
+
+    @Test
+    void templatesWithParametersDoubleTheirApostrophes() throws IOException {
+        // MessageFormat treats a single ' as the start of a quoted section,
+        // so "don't {0}" silently swallows the parameter. Templates without
+        // parameters are returned verbatim and may use plain apostrophes.
+        Pattern parameter = Pattern.compile("\\{\\d+}");
+        Pattern singleApostrophe = Pattern.compile("(?<!')'(?!')");
+        Set<String> offenders = new LinkedHashSet<>();
+        for (String fileName : List.of("en_US.yml", "de_DE.yml")) {
+            YamlConfiguration config = loadRealLangFile(fileName);
+            for (String key : config.getKeys(true)) {
+                String value = config.getString(key);
+                if (config.isString(key) && parameter.matcher(value).find() && singleApostrophe.matcher(value).find()) {
+                    offenders.add(fileName + ": " + key);
+                }
+            }
+        }
+        assertTrue(offenders.isEmpty(), () -> "Templates with {n} parameters must write apostrophes as '': " + offenders);
     }
 
     private void checkForRegressionRisk(String fileName) throws IOException {
@@ -114,17 +147,19 @@ class RealLangFilesTest {
 
     private Set<String> messageKeyLiteralsInSource() throws IOException {
         Set<String> keys = new LinkedHashSet<>();
-        Path root = Path.of("src/main/java");
-        assertTrue(Files.exists(root), () -> root + " not found - run from the project root");
-        try (var paths = Files.walk(root)) {
-            List<Path> javaFiles = paths.filter(p -> p.toString().endsWith(".java")).toList();
-            for (Path file : javaFiles) {
-                String content = Files.readString(file, StandardCharsets.UTF_8);
-                Matcher calls = KEY_LOOKUP_CALL.matcher(content);
-                while (calls.find()) {
-                    Matcher literals = KEY_SHAPED_LITERAL.matcher(calls.group(1));
-                    while (literals.find()) {
-                        keys.add(literals.group(1));
+        // The core and the public API (api/) both resolve lang keys.
+        for (Path root : List.of(Path.of("src/main/java"), Path.of("api/src/main/java"))) {
+            assertTrue(Files.exists(root), () -> root + " not found - run from the project root");
+            try (var paths = Files.walk(root)) {
+                List<Path> javaFiles = paths.filter(p -> p.toString().endsWith(".java")).toList();
+                for (Path file : javaFiles) {
+                    String content = Files.readString(file, StandardCharsets.UTF_8);
+                    Matcher calls = KEY_LOOKUP_CALL.matcher(content);
+                    while (calls.find()) {
+                        Matcher literals = KEY_SHAPED_LITERAL.matcher(calls.group(1));
+                        while (literals.find()) {
+                            keys.add(literals.group(1));
+                        }
                     }
                 }
             }

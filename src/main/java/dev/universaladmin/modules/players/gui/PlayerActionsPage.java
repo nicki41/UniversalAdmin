@@ -11,6 +11,7 @@ import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.SelectionDialog;
 import dev.universaladmin.localization.MessageKey;
+import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.players.PlayerPermissions;
 import dev.universaladmin.modules.players.action.PlayerActionIds;
 import dev.universaladmin.modules.players.action.PlayerTargetInput;
@@ -152,7 +153,7 @@ public final class PlayerActionsPage extends AbstractGuiPage {
     private GuiButton toggleButton(Material material, String labelKey, PermissionNode permission, Boolean currentlyOn, GuiButton.ClickHandler handler) {
         String status = messages.get(MessageKey.of(
                 currentlyOn == null ? "players.gui.status.unavailable" : (currentlyOn ? "players.gui.status.on" : "players.gui.status.off")));
-        return new GuiButton(GuiItem.of(material, text(labelKey, status)), permission, handler);
+        return new GuiButton(GuiItem.of(material, text(labelKey, MessageService.markup(status))), permission, handler);
     }
 
     private void promptPlayerToPlayer(Player viewer) {

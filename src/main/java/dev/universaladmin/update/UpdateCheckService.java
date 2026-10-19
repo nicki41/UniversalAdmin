@@ -21,13 +21,9 @@ import java.util.logging.Logger;
  * owns the <i>when</i>, same split as {@code telemetry.TelemetryService}/
  * {@code TelemetryScheduler}.
  *
- * <p>Version comparison is a plain string inequality against the running
- * plugin version, not a full SemVer ordering - this project's releases only
- * ever move forward (see docs/release/releasing.md), so "the latest tag on
- * GitHub isn't what's currently running" is already the right signal in
- * every real scenario; it would only be wrong for a locally built jar newer
- * than anything published, which is a developer's own machine, not a
- * server this feature needs to protect.
+ * <p>Only a release that is actually newer by SemVer ordering is announced
+ * (see {@link SemanticVersion}) - a server running a newer build than the
+ * latest GitHub release is never told to "update" to an older one.
  */
 public final class UpdateCheckService {
 
@@ -77,7 +73,7 @@ public final class UpdateCheckService {
                 GitHubRelease release = client.fetchLatest();
                 latestKnown.set(release);
                 failureAlreadyWarned.set(false);
-                if (!release.version().equals(currentVersion)) {
+                if (SemanticVersion.isNewer(release.version(), currentVersion)) {
                     scheduler.runOnMainThread(() -> announce(release));
                 }
             } catch (InterruptedException e) {

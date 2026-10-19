@@ -8,7 +8,7 @@ Accepted
 
 UniversalAdmin should later allow community and official extensions that
 can register modules, GUI pages, actions, permissions, migrations, and so
-on (full list in [../extensions-future.md](../extensions-future.md)). A
+on (full list in [../extensions.md](../extensions.md)). A
 public, versioned extension API is explicitly *not* built at this stage.
 The risk: if built-in modules internally work differently from how a future
 extension would need to work, the later API cut forces a rewrite of the

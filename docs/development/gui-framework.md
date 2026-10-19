@@ -376,3 +376,19 @@ hopping - `AbstractListGuiPage` provides all of that. The click handler
 (`onSelect`) only calls navigation and (indirectly, through the service)
 domain logic, never SQL or computation directly - see "The One
 Architecture Rule Still Holds" above.
+
+## Added in 1.0
+
+- **Main menu** entries come from `ModuleDescriptor#menu(homePage,
+  permission)` and `#menuOrder` - the menu lists every enabled module with a
+  registered home page; names come from `menu.<namespace>.<module>.*` keys
+  when present.
+- **Profile buttons** from any module or extension: `PlayerMenuEntry` +
+  `PlayerMenuRegistry` (`ModuleContext#registerPlayerMenuEntry`).
+- **`AbstractListGuiPage#renderControls`** places filter/add buttons in the
+  free top-row or bottom-row slots.
+- **`GuiActions.run(...)`** executes an action from a click and reports a
+  failure to the viewer.
+- **`ConfirmationDialog`** returns to the page it was opened from and is
+  single-use; every button ignores a second click within 150 ms.
+

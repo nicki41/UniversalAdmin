@@ -4,6 +4,8 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.core.time.DurationParser;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.whitelist.WhitelistEntry;
 import dev.universaladmin.modules.whitelist.WhitelistService;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +29,9 @@ public final class AddWhitelistEntryAction implements Action<AddWhitelistEntryIn
     @Override
     public CompletableFuture<ActionResult<WhitelistEntry>> execute(ActionContext context, AddWhitelistEntryInput input) {
         return whitelistService.add(input.playerId(), input.playerName(), context.actor(), input.reason(), input.notes(), input.expiresAt())
-                .thenApply(ActionResult::success);
+                .thenApply(entry -> entry.expiresAt() == null
+                        ? ActionResult.success(entry, MessageKey.of("whitelist.result.added"), entry.playerName())
+                        : ActionResult.success(entry, MessageKey.of("whitelist.result.added-temporary"),
+                                entry.playerName(), DurationParser.formatRemaining(entry.expiresAt())));
     }
 }

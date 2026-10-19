@@ -4,6 +4,8 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.core.PlayerNames;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.whitelist.WhitelistService;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -32,6 +34,7 @@ public final class RemoveWhitelistEntryAction implements Action<UUID, Void> {
 
     @Override
     public CompletableFuture<ActionResult<Void>> execute(ActionContext context, UUID playerId) {
-        return whitelistService.remove(playerId).thenApply(ActionResult::success);
+        return whitelistService.remove(playerId)
+                .thenApply(ignored -> ActionResult.success(null, MessageKey.of("whitelist.result.removed"), PlayerNames.of(playerId)));
     }
 }

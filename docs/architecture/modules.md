@@ -167,8 +167,10 @@ not have to repeat them.
 | Worlds | `dev.universaladmin.modules.worlds` | Complete: world browser/profile (environment/seed*/spawn/border/players/chunks/entities/time/weather/difficulty), teleport/spawn/time/weather/difficulty actions, world border management, a dynamic gamerule GUI (reads `World#getGameRules()` at runtime, no rule hardcoded), fine-grained permissions (seed kept separate), audit, no database of its own (everything Bukkit-persisted) - see [docs/user/modules/worlds.md](../user/modules/worlds.md) |
 | Whitelist | `dev.universaladmin.modules.whitelist` | Complete: native whitelist wrapping (enable/disable/list/add/remove) plus its own metadata (added-by/at, reason, notes, expiration), time-limited entries with a join check and hourly sweep, a strict ownership model (automated paths never touch entries set by someone else), fine-grained permissions, audit - see [docs/user/modules/whitelist.md](../user/modules/whitelist.md) |
 | Performance | `dev.universaladmin.modules.performance` | Complete: cached TPS/MSPT/memory/world/entity sampling on a configurable interval (`PerformanceSamplingService`, never recomputed per GUI render), dashboard, per-world performance view, entity overview (grouped by type/world), short in-memory history, staff alerts on TPS/MSPT/memory thresholds (`NotificationService#notifyStaff`), a deliberately narrow Entity Clear (never players, configurable protected types, preview, confirmation, audit), fine-grained permissions - see [docs/user/modules/performance.md](../user/modules/performance.md) |
-| Audit Log | `dev.universaladmin.modules.auditlog` | Skeleton, GUI/commands missing (the service itself already exists as the core service `dev.universaladmin.audit`) |
-| Settings | `dev.universaladmin.modules.settings` | Skeleton, GUI/commands missing (the service already exists as the core service `dev.universaladmin.settings.SettingsService`) |
+| Reports | `dev.universaladmin.modules.reports` | Complete: `/report`, cooldown/limit, staff notifications and join reminder, reports GUI with claim/resolve/reject and teleports, profile button, audit - see [docs/user/modules/reports.md](../user/modules/reports.md) |
+| Chat | `dev.universaladmin.modules.chat` | Complete: staff chat (command, toggle, `#` prefix), chat lock, slow mode, clear chat, GUI page, audit - see [docs/user/modules/chat.md](../user/modules/chat.md) |
+| Audit Log | `dev.universaladmin.modules.auditlog` | Complete: filterable GUI, detail page, retention, `/admin audit` - see [docs/user/audit-log.md](../user/audit-log.md) |
+| Settings | `dev.universaladmin.modules.settings` | Complete: settings GUI by section, `/admin settings`, audited `core:settings.set` - see [docs/user/modules/settings.md](../user/modules/settings.md) |
 
 "Skeleton" means: implements `Module`, compiles, registers an example
 permission, but has no repository/service/action/GUI chain yet. Building
@@ -206,12 +208,14 @@ ordering and a failed Players module cleanly marks the dependent module as
 `FAILED` instead of crashing with a `NoSuchElementException` from
 `ServiceRegistry.require`.
 
-## Extension-ready, on purpose
+## Extension modules
 
 Nothing about `Module`/`ModuleDescriptor`/`ModuleRegistry`/`ModuleManager`
-is built-in-only. This is the same lifecycle a future external extension
-would go through - no JAR loader, no classloader isolation, no public SDK
-yet (that's explicitly out of scope for now, see
-[extensions-future.md](extensions-future.md)), but the internal contract
-itself does not need to change when that arrives. See
-[decisions/0005-extension-ready-design.md](decisions/0005-extension-ready-design.md).
+is built-in-only. An extension's module goes through the same states via
+`ModuleManager#loadAndEnable` when its plugin registers it (after the
+built-ins), and through `ModuleManager#disable` when that plugin is
+disabled - modules depending on it are disabled first, and its
+`ModuleResources` are released either way. A disabled or failed module can
+be registered again (plugin reload). See [extensions.md](extensions.md),
+[decisions/0005-extension-ready-design.md](decisions/0005-extension-ready-design.md)
+and [decisions/0010-extension-api.md](decisions/0010-extension-api.md).

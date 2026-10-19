@@ -104,6 +104,7 @@ class GuiListenerTest {
         GuiButton.ClickHandler handler = mock(GuiButton.ClickHandler.class);
         GuiButton button = GuiButton.of(null, handler);
         when(view.buttonAt(4)).thenReturn(java.util.Optional.of(button));
+        when(view.acceptButtonClick(org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
 
         Inventory topInventory = mock(Inventory.class);
         when(topInventory.getHolder()).thenReturn(view);
@@ -174,6 +175,7 @@ class GuiListenerTest {
         GuiButton.ClickHandler handler = mock(GuiButton.ClickHandler.class);
         GuiButton button = GuiButton.of(null, handler);
         when(view.buttonAt(4)).thenReturn(java.util.Optional.of(button));
+        when(view.acceptButtonClick(org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
 
         Inventory topInventory = mock(Inventory.class);
         when(topInventory.getHolder()).thenReturn(view);

@@ -13,16 +13,22 @@ import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.moderation.action.FreezeInput;
 import dev.universaladmin.modules.moderation.action.ModerationActionIds;
 import dev.universaladmin.modules.moderation.action.UnfreezeInput;
-import dev.universaladmin.modules.moderation.gui.EnderChestInspectorPage;
-import dev.universaladmin.modules.moderation.gui.InventoryInspectorPage;
 import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
 import dev.universaladmin.modules.moderation.gui.ModeratePlayerPage;
 import dev.universaladmin.modules.moderation.gui.PunishmentListPage;
 import dev.universaladmin.modules.players.action.PlayerActionIds;
 import dev.universaladmin.modules.players.action.TeleportInput;
 import dev.universaladmin.modules.players.action.TeleportKind;
+import dev.universaladmin.modules.players.gui.PlayersGui;
+import dev.universaladmin.core.PlayerRef;
+import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.permission.bukkit.PermissiblePermissionEvaluator;
+import dev.universaladmin.settings.SettingsService;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -36,6 +42,7 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
 /**
@@ -50,20 +57,32 @@ import org.bukkit.inventory.EquipmentSlot;
  */
 public final class StaffModeGuardListener implements Listener {
 
+    private static final long TOOL_REUSE_NANOS = 250_000_000L;
+
     private final StaffModeState staffModeState;
     private final StaffToolItems toolItems;
     private final FreezeRuntimeState freezeState;
     private final ActionExecutor actionExecutor;
     private final ModerationGuiContext guiContext;
+    private final SettingsService settings;
+    private final ServiceRegistry services;
+    /**
+     * One physical right-click on a player can arrive as both an entity
+     * interaction and an "interact with air" - without this, a toggle tool
+     * (Freeze) would run twice and undo itself.
+     */
+    private final Map<UUID, Long> lastToolUse = new HashMap<>();
 
     public StaffModeGuardListener(
             StaffModeState staffModeState, StaffToolItems toolItems, FreezeRuntimeState freezeState,
-            ActionExecutor actionExecutor, ModerationGuiContext guiContext) {
+            ActionExecutor actionExecutor, ModerationGuiContext guiContext, SettingsService settings, ServiceRegistry services) {
         this.staffModeState = staffModeState;
         this.toolItems = toolItems;
         this.freezeState = freezeState;
         this.actionExecutor = actionExecutor;
         this.guiContext = guiContext;
+        this.settings = settings;
+        this.services = services;
     }
 
     @EventHandler
@@ -80,8 +99,20 @@ public final class StaffModeGuardListener implements Listener {
                 case EXIT_STAFF_MODE -> runSelfAction(player, ModerationActionIds.STAFF_MODE_EXIT);
                 default -> {
                     // PLAYER_INSPECTOR/FREEZE_TOOL/INVENTORY_INSPECTOR/
-                    // ENDERCHEST_INSPECTOR/MODERATE_TOOL/TELEPORT_TOOL need
-                    // an entity target - handled in onInteractEntity.
+                    // ENDERCHEST_INSPECTOR/MODERATE_TOOL/TELEPORT_TOOL act on
+                    // the player in the crosshair, at any distance up to the
+                    // configured range - not only on one close enough to
+                    // right-click directly (that case is onInteractEntity).
+                    if (event.getAction().isRightClick()) {
+                        Player target = StaffModeTargeting.targetedPlayer(
+                                player, settings.get(ModerationSettings.STAFFMODE_TARGET_RANGE_BLOCKS));
+                        if (target == null) {
+                            player.sendActionBar(ComponentMessages.render(guiContext.messages().get(
+                                    MessageKey.of("moderation.gui.staffmode.actionbar.no-target"))));
+                        } else {
+                            useOn(player, tool, target);
+                        }
+                    }
                 }
             }
         });
@@ -103,21 +134,47 @@ public final class StaffModeGuardListener implements Listener {
         }
         toolItems.toolOf(player.getInventory().getItemInMainHand()).ifPresent(tool -> {
             event.setCancelled(true);
-            if (!(event.getRightClicked() instanceof Player target)) {
-                return;
-            }
-            switch (tool) {
-                case PLAYER_INSPECTOR -> PunishmentListPage.forTarget(guiContext, target.getUniqueId()).open(player);
-                case INVENTORY_INSPECTOR -> new InventoryInspectorPage(guiContext, target.getUniqueId(), target.getName()).open(player);
-                case ENDERCHEST_INSPECTOR -> new EnderChestInspectorPage(guiContext, target.getUniqueId(), target.getName()).open(player);
-                case FREEZE_TOOL -> toggleFreeze(player, target);
-                case MODERATE_TOOL -> new ModeratePlayerPage(guiContext, target.getUniqueId(), target.getName()).open(player);
-                case TELEPORT_TOOL -> player.teleportAsync(target.getLocation());
-                default -> {
-                    // TELEPORT_PICKER/VANISH_TOGGLE/EXIT_STAFF_MODE don't need a target - handled in onInteract.
-                }
+            if (event.getRightClicked() instanceof Player target) {
+                useOn(player, tool, target);
             }
         });
+    }
+
+    /** Runs a player-targeting tool on {@code target} - at most once per physical click, see {@link #lastToolUse}. */
+    private void useOn(Player staff, StaffToolItems.Tool tool, Player target) {
+        long now = System.nanoTime();
+        Long previous = lastToolUse.get(staff.getUniqueId());
+        if (previous != null && now - previous < TOOL_REUSE_NANOS) {
+            return;
+        }
+        lastToolUse.put(staff.getUniqueId(), now);
+        PlayerRef ref = new PlayerRef(target.getUniqueId(), target.getName());
+        switch (tool) {
+            case PLAYER_INSPECTOR -> PunishmentListPage.forTarget(guiContext, target.getUniqueId()).open(staff);
+            case INVENTORY_INSPECTOR -> playersGui(staff).ifPresent(gui -> gui.openInventory(staff, ref));
+            case ENDERCHEST_INSPECTOR -> playersGui(staff).ifPresent(gui -> gui.openEnderChest(staff, ref));
+            case FREEZE_TOOL -> toggleFreeze(staff, target);
+            case MODERATE_TOOL -> new ModeratePlayerPage(guiContext, target.getUniqueId(), target.getName()).open(staff);
+            case TELEPORT_TOOL -> actionExecutor.<TeleportInput, Object>execute(PlayerActionIds.TELEPORT, contextFor(staff),
+                    TeleportInput.of(TeleportKind.ADMIN_TO_PLAYER, target.getUniqueId()));
+            default -> {
+                // TELEPORT_PICKER/VANISH_TOGGLE/EXIT_STAFF_MODE don't need a target - handled in onInteract.
+            }
+        }
+    }
+
+    /** The Players module's live inventory editors - absent while that module is disabled. */
+    private Optional<PlayersGui> playersGui(Player staff) {
+        Optional<PlayersGui> gui = services.get(PlayersGui.class);
+        if (gui.isEmpty()) {
+            staff.sendMessage(ComponentMessages.render(guiContext.messages().get(MessageKey.of("command.error.disabled"))));
+        }
+        return gui;
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        lastToolUse.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler

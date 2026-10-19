@@ -125,7 +125,7 @@ building a new one. `modules.players` is the reference implementation.
 `universaladmin-api`, `-sdk`, `-web` would today only consist of empty
 folders - there are no external extensions and no web app yet that would
 compile against them. The separation point is instead marked in code (see
-[extensions-future.md](extensions-future.md) and
+[extensions.md](extensions.md) and
 [web-future.md](web-future.md)) and becomes a real module split once
 something exists that needs it. Detail:
 [decisions/0006-optional-web-architecture.md](decisions/0006-optional-web-architecture.md).

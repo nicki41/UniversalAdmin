@@ -6,15 +6,22 @@ plugins {
 }
 
 group = "dev.universaladmin"
-// Semantic versioning; "-alpha" reflects actual status (see ROADMAP.md) -
-// not a 1.0 or a stable-implying bare version number.
-version = "0.1.0-alpha.5"
+// Semantic versioning. From 1.0.0 on the public API (api/) is stable: no
+// breaking change without a major version - see
+// docs/architecture/decisions/0010-extension-api.md. The api/ and extension
+// projects take this same version.
+version = "1.1.0"
 description = "UniversalAdmin - a universal admin platform for Paper servers"
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))
     }
+    // The Paper 26 API is published for Java 25 (its servers run 25), but the
+    // jars are Java 21 bytecode so Paper 1.21.x servers on Java 21 load them
+    // too - see gradle.properties. Without this, Gradle would refuse the
+    // Java 25 dependency for a Java 21 target.
+    disableAutoTargetJvm()
 }
 
 repositories {
@@ -23,8 +30,13 @@ repositories {
 }
 
 dependencies {
+    // The public extension API (api/) - shaded into the plugin jar
+    // unrelocated, because extensions compile against these exact class
+    // names. See settings.gradle.kts.
+    implementation(project(":universaladmin-api"))
+
     // Paper API - provided by the server at runtime, never shaded.
-    compileOnly("io.papermc.paper:paper-api:26.2.build.115-stable")
+    compileOnly("io.papermc.paper:paper-api:${property("paperApiVersion")}")
 
     // Storage: SQLite is the default database, bundled and shaded into the
     // plugin jar because Paper does not provide a JDBC driver.
@@ -44,11 +56,14 @@ dependencies {
     // Paper API types (e.g. org.bukkit.plugin.Plugin) are mocked, never run
     // against a real server, in tests that need them - see
     // docs/development/testing.md.
-    testImplementation("io.papermc.paper:paper-api:26.2.build.115-stable")
+    testImplementation("io.papermc.paper:paper-api:${property("paperApiVersion")}")
 }
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
+    // Java 21 bytecode: Paper 1.21.x servers commonly run Java 21. The
+    // toolchain stays 25; see gradle.properties for the supported versions.
+    options.release.set(21)
     options.compilerArgs.add("-parameters")
 }
 
@@ -97,6 +112,9 @@ tasks.named<ShadowJar>("shadowJar") {
     minimize {
         exclude(dependency("org.xerial:sqlite-jdbc:.*"))
         exclude(dependency("org.mariadb.jdbc:mariadb-java-client:.*"))
+        // Every API class must ship, used by the core or not: extensions
+        // load them from this jar at runtime.
+        exclude(project(":universaladmin-api"))
     }
 }
 

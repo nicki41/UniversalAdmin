@@ -53,8 +53,10 @@ public final class SetGameRuleAction implements Action<SetGameRuleInput, Void> {
             }
             boolean applied = world.setGameRuleValue(input.ruleName(), input.value());
             future.complete(applied
-                    ? ActionResult.success(null)
-                    : ActionResult.failure(ActionResult.FailureReason.VALIDATION, MessageKey.of("worlds.action.invalid-gamerule-value")));
+                    ? ActionResult.success(null, MessageKey.of("worlds.result.gamerule-set"),
+                            world.getName(), input.ruleName(), String.valueOf(world.getGameRuleValue(input.ruleName())))
+                    : ActionResult.failure(ActionResult.FailureReason.VALIDATION, MessageKey.of("worlds.action.invalid-gamerule-value"),
+                            input.value(), input.ruleName()));
         });
         return future;
     }

@@ -106,3 +106,14 @@ Backed by the `audit_log` table (see
 `(actor_type, actor_id)`, `(target_type, target_id)`, `action_id`,
 `module`, and `source` - the dimensions `AuditQuery` actually filters on,
 deliberately not more (see `AuditSchemaMigrationV2`'s Javadoc).
+
+## Commands
+
+`/admin audit [player] [page]` shows the newest entries in chat or the
+console. Targets and summaries use player names (since 1.0).
+
+## For extensions
+
+Every recorded entry is also published to `AuditListener`s
+(`ModuleContext#subscribeAudit`) - the official Discord extension uses this
+to mirror selected events into a channel.

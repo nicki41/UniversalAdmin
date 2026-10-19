@@ -84,8 +84,7 @@ jobs:
           ./gradlew clean build --console=plain
           -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64
 
-      # Exactly one installable artifact: the shaded plugin jar. No sources
-      # jar, no javadoc jar, no unshaded jar.
+      # The shaded plugin jar - the one file a server owner installs.
       - name: Locate release jar and create SHA-256 checksum
         id: artifact
         run: |
@@ -103,10 +102,58 @@ jobs:
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
           echo "checksum=${JAR}.sha256" >> "$GITHUB_OUTPUT"
 
-      # Every version - -alpha/-beta/-rc included - is published as a normal
-      # GitHub release, not flagged "Pre-release". Deliberate: the project's
-      # own alpha status is already communicated in the README/version
-      # string itself, not through GitHub's separate prerelease flag.
+      # Attached next to the plugin jar: the official Discord extension (its
+      # own plugin jar), the Velocity plugin for network mode, and the
+      # extension API for developers (binary, sources, javadoc). The plugin
+      # jar and the Velocity jar also go to Modrinth (below).
+      - name: Collect extension, proxy and API artifacts
+        id: extras
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          DISCORD="extensions/discord/build/libs/universaladmin-discord-${VERSION}.jar"
+          VELOCITY="proxy/velocity/build/libs/universaladmin-velocity-${VERSION}.jar"
+          API="api/build/libs/universaladmin-api-${VERSION}.jar"
+          for f in "$DISCORD" "$VELOCITY" "$API" \
+              "api/build/libs/universaladmin-api-${VERSION}-sources.jar" \
+              "api/build/libs/universaladmin-api-${VERSION}-javadoc.jar"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Expected artifact '$f' was not produced by the build."
+              exit 1
+            fi
+          done
+          ( cd extensions/discord/build/libs && sha256sum "universaladmin-discord-${VERSION}.jar" \
+              > "universaladmin-discord-${VERSION}.jar.sha256" )
+          ( cd proxy/velocity/build/libs && sha256sum "universaladmin-velocity-${VERSION}.jar" \
+              > "universaladmin-velocity-${VERSION}.jar.sha256" )
+          {
+            echo "files<<FILES_EOF"
+            echo "$DISCORD"
+            echo "${DISCORD}.sha256"
+            echo "$VELOCITY"
+            echo "${VELOCITY}.sha256"
+            echo "$API"
+            echo "api/build/libs/universaladmin-api-${VERSION}-sources.jar"
+            echo "api/build/libs/universaladmin-api-${VERSION}-javadoc.jar"
+            echo "FILES_EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "velocity=$VELOCITY" >> "$GITHUB_OUTPUT"
+
+      # One list for every place that names the supported Minecraft
+      # versions: supported-versions.txt (kept current by compatibility.yml).
+      - name: Read supported Minecraft versions
+        id: games
+        run: |
+          set -euo pipefail
+          {
+            echo "list<<GAMES_EOF"
+            grep -vE '^\s*(#|$)' supported-versions.txt
+            echo "GAMES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # Release notes come from the matching CHANGELOG section. Versions with
+      # a pre-release suffix are flagged "Pre-release" (see "Create GitHub
+      # release" below and docs/release/releasing.md#version-scheme).
       - name: Determine release notes
         id: notes
         run: |
@@ -142,6 +189,16 @@ jobs:
             --title "UniversalAdmin ${VERSION}"
             --generate-notes
           )
+          while IFS= read -r extra; do
+            [ -n "$extra" ] && ARGS+=("$extra")
+          done <<< "${{ steps.extras.outputs.files }}"
+          # From 1.0.0 on, -alpha/-beta/-rc builds are flagged Pre-release:
+          # GitHub's /releases/latest (which the in-plugin update check
+          # reads) then only ever returns a stable version, so servers on a
+          # stable release are never offered a pre-release.
+          if [[ "$VERSION" == *-* ]]; then
+            ARGS+=(--prerelease)
+          fi
           if [ -n "${{ steps.notes.outputs.notes_file }}" ]; then
             ARGS+=(--notes-file "${{ steps.notes.outputs.notes_file }}")
           fi
@@ -152,24 +209,43 @@ jobs:
             echo "GH_RELEASE_BODY_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      # Mirrors the same release onto the existing Modrinth project (id
-      # wGP5uSse, currently in "draft" - version uploads work regardless of
-      # the project's own moderation status). fail-mode: warn so a
-      # Modrinth-side hiccup doesn't mark the whole release as failed - the
-      # GitHub release above has already succeeded by this point.
+      # Mirrors the same release onto the Modrinth project (id wGP5uSse).
+      # fail-mode: warn so a Modrinth-side hiccup doesn't mark the whole
+      # release as failed - the GitHub release above has already succeeded
+      # by this point.
       - name: Publish to Modrinth
         uses: Kira-NT/mc-publish@v3
         with:
           modrinth-id: wGP5uSse
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: build/libs/universaladmin-core-*.jar
+          files: build/libs/universaladmin-core-${{ steps.version.outputs.version }}.jar
           name: UniversalAdmin ${{ steps.version.outputs.version }}
           version: ${{ steps.version.outputs.version }}
           changelog: ${{ steps.github_release.outputs.body }}
-          loaders: paper
-          # Only the currently pinned Paper API version is claimed - the
-          # broader supported range is an explicit open TODO, see
-          # RELEASE_READINESS.md and docs/release/modrinth.md.
-          game-versions: "26.2"
-          java: 25
+          # Paper and its forks that run Paper plugins unchanged.
+          loaders: |
+            paper
+            purpur
+          # Every version in supported-versions.txt: built for the oldest
+          # (Java 21 bytecode, api-version 1.21.7), compiled against the
+          # newest, and boot-tested on each - see docs/user/installation.md.
+          game-versions: ${{ steps.games.outputs.list }}
+          java: 21
+          fail-mode: warn
+
+      # The optional proxy plugin for network mode, as its own version in
+      # the same Modrinth project (loader "velocity").
+      - name: Publish the Velocity plugin to Modrinth
+        uses: Kira-NT/mc-publish@v3
+        with:
+          modrinth-id: wGP5uSse
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: ${{ steps.extras.outputs.velocity }}
+          name: UniversalAdmin Velocity ${{ steps.version.outputs.version }}
+          version: ${{ steps.version.outputs.version }}-velocity
+          changelog: |
+            The optional Velocity plugin for UniversalAdmin's network mode: refuses players banned with UniversalAdmin at the proxy. Install UniversalAdmin ${{ steps.version.outputs.version }} on your servers as well - see https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
+          loaders: velocity
+          game-versions: ${{ steps.games.outputs.list }}
+          java: 21
           fail-mode: warn

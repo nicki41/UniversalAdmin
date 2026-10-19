@@ -9,6 +9,7 @@ import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.localization.MessageKey;
+import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.moderation.ModerationPermissions;
 import dev.universaladmin.modules.moderation.action.ModerationActionIds;
 import dev.universaladmin.permission.PermissionNode;
@@ -90,7 +91,7 @@ public final class ModerationHomePage extends AbstractGuiPage {
 
     private GuiButton toggleButton(Material material, String labelKey, PermissionNode permission, boolean currentlyOn, ActionId actionId) {
         String status = messages.get(MessageKey.of(currentlyOn ? "moderation.gui.status.on" : "moderation.gui.status.off"));
-        return new GuiButton(GuiItem.of(material, text(labelKey, status)), permission,
+        return new GuiButton(GuiItem.of(material, text(labelKey, MessageService.markup(status))), permission,
                 clickCtx -> ModerationGuiActions.<Void>runAction(ctx, clickCtx.viewer(), actionId, null, () -> this.open(clickCtx.viewer())));
     }
 }

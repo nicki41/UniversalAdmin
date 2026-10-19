@@ -7,18 +7,16 @@ import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
-import dev.universaladmin.gui.GuiPage;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.SelectionDialog;
 import dev.universaladmin.localization.MessageKey;
-import dev.universaladmin.modules.moderation.DurationParseException;
-import dev.universaladmin.modules.moderation.DurationParser;
+import dev.universaladmin.core.time.DurationParseException;
+import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.modules.moderation.ModerationFormat;
 import dev.universaladmin.modules.moderation.ModerationPermissions;
-import dev.universaladmin.modules.moderation.ModerationPlayerLink;
 import dev.universaladmin.modules.moderation.ModerationSettings;
 import dev.universaladmin.modules.moderation.action.BanInput;
 import dev.universaladmin.modules.moderation.action.FreezeInput;
@@ -46,8 +44,8 @@ import org.bukkit.entity.Player;
  * Reason -&gt; Duration (if needed) -&gt; Confirmation -&gt; Action. Ephemeral,
  * built fresh per click with the target baked in (like {@code
  * PlayerProfilePage}), never registered in {@code GuiRegistry}, and
- * published to the Players module via {@link ModerationPlayerLink} instead
- * of a direct import (see that interface's javadoc).
+ * published to the Players module via a {@link ModeratePlayerMenuEntry} instead
+ * of a direct import.
  *
  * <p>Follows the one-page-with-chained-private-methods wizard shape every
  * other multi-step flow in this codebase uses (see {@code
@@ -72,11 +70,6 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
         this.ctx = ctx;
         this.targetId = targetId;
         this.targetName = targetName;
-    }
-
-    /** Adapter to {@link ModerationPlayerLink}'s functional shape, so {@code ModerationModule} can register a method reference. */
-    public static GuiPage open(ModerationGuiContext ctx, UUID targetId, String targetName) {
-        return new ModeratePlayerPage(ctx, targetId, targetName);
     }
 
     @Override

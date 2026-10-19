@@ -1,0 +1,7 @@
+name: UniversalAdminExample
+version: '${version}'
+main: dev.universaladmin.example.ExampleExtensionPlugin
+api-version: '1.21.7'
+description: Example extension for UniversalAdmin - adds a /admin greet command, a GUI page and a profile button.
+# Makes Paper enable UniversalAdmin first, so its API is ready in onEnable.
+depend: [UniversalAdmin]
