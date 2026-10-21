@@ -23,6 +23,15 @@ dated, versioned section below it (see
   `_mute_remaining`, `_warnings`, `_online` (without vanished players),
   `_staff_online`, `_open_reports`, `_maintenance`, network counts and more.
   See [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md).
+- **Discord bot mode** for UniversalAdmin Discord: two-way staff chat,
+  slash commands (`/ban`, `/mute`, `/kick`, `/warn`, `/unban`, `/unmute`,
+  `/history`, `/check`, `/find`, `/ua <any admin command>`) with player
+  autocomplete, and reports with Claim / Resolve / Reject buttons. Discord
+  roles map to permission nodes; everything is checked and audited like in
+  game. Webhook mode stays the default. See
+  [docs/extensions/discord.md](docs/extensions/discord.md).
+- Extension API 1.2: `Actor.remote` / `ActorType.REMOTE`, `RemoteCommands`
+  and `StaffChat` ([ADR 0016](docs/architecture/decisions/0016-remote-actors.md)).
 - Extension API 1.2: status services for displays
   (`dev.universaladmin.status`: `PlayerStatus`, `ReportOverview`,
   `MaintenanceStatus`) and `PlayerDirectory#addIfAbsent`.
