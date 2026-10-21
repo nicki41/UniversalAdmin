@@ -1,5 +1,12 @@
-# UniversalAdmin Discord - posts admin actions to a Discord channel.
+# UniversalAdmin Discord - admin actions in Discord, and (as a bot) staff chat,
+# slash commands and report buttons. Full guide: docs/extensions/discord.md
 #
+# "webhook": posts admin actions into one channel - set webhook-url below.
+# "bot":     a Discord bot - admin actions, two-way staff chat, /ban, /mute,
+#            /history, ... from Discord, report buttons. Set up "bot:" below.
+mode: webhook
+
+# --- Webhook mode -------------------------------------------------------------
 # 1. In Discord: Server Settings -> Integrations -> Webhooks -> New Webhook,
 #    pick the channel (a staff-only channel is recommended), "Copy Webhook URL".
 # 2. Paste it below and run /admin discord reload, then /admin discord test.
@@ -8,6 +15,7 @@
 # that channel. It is never logged or shown in-game.
 webhook-url: ""
 
+# --- Both modes -----------------------------------------------------------------
 # Which audit events to post. A pattern matches the event type; * matches
 # anything. Every type is listed in the audit log (/admin audit) and in
 # docs/user/audit-log.md.
@@ -40,3 +48,34 @@ username: "UniversalAdmin"
 avatar-url: ""
 # Shown in every message's footer - useful with several servers in one channel.
 server-name: "Minecraft Server"
+
+# --- Bot mode -------------------------------------------------------------------
+bot:
+  # Discord Developer Portal -> your application -> Bot -> Reset Token.
+  # Treat it like a password. Also switch on "Message Content Intent" there.
+  token: ""
+  # Your Discord server: User Settings -> Advanced -> Developer Mode on, then
+  # right-click the server icon -> Copy Server ID.
+  guild-id: ""
+  # Channel ids (right-click a channel -> Copy Channel ID). Leave one empty to
+  # switch that feature off.
+  channels:
+    # Admin actions (the "events"/"exclude" filter above applies).
+    log: ""
+    # Two-way staff chat: in-game /sc appears here, and what staff write here
+    # appears in game.
+    staff-chat: ""
+    # New reports with Claim / Resolve / Reject buttons.
+    reports: ""
+  # What members with a role may do: role id (right-click a role -> Copy Role
+  # ID) -> UniversalAdmin permission nodes. Wildcards work. Members without a
+  # role listed here can do nothing - every command is checked like in game.
+  roles:
+    # "111111111111111111":     # e.g. Admin
+    #   - "universaladmin.*"
+    # "222222222222222222":     # e.g. Moderator
+    #   - "universaladmin.moderation.*"
+    #   - "universaladmin.reports.*"
+    #   - "universaladmin.chat.staff"
+  # Shown under the bot's name; {online} = players online. Empty: nothing.
+  activity: "{online} players online"

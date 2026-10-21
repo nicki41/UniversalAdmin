@@ -5,6 +5,7 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionResult.FailureReason;
+import dev.universaladmin.chat.StaffChat;
 import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
@@ -12,6 +13,7 @@ import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.chat.ChatPermissions;
 import dev.universaladmin.modules.chat.ChatService;
 import dev.universaladmin.modules.chat.ChatSettings;
+import dev.universaladmin.modules.chat.StaffChatHub;
 import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
@@ -156,13 +158,16 @@ public final class ChatActions {
         private final TaskScheduler scheduler;
         private final Logger logger;
         private final NetworkService network;
+        private final StaffChatHub hub;
 
-        public StaffMessage(MessageService messages, SettingsService settings, TaskScheduler scheduler, Logger logger, NetworkService network) {
+        public StaffMessage(MessageService messages, SettingsService settings, TaskScheduler scheduler, Logger logger,
+                NetworkService network, StaffChatHub hub) {
             this.messages = messages;
             this.settings = settings;
             this.scheduler = scheduler;
             this.logger = logger;
             this.network = network;
+            this.hub = hub;
         }
 
         @Override
@@ -173,16 +178,28 @@ public final class ChatActions {
         @Override
         public CompletableFuture<ActionResult<Void>> execute(ActionContext context, String message) {
             String sender = context.actor().displayName();
-            deliver(sender, message.trim(), null);
+            deliver(sender, message.trim(), null, null);
             network.publish(NETWORK_TOPIC, Map.of("sender", sender, "message", message.trim()));
+            hub.fire(new StaffChat.Message(sender, message.trim(), null, null));
             return CompletableFuture.completedFuture(ActionResult.success(null));
         }
 
-        /** Shows a staff chat line to the staff on this server; {@code server} is where it was written, {@code null} for here. */
-        public void deliver(String sender, String message, String server) {
-            String text = server == null
-                    ? messages.get(MessageKey.of("chat.staff.format"), sender, message)
-                    : messages.get(MessageKey.of("chat.staff.format-network"), sender, message, server);
+        /**
+         * Shows a staff chat line to the staff on this server; {@code server} is
+         * where it was written ({@code null} for here), {@code via} the bridge it
+         * came through ({@code null} if written in game).
+         */
+        public void deliver(String sender, String message, String server, String via) {
+            String text;
+            if (via == null) {
+                text = server == null
+                        ? messages.get(MessageKey.of("chat.staff.format"), sender, message)
+                        : messages.get(MessageKey.of("chat.staff.format-network"), sender, message, server);
+            } else {
+                text = server == null
+                        ? messages.get(MessageKey.of("chat.staff.format-via"), sender, message, via)
+                        : messages.get(MessageKey.of("chat.staff.format-network-via"), sender, message, server, via);
+            }
             Component rendered = ComponentMessages.render(text);
             boolean console = settings.get(ChatSettings.STAFF_CHAT_CONSOLE);
             scheduler.runOnMainThread(() -> {
@@ -192,7 +209,8 @@ public final class ChatActions {
                     }
                 }
                 if (console) {
-                    logger.info("[Staff]" + (server == null ? "" : " [" + server + "]") + " " + sender + ": " + message);
+                    logger.info("[Staff]" + (server == null ? "" : " [" + server + "]") + (via == null ? "" : " [" + via + "]")
+                            + " " + sender + ": " + message);
                 }
             });
         }

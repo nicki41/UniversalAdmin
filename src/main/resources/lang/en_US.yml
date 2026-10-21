@@ -1222,6 +1222,8 @@ chat:
     format: "<dark_aqua>[Staff]</dark_aqua> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
     toggled: "<aqua>Staff chat mode: {0} <gray>- everything you type goes to staff chat while it is on."
     format-network: "<dark_aqua>[Staff]</dark_aqua> <dark_gray>[{2}]</dark_gray> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
+    format-via: "<dark_aqua>[Staff]</dark_aqua> <dark_gray>[<blue>{2}</blue>]</dark_gray> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
+    format-network-via: "<dark_aqua>[Staff]</dark_aqua> <dark_gray>[{2}]</dark_gray> <dark_gray>[<blue>{3}</blue>]</dark_gray> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
   gui:
     title: "<gold><bold>Chat"
     lock: "<red>Lock the chat"

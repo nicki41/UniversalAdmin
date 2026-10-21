@@ -15,10 +15,13 @@ import org.junit.jupiter.api.Test;
 
 class DiscordFormattingTest {
 
-    private static final DiscordConfig CONFIG = new DiscordConfig(
+    private static final DiscordConfig.BotSettings NO_BOT =
+            new DiscordConfig.BotSettings("", "", "", "", "", java.util.Map.of(), "");
+
+    private static final DiscordConfig CONFIG = new DiscordConfig(DiscordConfig.Mode.WEBHOOK,
             "https://discord.com/api/webhooks/1/abc",
             new EventFilter(List.of("core:moderation.*", "core:reports.*"), List.of("core:moderation.notes.*")),
-            false, "UniversalAdmin", "", "Test Server");
+            false, "UniversalAdmin", "", "Test Server", NO_BOT);
 
     @Test
     void filterMatchesIncludesMinusExcludes() {
@@ -82,6 +85,6 @@ class DiscordFormattingTest {
     }
 
     private static DiscordConfig withUrl(String url) {
-        return new DiscordConfig(url, CONFIG.filter(), false, "UniversalAdmin", "", "Test Server");
+        return new DiscordConfig(DiscordConfig.Mode.WEBHOOK, url, CONFIG.filter(), false, "UniversalAdmin", "", "Test Server", NO_BOT);
     }
 }

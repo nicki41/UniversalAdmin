@@ -3,6 +3,8 @@ package dev.universaladmin.discord;
 import dev.universaladmin.audit.AuditEvent;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -49,22 +51,38 @@ final class EmbedFormatter {
     private EmbedFormatter() {
     }
 
-    static String payload(AuditEvent event, DiscordConfig config) {
+    /** One embed for an audit event - shared by the webhook ({@link #payload}) and the bot. */
+    record Embed(String title, String description, int color, List<Field> fields, String footer, Instant timestamp) {
+
+        record Field(String name, String value, boolean inline) {
+        }
+    }
+
+    static Embed embed(AuditEvent event, DiscordConfig config) {
         String type = event.type().toString();
         Style style = STYLES.getOrDefault(type, new Style(fallbackTitle(type), BLUE));
         int color = event.success() ? style.color() : GRAY;
         String title = event.success() ? style.title() : style.title() + " (failed)";
-
-        StringBuilder fields = new StringBuilder();
-        appendField(fields, "Staff", event.actor().displayName(), true);
+        List<Embed.Field> fields = new ArrayList<>();
+        fields.add(field("Staff", event.actor().displayName(), true));
         if (event.target() != null) {
-            appendField(fields, "Target", event.target().displayName(), true);
+            fields.add(field("Target", event.target().displayName(), true));
         }
         if (event.reason() != null && !event.reason().isBlank()) {
-            appendField(fields, "Reason", event.reason(), false);
+            fields.add(field("Reason", event.reason(), false));
         }
         if (event.oldValue() != null || event.newValue() != null) {
-            appendField(fields, "Change", String.valueOf(event.oldValue()) + " → " + event.newValue(), false);
+            fields.add(field("Change", String.valueOf(event.oldValue()) + " → " + event.newValue(), false));
+        }
+        return new Embed(limit(title, 256), limit(event.summary(), 4000), color, fields,
+                limit(config.serverName() + " • " + type, 2048), event.timestamp());
+    }
+
+    static String payload(AuditEvent event, DiscordConfig config) {
+        Embed embed = embed(event, config);
+        StringBuilder fields = new StringBuilder();
+        for (Embed.Field field : embed.fields()) {
+            appendField(fields, field.name(), field.value(), field.inline());
         }
 
         StringBuilder json = new StringBuilder(512);
@@ -75,12 +93,12 @@ final class EmbedFormatter {
         }
         json.append(",\"allowed_mentions\":{\"parse\":[]}");
         json.append(",\"embeds\":[{");
-        json.append("\"title\":").append(Json.string(limit(title, 256)));
-        json.append(",\"description\":").append(Json.string(limit(event.summary(), 4000)));
-        json.append(",\"color\":").append(color);
+        json.append("\"title\":").append(Json.string(embed.title()));
+        json.append(",\"description\":").append(Json.string(embed.description()));
+        json.append(",\"color\":").append(embed.color());
         json.append(",\"fields\":[").append(fields).append(']');
-        json.append(",\"footer\":{\"text\":").append(Json.string(limit(config.serverName() + " • " + type, 2048))).append('}');
-        json.append(",\"timestamp\":").append(Json.string(DateTimeFormatter.ISO_INSTANT.format(event.timestamp())));
+        json.append(",\"footer\":{\"text\":").append(Json.string(embed.footer())).append('}');
+        json.append(",\"timestamp\":").append(Json.string(DateTimeFormatter.ISO_INSTANT.format(embed.timestamp())));
         json.append("}]}");
         return json.toString();
     }
@@ -94,6 +112,10 @@ final class EmbedFormatter {
                 + Json.string("Test message sent by " + sentBy + " from " + config.serverName() + ".")
                 + ",\"color\":" + GREEN
                 + ",\"timestamp\":" + Json.string(DateTimeFormatter.ISO_INSTANT.format(Instant.now())) + "}]}";
+    }
+
+    private static Embed.Field field(String name, String value, boolean inline) {
+        return new Embed.Field(name, limit(value == null || value.isBlank() ? "-" : value, 1024), inline);
     }
 
     private static void appendField(StringBuilder fields, String name, String value, boolean inline) {
@@ -115,7 +137,7 @@ final class EmbedFormatter {
         return rest.isEmpty() ? capitalized : capitalized + ": " + rest;
     }
 
-    private static String limit(String value, int max) {
+    static String limit(String value, int max) {
         return value.length() <= max ? value : value.substring(0, max - 1) + "…";
     }
 

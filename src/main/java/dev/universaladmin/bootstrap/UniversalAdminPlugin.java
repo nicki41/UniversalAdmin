@@ -10,6 +10,8 @@ import dev.universaladmin.audit.DefaultAuditService;
 import dev.universaladmin.audit.jdbc.JdbcAuditEventRepository;
 import dev.universaladmin.command.CommandInvocation;
 import dev.universaladmin.command.CommandRegistry;
+import dev.universaladmin.command.RemoteCommandService;
+import dev.universaladmin.command.RemoteCommands;
 import dev.universaladmin.command.UniversalAdminCommand;
 import dev.universaladmin.command.builtin.CorePermissions;
 import dev.universaladmin.command.builtin.HelpCommand;
@@ -415,6 +417,8 @@ public final class UniversalAdminPlugin extends JavaPlugin {
             command.setExecutor(dispatcher);
             command.setTabCompleter(dispatcher);
         }
+        // /admin for users outside the game - the Discord bot, later the web panel.
+        platform.services().register(RemoteCommands.class, new RemoteCommandService(dispatcher, platform.scheduler()));
         ShortcutCommands.install(this, dispatcher, platform.settings(), platform.messages(), getLogger());
     }
 

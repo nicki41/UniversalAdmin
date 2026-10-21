@@ -45,6 +45,17 @@ public record Actor(ActorType type, UUID playerId, String displayName, Permissio
         return new Actor(ActorType.WEB, null, displayName, permissions);
     }
 
+    /**
+     * Someone acting through another application (see {@link ActorType#REMOTE}),
+     * e.g. {@code Discord:Nick}. {@code permissions} is that application's
+     * mapping, such as Discord roles to permission nodes.
+     *
+     * @since 1.2
+     */
+    public static Actor remote(String displayName, PermissionEvaluator permissions) {
+        return new Actor(ActorType.REMOTE, null, displayName, permissions);
+    }
+
     public boolean hasPermission(PermissionNode node) {
         return permissions.has(node);
     }

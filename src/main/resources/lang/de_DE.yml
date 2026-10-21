@@ -1219,6 +1219,8 @@ chat:
     format: "<dark_aqua>[Team]</dark_aqua> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
     toggled: "<aqua>Team-Chat-Modus: {0} <gray>- solange er an ist, geht alles, was du schreibst, in den Team-Chat."
     format-network: "<dark_aqua>[Team]</dark_aqua> <dark_gray>[{2}]</dark_gray> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
+    format-via: "<dark_aqua>[Team]</dark_aqua> <dark_gray>[<blue>{2}</blue>]</dark_gray> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
+    format-network-via: "<dark_aqua>[Team]</dark_aqua> <dark_gray>[{2}]</dark_gray> <dark_gray>[<blue>{3}</blue>]</dark_gray> <aqua>{0}</aqua><dark_gray>:</dark_gray> <white>{1}"
   gui:
     title: "<gold><bold>Chat"
     lock: "<red>Chat sperren"
