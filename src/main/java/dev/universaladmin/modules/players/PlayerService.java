@@ -1,9 +1,12 @@
 package dev.universaladmin.modules.players;
 
+import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -48,6 +51,20 @@ public final class PlayerService {
                     .orElseGet(() -> new PlayerProfile(playerId, currentName, now, now));
             return repository.save(profile);
         });
+    }
+
+    /**
+     * Adds a profile for each player the database has never seen (imported
+     * punishments), first join and last seen set to when the source last saw
+     * them; known players are left unchanged. Several names for one UUID: the
+     * most recent wins.
+     */
+    public CompletableFuture<Integer> addIfAbsent(Map<PlayerRef, Instant> lastSeen) {
+        Map<UUID, PlayerProfile> profiles = new HashMap<>();
+        lastSeen.forEach((player, seenAt) -> profiles.merge(player.id(),
+                new PlayerProfile(player.id(), player.name(), seenAt, seenAt),
+                (old, fresh) -> fresh.lastSeen().isAfter(old.lastSeen()) ? fresh : old));
+        return repository.insertIfAbsent(profiles.values());
     }
 
     public CompletableFuture<Optional<PlayerProfile>> findProfile(UUID playerId) {

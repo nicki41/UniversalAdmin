@@ -57,6 +57,11 @@ dependencies {
     // against a real server, in tests that need them - see
     // docs/development/testing.md.
     testImplementation("io.papermc.paper:paper-api:${property("paperApiVersion")}")
+    // Only to build fixture databases the way LiteBans (H2) and AdvancedBan
+    // (HSQLDB) store them; the import itself borrows these drivers from the
+    // source plugin at runtime and never ships them (see ADR 0015).
+    testImplementation("com.h2database:h2:2.2.224")
+    testImplementation("org.hsqldb:hsqldb:2.7.2")
 }
 
 tasks.withType<JavaCompile>().configureEach {

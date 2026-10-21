@@ -5,20 +5,26 @@ import dev.universaladmin.modules.players.PlayerProfileRepository;
 import dev.universaladmin.modules.players.PlayerSearchQuery;
 import dev.universaladmin.modules.players.PlayerSort;
 import dev.universaladmin.scheduler.TaskScheduler;
+import dev.universaladmin.storage.Transactions;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import javax.sql.DataSource;
 
 public final class JdbcPlayerProfileRepository implements PlayerProfileRepository {
+
+    private static final int LOOKUP_CHUNK = 500;
 
     private final DataSource dataSource;
     private final TaskScheduler scheduler;
@@ -143,6 +149,58 @@ public final class JdbcPlayerProfileRepository implements PlayerProfileRepositor
             case LAST_SEEN_ASC -> "last_seen ASC";
             case FIRST_JOIN_DESC -> "first_join DESC";
         };
+    }
+
+    @Override
+    public CompletableFuture<Integer> insertIfAbsent(Collection<PlayerProfile> profiles) {
+        if (profiles.isEmpty()) {
+            return CompletableFuture.completedFuture(0);
+        }
+        return Transactions.run(dataSource, scheduler, connection -> {
+            List<PlayerProfile> missing = new ArrayList<>();
+            List<PlayerProfile> all = List.copyOf(profiles);
+            // Which ids exist, in chunks well below every driver's parameter limit.
+            Set<String> existing = new HashSet<>();
+            for (int from = 0; from < all.size(); from += LOOKUP_CHUNK) {
+                List<PlayerProfile> chunk = all.subList(from, Math.min(all.size(), from + LOOKUP_CHUNK));
+                String sql = "SELECT id FROM player_profiles WHERE id IN ("
+                        + String.join(",", java.util.Collections.nCopies(chunk.size(), "?")) + ")";
+                try (PreparedStatement select = connection.prepareStatement(sql)) {
+                    for (int i = 0; i < chunk.size(); i++) {
+                        select.setString(i + 1, chunk.get(i).id().toString());
+                    }
+                    try (ResultSet resultSet = select.executeQuery()) {
+                        while (resultSet.next()) {
+                            existing.add(resultSet.getString(1));
+                        }
+                    }
+                }
+            }
+            for (PlayerProfile profile : all) {
+                if (existing.add(profile.id().toString())) {
+                    missing.add(profile);
+                }
+            }
+            if (missing.isEmpty()) {
+                return 0;
+            }
+            // INSERT-or-ignore, so a player joining at the same moment is no error.
+            boolean sqlite = connection.getMetaData().getDatabaseProductName().toLowerCase(Locale.ROOT).contains("sqlite");
+            String sql = sqlite
+                    ? "INSERT INTO player_profiles (id, last_known_name, first_join, last_seen) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING"
+                    : "INSERT IGNORE INTO player_profiles (id, last_known_name, first_join, last_seen) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement insert = connection.prepareStatement(sql)) {
+                for (PlayerProfile profile : missing) {
+                    insert.setString(1, profile.id().toString());
+                    insert.setString(2, profile.lastKnownName());
+                    insert.setLong(3, profile.firstJoin().toEpochMilli());
+                    insert.setLong(4, profile.lastSeen().toEpochMilli());
+                    insert.addBatch();
+                }
+                insert.executeBatch();
+            }
+            return missing.size();
+        });
     }
 
     @Override

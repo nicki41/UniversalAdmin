@@ -69,15 +69,16 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
         });
     }
 
+    /** Shared with {@link JdbcImportRepository}, which inserts imported rows in batches. */
+    static final String INSERT_SQL = """
+            INSERT INTO punishments
+                (type, target_id, target_last_known_name, target_ip, actor_id, actor_name, reason,
+                 created_at, expires_at, active, revoked_at, revoked_by, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
+
     private Punishment insert(Connection connection, Punishment entity) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(
-                """
-                INSERT INTO punishments
-                    (type, target_id, target_last_known_name, target_ip, actor_id, actor_name, reason,
-                     created_at, expires_at, active, revoked_at, revoked_by, metadata)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement statement = connection.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
             bind(statement, entity);
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
@@ -102,7 +103,7 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
         }
     }
 
-    private void bind(PreparedStatement statement, Punishment entity) throws SQLException {
+    static void bind(PreparedStatement statement, Punishment entity) throws SQLException {
         statement.setString(1, entity.type().name());
         statement.setString(2, entity.targetId().toString());
         statement.setString(3, entity.targetLastKnownName());
