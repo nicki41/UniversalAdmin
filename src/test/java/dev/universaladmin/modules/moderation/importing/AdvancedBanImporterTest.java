@@ -37,9 +37,14 @@ class AdvancedBanImporterTest {
         Path plugins = fixture(server);
         AdvancedBanImporter importer = new AdvancedBanImporter(plugins, false, NOTE_TEXT);
         RecordingSink sink = new RecordingSink();
+        java.util.List<java.util.logging.Handler> logHandlers = java.util.List.of(java.util.logging.Logger.getLogger("").getHandlers());
 
         assertTrue(importer.locate().orElseThrow().startsWith("HSQLDB"));
         importer.read(sink);
+
+        // The borrowed HSQLDB must leave the server's logging alone.
+        assertEquals(logHandlers, java.util.List.of(java.util.logging.Logger.getLogger("").getHandlers()));
+        assertNull(System.getProperty("hsqldb.reconfig_logging"));
 
         UUID notch = ImportTargets.uuid(NOTCH).orElseThrow();
         ImportedPunishment ban = sink.bySourceId("history:0");

@@ -213,7 +213,10 @@ public final class AdvancedBanImporter implements PunishmentImporter {
                 + ";hsqldb.lock_file=false;readonly=true;ifexists=true;shutdown=true";
         List<Path> driverSearch = new ArrayList<>(pluginJars());
         driverSearch.add(folder());
-        return ForeignDatabase.withBorrowedDriver(displayName(), "HSQLDB", driverSearch, "hsqldb/jdbc/JDBCDriver.class", url, properties);
+        // HSQLDB reconfigures java.util.logging when it loads unless told not
+        // to - which would double every log line of the server afterwards.
+        return ForeignDatabase.withBorrowedDriver(displayName(), "HSQLDB", driverSearch, "hsqldb/jdbc/JDBCDriver.class", url,
+                properties, Map.of("hsqldb.reconfig_logging", "false"));
     }
 
     private boolean useMySql() {

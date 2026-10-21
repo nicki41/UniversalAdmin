@@ -16,9 +16,11 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -90,6 +92,38 @@ final class ForeignDatabase {
      */
     static Connection withBorrowedDriver(String source, String driverLabel, List<Path> searchRoots, String driverClassSuffix,
             String url, Properties properties) throws ImportException {
+        return withBorrowedDriver(source, driverLabel, searchRoots, driverClassSuffix, url, properties, Map.of());
+    }
+
+    /**
+     * Like {@link #withBorrowedDriver(String, String, List, String, String, Properties)}, with system properties set
+     * from loading the driver until the connection is closed - e.g. to keep HSQLDB from reconfiguring the server's
+     * logging, which it does as late as when the database closes.
+     */
+    static Connection withBorrowedDriver(String source, String driverLabel, List<Path> searchRoots, String driverClassSuffix,
+            String url, Properties properties, Map<String, String> systemProperties) throws ImportException {
+        Map<String, String> previous = new HashMap<>();
+        systemProperties.forEach((key, value) -> {
+            previous.put(key, System.getProperty(key));
+            System.setProperty(key, value);
+        });
+        Runnable restore = () -> previous.forEach((key, value) -> {
+            if (value == null) {
+                System.clearProperty(key);
+            } else {
+                System.setProperty(key, value);
+            }
+        });
+        try {
+            return connectWithBorrowedDriver(source, driverLabel, searchRoots, driverClassSuffix, url, properties, restore);
+        } catch (ImportException | RuntimeException e) {
+            restore.run();
+            throw e;
+        }
+    }
+
+    private static Connection connectWithBorrowedDriver(String source, String driverLabel, List<Path> searchRoots,
+            String driverClassSuffix, String url, Properties properties, Runnable onClose) throws ImportException {
         List<DriverJar> candidates = findDriverJars(searchRoots, driverClassSuffix);
         if (candidates.isEmpty()) {
             throw new ImportException("moderation.import.error.driver", source, driverLabel);
@@ -102,7 +136,7 @@ final class ForeignDatabase {
                 Driver driver = (Driver) Class.forName(candidate.className(), true, loader).getDeclaredConstructor().newInstance();
                 Connection connection = driver.connect(url, properties);
                 if (connection != null) {
-                    return closingLoader(connection, loader);
+                    return closingLoader(connection, loader, onClose);
                 }
             } catch (SQLException e) {
                 last = e;
@@ -119,13 +153,14 @@ final class ForeignDatabase {
      * borrowed driver - otherwise the source plugin's jar stays open (and on
      * Windows cannot be deleted) until the server restarts.
      */
-    private static Connection closingLoader(Connection connection, URLClassLoader loader) {
+    private static Connection closingLoader(Connection connection, URLClassLoader loader, Runnable onClose) {
         InvocationHandler handler = (proxy, method, args) -> {
             if (method.getName().equals("close") && method.getParameterCount() == 0) {
                 try {
                     connection.close();
                 } finally {
                     closeQuietly(loader);
+                    onClose.run();
                 }
                 return null;
             }
