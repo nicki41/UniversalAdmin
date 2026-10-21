@@ -5,7 +5,9 @@ import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionTarget;
 import dev.universaladmin.action.ActionValidator;
+import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
+import dev.universaladmin.core.PlayerDirectory;
 import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.localization.MessageKey;
@@ -43,6 +45,19 @@ import dev.universaladmin.modules.moderation.command.ModerationCommands;
 import dev.universaladmin.modules.moderation.gui.ModeratePlayerMenuEntry;
 import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
 import dev.universaladmin.modules.moderation.gui.ModerationHomePage;
+import dev.universaladmin.modules.moderation.importing.AdvancedBanImporter;
+import dev.universaladmin.modules.moderation.importing.EssentialsImporter;
+import dev.universaladmin.modules.moderation.importing.ImportAction;
+import dev.universaladmin.modules.moderation.importing.ImportCommand;
+import dev.universaladmin.modules.moderation.importing.ImportException;
+import dev.universaladmin.modules.moderation.importing.ImportRecordsMigration;
+import dev.universaladmin.modules.moderation.importing.ImportService;
+import dev.universaladmin.modules.moderation.importing.ImportSummary;
+import dev.universaladmin.modules.moderation.importing.LiteBansImporter;
+import dev.universaladmin.modules.moderation.importing.NoteText;
+import dev.universaladmin.modules.moderation.importing.PunishmentImporter;
+import dev.universaladmin.modules.moderation.importing.VanillaImporter;
+import dev.universaladmin.modules.moderation.jdbc.JdbcImportRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcPlayerNoteRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcPunishmentRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcStaffModeSnapshotRepository;
@@ -55,7 +70,19 @@ import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
+import dev.universaladmin.status.PlayerStatus;
+import io.papermc.paper.ban.BanListType;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletionException;
+import org.bukkit.Server;
+import org.bukkit.ban.IpBanList;
+import org.bukkit.ban.ProfileBanList;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -79,6 +106,9 @@ public final class ModerationModule implements Module {
     /** How often {@link StaffModeTargetTracker#tick()} refreshes the Player Inspector tool and checks for tool-kit tampering - twice a second, cheap enough given how few players are ever in Staff Mode at once. */
     private static final long STAFF_MODE_TRACKER_PERIOD_TICKS = 10L;
 
+    /** How often {@link ModerationPlayerStatus} reloads online players' mutes and warnings - catches changes made on other servers. */
+    private static final long STATUS_REFRESH_TICKS = 20L * 60;
+
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Moderation")
             .description("Kick/ban/tempban/ipban/mute/tempmute/warn/freeze tooling plus Vanish/Godmode/Staff Mode, with join/chat enforcement.")
             .icon(new GuiIcon("iron_sword", "Moderation"))
@@ -100,6 +130,7 @@ public final class ModerationModule implements Module {
         context.platform().storage().migrations().register(new VanishStateMigration());
         context.platform().storage().migrations().register(new StaffModeSnapshotMigration());
         context.registerMigration(new PlayerNotesMigration());
+        context.registerMigration(new ImportRecordsMigration());
     }
 
     @Override
@@ -178,6 +209,7 @@ public final class ModerationModule implements Module {
                 .forEach(context::registerCommand);
 
         registerNotes(context);
+        registerImport(context);
         StaffPunishmentNotifier notifier = new StaffPunishmentNotifier(messages, context.platform().settings(), scheduler);
         context.subscribe(notifier);
         // Network mode: punishments issued on another server take effect
@@ -187,6 +219,16 @@ public final class ModerationModule implements Module {
         context.subscribe(bridge);
         network.subscribe(NetworkModerationBridge.TOPIC, bridge);
         context.resources().closeable(() -> network.unsubscribe(NetworkModerationBridge.TOPIC, bridge));
+
+        // Read-only status for scoreboards, tab lists and placeholders.
+        ModerationPlayerStatus status = new ModerationPlayerStatus(
+                punishmentService, vanishRuntimeState, staffModeState, freezeRuntimeState, godmodeState);
+        context.resources().listener(status);
+        context.subscribeAudit(status);
+        plugin.getServer().getOnlinePlayers().forEach(player -> status.track(player.getUniqueId()));
+        context.registerService(PlayerStatus.class, status);
+        context.resources().task(plugin.getServer().getScheduler().runTaskTimer(
+                plugin, status::refreshAll, STATUS_REFRESH_TICKS, STATUS_REFRESH_TICKS));
 
         scheduleExpirySweep(context, punishmentService);
         scheduleStaffModeTracker(context, staffModeState, toolItems, freezeRuntimeState, vanishService, context.platform().settings(), messages);
@@ -427,6 +469,75 @@ public final class ModerationModule implements Module {
         context.registerPlayerMenuEntry(NotesSupport.menuEntry(notesContext));
         context.registerCommand(new NotesSupport.NotesCommand(notesContext));
         context.registerListener(new NotesSupport.JoinAlertListener(notesContext));
+    }
+
+    /**
+     * {@code /admin import}: punishments from LiteBans, AdvancedBan, the
+     * vanilla ban lists and EssentialsX - see docs/user/import.md.
+     */
+    private void registerImport(ModuleContext context) {
+        var platform = context.platform();
+        Server server = platform.plugin().getServer();
+        Path pluginsFolder = platform.plugin().getDataFolder().toPath().toAbsolutePath().getParent();
+        Path serverFolder = Path.of("").toAbsolutePath();
+        boolean offlineMode = !server.getOnlineMode()
+                && !(server.getServerConfig().isProxyEnabled() && server.getServerConfig().isProxyOnlineMode());
+        MessageService messages = platform.messages();
+        NoteText noteText = (key, args) -> messages.get(MessageKey.of(key), args);
+        TaskScheduler scheduler = platform.scheduler();
+
+        List<PunishmentImporter> importers = List.of(
+                new LiteBansImporter(pluginsFolder, serverFolder.resolve("libraries")),
+                new AdvancedBanImporter(pluginsFolder, offlineMode, noteText),
+                new VanillaImporter(List.of(serverFolder, server.getWorldContainer().toPath().toAbsolutePath()),
+                        (players, addresses) -> removeFromVanillaBanLists(server, scheduler, players, addresses)),
+                new EssentialsImporter(pluginsFolder, noteText));
+        ImportService service = new ImportService(importers,
+                new JdbcImportRepository(platform.storage().dataSource(), scheduler),
+                () -> platform.services().get(PlayerDirectory.class), context.logger());
+
+        context.registerAction(ActionDefinition.builder(new ImportAction(service, scheduler))
+                .permission(ModerationPermissions.IMPORT)
+                .module(ID.key().name())
+                .target(input -> Optional.of(ActionTarget.of("import", input.source(), sourceName(service, input.source()))))
+                .auditSummary(input -> "Imported punishments from " + sourceName(service, input.source()))
+                .auditDetails((input, result) -> result instanceof ActionResult.Success<ImportSummary> success
+                        ? AuditDetails.builder().metadata(Map.of(
+                                "punishments", success.value().totalPunishments(),
+                                "notes", success.value().notes(),
+                                "players", success.value().players(),
+                                "skipped", success.value().totalSkipped(),
+                                "already_imported", success.value().alreadyImported())).build()
+                        : AuditDetails.EMPTY)
+                .build());
+        context.registerCommand(new ImportCommand(service, scheduler, context.logger()));
+    }
+
+    /** "EssentialsX" for "essentials" - the source as the audit log shows it. */
+    private static String sourceName(ImportService service, String id) {
+        return service.importer(id).map(PunishmentImporter::displayName).orElse(id);
+    }
+
+    /** Takes moved entries off the server's own ban lists (the vanilla import moves them) - Bukkit API, so on the main thread. */
+    private static void removeFromVanillaBanLists(Server server, TaskScheduler scheduler, List<UUID> players, List<String> addresses)
+            throws ImportException {
+        try {
+            scheduler.supplyOnMainThread(() -> {
+                ProfileBanList profiles = server.getBanList(BanListType.PROFILE);
+                players.forEach(id -> profiles.pardon(server.createPlayerProfile(id)));
+                IpBanList ips = server.getBanList(BanListType.IP);
+                for (String address : addresses) {
+                    try {
+                        ips.pardon(InetAddress.getByName(address));
+                    } catch (UnknownHostException e) {
+                        // Not an address after all - nothing on the list to remove.
+                    }
+                }
+                return null;
+            }).join();
+        } catch (CompletionException e) {
+            throw new ImportException("moderation.import.error.vanilla-remove", e.getCause(), e.getCause().getMessage());
+        }
     }
 
     private void scheduleExpirySweep(ModuleContext context, PunishmentService punishmentService) {

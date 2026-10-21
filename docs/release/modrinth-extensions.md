@@ -1,0 +1,129 @@
+# Modrinth Pages of the Official Extensions
+
+Source of truth for the Modrinth projects of the two official extensions.
+Edit here first, then copy into Modrinth. Versions are uploaded by
+`release.yml` like the plugin's (see [releasing.md](releasing.md#modrinth));
+texts, icons and gallery are maintained by hand. All three projects are in
+the Modrinth collection "UniversalAdmin".
+
+## UniversalAdmin Discord
+
+| Field | Value |
+|---|---|
+| Name | UniversalAdmin Discord |
+| Slug | `universaladmin-discord` |
+| Categories | Management, Social, Utility |
+| Environment | Server-side only |
+| Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
+| License | Apache-2.0 |
+| Icon | `assets/icon-discord.png` |
+| Links | Source and issues: the UniversalAdmin repository; wiki: `docs/extensions/discord.md` |
+
+### Summary
+
+> UniversalAdmin in Discord: admin actions as embeds, two-way staff chat, /ban, /mute and /history from Discord, and reports with buttons.
+
+### Description
+
+---
+
+# UniversalAdmin Discord
+
+The official Discord extension for
+[UniversalAdmin](https://modrinth.com/plugin/universaladmin) - your staff
+team's work in Discord.
+
+## Two modes
+
+**Webhook** - paste a webhook URL, done: bans, mutes, warnings, reports,
+restarts, maintenance and whitelist changes appear in a channel as tidy
+embeds.
+
+**Bot** - everything above, plus:
+
+- 💬 **Staff chat both ways** - `/sc` in game shows up in Discord, and what
+  your team writes in the staff channel shows up in game.
+- 🔨 **Moderate from Discord** - `/ban`, `/mute`, `/kick`, `/warn`,
+  `/unban`, `/unmute`, `/history`, `/check`, `/find`, and `/ua` for any
+  other admin command - with player name completion.
+- 📣 **Reports with buttons** - every new report appears with **Claim**,
+  **Resolve** and **Reject**; the card follows the report's status.
+
+## Safe by design
+
+- Discord roles map to UniversalAdmin permissions: a moderator role that
+  may mute but not ban can `/mute` but not `/ban`.
+- Everything from Discord runs through the same checks and the same audit
+  log as in game, as `Discord:<name>`.
+- No pings, ever: mentions are switched off, and text from the game cannot
+  format Discord messages.
+- Discord traffic never runs on the server's main thread.
+
+## Requirements
+
+- [UniversalAdmin](https://modrinth.com/plugin/universaladmin) of the same
+  version.
+- Bot mode: a Discord application with a bot token
+  ([setup guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/discord.md#bot-mode)).
+  On the first start the server downloads the Discord library (about
+  20 MB) once.
+
+[Setup guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/discord.md) ·
+[Source](https://github.com/nicki41/UniversalAdmin) ·
+[Issues](https://github.com/nicki41/UniversalAdmin/issues)
+
+---
+
+## UniversalAdmin Placeholders
+
+| Field | Value |
+|---|---|
+| Name | UniversalAdmin Placeholders |
+| Slug | `universaladmin-placeholders` |
+| Categories | Utility, Management |
+| Environment | Server-side only |
+| Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
+| License | Apache-2.0 |
+| Icon | `assets/icon-placeholders.png` |
+| Links | Source and issues: the UniversalAdmin repository; wiki: `docs/extensions/placeholderapi.md` |
+
+### Summary
+
+> PlaceholderAPI placeholders for UniversalAdmin: online count without vanished players, mutes, warnings, open reports, maintenance and network counts.
+
+### Description
+
+---
+
+# UniversalAdmin Placeholders
+
+The official [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi)
+extension for [UniversalAdmin](https://modrinth.com/plugin/universaladmin) -
+put your admin data on scoreboards, tab lists, chat formats and holograms.
+
+## Highlights
+
+- `%universaladmin_online%` - the online count **without vanished
+  players**, so your tab list never gives a vanished moderator away.
+- `%universaladmin_staff_online%` - visible staff online.
+- `%universaladmin_muted%`, `_mute_reason`, `_mute_remaining` - show a
+  muted player how long is left.
+- `%universaladmin_warnings%`, `_punishments` - per player.
+- `%universaladmin_open_reports%`, `_maintenance` - for staff scoreboards.
+- `%universaladmin_vanished%`, `_staffmode`, `_frozen`, `_godmode`.
+- Networks: `%universaladmin_server%`, `_network_online`,
+  `_network_servers`, `_network_online_<server>`.
+
+All values come from memory - safe for scoreboards that update every tick.
+No `/papi ecloud` download needed.
+
+## Requirements
+
+- [UniversalAdmin](https://modrinth.com/plugin/universaladmin) 1.2 or newer.
+- [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi).
+
+[Every placeholder](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/placeholderapi.md) ·
+[Source](https://github.com/nicki41/UniversalAdmin) ·
+[Issues](https://github.com/nicki41/UniversalAdmin/issues)
+
+---

@@ -108,7 +108,9 @@ the extension points the built-in modules use. See
 [docs/architecture/extensions.md](docs/architecture/extensions.md),
 [ADR 0010](docs/architecture/decisions/0010-extension-api.md) and the
 [developer guide](docs/extensions/getting-started.md). A web app/REST API is
-still planned - [docs/architecture/web-future.md](docs/architecture/web-future.md).
+still planned - [docs/architecture/web-future.md](docs/architecture/web-future.md) -
+and so is a drag-and-drop extension builder in the browser with a place to
+share extensions - [docs/architecture/extension-builder.md](docs/architecture/extension-builder.md).
 
 ## Gradle layout
 
@@ -117,6 +119,7 @@ still planned - [docs/architecture/web-future.md](docs/architecture/web-future.m
 | `universaladmin-api` | `api/` | Public, semantically versioned extension API |
 | `universaladmin-core` | `/` | The plugin: bootstrap, implementations, built-in modules; shades the API |
 | `universaladmin-discord` | `extensions/discord/` | Official Discord extension (own plugin jar) |
+| `universaladmin-placeholderapi` | `extensions/placeholderapi/` | Official PlaceholderAPI extension (own plugin jar) |
 | `example-extension` | `examples/example-extension/` | Template extension, built in CI only |
 | `universaladmin-velocity` | `proxy/velocity/` | Optional Velocity plugin for network mode (own jar) |
 

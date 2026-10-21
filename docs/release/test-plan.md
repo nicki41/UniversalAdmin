@@ -256,7 +256,65 @@ settings, issue some bans, then upgrade):
 - [ ] On 1.1.0 with no newer release: no update notice.
 - [ ] `/admin update` → "already the latest version".
 
-## 21. Network (Velocity)
+## 21. Import
+
+Copy the data folder of the old plugin (or install it with test data).
+
+- [ ] [C] `/admin import` lists the sources found, each with a location.
+- [ ] [C] `/admin import advancedban` (and `litebans`, `vanilla`,
+      `essentials`) - preview with plausible counts; nothing in
+      `/admin history` yet.
+- [ ] [C] `/admin import <source> confirm` - progress, summary; `/history
+      <player>` shows the imported entries with reason, date and issuer; an
+      imported active ban keeps the player out, an imported mute blocks
+      chat.
+- [ ] Running the same import again: "already imported" equals the first
+      run's count, nothing duplicated.
+- [ ] `/admin unban <name>` of an imported player who never joined works.
+- [ ] Vanilla: after the import `banned-players.json` no longer lists the
+      moved players; `/admin unban` lets them in.
+- [ ] EssentialsX: a jailed player has a staff note about the jail.
+- [ ] H2/HSQLDB without the old plugin's jar: clear message about the
+      missing driver.
+
+## 22. PlaceholderAPI extension
+
+- [ ] With PlaceholderAPI and `universaladmin-placeholderapi-<v>.jar`:
+      `/admin modules` lists "Placeholders".
+- [ ] `/papi parse me %universaladmin_online%` - vanish yourself, the
+      number drops; `%universaladmin_vanished%` yes/no.
+- [ ] Mute a player: `%universaladmin_muted%`, `_mute_reason`,
+      `_mute_remaining` for that player (`/papi parse <player> ...`).
+- [ ] `%universaladmin_open_reports%` changes after `/report`.
+- [ ] `%universaladmin_maintenance%` after `/admin maintenance on`.
+
+## 23. Discord bot
+
+Setup as in [docs/extensions/discord.md](../extensions/discord.md#bot-mode),
+with a log, a staff chat and a reports channel, an "Admin" role with
+`universaladmin.*` and a "Mod" role with `universaladmin.moderation.mute`,
+`universaladmin.moderation.view` and `universaladmin.chat.staff`.
+
+- [ ] `/admin discord status` - online as ... on ...; `/admin discord test`
+      posts into the log channel.
+- [ ] Slash commands are listed in Discord; `/ban player:` completes online
+      players.
+- [ ] Admin: `/ban player:Steve duration:1h reason:test` - Steve is banned,
+      the answer is only visible to the admin, the audit log shows
+      `Discord:<name>`, the log channel gets an embed.
+- [ ] Mod: `/mute` works, `/ban` answers "no permission"; without any role
+      nothing works.
+- [ ] `/ua command:notes Steve add test` and `/history player:Steve`.
+- [ ] Staff chat: `/sc hi` in game appears in the channel; a Mod message in
+      the channel appears in game as `[Staff] [Discord] ...`; a member
+      without the role gets a 🚫 reaction; `@everyone` in game pings nobody.
+- [ ] `/report` in game - a card with buttons appears; Claim (card shows
+      who), Resolve with a note (buttons disabled, report closed in game);
+      a report closed in game closes its card.
+- [ ] `/admin discord reload` after changing the token - reconnects; a wrong
+      token is reported in `/admin discord status`.
+
+## 24. Network (Velocity)
 
 Setup: Velocity with `player-info-forwarding-mode = "modern"`, two Paper
 servers `lobby` and `survival` with the forwarding secret, one MariaDB,

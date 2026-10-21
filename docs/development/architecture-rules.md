@@ -106,7 +106,9 @@ template - see
 - Gradle projects: `universaladmin-api` (`api/`, the public extension API),
   `universaladmin-core` (the repository root: bootstrap, implementations,
   built-in modules), `universaladmin-discord` (`extensions/discord`, the
-  official Discord extension), `universaladmin-velocity` (`proxy/velocity`,
+  official Discord extension), `universaladmin-placeholderapi`
+  (`extensions/placeholderapi`, the official PlaceholderAPI extension),
+  `universaladmin-velocity` (`proxy/velocity`,
   the optional Velocity plugin for network mode - a Velocity plugin, it
   depends on neither the API nor the core) and `example-extension`
   (`examples/example-extension`). The API and the core share package names;
@@ -307,7 +309,7 @@ along with a feature PR.
 
 ```bash
 ./gradlew build   # every project: tests, shaded plugin jar (build/libs/universaladmin-core-*.jar),
-                  # API jars (api/build/libs), Discord extension (extensions/discord/build/libs),
+                  # API jars (api/build/libs), Discord and PlaceholderAPI extensions (extensions/*/build/libs),
                   # Velocity plugin (proxy/velocity/build/libs)
 ./gradlew test    # tests only
 ```

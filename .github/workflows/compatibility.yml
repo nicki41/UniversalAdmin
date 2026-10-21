@@ -115,7 +115,8 @@ jobs:
           set -euo pipefail
           UA='nicki41/UniversalAdmin compatibility'
           VERSIONS="$(curl -fsS -A "$UA" "https://api.modrinth.com/v2/project/wGP5uSse/version")"
-          # The newest release-type version per loader family (Paper plugin, Velocity plugin).
+          # The newest release-type version per loader family (Paper plugin, Velocity plugin),
+          # and of each official extension's own project.
           for LOADER in paper velocity; do
             ID="$(jq -r --arg loader "$LOADER" '[.[] | select(.version_type == "release" and (.loaders | index($loader)))][0].id // empty' <<< "$VERSIONS")"
             [ -z "$ID" ] && continue
@@ -124,6 +125,16 @@ jobs:
             curl -fsS -X PATCH -A "$UA" -H "Authorization: $MODRINTH_TOKEN" -H 'Content-Type: application/json' \
               -d "{\"game_versions\": $UPDATED}" "https://api.modrinth.com/v2/version/$ID"
             echo "Modrinth version $ID ($LOADER): $UPDATED"
+          done
+          for PROJECT in Lq5Ihyzr 229V0zwE; do
+            EXTENSION="$(curl -fsS -A "$UA" "https://api.modrinth.com/v2/project/$PROJECT/version" || echo '[]')"
+            ID="$(jq -r '[.[] | select(.version_type == "release")][0].id // empty' <<< "$EXTENSION")"
+            [ -z "$ID" ] && continue
+            CURRENT="$(jq -c --arg id "$ID" '.[] | select(.id == $id) | .game_versions' <<< "$EXTENSION")"
+            UPDATED="$(jq -c --arg add "${{ steps.test.outputs.passed }}" '. + ($add | split(" ")) | unique' <<< "$CURRENT")"
+            curl -fsS -X PATCH -A "$UA" -H "Authorization: $MODRINTH_TOKEN" -H 'Content-Type: application/json' \
+              -d "{\"game_versions\": $UPDATED}" "https://api.modrinth.com/v2/version/$ID"
+            echo "Modrinth version $ID ($PROJECT): $UPDATED"
           done
 
       - name: Open a pull request for supported-versions.txt

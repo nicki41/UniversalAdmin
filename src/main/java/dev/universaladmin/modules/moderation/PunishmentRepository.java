@@ -35,6 +35,9 @@ public interface PunishmentRepository extends Repository<Punishment, Long> {
     /** Backs every GUI list (Active/Recent/Warnings/Bans/Mutes, one target's history) - see {@link PunishmentQuery}. */
     CompletableFuture<List<Punishment>> findByQuery(PunishmentQuery query);
 
+    /** How many rows {@link #findByQuery} would find without its limit - for counts on displays. */
+    CompletableFuture<Integer> count(PunishmentQuery query);
+
     /**
      * Revokes every currently-active row of {@code types} for {@code targetId}
      * (UNBAN/UNMUTE) - each row is only flipped if it was still

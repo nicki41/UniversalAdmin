@@ -102,8 +102,9 @@ jobs:
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
           echo "checksum=${JAR}.sha256" >> "$GITHUB_OUTPUT"
 
-      # Attached next to the plugin jar: the official Discord extension (its
-      # own plugin jar), the Velocity plugin for network mode, and the
+      # Attached next to the plugin jar: the official Discord and
+      # PlaceholderAPI extensions (their own plugin jars), the Velocity plugin
+      # for network mode, and the
       # extension API for developers (binary, sources, javadoc). The plugin
       # jar and the Velocity jar also go to Modrinth (below).
       - name: Collect extension, proxy and API artifacts
@@ -112,9 +113,10 @@ jobs:
           set -euo pipefail
           VERSION="${{ steps.version.outputs.version }}"
           DISCORD="extensions/discord/build/libs/universaladmin-discord-${VERSION}.jar"
+          PLACEHOLDERS="extensions/placeholderapi/build/libs/universaladmin-placeholderapi-${VERSION}.jar"
           VELOCITY="proxy/velocity/build/libs/universaladmin-velocity-${VERSION}.jar"
           API="api/build/libs/universaladmin-api-${VERSION}.jar"
-          for f in "$DISCORD" "$VELOCITY" "$API" \
+          for f in "$DISCORD" "$PLACEHOLDERS" "$VELOCITY" "$API" \
               "api/build/libs/universaladmin-api-${VERSION}-sources.jar" \
               "api/build/libs/universaladmin-api-${VERSION}-javadoc.jar"; do
             if [ ! -f "$f" ]; then
@@ -124,12 +126,16 @@ jobs:
           done
           ( cd extensions/discord/build/libs && sha256sum "universaladmin-discord-${VERSION}.jar" \
               > "universaladmin-discord-${VERSION}.jar.sha256" )
+          ( cd extensions/placeholderapi/build/libs && sha256sum "universaladmin-placeholderapi-${VERSION}.jar" \
+              > "universaladmin-placeholderapi-${VERSION}.jar.sha256" )
           ( cd proxy/velocity/build/libs && sha256sum "universaladmin-velocity-${VERSION}.jar" \
               > "universaladmin-velocity-${VERSION}.jar.sha256" )
           {
             echo "files<<FILES_EOF"
             echo "$DISCORD"
             echo "${DISCORD}.sha256"
+            echo "$PLACEHOLDERS"
+            echo "${PLACEHOLDERS}.sha256"
             echo "$VELOCITY"
             echo "${VELOCITY}.sha256"
             echo "$API"
@@ -138,6 +144,8 @@ jobs:
             echo "FILES_EOF"
           } >> "$GITHUB_OUTPUT"
           echo "velocity=$VELOCITY" >> "$GITHUB_OUTPUT"
+          echo "discord=$DISCORD" >> "$GITHUB_OUTPUT"
+          echo "placeholders=$PLACEHOLDERS" >> "$GITHUB_OUTPUT"
 
       # One list for every place that names the supported Minecraft
       # versions: supported-versions.txt (kept current by compatibility.yml).
@@ -247,5 +255,47 @@ jobs:
             The optional Velocity plugin for UniversalAdmin's network mode: refuses players banned with UniversalAdmin at the proxy. Install UniversalAdmin ${{ steps.version.outputs.version }} on your servers as well - see https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
           loaders: velocity
           game-versions: ${{ steps.games.outputs.list }}
+          java: 21
+          fail-mode: warn
+
+      # The official extensions have their own Modrinth projects (all three
+      # are in the collection "UniversalAdmin"), released together with the
+      # plugin and depending on it.
+      - name: Publish UniversalAdmin Discord to Modrinth
+        uses: Kira-NT/mc-publish@v3
+        with:
+          modrinth-id: Lq5Ihyzr
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: ${{ steps.extras.outputs.discord }}
+          name: UniversalAdmin Discord ${{ steps.version.outputs.version }}
+          version: ${{ steps.version.outputs.version }}
+          changelog: |
+            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/nicki41/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
+          loaders: |
+            paper
+            purpur
+          game-versions: ${{ steps.games.outputs.list }}
+          dependencies: |
+            universaladmin(required){modrinth:wGP5uSse}
+          java: 21
+          fail-mode: warn
+
+      - name: Publish UniversalAdmin Placeholders to Modrinth
+        uses: Kira-NT/mc-publish@v3
+        with:
+          modrinth-id: 229V0zwE
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: ${{ steps.extras.outputs.placeholders }}
+          name: UniversalAdmin Placeholders ${{ steps.version.outputs.version }}
+          version: ${{ steps.version.outputs.version }}
+          changelog: |
+            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/nicki41/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
+          loaders: |
+            paper
+            purpur
+          game-versions: ${{ steps.games.outputs.list }}
+          dependencies: |
+            universaladmin(required){modrinth:wGP5uSse}
+            placeholderapi(required){modrinth:lKEzGugV}
           java: 21
           fail-mode: warn

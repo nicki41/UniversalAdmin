@@ -11,6 +11,9 @@ group = "dev.universaladmin.discord"
 version = rootProject.version
 base.archivesName.set("universaladmin-discord")
 
+/** Also written into plugin.yml ("libraries"), so compile and runtime always match. */
+val jdaVersion = "6.6.0"
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))
@@ -30,12 +33,20 @@ repositories {
 dependencies {
     compileOnly(project(":universaladmin-api"))
     compileOnly("io.papermc.paper:paper-api:${property("paperApiVersion")}")
+    // Bot mode. Not shaded: Paper downloads it from Maven Central on the first
+    // start (plugin.yml "libraries"), so the plugin jar stays small.
+    compileOnly("net.dv8tion:JDA:$jdaVersion") {
+        exclude(module = "opus-java")
+    }
 
     testImplementation(platform("org.junit:junit-bom:5.12.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation(project(":universaladmin-api"))
     testImplementation("io.papermc.paper:paper-api:${property("paperApiVersion")}")
+    testImplementation("net.dv8tion:JDA:$jdaVersion") {
+        exclude(module = "opus-java")
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -51,7 +62,7 @@ tasks.test {
 }
 
 tasks.processResources {
-    val props = mapOf("version" to project.version)
+    val props = mapOf("version" to project.version, "jdaVersion" to jdaVersion)
     inputs.properties(props)
     filesMatching("plugin.yml") {
         expand(props)

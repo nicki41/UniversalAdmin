@@ -43,6 +43,8 @@ public final class ModerationPermissions {
     public static final PermissionNode NOTES = PermissionNode.core("moderation.notes");
     /** Receive a staff notification whenever another staff member punishes or pardons a player. */
     public static final PermissionNode NOTIFY = PermissionNode.core("moderation.notify");
+    /** Import punishments from LiteBans, AdvancedBan, the vanilla ban lists or EssentialsX ({@code /admin import}). */
+    public static final PermissionNode IMPORT = PermissionNode.core("moderation.import");
 
     /** Registers every node above with {@link PermissionDefault#OP}, matching every other node in the plugin today. */
     public static void registerAll(PermissionRegistry registry) {
@@ -50,6 +52,7 @@ public final class ModerationPermissions {
                 new PermissionDefinition(USE, "Open the Moderation GUI", PermissionDefault.OP),
                 new PermissionDefinition(NOTES, "Read and write staff notes about players", PermissionDefault.OP),
                 new PermissionDefinition(NOTIFY, "Get notified when staff punish or pardon a player", PermissionDefault.OP),
+                new PermissionDefinition(IMPORT, "Import punishments from other plugins", PermissionDefault.OP),
                 new PermissionDefinition(VIEW, "View punishment history, warnings, bans, and mutes", PermissionDefault.OP),
                 new PermissionDefinition(KICK, "Kick a player", PermissionDefault.OP),
                 new PermissionDefinition(BAN, "Permanently ban a player", PermissionDefault.OP),

@@ -30,6 +30,7 @@ import dev.universaladmin.modules.players.gui.PlayersGui;
 import dev.universaladmin.modules.players.inventory.LiveInventoryService;
 import dev.universaladmin.modules.players.jdbc.JdbcPlayerProfileRepository;
 import dev.universaladmin.scheduler.TaskScheduler;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -95,6 +96,11 @@ public final class PlayersModule implements Module {
             public CompletableFuture<Optional<PlayerRef>> findById(UUID playerId) {
                 return playerService.findProfile(playerId)
                         .thenApply(profile -> profile.map(found -> new PlayerRef(found.id(), found.lastKnownName())));
+            }
+
+            @Override
+            public CompletableFuture<Integer> addIfAbsent(Map<PlayerRef, Instant> lastSeen) {
+                return playerService.addIfAbsent(lastSeen);
             }
         });
 

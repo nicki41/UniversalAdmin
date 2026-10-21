@@ -3,6 +3,7 @@ package dev.universaladmin.modules.chat;
 import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ValidationError;
+import dev.universaladmin.chat.StaffChat;
 import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
@@ -63,13 +64,20 @@ public final class ChatModule implements Module {
         context.registerAction(ActionDefinition.builder(new ChatActions.Clear(platform.messages(), platform.settings(), platform.scheduler()))
                 .permission(ChatPermissions.MANAGE).module(module).auditSummary(input -> "Cleared the chat").build());
         // Staff chat itself is not audited - it is conversation, not an admin action.
+        StaffChatHub staffChat = new StaffChatHub(platform.scheduler(), platform.network(), context.logger());
         ChatActions.StaffMessage staffMessage = new ChatActions.StaffMessage(
-                platform.messages(), platform.settings(), platform.scheduler(), context.logger(), platform.network());
+                platform.messages(), platform.settings(), platform.scheduler(), context.logger(), platform.network(), staffChat);
+        staffChat.deliverWith(staffMessage);
+        // Bridges such as the Discord extension send into and listen to staff chat through this.
+        context.registerService(StaffChat.class, staffChat);
         context.registerAction(ActionDefinition.builder(staffMessage)
                 .permission(ChatPermissions.STAFF_CHAT).module(module).notAudited().build());
         // Network mode: staff chat from the other servers.
-        NetworkListener remoteStaffChat = message -> staffMessage.deliver(
-                message.get("sender", "?"), message.get("message", ""), message.source());
+        NetworkListener remoteStaffChat = message -> {
+            String via = message.get("via", null);
+            staffMessage.deliver(message.get("sender", "?"), message.get("message", ""), message.source(), via);
+            staffChat.fire(new StaffChat.Message(message.get("sender", "?"), message.get("message", ""), message.source(), via));
+        };
         platform.network().subscribe(ChatActions.StaffMessage.NETWORK_TOPIC, remoteStaffChat);
         context.resources().closeable(() -> platform.network().unsubscribe(ChatActions.StaffMessage.NETWORK_TOPIC, remoteStaffChat));
         context.registerAction(ActionDefinition.builder(new ChatActions.ToggleStaffChat(chat))

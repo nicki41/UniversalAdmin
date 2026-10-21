@@ -69,15 +69,16 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
         });
     }
 
+    /** Shared with {@link JdbcImportRepository}, which inserts imported rows in batches. */
+    static final String INSERT_SQL = """
+            INSERT INTO punishments
+                (type, target_id, target_last_known_name, target_ip, actor_id, actor_name, reason,
+                 created_at, expires_at, active, revoked_at, revoked_by, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
+
     private Punishment insert(Connection connection, Punishment entity) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(
-                """
-                INSERT INTO punishments
-                    (type, target_id, target_last_known_name, target_ip, actor_id, actor_name, reason,
-                     created_at, expires_at, active, revoked_at, revoked_by, metadata)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement statement = connection.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
             bind(statement, entity);
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
@@ -102,7 +103,7 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
         }
     }
 
-    private void bind(PreparedStatement statement, Punishment entity) throws SQLException {
+    static void bind(PreparedStatement statement, Punishment entity) throws SQLException {
         statement.setString(1, entity.type().name());
         statement.setString(2, entity.targetId().toString());
         statement.setString(3, entity.targetLastKnownName());
@@ -185,37 +186,12 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
     @Override
     public CompletableFuture<List<Punishment>> findByQuery(PunishmentQuery query) {
         return scheduler.supplyAsync(() -> {
-            List<String> conditions = new ArrayList<>();
             List<Object> values = new ArrayList<>();
-            if (query.targetId() != null) {
-                conditions.add("target_id = ?");
-                values.add(query.targetId().toString());
-            }
-            if (query.types() != null && !query.types().isEmpty()) {
-                conditions.add("type IN (" + placeholders(query.types().size()) + ")");
-                query.types().forEach(type -> values.add(type.name()));
-            }
-            Instant now = Instant.now();
-            if (Boolean.TRUE.equals(query.active())) {
-                conditions.add("active = TRUE AND (expires_at IS NULL OR expires_at > ?)");
-                values.add(now.toEpochMilli());
-            } else if (Boolean.FALSE.equals(query.active())) {
-                conditions.add("(active = FALSE OR (expires_at IS NOT NULL AND expires_at <= ?))");
-                values.add(now.toEpochMilli());
-            }
-            String where = conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions);
-            String sql = "SELECT * FROM punishments" + where + " ORDER BY created_at DESC LIMIT ?";
+            String sql = "SELECT * FROM punishments" + where(query, values) + " ORDER BY created_at DESC LIMIT ?";
 
             try (Connection connection = dataSource.getConnection();
                     PreparedStatement statement = connection.prepareStatement(sql)) {
-                int index = 1;
-                for (Object value : values) {
-                    if (value instanceof Long l) {
-                        statement.setLong(index++, l);
-                    } else {
-                        statement.setString(index++, (String) value);
-                    }
-                }
+                int index = bindAll(statement, values);
                 statement.setInt(index, query.limit());
                 try (ResultSet resultSet = statement.executeQuery()) {
                     return mapAll(resultSet);
@@ -224,6 +200,58 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
                 throw new PunishmentStorageException("Failed to query punishments", e);
             }
         });
+    }
+
+    @Override
+    public CompletableFuture<Integer> count(PunishmentQuery query) {
+        return scheduler.supplyAsync(() -> {
+            List<Object> values = new ArrayList<>();
+            String sql = "SELECT COUNT(*) FROM punishments" + where(query, values);
+            try (Connection connection = dataSource.getConnection();
+                    PreparedStatement statement = connection.prepareStatement(sql)) {
+                bindAll(statement, values);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    return resultSet.next() ? resultSet.getInt(1) : 0;
+                }
+            } catch (SQLException e) {
+                throw new PunishmentStorageException("Failed to count punishments", e);
+            }
+        });
+    }
+
+    /** The WHERE clause for {@code query}, adding its parameters to {@code values}. */
+    private static String where(PunishmentQuery query, List<Object> values) {
+        List<String> conditions = new ArrayList<>();
+        if (query.targetId() != null) {
+            conditions.add("target_id = ?");
+            values.add(query.targetId().toString());
+        }
+        if (query.types() != null && !query.types().isEmpty()) {
+            conditions.add("type IN (" + placeholders(query.types().size()) + ")");
+            query.types().forEach(type -> values.add(type.name()));
+        }
+        long now = Instant.now().toEpochMilli();
+        if (Boolean.TRUE.equals(query.active())) {
+            conditions.add("active = TRUE AND (expires_at IS NULL OR expires_at > ?)");
+            values.add(now);
+        } else if (Boolean.FALSE.equals(query.active())) {
+            conditions.add("(active = FALSE OR (expires_at IS NOT NULL AND expires_at <= ?))");
+            values.add(now);
+        }
+        return conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions);
+    }
+
+    /** Binds {@code values} from the first parameter on; returns the next free index. */
+    private static int bindAll(PreparedStatement statement, List<Object> values) throws SQLException {
+        int index = 1;
+        for (Object value : values) {
+            if (value instanceof Long l) {
+                statement.setLong(index++, l);
+            } else {
+                statement.setString(index++, (String) value);
+            }
+        }
+        return index;
     }
 
     @Override

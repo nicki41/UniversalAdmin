@@ -1,6 +1,9 @@
 # Modrinth Page
 
 Source of truth for the `universaladmin` Modrinth project (id `wGP5uSse`).
+The official extensions have their own projects - see
+[modrinth-extensions.md](modrinth-extensions.md); all three are in the
+collection [UniversalAdmin](https://modrinth.com/collection/DrMT8zro).
 Edit here first, then copy into Modrinth. Versions are uploaded
 automatically by `release.yml` - see [releasing.md](releasing.md#modrinth);
 everything on this page (texts, gallery, links) is maintained by hand.
@@ -83,6 +86,13 @@ Optional: the **UniversalAdmin Velocity** plugin (the `-velocity` version on
 this page) keeps banned players out at the proxy, before they reach any
 server. [Network guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md).
 
+## 🔁 Switching from another plugin?
+
+`/admin import` brings your bans, mutes, warnings and kicks over from
+**LiteBans**, **AdvancedBan**, the **vanilla ban lists** and **EssentialsX** -
+with reasons, dates and what is still in force. Preview first, nothing is
+lost. [Import guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/import.md).
+
 ## 🛡️ Moderation
 
 Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn and freeze - with reason
@@ -138,9 +148,17 @@ Change any setting from a menu - validated, applied right away, saved to
 
 Other plugins can add modules to UniversalAdmin: commands, menu pages,
 profile buttons, settings, database tables - all audited and permissioned
-like the built-ins. **Official: UniversalAdmin Discord** posts bans, mutes,
-reports and restarts to your Discord channel (download from the GitHub
-release). Developers: see the
+like the built-ins. The official extensions - all in the
+[UniversalAdmin collection](https://modrinth.com/collection/DrMT8zro):
+
+- **UniversalAdmin Discord** - admin actions in Discord, and as a bot:
+  two-way staff chat, `/ban`, `/mute`, `/history` from Discord, reports
+  with Claim / Resolve / Reject buttons.
+- **UniversalAdmin Placeholders** - PlaceholderAPI placeholders such as
+  `%universaladmin_online%` (without vanished players),
+  `%universaladmin_muted%` and `%universaladmin_open_reports%`.
+
+Developers: see the
 [extension guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/getting-started.md).
 
 ## 📦 Requirements

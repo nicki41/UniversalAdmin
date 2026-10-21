@@ -1,5 +1,6 @@
 package dev.universaladmin.modules.players;
 
+import java.util.Collection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -110,6 +111,17 @@ class PlayerServiceTest {
         public CompletableFuture<Void> deleteById(UUID id) {
             store.remove(id);
             return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public CompletableFuture<Integer> insertIfAbsent(Collection<PlayerProfile> profiles) {
+            int added = 0;
+            for (PlayerProfile profile : profiles) {
+                if (store.putIfAbsent(profile.id(), profile) == null) {
+                    added++;
+                }
+            }
+            return CompletableFuture.completedFuture(added);
         }
 
         @Override

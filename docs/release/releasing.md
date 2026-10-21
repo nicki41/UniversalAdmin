@@ -6,13 +6,17 @@ and publishes:
 
 - a GitHub release with `universaladmin-core-<v>.jar` (+ `.sha256`),
   `universaladmin-discord-<v>.jar` (+ `.sha256`),
+  `universaladmin-placeholderapi-<v>.jar` (+ `.sha256`),
   `universaladmin-velocity-<v>.jar` (+ `.sha256`) and
   `universaladmin-api-<v>.jar` with `-sources.jar` and `-javadoc.jar`,
   release notes from the matching `CHANGELOG.md` section;
 - on the Modrinth project (id `wGP5uSse`): the plugin jar as version `<v>`
   (loaders `paper`, `purpur`; every game version in
   [`supported-versions.txt`](../../supported-versions.txt)) and the Velocity
-  plugin as version `<v>-velocity` (loader `velocity`) - see
+  plugin as version `<v>-velocity` (loader `velocity`);
+- on the extensions' own Modrinth projects, each depending on the plugin:
+  UniversalAdmin Discord (id `Lq5Ihyzr`) and UniversalAdmin Placeholders
+  (id `229V0zwE`, also depending on PlaceholderAPI) - see
   [Modrinth](#modrinth).
 
 Nothing is published if a single test fails.
@@ -83,7 +87,10 @@ Modrinth hiccup never fails the GitHub release. The version type
 (release/beta/alpha) is derived from the version string.
 
 Project page content (description, gallery, links) is maintained by hand -
-see [modrinth.md](modrinth.md).
+see [modrinth.md](modrinth.md) and, for the two extensions,
+[modrinth-extensions.md](modrinth-extensions.md). All three projects are in
+the public collection
+[UniversalAdmin](https://modrinth.com/collection/DrMT8zro).
 
 ## Compatibility
 
@@ -105,7 +112,7 @@ Compatibility -> Run workflow, optionally with one version):
    modules enabled, a list of console commands, no errors, no missing
    texts);
 3. if it passes: adds the version to the newest release-type Modrinth
-   versions (plugin and Velocity) right away, and opens a pull request from
+   versions (plugin, Velocity and both extensions) right away, and opens a pull request from
    `automation/supported-versions` that adds it to the file - merge it so
    the next release lists it too;
 4. if it fails: opens an issue "UniversalAdmin does not work on Paper

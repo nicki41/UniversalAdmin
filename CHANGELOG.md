@@ -7,6 +7,47 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-21
+
+Switching made easy: bring your bans over from LiteBans, AdvancedBan, the
+vanilla ban lists or EssentialsX. Plus PlaceholderAPI placeholders and a
+Discord bot, both as official extensions with their own Modrinth pages.
+
+### Added
+
+- **Import from other plugins**: `/admin import` brings bans (also IP
+  bans), mutes, warnings and kicks over from **LiteBans** (MySQL/MariaDB or
+  its H2 file), **AdvancedBan** (MySQL or its HSQLDB files), the **vanilla
+  ban lists** and **EssentialsX** (mutes; jails become staff notes) - with
+  reasons, dates, who issued and who lifted them, and what is still in
+  force. A preview shows everything before anything is written; running it
+  again only imports what is new; players who never joined become known by
+  name. Vanilla entries are moved so unbans work. See
+  [docs/user/import.md](docs/user/import.md).
+- **UniversalAdmin Placeholders** - a new official extension for
+  PlaceholderAPI: `%universaladmin_vanished%`, `_muted`,
+  `_mute_remaining`, `_warnings`, `_online` (without vanished players),
+  `_staff_online`, `_open_reports`, `_maintenance`, network counts and more.
+  See [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md).
+- **Discord bot mode** for UniversalAdmin Discord: two-way staff chat,
+  slash commands (`/ban`, `/mute`, `/kick`, `/warn`, `/unban`, `/unmute`,
+  `/history`, `/check`, `/find`, `/ua <any admin command>`) with player
+  autocomplete, and reports with Claim / Resolve / Reject buttons. Discord
+  roles map to permission nodes; everything is checked and audited like in
+  game. Webhook mode stays the default. See
+  [docs/extensions/discord.md](docs/extensions/discord.md).
+- Extension API 1.2: `Actor.remote` / `ActorType.REMOTE`, `RemoteCommands`
+  and `StaffChat` ([ADR 0016](docs/architecture/decisions/0016-remote-actors.md)).
+- Extension API 1.2: status services for displays
+  (`dev.universaladmin.status`: `PlayerStatus`, `ReportOverview`,
+  `MaintenanceStatus`) and `PlayerDirectory#addIfAbsent`.
+- New permission `universaladmin.moderation.import`.
+
+### Upgrading
+
+- Replace the jar and restart. A new table (`ua_import_records`) is created
+  automatically; nothing else changes.
+
 ## [1.1.0] - 2026-10-20
 
 The first stable release: commands for everything, a report system, chat

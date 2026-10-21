@@ -56,6 +56,7 @@ permission listed is checked by the action itself, not just by the command.
 | `/admin nocollision` | `/nocollision` | `moderation.collision` | Toggle your collision |
 | `/admin staff` | `/staff` | `moderation.staffmode` | Enter/leave staff mode |
 | `/admin staff recover [player]` | - | `moderation.staffmode.recover` | Restore a stuck staff-mode inventory |
+| `/admin import [source] [confirm]` | - | `moderation.import` | Import punishments from LiteBans, AdvancedBan, the vanilla ban lists or EssentialsX - without `confirm` only a preview ([import.md](import.md)) |
 
 (Permission names in these tables omit the leading `universaladmin.`.)
 

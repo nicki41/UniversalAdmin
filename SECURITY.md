@@ -7,9 +7,10 @@ line. Please update to the newest release before reporting.
 
 | Version | Supported |
 |---|---|
-| 1.1.x (latest) | yes |
+| 1.2.x (latest) | yes |
+| 1.1.x | until 1.3.0 |
 | `main` | yes |
-| 0.1.0-alpha.* | no - please update to 1.1 |
+| 0.1.0-alpha.* | no - please update to 1.2 |
 
 The official Discord extension, the Velocity plugin and the extension API
 follow the same versions.

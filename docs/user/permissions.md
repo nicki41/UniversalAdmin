@@ -101,6 +101,7 @@ universaladmin.*
 | `universaladmin.moderation.unban` / `.unmute` | op | Lift bans/mutes |
 | `universaladmin.moderation.freeze` / `.unfreeze` | op | Freeze |
 | `universaladmin.moderation.notes` | op | Staff notes; "player with notes joined" alert |
+| `universaladmin.moderation.import` | op | `/admin import` - import punishments from other plugins |
 | `universaladmin.moderation.notify` | op | Be told when staff punish or pardon someone |
 | `universaladmin.moderation.vanish` | op | Vanish yourself |
 | `universaladmin.bypass.vanish` | op | See vanished players |

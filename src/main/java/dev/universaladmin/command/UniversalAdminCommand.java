@@ -86,7 +86,35 @@ public final class UniversalAdminCommand implements TabExecutor {
 
     /** Runs an already-resolved command - the shortcut registrations call this directly. */
     public void dispatchResolved(CommandSender sender, String label, AdminCommand target, List<String> args) {
-        Actor actor = actorFor(sender);
+        dispatchResolved(sender, actorFor(sender), label, target, args);
+    }
+
+    /**
+     * Like {@link #dispatch}, for an actor that is not the sender itself - a
+     * Discord user through {@link RemoteCommandService}, whose stand-in sender
+     * only carries the replies.
+     */
+    public void dispatchAs(CommandSender sender, Actor actor, String rootLabel, String name, List<String> args) {
+        Optional<AdminCommand> found = registry.find(name);
+        if (found.isEmpty()) {
+            send(sender, CommandMessages.UNKNOWN, rootLabel);
+            return;
+        }
+        dispatchResolved(sender, actor, rootLabel + " " + found.get().name(), found.get(), args);
+    }
+
+    /** Completion for {@link #dispatchAs}. */
+    public List<String> completeAs(CommandSender sender, Actor actor, String label, AdminCommand target, List<String> args) {
+        CommandInvocation invocation = new CommandInvocation(sender, actor, label, args, environment);
+        try {
+            return Arguments.matching(target.complete(invocation), invocation.currentArg());
+        } catch (RuntimeException e) {
+            environment.logger().log(Level.WARNING, "Tab completion for /" + label + " threw", e);
+            return List.of();
+        }
+    }
+
+    private void dispatchResolved(CommandSender sender, Actor actor, String label, AdminCommand target, List<String> args) {
         CommandInvocation invocation = new CommandInvocation(sender, actor, label, args, environment);
         if (!invocation.hasPermission(target.permission())) {
             invocation.reply(CommandMessages.NO_PERMISSION);
