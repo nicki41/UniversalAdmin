@@ -148,11 +148,17 @@ Change any setting from a menu - validated, applied right away, saved to
 
 Other plugins can add modules to UniversalAdmin: commands, menu pages,
 profile buttons, settings, database tables - all audited and permissioned
-like the built-ins. Official extensions (download from the GitHub release):
-**UniversalAdmin Discord** posts bans, mutes, reports and restarts to your
-Discord channel; **UniversalAdmin Placeholders** adds PlaceholderAPI
-placeholders such as `%universaladmin_online%` (without vanished players),
-`%universaladmin_muted%` and `%universaladmin_open_reports%`. Developers: see the
+like the built-ins. The official extensions - all in the
+[UniversalAdmin collection](https://modrinth.com/collection/DrMT8zro):
+
+- **UniversalAdmin Discord** - admin actions in Discord, and as a bot:
+  two-way staff chat, `/ban`, `/mute`, `/history` from Discord, reports
+  with Claim / Resolve / Reject buttons.
+- **UniversalAdmin Placeholders** - PlaceholderAPI placeholders such as
+  `%universaladmin_online%` (without vanished players),
+  `%universaladmin_muted%` and `%universaladmin_open_reports%`.
+
+Developers: see the
 [extension guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/getting-started.md).
 
 ## 📦 Requirements
