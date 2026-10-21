@@ -7,6 +7,12 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-21
+
+Switching made easy: bring your bans over from LiteBans, AdvancedBan, the
+vanilla ban lists or EssentialsX. Plus PlaceholderAPI placeholders and a
+Discord bot, both as official extensions with their own Modrinth pages.
+
 ### Added
 
 - **Import from other plugins**: `/admin import` brings bans (also IP

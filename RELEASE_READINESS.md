@@ -1,24 +1,26 @@
-# Release Readiness - 1.1.0
+# Release Readiness - 1.2.0
 
-Status of the 1.1.0 release - the first stable release (1.0.0 was folded
-into it). What a manual pass covers is in the
-[test plan](docs/release/test-plan.md).
+Status of the 1.2.0 release: punishment import, the PlaceholderAPI
+extension and the Discord bot (details in the
+[changelog](CHANGELOG.md)). What a manual pass covers is in the
+[test plan](docs/release/test-plan.md); what was verified for 1.1.0 below
+still holds.
 
 ## Overview
 
 | Item | Status |
 |---|---|
-| **Version** | `1.1.0` (`build.gradle.kts`; `./gradlew -q printVersion`) |
+| **Version** | `1.2.0` (`build.gradle.kts`; `./gradlew -q printVersion`) |
 | **Build** | `./gradlew clean build` green - all projects, including `verifyShadedJarDrivers` (real SQLite connection through the finished jar) |
 | **Tests** | unit and integration tests for services, actions, migrations (real SQLite), settings, localization, commands' building blocks, live inventory sync, the network repository, the Discord extension and the Velocity plugin |
 | **Supported server** | Paper/Purpur 1.21.7 - 1.21.11 and 26.1.1 - 26.3, Java 21+ - see [installation.md](docs/user/installation.md#supported-versions) and [supported-versions.txt](supported-versions.txt) |
 | **Modules** | Players, Moderation (+ staff tools, notes), Reports, Chat, Server, Worlds, Whitelist, Performance, Audit Log, Settings; Network (with network mode) |
 | **Commands** | every module, `/admin help`, shortcuts - [commands.md](docs/user/commands.md) |
-| **Extension API** | `universaladmin-api` 1.1, semantically versioned - [ADR 0010](docs/architecture/decisions/0010-extension-api.md) |
-| **Official extensions** | UniversalAdmin Discord; proxy plugin UniversalAdmin Velocity |
+| **Extension API** | `universaladmin-api` 1.2, semantically versioned - [ADR 0010](docs/architecture/decisions/0010-extension-api.md) |
+| **Official extensions** | UniversalAdmin Discord (webhook or bot), UniversalAdmin Placeholders (PlaceholderAPI); proxy plugin UniversalAdmin Velocity |
 | **Release pipeline** | tag → GitHub release (plugin, Discord extension, Velocity plugin, API jars, checksums) + Modrinth versions for every supported game version; new Paper versions tested weekly - [releasing.md](docs/release/releasing.md) |
 | **Telemetry** | on by default, fully documented, single switch `telemetry.enabled` - [telemetry.md](docs/user/telemetry.md) |
-| **Upgrade path** | 0.1.0-alpha → 1.1.0 automatic: config migration v3, new tables, layered language files - see the changelog |
+| **Upgrade path** | 1.1.x → 1.2.0: replace the jar (one new table). 0.1.0-alpha → 1.2.0 automatic: config migration v3, new tables, layered language files - see the changelog |
 
 ## Verified
 
@@ -47,6 +49,14 @@ commands, no errors, no missing texts):
   across servers, a ban issued on one server for a player known only on the
   other, audit entries tagged with the server, servers starting together on
   an empty database, the Velocity plugin starting before the database.
+
+For 1.2.0 additionally: 365 automated tests, including fixture databases
+for every import source; live on Paper 1.21.11 with the real AdvancedBan
+2.3.0, EssentialsX 2.22.0 and PlaceholderAPI 2.12.3 (imports, re-runs,
+placeholders); the Discord extension's library loading and error handling
+in bot mode. **Not yet verified against a real Discord server: the bot's
+slash commands, staff chat bridge and report buttons** - test plan section
+23.
 
 ## Not verifiable without game clients
 
