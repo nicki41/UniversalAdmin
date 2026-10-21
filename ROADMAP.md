@@ -63,7 +63,16 @@ Additive, no breaking changes.
 - [ ] **Web panel**: REST API over the same actions, live dashboard via
       WebSockets, web logins separate from Minecraft accounts - see
       [docs/architecture/web-future.md](docs/architecture/web-future.md)
-- [ ] Extension marketplace/registry (format still open)
+- [ ] **Extension builder in the browser**: build extensions by drag and
+      drop - menu pages on the chest grid, commands, logic blocks
+      (event → condition → action), settings, permissions, translations -
+      for people who don't write Java. The result is a real extension
+      project against `universaladmin-api` with code blocks and an "eject
+      to IDE" path, so an extension can grow as complex as a hand-written
+      one - see [docs/architecture/extension-builder.md](docs/architecture/extension-builder.md)
+- [ ] **Sharing extensions on the same site** (the extension registry):
+      a page per extension with versions and downloads, search, and "open
+      in builder" to start from a shared project
 
 ## Deliberately not planned
 

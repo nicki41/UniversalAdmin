@@ -108,7 +108,9 @@ the extension points the built-in modules use. See
 [docs/architecture/extensions.md](docs/architecture/extensions.md),
 [ADR 0010](docs/architecture/decisions/0010-extension-api.md) and the
 [developer guide](docs/extensions/getting-started.md). A web app/REST API is
-still planned - [docs/architecture/web-future.md](docs/architecture/web-future.md).
+still planned - [docs/architecture/web-future.md](docs/architecture/web-future.md) -
+and so is a drag-and-drop extension builder in the browser with a place to
+share extensions - [docs/architecture/extension-builder.md](docs/architecture/extension-builder.md).
 
 ## Gradle layout
 
