@@ -150,6 +150,10 @@ public final class TicketsModule implements Module {
   network, by name or UUID. In commands, `CommandInvocation#withPlayer(index,
   player -> ...)` does that lookup for an argument and reports "unknown
   player" for you.
+- Outside the game (1.2): `services().get(RemoteCommands.class)` runs any
+  `/admin` command for an `Actor.remote(name, permissions)` - with the same
+  checks and audit entries as in game; `StaffChat` sends into and listens
+  to the staff chat. The Discord bot is built on both.
 - Status for displays (1.2): `services().get(PlayerStatus.class)` (vanished,
   staff mode, frozen, muted, warnings, punishment count), `ReportOverview`
   (open reports), `MaintenanceStatus` - all answered from memory, safe on

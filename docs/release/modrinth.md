@@ -1,6 +1,9 @@
 # Modrinth Page
 
 Source of truth for the `universaladmin` Modrinth project (id `wGP5uSse`).
+The official extensions have their own projects - see
+[modrinth-extensions.md](modrinth-extensions.md); all three are in the
+collection [UniversalAdmin](https://modrinth.com/collection/DrMT8zro).
 Edit here first, then copy into Modrinth. Versions are uploaded
 automatically by `release.yml` - see [releasing.md](releasing.md#modrinth);
 everything on this page (texts, gallery, links) is maintained by hand.

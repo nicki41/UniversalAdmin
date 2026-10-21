@@ -44,6 +44,8 @@ implementations, ...) are internal and may change in any release.
 | Threading | `TaskScheduler` (`supplyAsync`, `runOnMainThread`, `supplyOnMainThread`) | - |
 | Other servers of a network (1.1) | `NetworkService` (`UniversalAdmin#network`): servers, players, messages, moving players - a no-op without network mode | `subscribe`/`unsubscribe` on the service |
 | Any known player, network-wide (1.1) | `PlayerDirectory` service, `CommandInvocation#withPlayer` | - |
+| Run `/admin` commands for someone outside the game (1.2) | `RemoteCommands` service, `Actor.remote` - the same checks and audit as in game ([ADR 0016](decisions/0016-remote-actors.md)) | - |
+| Staff chat bridges (1.2) | `StaffChat` service: send into and subscribe to the staff chat | - |
 | Status for displays (1.2) | `PlayerStatus`, `ReportOverview`, `MaintenanceStatus` services (`dev.universaladmin.status`) - from memory, main-thread safe | - |
 
 Every `register*` call undoes itself when the module is disabled - which

@@ -55,7 +55,7 @@ to be the one admin plugin your server needs.
 | **Switching** | `/admin import` brings bans, mutes, warnings and kicks over from LiteBans, AdvancedBan, the vanilla ban lists and EssentialsX - preview first, repeatable. |
 | **Network** | Velocity/BungeeCord: every server and its players in one menu, `/admin find`, cross-server teleports and `/admin send`, network-wide bans, staff chat, alerts and audit log. Optional Velocity plugin that keeps banned players out at the proxy. |
 | **Settings** | Edit every setting in-game - validated, saved with comments intact. |
-| **Extensions** | A public API for other plugins - see below. Official: **Discord logging**, **PlaceholderAPI placeholders**. |
+| **Extensions** | A public API for other plugins - see below. Official: **Discord** (log, two-way staff chat, moderation from Discord, report buttons), **PlaceholderAPI placeholders**. |
 
 ## Requirements
 
@@ -149,11 +149,13 @@ UniversalAdminProvider.get().extensions().register(this, new MyModule());
 - API jars (binary, sources, javadoc) are attached to every
   [release](https://github.com/nicki41/UniversalAdmin/releases).
 
-**Official extensions:**
+**Official extensions** (all in the Modrinth collection
+[UniversalAdmin](https://modrinth.com/collection/DrMT8zro)):
 
 - **UniversalAdmin Discord** posts bans, mutes, reports, restarts and more to
-  a Discord channel. Setup takes two minutes:
-  [docs/extensions/discord.md](docs/extensions/discord.md).
+  a Discord channel - with a webhook in two minutes, or as a bot with
+  two-way staff chat, `/ban`, `/mute`, `/history` from Discord and report
+  buttons: [docs/extensions/discord.md](docs/extensions/discord.md).
 - **UniversalAdmin Placeholders** adds PlaceholderAPI placeholders for
   scoreboards and tab lists:
   [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md).
