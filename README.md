@@ -52,9 +52,10 @@ to be the one admin plugin your server needs.
 | **Whitelist** | With reasons, notes and **temporary** access that expires on its own. |
 | **Performance** | TPS/MSPT/memory dashboard, per-world stats, entity overview, staff alerts, and a careful entity clear that never touches players or protected mobs. |
 | **Audit log** | Every admin action, filterable by player, module and time, with details. |
+| **Switching** | `/admin import` brings bans, mutes, warnings and kicks over from LiteBans, AdvancedBan, the vanilla ban lists and EssentialsX - preview first, repeatable. |
 | **Network** | Velocity/BungeeCord: every server and its players in one menu, `/admin find`, cross-server teleports and `/admin send`, network-wide bans, staff chat, alerts and audit log. Optional Velocity plugin that keeps banned players out at the proxy. |
 | **Settings** | Edit every setting in-game - validated, saved with comments intact. |
-| **Extensions** | A public API for other plugins - see below. Official: **Discord logging**. |
+| **Extensions** | A public API for other plugins - see below. Official: **Discord logging**, **PlaceholderAPI placeholders**. |
 
 ## Requirements
 
@@ -120,8 +121,14 @@ Optionally add the UniversalAdmin Velocity plugin to the proxy. Guide:
 **Folia / Spigot / Minecraft below 1.21.7?** Not supported - UniversalAdmin
 targets Paper 1.21.7 and newer.
 
-**Can I import bans from another plugin?** Not yet - it is on the
-[roadmap](ROADMAP.md).
+**Can I import bans from another plugin?** Yes - from LiteBans, AdvancedBan,
+the vanilla ban lists and EssentialsX: `/admin import`. See
+[docs/user/import.md](docs/user/import.md).
+
+**PlaceholderAPI?** Yes, with the official UniversalAdmin Placeholders
+extension: `%universaladmin_online%` (without vanished players),
+`%universaladmin_muted%`, `%universaladmin_open_reports%` and more -
+[docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md).
 
 **How do I change the messages?** Edit `plugins/UniversalAdmin/lang/<language>.yml`,
 then `/admin reload`. Only keep the keys you changed - everything else
@@ -142,9 +149,14 @@ UniversalAdminProvider.get().extensions().register(this, new MyModule());
 - API jars (binary, sources, javadoc) are attached to every
   [release](https://github.com/nicki41/UniversalAdmin/releases).
 
-**Official extension - UniversalAdmin Discord:** posts bans, mutes, reports,
-restarts and more to a Discord channel. Setup takes two minutes:
-[docs/extensions/discord.md](docs/extensions/discord.md).
+**Official extensions:**
+
+- **UniversalAdmin Discord** posts bans, mutes, reports, restarts and more to
+  a Discord channel. Setup takes two minutes:
+  [docs/extensions/discord.md](docs/extensions/discord.md).
+- **UniversalAdmin Placeholders** adds PlaceholderAPI placeholders for
+  scoreboards and tab lists:
+  [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md).
 
 ## Anonymous statistics
 
@@ -162,7 +174,7 @@ all. Exactly what is sent: [docs/user/telemetry.md](docs/user/telemetry.md).
 - **Server owners:** [installation](docs/user/installation.md) ·
   [commands](docs/user/commands.md) · [permissions](docs/user/permissions.md) ·
   [configuration](docs/user/configuration.md) · [database](docs/user/database.md) ·
-  [network](docs/user/network.md) ·
+  [network](docs/user/network.md) · [import](docs/user/import.md) ·
   [audit log](docs/user/audit-log.md) · [telemetry](docs/user/telemetry.md)
 - **Modules:** [players](docs/user/modules/players.md) ·
   [moderation](docs/user/modules/moderation.md) ·

@@ -252,6 +252,15 @@ class PunishmentServiceTest {
         }
 
         @Override
+        public CompletableFuture<Integer> count(PunishmentQuery query) {
+            return CompletableFuture.completedFuture((int) store.values().stream()
+                    .filter(p -> query.targetId() == null || p.targetId().equals(query.targetId()))
+                    .filter(p -> query.types() == null || query.types().contains(p.type()))
+                    .filter(p -> query.active() == null || query.active() == p.isActiveAt(Instant.now()))
+                    .count());
+        }
+
+        @Override
         public synchronized CompletableFuture<List<Punishment>> revokeActiveByTarget(
                 UUID targetId, Set<PunishmentType> types, Instant revokedAt, String revokedBy) {
             List<Punishment> revoked = new ArrayList<>();

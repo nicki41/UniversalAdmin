@@ -102,8 +102,9 @@ jobs:
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
           echo "checksum=${JAR}.sha256" >> "$GITHUB_OUTPUT"
 
-      # Attached next to the plugin jar: the official Discord extension (its
-      # own plugin jar), the Velocity plugin for network mode, and the
+      # Attached next to the plugin jar: the official Discord and
+      # PlaceholderAPI extensions (their own plugin jars), the Velocity plugin
+      # for network mode, and the
       # extension API for developers (binary, sources, javadoc). The plugin
       # jar and the Velocity jar also go to Modrinth (below).
       - name: Collect extension, proxy and API artifacts
@@ -112,9 +113,10 @@ jobs:
           set -euo pipefail
           VERSION="${{ steps.version.outputs.version }}"
           DISCORD="extensions/discord/build/libs/universaladmin-discord-${VERSION}.jar"
+          PLACEHOLDERS="extensions/placeholderapi/build/libs/universaladmin-placeholderapi-${VERSION}.jar"
           VELOCITY="proxy/velocity/build/libs/universaladmin-velocity-${VERSION}.jar"
           API="api/build/libs/universaladmin-api-${VERSION}.jar"
-          for f in "$DISCORD" "$VELOCITY" "$API" \
+          for f in "$DISCORD" "$PLACEHOLDERS" "$VELOCITY" "$API" \
               "api/build/libs/universaladmin-api-${VERSION}-sources.jar" \
               "api/build/libs/universaladmin-api-${VERSION}-javadoc.jar"; do
             if [ ! -f "$f" ]; then
@@ -124,12 +126,16 @@ jobs:
           done
           ( cd extensions/discord/build/libs && sha256sum "universaladmin-discord-${VERSION}.jar" \
               > "universaladmin-discord-${VERSION}.jar.sha256" )
+          ( cd extensions/placeholderapi/build/libs && sha256sum "universaladmin-placeholderapi-${VERSION}.jar" \
+              > "universaladmin-placeholderapi-${VERSION}.jar.sha256" )
           ( cd proxy/velocity/build/libs && sha256sum "universaladmin-velocity-${VERSION}.jar" \
               > "universaladmin-velocity-${VERSION}.jar.sha256" )
           {
             echo "files<<FILES_EOF"
             echo "$DISCORD"
             echo "${DISCORD}.sha256"
+            echo "$PLACEHOLDERS"
+            echo "${PLACEHOLDERS}.sha256"
             echo "$VELOCITY"
             echo "${VELOCITY}.sha256"
             echo "$API"

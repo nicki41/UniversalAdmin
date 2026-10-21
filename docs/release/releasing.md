@@ -6,6 +6,7 @@ and publishes:
 
 - a GitHub release with `universaladmin-core-<v>.jar` (+ `.sha256`),
   `universaladmin-discord-<v>.jar` (+ `.sha256`),
+  `universaladmin-placeholderapi-<v>.jar` (+ `.sha256`),
   `universaladmin-velocity-<v>.jar` (+ `.sha256`) and
   `universaladmin-api-<v>.jar` with `-sources.jar` and `-javadoc.jar`,
   release notes from the matching `CHANGELOG.md` section;

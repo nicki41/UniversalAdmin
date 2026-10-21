@@ -70,6 +70,7 @@ import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
+import dev.universaladmin.status.PlayerStatus;
 import io.papermc.paper.ban.BanListType;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -104,6 +105,9 @@ public final class ModerationModule implements Module {
 
     /** How often {@link StaffModeTargetTracker#tick()} refreshes the Player Inspector tool and checks for tool-kit tampering - twice a second, cheap enough given how few players are ever in Staff Mode at once. */
     private static final long STAFF_MODE_TRACKER_PERIOD_TICKS = 10L;
+
+    /** How often {@link ModerationPlayerStatus} reloads online players' mutes and warnings - catches changes made on other servers. */
+    private static final long STATUS_REFRESH_TICKS = 20L * 60;
 
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Moderation")
             .description("Kick/ban/tempban/ipban/mute/tempmute/warn/freeze tooling plus Vanish/Godmode/Staff Mode, with join/chat enforcement.")
@@ -215,6 +219,16 @@ public final class ModerationModule implements Module {
         context.subscribe(bridge);
         network.subscribe(NetworkModerationBridge.TOPIC, bridge);
         context.resources().closeable(() -> network.unsubscribe(NetworkModerationBridge.TOPIC, bridge));
+
+        // Read-only status for scoreboards, tab lists and placeholders.
+        ModerationPlayerStatus status = new ModerationPlayerStatus(
+                punishmentService, vanishRuntimeState, staffModeState, freezeRuntimeState, godmodeState);
+        context.resources().listener(status);
+        context.subscribeAudit(status);
+        plugin.getServer().getOnlinePlayers().forEach(player -> status.track(player.getUniqueId()));
+        context.registerService(PlayerStatus.class, status);
+        context.resources().task(plugin.getServer().getScheduler().runTaskTimer(
+                plugin, status::refreshAll, STATUS_REFRESH_TICKS, STATUS_REFRESH_TICKS));
 
         scheduleExpirySweep(context, punishmentService);
         scheduleStaffModeTracker(context, staffModeState, toolItems, freezeRuntimeState, vanishService, context.platform().settings(), messages);
@@ -485,8 +499,8 @@ public final class ModerationModule implements Module {
         context.registerAction(ActionDefinition.builder(new ImportAction(service, scheduler))
                 .permission(ModerationPermissions.IMPORT)
                 .module(ID.key().name())
-                .target(input -> Optional.of(ActionTarget.of("import", input.source(), input.source())))
-                .auditSummary(input -> "Imported punishments from " + input.source())
+                .target(input -> Optional.of(ActionTarget.of("import", input.source(), sourceName(service, input.source()))))
+                .auditSummary(input -> "Imported punishments from " + sourceName(service, input.source()))
                 .auditDetails((input, result) -> result instanceof ActionResult.Success<ImportSummary> success
                         ? AuditDetails.builder().metadata(Map.of(
                                 "punishments", success.value().totalPunishments(),
@@ -497,6 +511,11 @@ public final class ModerationModule implements Module {
                         : AuditDetails.EMPTY)
                 .build());
         context.registerCommand(new ImportCommand(service, scheduler, context.logger()));
+    }
+
+    /** "EssentialsX" for "essentials" - the source as the audit log shows it. */
+    private static String sourceName(ImportService service, String id) {
+        return service.importer(id).map(PunishmentImporter::displayName).orElse(id);
     }
 
     /** Takes moved entries off the server's own ban lists (the vanilla import moves them) - Bukkit API, so on the main thread. */

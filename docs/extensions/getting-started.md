@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
-    compileOnly("com.github.nicki41.UniversalAdmin:universaladmin-api:v1.1.0")
+    compileOnly("com.github.nicki41.UniversalAdmin:universaladmin-api:v1.2.0")
 }
 ```
 
@@ -33,10 +33,10 @@ Alternatives if you prefer:
 
 - the plugin jar from Modrinth's Maven:
   `maven("https://api.modrinth.com/maven")` +
-  `compileOnly("maven.modrinth:universaladmin:1.1.0")`,
-- or `universaladmin-api-1.1.0.jar` (with sources and javadoc) from the
+  `compileOnly("maven.modrinth:universaladmin:1.2.0")`,
+- or `universaladmin-api-1.2.0.jar` (with sources and javadoc) from the
   [GitHub release](https://github.com/nicki41/UniversalAdmin/releases),
-  added via `compileOnly(files("libs/universaladmin-api-1.1.0.jar"))`.
+  added via `compileOnly(files("libs/universaladmin-api-1.2.0.jar"))`.
 
 Never shade the API into your jar.
 
@@ -150,9 +150,14 @@ public final class TicketsModule implements Module {
   network, by name or UUID. In commands, `CommandInvocation#withPlayer(index,
   player -> ...)` does that lookup for an argument and reports "unknown
   player" for you.
+- Status for displays (1.2): `services().get(PlayerStatus.class)` (vanished,
+  staff mode, frozen, muted, warnings, punishment count), `ReportOverview`
+  (open reports), `MaintenanceStatus` - all answered from memory, safe on
+  the main thread. The PlaceholderAPI extension is built on them.
 - `UniversalAdminProvider.API_VERSION` - check before relying on API added
   in a later minor version (`network()`, `PlayerDirectory` and
-  `withPlayer` are 1.1).
+  `withPlayer` are 1.1; the status services and
+  `PlayerDirectory#addIfAbsent` are 1.2).
 
 ## Reference
 

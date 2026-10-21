@@ -20,7 +20,7 @@ public final class UniversalAdminProvider {
      * compatible additions and in the major digit for breaking changes -
      * an extension can check it before relying on newer API.
      */
-    public static final String API_VERSION = "1.1";
+    public static final String API_VERSION = "1.2";
 
     private static volatile UniversalAdmin instance;
 

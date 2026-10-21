@@ -256,7 +256,39 @@ settings, issue some bans, then upgrade):
 - [ ] On 1.1.0 with no newer release: no update notice.
 - [ ] `/admin update` → "already the latest version".
 
-## 21. Network (Velocity)
+## 21. Import
+
+Copy the data folder of the old plugin (or install it with test data).
+
+- [ ] [C] `/admin import` lists the sources found, each with a location.
+- [ ] [C] `/admin import advancedban` (and `litebans`, `vanilla`,
+      `essentials`) - preview with plausible counts; nothing in
+      `/admin history` yet.
+- [ ] [C] `/admin import <source> confirm` - progress, summary; `/history
+      <player>` shows the imported entries with reason, date and issuer; an
+      imported active ban keeps the player out, an imported mute blocks
+      chat.
+- [ ] Running the same import again: "already imported" equals the first
+      run's count, nothing duplicated.
+- [ ] `/admin unban <name>` of an imported player who never joined works.
+- [ ] Vanilla: after the import `banned-players.json` no longer lists the
+      moved players; `/admin unban` lets them in.
+- [ ] EssentialsX: a jailed player has a staff note about the jail.
+- [ ] H2/HSQLDB without the old plugin's jar: clear message about the
+      missing driver.
+
+## 22. PlaceholderAPI extension
+
+- [ ] With PlaceholderAPI and `universaladmin-placeholderapi-<v>.jar`:
+      `/admin modules` lists "Placeholders".
+- [ ] `/papi parse me %universaladmin_online%` - vanish yourself, the
+      number drops; `%universaladmin_vanished%` yes/no.
+- [ ] Mute a player: `%universaladmin_muted%`, `_mute_reason`,
+      `_mute_remaining` for that player (`/papi parse <player> ...`).
+- [ ] `%universaladmin_open_reports%` changes after `/report`.
+- [ ] `%universaladmin_maintenance%` after `/admin maintenance on`.
+
+## 23. Network (Velocity)
 
 Setup: Velocity with `player-info-forwarding-mode = "modern"`, two Paper
 servers `lobby` and `survival` with the forwarding secret, one MariaDB,

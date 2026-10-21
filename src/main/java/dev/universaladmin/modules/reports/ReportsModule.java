@@ -23,7 +23,9 @@ import dev.universaladmin.modules.reports.gui.ReportsPlayerMenuEntry;
 import dev.universaladmin.modules.reports.jdbc.JdbcReportRepository;
 import dev.universaladmin.network.NetworkListener;
 import dev.universaladmin.settings.SettingsService;
+import dev.universaladmin.status.ReportOverview;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Player reports: {@code /report <player> <reason>} for everyone, with a
@@ -38,6 +40,9 @@ public final class ReportsModule implements Module {
     public static final ModuleId ID = ModuleId.core("reports");
 
     private static final int MAX_REASON_LENGTH = 256;
+
+    /** How often the open-report count for displays is reloaded (also catches reports filed on other servers). */
+    private static final long OPEN_REPORTS_REFRESH_TICKS = 20L * 15;
 
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Reports")
             .description("Players report rule-breakers with /report; staff claim and resolve reports in a GUI.")
@@ -66,6 +71,19 @@ public final class ReportsModule implements Module {
 
         ReportService reports = new ReportService(new JdbcReportRepository(platform.storage().dataSource(), platform.scheduler()));
         context.registerService(ReportService.class, reports);
+        // Open-report count for scoreboards and placeholders: refreshed after
+        // every report action and every few seconds (reports from other servers).
+        AtomicInteger openReports = new AtomicInteger();
+        Runnable refreshOpenReports = () -> reports.openCount().thenAccept(openReports::set);
+        context.registerService(ReportOverview.class, openReports::get);
+        context.subscribeAudit(event -> {
+            if (ID.key().name().equals(event.module())) {
+                refreshOpenReports.run();
+            }
+        });
+        refreshOpenReports.run();
+        context.resources().task(platform.plugin().getServer().getScheduler().runTaskTimer(
+                platform.plugin(), refreshOpenReports, OPEN_REPORTS_REFRESH_TICKS, OPEN_REPORTS_REFRESH_TICKS));
 
         String module = ID.key().name();
         CreateReportAction create = new CreateReportAction(

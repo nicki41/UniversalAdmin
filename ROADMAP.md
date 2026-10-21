@@ -33,19 +33,23 @@ welcome as [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues).
 - [x] Releases: GitHub (plugin, Discord extension, Velocity plugin, API
       jars), Modrinth, update checker, anonymous statistics with opt-out
 
+## Done - 1.2.0
+
+- [x] **Import** bans/mutes/warnings/kicks from LiteBans, AdvancedBan, the
+      vanilla ban lists and EssentialsX
+      ([ADR 0015](docs/architecture/decisions/0015-punishment-import.md))
+- [x] **PlaceholderAPI** placeholders as an official extension, backed by
+      status services in the extension API
+
 ## Next - 1.x
 
 Additive, no breaking changes.
 
-- [ ] **Import** bans/mutes/warnings from LiteBans, AdvancedBan and vanilla
-      `banned-players.json` - the most requested migration path
 - [ ] **Punishment templates and escalation** ("spam": 1st = warn, 2nd =
       1h mute, 3rd = 1d mute) selectable in the wizard and via
       `/punish <player> <template>`
 - [ ] **Alt detection** based on hashed IPs (opt-in, privacy-friendly - raw
       IPs are not stored for this)
-- [ ] **PlaceholderAPI** expansion as an official extension (vanish state,
-      open reports, punishment counts)
 - [ ] **Vault** bridge for economy/permission display on profiles (official
       extension)
 - [ ] Ticket/support system as an official extension built on the API

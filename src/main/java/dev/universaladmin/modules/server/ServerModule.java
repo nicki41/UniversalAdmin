@@ -8,7 +8,6 @@ import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
-import dev.universaladmin.modules.server.command.ServerCommands;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -24,6 +23,7 @@ import dev.universaladmin.modules.server.action.EnableMaintenanceAction;
 import dev.universaladmin.modules.server.action.RestartAction;
 import dev.universaladmin.modules.server.action.SetMaintenanceAllowedPlayersAction;
 import dev.universaladmin.modules.server.action.ShutdownAction;
+import dev.universaladmin.modules.server.command.ServerCommands;
 import dev.universaladmin.modules.server.gui.ServerGuiContext;
 import dev.universaladmin.modules.server.gui.ServerHomePage;
 import dev.universaladmin.modules.server.gui.ServerMaintenancePage;
@@ -31,6 +31,7 @@ import dev.universaladmin.modules.server.jdbc.JdbcMaintenanceStateRepository;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
+import dev.universaladmin.status.MaintenanceStatus;
 import java.util.Optional;
 import java.util.function.Function;
 import org.bukkit.plugin.Plugin;
@@ -88,6 +89,7 @@ public final class ServerModule implements Module {
         MaintenanceService maintenanceService =
                 new DefaultMaintenanceService(maintenanceRepository, settings, scheduler, context.logger());
         context.platform().services().register(MaintenanceService.class, maintenanceService);
+        context.registerService(MaintenanceStatus.class, () -> maintenanceService.current().enabled());
         context.resources().listener(new MaintenanceJoinListener(maintenanceService));
 
         ServerLifecycleService lifecycleService =

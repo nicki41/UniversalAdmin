@@ -77,6 +77,10 @@ public final class PunishmentService {
     }
 
     /** Backs every GUI list (Active/Recent/Warnings/Bans/Mutes, one target's history). */
+    public CompletableFuture<Integer> count(PunishmentQuery query) {
+        return repository.count(query);
+    }
+
     public CompletableFuture<List<Punishment>> history(PunishmentQuery query) {
         return repository.findByQuery(query);
     }

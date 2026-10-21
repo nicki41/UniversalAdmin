@@ -44,6 +44,7 @@ implementations, ...) are internal and may change in any release.
 | Threading | `TaskScheduler` (`supplyAsync`, `runOnMainThread`, `supplyOnMainThread`) | - |
 | Other servers of a network (1.1) | `NetworkService` (`UniversalAdmin#network`): servers, players, messages, moving players - a no-op without network mode | `subscribe`/`unsubscribe` on the service |
 | Any known player, network-wide (1.1) | `PlayerDirectory` service, `CommandInvocation#withPlayer` | - |
+| Status for displays (1.2) | `PlayerStatus`, `ReportOverview`, `MaintenanceStatus` services (`dev.universaladmin.status`) - from memory, main-thread safe | - |
 
 Every `register*` call undoes itself when the module is disabled - which
 happens automatically when the owning plugin is disabled.

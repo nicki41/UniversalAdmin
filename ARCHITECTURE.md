@@ -119,6 +119,7 @@ share extensions - [docs/architecture/extension-builder.md](docs/architecture/ex
 | `universaladmin-api` | `api/` | Public, semantically versioned extension API |
 | `universaladmin-core` | `/` | The plugin: bootstrap, implementations, built-in modules; shades the API |
 | `universaladmin-discord` | `extensions/discord/` | Official Discord extension (own plugin jar) |
+| `universaladmin-placeholderapi` | `extensions/placeholderapi/` | Official PlaceholderAPI extension (own plugin jar) |
 | `example-extension` | `examples/example-extension/` | Template extension, built in CI only |
 | `universaladmin-velocity` | `proxy/velocity/` | Optional Velocity plugin for network mode (own jar) |
 
