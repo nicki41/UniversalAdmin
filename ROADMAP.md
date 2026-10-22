@@ -47,15 +47,26 @@ welcome as [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues).
       proxy by UniversalAdmin Velocity
       ([ADR 0017](docs/architecture/decisions/0017-maintenance-scopes.md))
 
-## Next - 1.x
+## Done - 1.3.0
+
+- [x] **Punishment templates and escalation** ("spam": 1st = warn, 2nd =
+      1h mute, 3rd = 1d mute) in the wizard, via `/punish <player> <template>`
+      and in the Discord bot
+      ([ADR 0018](docs/architecture/decisions/0018-punishment-templates.md))
+- [x] **Network whitelist** and **vanish across the network**
+      ([ADR 0019](docs/architecture/decisions/0019-network-whitelist-and-vanish.md))
+
+## Next - 1.4.0
+
+- [ ] **Alt detection** based on hashed IPs (opt-in, privacy-friendly - raw
+      IPs are not stored for this): possible alts on the profile and a staff
+      hint when an alt of a banned player joins
+- [ ] A **BungeeCord** proxy plugin next to the Velocity one
+
+## Later - 1.x
 
 Additive, no breaking changes.
 
-- [ ] **Punishment templates and escalation** ("spam": 1st = warn, 2nd =
-      1h mute, 3rd = 1d mute) selectable in the wizard and via
-      `/punish <player> <template>`
-- [ ] **Alt detection** based on hashed IPs (opt-in, privacy-friendly - raw
-      IPs are not stored for this)
 - [ ] **Vault** bridge for economy/permission display on profiles (official
       extension)
 - [ ] Ticket/support system as an official extension built on the API
@@ -64,8 +75,6 @@ Additive, no breaking changes.
 - [ ] Audit log export (CSV) and per-module retention
 - [ ] Loading/unloading worlds from the Worlds module
 - [ ] A curated extension list in the docs
-- [ ] Network: a network-wide whitelist, a BungeeCord proxy plugin next to
-      the Velocity one, network-wide vanish
 
 ## Later - 2.0 candidates
 

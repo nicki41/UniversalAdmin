@@ -41,7 +41,7 @@ to be the one admin plugin your server needs.
 
 | | |
 |---|---|
-| **Moderation** | Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn, freeze - with reason and duration presets, a guided GUI wizard, full history and `/checkban`. Team notifications for every punishment. |
+| **Moderation** | Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn, freeze - with reason and duration presets, a guided GUI wizard, full history and `/checkban`. **Punishment templates** that escalate on their own (`/punish Steve spam`). Team notifications for every punishment. |
 | **Reports** | `/report` for players, clickable instant alerts for staff, a reports GUI with claim/resolve/reject and one-click teleports. Spam-protected. |
 | **Staff tools** | Vanish (with fake join/leave), godmode, no-collision, and a crash-safe **staff mode** with a toolbar: player inspector, freeze stick, live inventory/ender chest inspectors, teleport picker. |
 | **Staff notes** | Private notes about players, with a heads-up when such a player joins. |
@@ -49,7 +49,7 @@ to be the one admin plugin your server needs.
 | **Players** | Online/offline browser with search, profile pages, heal/feed/fly/gamemode/speed/effects, teleports, and a **live** inventory and ender chest editor. |
 | **Server** | Dashboard, broadcasts (chat, title, action bar), maintenance mode with allow-list, shutdown/restart with countdown. |
 | **Worlds** | Time, weather, difficulty, spawn, world border and a full gamerule editor - per world. |
-| **Whitelist** | With reasons, notes and **temporary** access that expires on its own. |
+| **Whitelist** | With reasons, notes and **temporary** access that expires on its own - per server or for the whole network. |
 | **Performance** | TPS/MSPT/memory dashboard, per-world stats, entity overview, staff alerts, and a careful entity clear that never touches players or protected mobs. |
 | **Audit log** | Every admin action, filterable by player, module and time, with details. |
 | **Switching** | `/admin import` brings bans, mutes, warnings and kicks over from LiteBans, AdvancedBan, the vanilla ban lists and EssentialsX - preview first, repeatable. |
@@ -86,6 +86,7 @@ That's it - the database (SQLite) is created automatically.
 | `/admin` | Admin menu |
 | `/kick`, `/ban`, `/tempban`, `/mute`, `/warn`, `/freeze` `<player> [duration] [reason]` | Punish |
 | `/unban`, `/unmute`, `/unfreeze` `<player>` · `/unwarn <id>` | Pardon |
+| `/punish <player> <template>` | Punish with an escalating template |
 | `/history <player>` · `/checkban <player>` | Punishment history / current status |
 | `/report <player> <reason>` · `/admin reports` | Reports |
 | `/vanish` · `/staff` · `/sc <message>` | Staff tools |
