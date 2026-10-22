@@ -116,8 +116,9 @@ Staff can also start a chat message with `#` to send it to staff chat
 | `/admin server shutdown\|restart [reason]` | - | `server.shutdown` / `server.restart` | With countdown (`server.countdown.*`) |
 | `/admin server cancel` | - | `server.shutdown` / `server.restart` | Cancel a pending shutdown/restart |
 | `/admin maintenance on [kick] [reason]` | `/maintenance` | `server.maintenance` | Maintenance mode - `kick` also kicks everyone without bypass |
-| `/admin maintenance off\|status\|list` | `/maintenance` | `server.maintenance` | |
+| `/admin maintenance off\|status\|list` | `/maintenance` | `server.maintenance` | `status` also shows the network's |
 | `/admin maintenance allow\|deny <player>` | `/maintenance` | `server.maintenance` | Maintenance allow-list |
+| `/admin maintenance network on\|off\|status\|list\|allow\|deny ...` | `/maintenance` | `server.maintenance` + `server.maintenance.network` | The whole network's maintenance (network mode) - see [network.md](network.md#maintenance) |
 
 ## Worlds
 

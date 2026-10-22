@@ -6,7 +6,7 @@ import java.util.Optional;
  * A registered setting's full static specification: how to parse it
  * ({@link #type()}), what it defaults to, whether it can be changed without
  * a restart, and how to validate it. See {@link SettingRegistry} for where
- * these get registered and {@link YamlSettingsService} for how they get
+ * these get registered and {@code YamlSettingsService} for how they get
  * resolved into a live {@link SettingValue}.
  *
  * @param key             namespaced identifier / config path, see {@link SettingKey}

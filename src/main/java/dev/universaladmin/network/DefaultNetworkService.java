@@ -129,6 +129,12 @@ public final class DefaultNetworkService implements NetworkService {
         }
         logger.info(() -> "Network mode: this server is '" + serverName + "'"
                 + (nameConfirmed ? "." : " until the proxy tells its real name (set network.server-name to skip this)."));
+        if (plugin.getServer().getPluginManager().getPlugin("LuckPerms") == null) {
+            // OP and permissions.yml are per server - the most common surprise in a new network.
+            logger.info("Network mode: OP and permissions count per server. To give staff the same rights on every server "
+                    + "and on the proxy, use a permissions plugin such as LuckPerms with one shared database - see "
+                    + "docs/user/network.md, \"Permissions\".");
+        }
         repository.servers().thenAccept(rows -> rows.stream()
                 .filter(row -> row.name().equals(serverName) && row.lastSeen().isAfter(Instant.now().minus(SERVER_TIMEOUT)))
                 .findFirst()

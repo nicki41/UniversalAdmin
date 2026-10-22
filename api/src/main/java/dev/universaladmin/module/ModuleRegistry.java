@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Holds every {@link Module} known to the platform and its current
  * {@link ModuleState}. Pure bookkeeping - state *transitions* are driven
- * exclusively by {@link ModuleManager}; this class only stores and reports
+ * exclusively by {@code ModuleManager}; this class only stores and reports
  * what {@code ModuleManager} tells it.
  *
  * <p>Lives on {@link dev.universaladmin.core.UniversalAdmin} so anything with
@@ -50,7 +50,7 @@ public final class ModuleRegistry {
         return state;
     }
 
-    /** Package-private: only {@link ModuleManager} drives state transitions. */
+    /** Package-private: only {@code ModuleManager} drives state transitions. */
     void transition(ModuleId id, ModuleState newState) {
         if (!modules.containsKey(id)) {
             throw new IllegalArgumentException("Unknown module: " + id);

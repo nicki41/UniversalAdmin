@@ -14,7 +14,7 @@ import java.util.Optional;
  * {@code config.yml}: only one setting can live at {@code gui.page-size}
  * regardless of which module or extension registered it.
  *
- * <p>Core settings are registered by {@link CoreSettings}; a built-in
+ * <p>Core settings are registered by {@code CoreSettings}; a built-in
  * module or, later, an extension registers its own under its
  * {@code ModuleDescriptor.settingsNamespace()}. Nothing here is Paper-
  * specific, so it's usable and testable without a running server.

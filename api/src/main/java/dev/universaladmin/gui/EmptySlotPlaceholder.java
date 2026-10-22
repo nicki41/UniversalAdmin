@@ -30,7 +30,7 @@ import org.bukkit.persistence.PersistentDataType;
  *
  * <p>Deliberately still a plain, draggable {@link GuiItem} (not a locked
  * {@link GuiButton}): a button slot is unconditionally click-cancelled by
- * {@link GuiListener} even in an editable view, which would make an empty
+ * {@code GuiListener} even in an editable view, which would make an empty
  * slot permanently un-fillable. The trade-off is that a placeholder can be
  * dragged around like any other item; {@link #stripPlaceholder} makes sure
  * that never writes a placeholder into a real inventory no matter which

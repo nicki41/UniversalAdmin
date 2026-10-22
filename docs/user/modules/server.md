@@ -66,11 +66,23 @@ allow-list of player names (case-insensitive) who may join anyway.
 - **Allowed Players** (`universaladmin.server.maintenance`) - a
   comma-separated name list, replaced wholesale.
 
-Maintenance mode has no dedicated `/admin server maintenance` console
-command in this version - its richest action (enable) takes a multi-field
-input, and `UniversalAdminCommand` deliberately never imports a specific
-built-in module's types (the same rule `staff recover` already follows, see
-that command's javadoc). It's fully manageable in-game via the GUI.
+The same from the console or chat: `/admin maintenance on [kick] [reason]`,
+`off`, `status`, `list`, `allow <player>`, `deny <player>` (see
+[commands.md](../commands.md)).
+
+**Network mode** adds a second state for the whole network
+(`/admin maintenance network ...`, a second row on the GUI page,
+`universaladmin.server.maintenance.network`): every server refuses players
+while either its own or the network's maintenance refuses them, and
+UniversalAdmin Velocity refuses them at the proxy. Each server of a network
+keeps its own maintenance - switching one server into maintenance leaves the
+others open. Details in [network.md](../network.md#maintenance).
+
+Storage: one row per scope in `ua_maintenance` - `local` without network
+mode, `server:<name>` per network server, `network` for the whole network.
+Until 1.2.1 there was a single row that every server of a network shared;
+the upgrade copies it to `local`, and a network server reads that until it
+saves its own, so nothing changes at the moment of the upgrade.
 
 ## Shutdown & Restart
 
@@ -116,9 +128,10 @@ actually active.
 | `universaladmin.server.view` | op | Open the server dashboard |
 | `universaladmin.server.broadcast` | op | Broadcast messages/titles/actionbars |
 | `universaladmin.server.maintenance` | op | Enable/disable maintenance mode and manage its allow-list |
+| `universaladmin.server.maintenance.network` | op | The same for the whole network (network mode) |
 | `universaladmin.server.restart` | op | Restart the server (confirmation/countdown) |
 | `universaladmin.server.shutdown` | op | Shut down the server (confirmation/countdown) |
-| `universaladmin.bypass.maintenance` | op | Join the server while maintenance mode is enabled |
+| `universaladmin.bypass.maintenance` | op | Join while this server's or the network's maintenance mode is enabled |
 
 See [docs/user/permissions.md](../permissions.md) for how these fit into
 the platform-wide list, and [docs/architecture/actions.md](../architecture/actions.md)

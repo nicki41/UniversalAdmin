@@ -15,10 +15,11 @@ network mode, and the servers know each other.
 | **Network alerts**: `/admin alert <message>` on every server | message channel |
 | **One audit log** for the whole network, every entry tagged with its server | shared database |
 | Commands find **every player of the network**, also ones who only ever played on another server | shared player profiles |
+| **Maintenance for one server or the whole network**: `/admin maintenance on` closes this server, `/admin maintenance network on` every server at once | shared database + a message between the servers |
 
 Optional: the **UniversalAdmin Velocity** plugin turns banned players away at
 the proxy itself - before they reach any server, including servers without
-UniversalAdmin.
+UniversalAdmin - and keeps the proxy closed during network maintenance.
 
 ## Setup
 
@@ -97,12 +98,21 @@ database:
 ```
 
 Restart the proxy. `/uavelocity` (permission
-`universaladmin.velocity.status`) shows whether the check runs and how many
-logins it refused. It only reads from the database. If the proxy starts
+`universaladmin.velocity.status`) shows whether the checks run and how many
+logins they refused. It only reads from the database. If the proxy starts
 before the database is ready, it keeps checking on every login instead of
 giving up. `ban-check.allow-on-error` decides what happens while the database
 is unreachable: let players in (default - the servers still check on join)
 or keep everyone out. The ban screen texts are in the same file.
+
+During [network maintenance](#maintenance) the proxy refuses every login
+except players with `universaladmin.bypass.maintenance` - on the proxy, so
+from a permissions plugin there (see [Permissions](#permissions)) - and names
+on the network allow-list. The server list shows `maintenance-check.motd`
+and, in red instead of the player count, `maintenance-check.version-text`
+(empty = unchanged). `maintenance-check.enabled: false` switches this off;
+the servers still refuse players on join. A server's own maintenance does not
+concern the proxy: players are refused when they switch to that server.
 
 Works on Velocity 3.4+ and 4.x.
 
@@ -123,6 +133,50 @@ Works on Velocity 3.4+ and 4.x.
 | `universaladmin.network.goto` | Go to another server or to a player on another server (`/admin tp`, `/admin connect`) |
 | `universaladmin.network.send` | Move other players between servers (`/admin tphere`, `/admin send`) |
 | `universaladmin.network.alert` | `/admin alert` |
+
+Network maintenance needs `universaladmin.server.maintenance.network` in
+addition to `universaladmin.server.maintenance` - see [Maintenance](#maintenance).
+
+**OP and permissions count per server.** `op Steve` on the lobby makes Steve
+an operator of the lobby only - not of survival and not of the proxy
+(Velocity has no OP at all). UniversalAdmin does not copy rights between
+servers on purpose: who may ban on which server is a decision, not
+something to sync silently. For the same rights everywhere use a permissions
+plugin on every server **and** on the proxy with one shared database -
+[LuckPerms](https://luckperms.net/) does exactly that (`storage-method:
+MariaDB`, the same database settings in every LuckPerms config, optionally
+`messaging-service: sql` for instant updates). Give your staff a group with
+`universaladmin.*` or individual nodes from
+[permissions.md](permissions.md). Without LuckPerms, the log of a server in
+network mode says so at startup.
+
+## Maintenance
+
+Two kinds, each with its own reason, message and allow-list:
+
+| | Command | Closes | Permission |
+|---|---|---|---|
+| **This server** | `/admin maintenance on [kick] [reason]` | only the server you run it on - the others stay open | `universaladmin.server.maintenance` |
+| **The whole network** | `/admin maintenance network on [kick] [reason]` | every server with UniversalAdmin at once, and the proxy with UniversalAdmin Velocity | additionally `universaladmin.server.maintenance.network` |
+
+`off`, `status`, `list`, `allow <player>` and `deny <player>` work the same
+way, with `network` in front for the network's. `/admin maintenance status`
+shows both. The GUI (`/admin` → Server → Manage Maintenance Mode) has a
+second row for the network.
+
+- A player gets in only if **neither** refuses them: the bypass permission
+  `universaladmin.bypass.maintenance` passes both, the two allow-lists are
+  separate. If both refuse, the network's message is shown.
+- `kick` removes everyone without access: for this server's maintenance they
+  go to the proxy's fallback server, for the network's they leave the
+  network - on every server.
+- Switching the network's maintenance reaches the other servers within a
+  second (message channel) and is re-read every 10 seconds anyway; a server
+  that starts later reads it from the database.
+- Give every server a `network.server-name`. A server without one learns its
+  name from the proxy when the first player joins; until then it does not
+  know its own maintenance yet and lets that first player in - once the name
+  is known, players its maintenance refuses are removed again.
 
 ## How it works
 
@@ -157,5 +211,5 @@ Works on Velocity 3.4+ and 4.x.
   address is only known there): `/admin tp <player>` first, or ban by name.
 - **Freeze** follows the player when they switch servers; staff mode,
   vanish, godmode and live inventory editors are per server.
-- **Maintenance mode, the whitelist, gamerules, worlds** stay per server -
-  they usually differ between servers.
+- **The whitelist, gamerules, worlds** stay per server - they usually differ
+  between servers. Maintenance can be either - see [Maintenance](#maintenance).

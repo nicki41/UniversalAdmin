@@ -41,6 +41,12 @@ welcome as [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues).
 - [x] **PlaceholderAPI** placeholders as an official extension, backed by
       status services in the extension API
 
+## Done - 1.2.1
+
+- [x] **Maintenance per server or for the whole network**, enforced at the
+      proxy by UniversalAdmin Velocity
+      ([ADR 0017](docs/architecture/decisions/0017-maintenance-scopes.md))
+
 ## Next - 1.x
 
 Additive, no breaking changes.
@@ -58,9 +64,8 @@ Additive, no breaking changes.
 - [ ] Audit log export (CSV) and per-module retention
 - [ ] Loading/unloading worlds from the Worlds module
 - [ ] A curated extension list in the docs
-- [ ] Network: maintenance mode and whitelist for several servers at once,
-      a BungeeCord proxy plugin next to the Velocity one, network-wide
-      vanish
+- [ ] Network: a network-wide whitelist, a BungeeCord proxy plugin next to
+      the Velocity one, network-wide vanish
 
 ## Later - 2.0 candidates
 

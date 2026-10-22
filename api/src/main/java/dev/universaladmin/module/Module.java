@@ -15,7 +15,7 @@ package dev.universaladmin.module;
  * seam a future external extension will implement too. See
  * docs/architecture/decisions/0005-extension-ready-design.md.
  *
- * <p>{@link ModuleManager} drives every module through the same two-phase
+ * <p>{@code ModuleManager} drives every module through the same two-phase
  * startup: {@link #onLoad} for setup that does not depend on any other
  * module, then {@link #onEnable} - only once every declared
  * {@link ModuleDescriptor#dependencies()} is confirmed {@code ENABLED} - for
@@ -23,8 +23,8 @@ package dev.universaladmin.module;
  *
  * <p><b>{@code onLoad} is where a module registers its {@code Migration}(s)</b>
  * (see {@code dev.universaladmin.storage.Migration}) - not {@code onEnable}.
- * {@link ModuleManager#loadAll()} runs {@code onLoad} for every module to
- * completion before {@link ModuleManager#enableAll()} runs {@code onEnable}
+ * {@code ModuleManager#loadAll()} runs {@code onLoad} for every module to
+ * completion before {@code ModuleManager#enableAll()} runs {@code onEnable}
  * for any of them, and {@code UniversalAdminPlugin#onEnable} applies every
  * pending migration in between. A module that registers its migration in
  * {@code onEnable} instead risks its own {@code onEnable} building a
@@ -51,7 +51,7 @@ public interface Module {
      * Release resources this module owns directly (e.g. an internal cache).
      * Listeners, scheduler tasks, and closeables registered through
      * {@link ModuleContext#resources()} during {@code onEnable} are released
-     * automatically by {@link ModuleManager} - they do not need to be
+     * automatically by {@code ModuleManager} - they do not need to be
      * repeated here.
      */
     default void onDisable(ModuleContext context) {

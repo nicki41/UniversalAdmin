@@ -1,12 +1,13 @@
 # UniversalAdmin for Velocity.
 #
 # Turns players banned with UniversalAdmin away at the proxy - before they
-# reach any server, including servers that do not run UniversalAdmin. It
-# reads the same MySQL/MariaDB database as your servers (their
-# config.yml -> database) and never writes to it. Setup guide:
+# reach any server, including servers that do not run UniversalAdmin - and
+# keeps the network closed during network maintenance. It reads the same
+# MySQL/MariaDB database as your servers (their config.yml -> database) and
+# never writes to it. Setup guide:
 # https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
 #
-# /uavelocity shows whether the check runs (permission:
+# /uavelocity shows whether the checks run (permission:
 # universaladmin.velocity.status). Changes here need a proxy restart.
 
 database:
@@ -16,7 +17,7 @@ database:
   username: universaladmin
   password: ""
   ssl: true
-  # The proxy only reads one row per login - a small pool is plenty.
+  # The proxy only reads a row or two per login - a small pool is plenty.
   pool-size: 3
 
 ban-check:
@@ -25,10 +26,25 @@ ban-check:
   # (true - the servers still check on join) or keep everyone out (false).
   allow-on-error: true
 
+maintenance-check:
+  # Refuse logins while the whole network is in maintenance
+  # (/admin maintenance network on). Players with
+  # universaladmin.bypass.maintenance on the proxy (a permissions plugin such
+  # as LuckPerms) and names on the network allow-list still get in. Needs
+  # UniversalAdmin 1.2.1 or newer on the servers.
+  enabled: true
+  # MiniMessage. Server list text during network maintenance; empty = unchanged.
+  motd: "<red><bold>Maintenance</bold></red>\n<gray>We will be back soon."
+  # Shown in red instead of the player count during network maintenance; empty = unchanged.
+  version-text: "Maintenance"
+
 messages:
   # MiniMessage. <reason>, <expires> and <remaining> are filled in as plain text.
   banned-permanent: "<red><bold>You are banned from this network.</bold></red>\n\n<gray>Reason: <white><reason>"
   banned-temporary: "<red><bold>You are banned from this network.</bold></red>\n\n<gray>Reason: <white><reason>\n<gray>Until: <white><expires> <dark_gray>(<remaining> left)"
   no-reason: "No reason given"
+  # Shown to players refused during network maintenance, unless
+  # /admin maintenance network set its own message.
+  maintenance: "<red><bold>The network is under maintenance.</bold></red>\n\n<gray>Please try again later."
   # java.time pattern for <expires>.
   date-pattern: "yyyy-MM-dd HH:mm"

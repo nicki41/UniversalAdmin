@@ -28,12 +28,14 @@ import dev.universaladmin.modules.server.gui.ServerGuiContext;
 import dev.universaladmin.modules.server.gui.ServerHomePage;
 import dev.universaladmin.modules.server.gui.ServerMaintenancePage;
 import dev.universaladmin.modules.server.jdbc.JdbcMaintenanceStateRepository;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
 import dev.universaladmin.status.MaintenanceStatus;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.logging.Level;
 import org.bukkit.plugin.Plugin;
 
 /**
@@ -52,6 +54,8 @@ import org.bukkit.plugin.Plugin;
 public final class ServerModule implements Module {
 
     public static final ModuleId ID = ModuleId.core("server");
+    /** Network mode: how often the network's maintenance is re-read, in case a change message was missed. */
+    private static final long MAINTENANCE_REFRESH_TICKS = 20L * 10;
 
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Server")
             .description("Server dashboard, broadcasts, maintenance mode, and confirmed shutdown/restart.")
@@ -72,6 +76,7 @@ public final class ServerModule implements Module {
         // eagerly (async) reads server_maintenance_state the moment it's
         // constructed in onEnable, so that table must already exist by then.
         context.platform().storage().migrations().register(new ServerMaintenanceMigration());
+        context.platform().storage().migrations().register(new MaintenanceScopeMigration());
     }
 
     @Override
@@ -84,19 +89,31 @@ public final class ServerModule implements Module {
         ServerSettings.registerAll(context.platform().settingRegistry());
         ServerPermissions.registerAll(context.platform().permissions());
 
+        NetworkService network = context.platform().network();
         MaintenanceStateRepository maintenanceRepository =
                 new JdbcMaintenanceStateRepository(context.platform().storage().dataSource(), scheduler);
-        MaintenanceService maintenanceService =
-                new DefaultMaintenanceService(maintenanceRepository, settings, scheduler, context.logger());
+        DefaultMaintenanceService maintenanceService =
+                new DefaultMaintenanceService(maintenanceRepository, settings, scheduler, context.logger(), network);
         context.platform().services().register(MaintenanceService.class, maintenanceService);
-        context.registerService(MaintenanceStatus.class, () -> maintenanceService.current().enabled());
+        context.registerService(MaintenanceStatus.class, maintenanceService::active);
         context.resources().listener(new MaintenanceJoinListener(maintenanceService));
+        if (network.enabled()) {
+            // The network's maintenance, switched on another server: at once by
+            // message, and re-read every few seconds in case one was missed.
+            network.subscribe(DefaultMaintenanceService.NETWORK_TOPIC, maintenanceService);
+            context.resources().closeable(() -> network.unsubscribe(DefaultMaintenanceService.NETWORK_TOPIC, maintenanceService));
+            context.resources().task(plugin.getServer().getScheduler().runTaskTimer(plugin,
+                    () -> maintenanceService.refresh().exceptionally(error -> {
+                        context.logger().log(Level.FINE, "Could not re-read the maintenance state", error);
+                        return null;
+                    }), MAINTENANCE_REFRESH_TICKS, MAINTENANCE_REFRESH_TICKS));
+        }
 
         ServerLifecycleService lifecycleService =
                 new ServerLifecycleService(plugin, context.resources(), notifications, context.platform().messages(), settings);
         ServerDashboardService dashboardService = new ServerDashboardService(context.platform()::status);
 
-        registerActions(context.platform().actions(), scheduler, notifications, maintenanceService, lifecycleService);
+        registerActions(context.platform().actions(), scheduler, notifications, maintenanceService, lifecycleService, network);
 
         ServerGuiContext guiContext = new ServerGuiContext(context.platform().guiFramework(), context.platform().messages(),
                 scheduler, context.platform().actionExecutor(), settings, dashboardService, maintenanceService, lifecycleService);
@@ -111,7 +128,7 @@ public final class ServerModule implements Module {
 
     private static void registerActions(
             ActionRegistry actions, TaskScheduler scheduler, NotificationService notifications,
-            MaintenanceService maintenanceService, ServerLifecycleService lifecycleService) {
+            MaintenanceService maintenanceService, ServerLifecycleService lifecycleService, NetworkService network) {
         String module = ID.key().name();
 
         actions.register(ActionDefinition.builder(new BroadcastMessageAction(scheduler, notifications))
@@ -133,22 +150,43 @@ public final class ServerModule implements Module {
                 .auditSummary(in -> "Broadcast actionbar: " + in)
                 .build());
 
-        actions.register(ActionDefinition.builder(new EnableMaintenanceAction(maintenanceService))
+        actions.register(ActionDefinition.builder(new EnableMaintenanceAction(maintenanceService, MaintenanceScope.SERVER))
                 .permission(ServerPermissions.MAINTENANCE)
                 .module(module)
-                .auditSummary(in -> "Enabled maintenance mode" + (blank(in.reason()) ? "" : ": " + in.reason()))
+                .auditSummary(in -> "Enabled maintenance mode" + reasonSuffix(in.reason()))
                 .auditDetails((in, result) -> AuditDetails.builder().reason(in.reason()).newValue("enabled").build())
                 .build());
-        actions.register(ActionDefinition.builder(new DisableMaintenanceAction(maintenanceService))
+        actions.register(ActionDefinition.builder(new DisableMaintenanceAction(maintenanceService, MaintenanceScope.SERVER))
                 .permission(ServerPermissions.MAINTENANCE)
                 .module(module)
                 .auditSummary(in -> "Disabled maintenance mode")
                 .auditDetails((in, result) -> AuditDetails.builder().newValue("disabled").build())
                 .build());
-        actions.register(ActionDefinition.builder(new SetMaintenanceAllowedPlayersAction(maintenanceService))
+        actions.register(ActionDefinition.builder(new SetMaintenanceAllowedPlayersAction(maintenanceService, MaintenanceScope.SERVER))
                 .permission(ServerPermissions.MAINTENANCE)
                 .module(module)
-                .auditSummary(in -> "Updated maintenance allow-list (" + in.size() + " players)")
+                .auditSummary(in -> "Updated maintenance allow-list (" + players(in.size()) + ")")
+                .build());
+
+        actions.register(ActionDefinition.builder(new EnableMaintenanceAction(maintenanceService, MaintenanceScope.NETWORK))
+                .permission(ServerPermissions.MAINTENANCE_NETWORK)
+                .module(module)
+                .validator(requireNetwork(network))
+                .auditSummary(in -> "Enabled network maintenance mode" + reasonSuffix(in.reason()))
+                .auditDetails((in, result) -> AuditDetails.builder().reason(in.reason()).newValue("enabled").build())
+                .build());
+        actions.register(ActionDefinition.builder(new DisableMaintenanceAction(maintenanceService, MaintenanceScope.NETWORK))
+                .permission(ServerPermissions.MAINTENANCE_NETWORK)
+                .module(module)
+                .validator(requireNetwork(network))
+                .auditSummary(in -> "Disabled network maintenance mode")
+                .auditDetails((in, result) -> AuditDetails.builder().newValue("disabled").build())
+                .build());
+        actions.register(ActionDefinition.builder(new SetMaintenanceAllowedPlayersAction(maintenanceService, MaintenanceScope.NETWORK))
+                .permission(ServerPermissions.MAINTENANCE_NETWORK)
+                .module(module)
+                .validator(requireNetwork(network))
+                .auditSummary(in -> "Updated network maintenance allow-list (" + players(in.size()) + ")")
                 .build());
 
         actions.register(ActionDefinition.builder(new ShutdownAction(scheduler, lifecycleService))
@@ -173,12 +211,22 @@ public final class ServerModule implements Module {
                 .build());
     }
 
+    private static String players(int count) {
+        return count + (count == 1 ? " player" : " players");
+    }
+
     private static String reasonSuffix(String reason) {
         return blank(reason) ? "" : ": " + reason;
     }
 
     private static boolean blank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private static <I> ActionValidator<I> requireNetwork(NetworkService network) {
+        return (context, input) -> network.enabled()
+                ? Optional.empty()
+                : Optional.of(ValidationError.of(ActionResult.FailureReason.VALIDATION, MessageKey.of("server.action.network-required")));
     }
 
     private static ActionValidator<String> nonBlank(String messageKey) {

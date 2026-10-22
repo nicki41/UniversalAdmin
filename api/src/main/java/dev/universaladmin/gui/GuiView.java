@@ -14,15 +14,15 @@ import org.bukkit.inventory.InventoryHolder;
 /**
  * One rendered instance of a {@link GuiPage} for one player - the live
  * Bukkit {@link Inventory} plus the slot-&gt;{@link GuiButton} table
- * {@link GuiListener} dispatches clicks against. Implements
+ * {@code GuiListener} dispatches clicks against. Implements
  * {@link InventoryHolder} itself (rather than a separate wrapper) so
- * {@code inventory.getHolder()} is how {@link GuiListener} recognizes "this
+ * {@code inventory.getHolder()} is how {@code GuiListener} recognizes "this
  * is one of ours" - no separate {@code Map<Inventory, GuiView>} to leak if
  * cleanup is ever missed; the view lives exactly as long as the
  * {@link Inventory} Bukkit already tracks for the open {@code InventoryView}.
  *
  * <p>Deliberately holds only a {@link UUID}, never a {@link Player}
- * reference - see docs/development/gui-framework.md. {@link GuiListener}
+ * reference - see docs/development/gui-framework.md. {@code GuiListener}
  * always re-derives the live {@code Player} from the triggering event.
  */
 public final class GuiView implements InventoryHolder {
@@ -91,7 +91,7 @@ public final class GuiView implements InventoryHolder {
     }
 
     /**
-     * Registers a callback {@link GuiListener#onClose} runs when this view
+     * Registers a callback {@code GuiListener#onClose} runs when this view
      * closes for a "real" reason (not {@code OPEN_NEW}, same distinction the
      * session cleanup already makes) - the seam an {@code editable(true)}
      * page uses to persist its final state without a separate Save button,
@@ -104,7 +104,7 @@ public final class GuiView implements InventoryHolder {
         this.onClose = callback;
     }
 
-    /** Invoked by {@link GuiListener} once this view genuinely closes. */
+    /** Invoked by {@code GuiListener} once this view genuinely closes. */
     void handleClose() {
         if (onClose != null) {
             onClose.accept(this);
@@ -112,7 +112,7 @@ public final class GuiView implements InventoryHolder {
     }
 
     /**
-     * Registers a callback {@link GuiListener} runs, one tick after a click
+     * Registers a callback {@code GuiListener} runs, one tick after a click
      * or drag it let through (i.e. {@link #editable()} was {@code true} and
      * the click wasn't on a {@link GuiButton} slot) - the seam a live-sync
      * page (e.g. an inventory editor that must mirror onto the real target
@@ -129,7 +129,7 @@ public final class GuiView implements InventoryHolder {
         this.onChange = callback;
     }
 
-    /** Invoked by {@link GuiListener}, one tick after a click/drag it let through. */
+    /** Invoked by {@code GuiListener}, one tick after a click/drag it let through. */
     void handleChange() {
         if (onChange != null) {
             onChange.accept(this);

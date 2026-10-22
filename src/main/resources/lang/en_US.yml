@@ -236,8 +236,8 @@ moderation:
     preview-nothing: "<green>Nothing new to import from {0}."
     preview-confirm: "<yellow>Import with</yellow> <click:suggest_command:''/admin import {0} confirm''><white><u>/admin import {0} confirm</u></white></click>"
     started: "<gray>Importing from {0} - progress follows ..."
-    progress: "<gray>... {0} entries imported"
-    done: "<green>Imported <white>{0}</white> punishments and <white>{1}</white> staff notes from <white>{2}</white> in {3}s - <white>{4}</white> new players, {5} skipped, {6} imported earlier."
+    progress: "<gray>... imported so far: {0}"
+    done: "<green>Import from <white>{2}</white> finished in {3}s.</green> <gray>Punishments: <white>{0}</white>, staff notes: <white>{1}</white>, new players: <white>{4}</white>, skipped: {5}, imported earlier: {6}"
     unknown-source: "<red>Unknown source <white>{0}</white>. Available: {1}"
     type:
       ban: "Bans"
@@ -441,6 +441,7 @@ server:
     countdown-warning: "<yellow>{0} in {1} second(s)."
     executing-now: "<red>{0} now."
     countdown-cancelled: "<green>{0} cancelled."
+    network-required: "<red>Network maintenance needs network mode (network.enabled in config.yml)."
   gui:
     action:
       success: "<green>Done."
@@ -460,6 +461,7 @@ server:
       maintenance-on: "<red>Maintenance: ON"
       maintenance-off: "<green>Maintenance: OFF"
       maintenance-reason: "<gray>Reason: <white>{0}"
+      maintenance-network: "<red>The whole network is in maintenance"
       broadcast-message: "<aqua>Broadcast Message"
       broadcast-title: "<aqua>Broadcast Title"
       broadcast-actionbar: "<aqua>Broadcast Actionbar"
@@ -491,6 +493,13 @@ server:
       kick-prompt: "Kick players currently online without bypass?"
       kick-yes: "<red>Yes, kick them"
       kick-no: "<green>No, leave them"
+      network-status-on: "<red>Network maintenance is ON"
+      network-status-off: "<green>Network maintenance is OFF"
+      network-enable: "<red>Enable Network Maintenance"
+      network-disable: "<green>Disable Network Maintenance"
+      network-confirm-enable: "<gray>On every server of the network, only bypass-permitted and allow-listed players will be able to join."
+      network-confirm-disable: "<gray>Every player will be able to join the network again."
+      network-allowed-players: "<aqua>Allowed Players (Network)"
   result:
     broadcast: "<gray>Message sent to <white>{0}</white> online player(s)."
     actionbar: "<gray>Action bar shown to <white>{0}</white> online player(s)."
@@ -503,6 +512,10 @@ server:
     maintenance-on-kick: "<gray>Maintenance mode is now <red>ON</red> - everyone without access was kicked. Reason: <white>{0}</white> <dark_gray>({1} player(s) allowed)</dark_gray>"
     maintenance-off: "<gray>Maintenance mode is now <green>OFF</green> - everyone can join again."
     maintenance-allowed: "<gray>Maintenance allow list saved: <white>{0}</white> player(s)."
+    network-maintenance-on: "<gray>Network maintenance is now <red>ON</red> on every server. Reason: <white>{0}</white> <dark_gray>({1} player(s) allowed)</dark_gray>"
+    network-maintenance-on-kick: "<gray>Network maintenance is now <red>ON</red> - everyone without access left the network. Reason: <white>{0}</white> <dark_gray>({1} player(s) allowed)</dark_gray>"
+    network-maintenance-off: "<gray>Network maintenance is now <green>OFF</green> - everyone can join the network again."
+    network-maintenance-allowed: "<gray>Network maintenance allow list saved: <white>{0}</white> player(s)."
 
 worlds:
   action:
@@ -1000,11 +1013,14 @@ commands:
       worlds: "<gray>Worlds: <white>{0}"
       database: "<gray>Database: <white>{0}"
   maintenance:
-    usage: "<on [kick] [reason]|off|status|allow <player>|deny <player>|list>"
-    description: "Maintenance mode: only staff and allowed players can join."
+    usage: "[network] <on [kick] [reason]|off|status|allow <player>|deny <player>|list>"
+    description: "Maintenance mode: only staff and allowed players can join - this server or, with network, the whole network."
     status-on: "<red>Maintenance mode is ON</red> <gray>- reason: {0}, {1} allowed player(s)"
     status-off: "<green>Maintenance mode is OFF</green> <gray>({1} allowed player(s) on the list)"
+    network-status-on: "<red>Network maintenance is ON</red> <gray>- reason: {0}, {1} allowed player(s)"
+    network-status-off: "<green>Network maintenance is OFF</green> <gray>({1} allowed player(s) on the list)"
     allowed: "<gray>Allowed during maintenance: <white>{0}"
+    network-allowed: "<gray>Allowed during network maintenance: <white>{0}"
     allow-added: "<green><white>{0}</white> may now join during maintenance."
     allow-removed: "<yellow><white>{0}</white> was removed from the maintenance allow-list."
     already-allowed: "<yellow><white>{0}</white> is already on the allow-list."

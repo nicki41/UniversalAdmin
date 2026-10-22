@@ -342,4 +342,13 @@ survival.
 - [ ] Staff chat, staff notifications and a `/report` on survival appear on
       lobby with `[survival]`; `/admin alert hello` appears on both.
 - [ ] Audit log on lobby shows survival's entries with the server tag.
+- [ ] [A] on survival: `/admin maintenance on kick test` → Player is moved
+      to lobby; `/server survival` is refused with the maintenance message;
+      lobby stays open - also after restarting lobby.
+- [ ] [A] on lobby: `/admin maintenance network on kick update` → Player
+      leaves the network; a new login is refused by the proxy; the server
+      list shows "Maintenance"; Admin (bypass permission via LuckPerms on
+      the proxy, or `/admin maintenance network allow Admin`) still gets in.
+      `/admin maintenance status` on survival shows the network's
+      maintenance. `network off` → everyone can join again.
 - [ ] Stop survival → after ~20 s it shows as offline in the network list.

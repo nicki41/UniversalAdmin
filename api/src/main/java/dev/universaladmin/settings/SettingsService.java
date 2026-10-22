@@ -7,7 +7,7 @@ package dev.universaladmin.settings;
  *
  * <p>Reading a setting never fails: an unset key returns the definition's
  * default, and a value that fails to parse or validate is logged and also
- * falls back to the default (see {@link YamlSettingsService}).
+ * falls back to the default (see {@code YamlSettingsService}).
  */
 public interface SettingsService {
 
@@ -20,7 +20,7 @@ public interface SettingsService {
     /**
      * Re-reads {@code config.yml} and re-resolves every registered setting.
      * Never throws for a bad value - see {@link ConfigReloadResult}. Runs
-     * synchronously wherever it's called from; see {@link dev.universaladmin.settings.ReloadConfigAction}
+     * synchronously wherever it's called from; see {@code ReloadConfigAction}
      * for why the actual {@code /admin reload} command runs this off the
      * main thread.
      */

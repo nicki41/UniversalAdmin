@@ -12,7 +12,7 @@ import java.util.Map;
  *
  * <p>{@code messageKey}/{@code messageArgs} let a failure be rendered through
  * {@link dev.universaladmin.localization.MessageService} like any other
- * user-facing text (see {@link dev.universaladmin.modules.players.action.GetPlayerProfileAction}
+ * user-facing text (see {@code GetPlayerProfileAction}
  * for an example); {@code message} remains available for a plain, non-localized
  * detail (logs, debugging, or a frontend that has no better key to show).
  * {@code metadata} is a small, action-defined bag for anything else worth

@@ -16,7 +16,8 @@ import org.yaml.snakeyaml.Yaml;
 record VelocitySettings(
         String host, int port, String database, String username, String password, boolean ssl, int poolSize,
         boolean banCheck, boolean allowOnError, String bannedPermanent, String bannedTemporary, String noReason,
-        String datePattern) {
+        String datePattern, boolean maintenanceCheck, String maintenanceMotd, String maintenanceVersionText,
+        String maintenanceMessage) {
 
     static VelocitySettings load(Path dataDirectory) throws IOException {
         Path file = dataDirectory.resolve("config.yml");
@@ -42,7 +43,9 @@ record VelocitySettings(
                 config.integer("database.pool-size"),
                 config.bool("ban-check.enabled"), config.bool("ban-check.allow-on-error"),
                 config.string("messages.banned-permanent"), config.string("messages.banned-temporary"),
-                config.string("messages.no-reason"), config.string("messages.date-pattern"));
+                config.string("messages.no-reason"), config.string("messages.date-pattern"),
+                config.bool("maintenance-check.enabled"), config.string("maintenance-check.motd"),
+                config.string("maintenance-check.version-text"), config.string("messages.maintenance"));
     }
 
     /** Dotted-path reads over the loaded YAML, falling back to the defaults. */
