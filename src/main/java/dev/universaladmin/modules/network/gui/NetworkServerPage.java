@@ -11,6 +11,7 @@ import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.modules.network.NetworkPermissions;
 import dev.universaladmin.modules.network.action.NetworkActions;
 import dev.universaladmin.network.NetworkPlayer;
+import dev.universaladmin.network.NetworkVisibility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -42,7 +43,7 @@ public final class NetworkServerPage extends AbstractListGuiPage<NetworkPlayer> 
 
     @Override
     protected CompletableFuture<List<NetworkPlayer>> loadItems(Player viewer) {
-        return CompletableFuture.completedFuture(ctx.network().players().stream()
+        return CompletableFuture.completedFuture(NetworkVisibility.players(viewer, ctx.network()).stream()
                 .filter(player -> player.server().equalsIgnoreCase(server))
                 .toList());
     }

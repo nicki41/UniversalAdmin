@@ -18,6 +18,10 @@ public final class WhitelistPermissions {
     public static final PermissionNode REMOVE = PermissionNode.core("whitelist.remove");
     /** Gates setting an expiration on an add - separate from {@link #ADD} so an admin can add without being allowed to make an entry temporary. */
     public static final PermissionNode TEMPORARY = PermissionNode.core("whitelist.temporary");
+    /** The network whitelist - on top of {@link #TOGGLE}/{@link #ADD}/{@link #REMOVE} for the same change. */
+    public static final PermissionNode NETWORK = PermissionNode.core("whitelist.network");
+    /** Join while the network whitelist is on without being on it - not under {@code whitelist}, like the other bypass nodes. */
+    public static final PermissionNode BYPASS_NETWORK = PermissionNode.core("bypass.network-whitelist");
 
     public static void registerAll(PermissionRegistry registry) {
         List.of(
@@ -25,7 +29,9 @@ public final class WhitelistPermissions {
                 new PermissionDefinition(TOGGLE, "Enable/disable the whitelist", PermissionDefault.OP),
                 new PermissionDefinition(ADD, "Add a player to the whitelist", PermissionDefault.OP),
                 new PermissionDefinition(REMOVE, "Remove a player from the whitelist", PermissionDefault.OP),
-                new PermissionDefinition(TEMPORARY, "Give a whitelist entry an expiration", PermissionDefault.OP))
+                new PermissionDefinition(TEMPORARY, "Give a whitelist entry an expiration", PermissionDefault.OP),
+                new PermissionDefinition(NETWORK, "Manage the network whitelist (with toggle/add/remove)", PermissionDefault.OP),
+                new PermissionDefinition(BYPASS_NETWORK, "Join while the network whitelist is on without being on it", PermissionDefault.OP))
                 .forEach(registry::register);
     }
 }

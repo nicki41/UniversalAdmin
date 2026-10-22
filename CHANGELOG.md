@@ -7,6 +7,57 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-22
+
+Consistent punishments that escalate on their own, and a network that can
+be whitelisted and keeps vanished staff hidden.
+
+### Added
+
+- **Punishment templates with escalation**: `/punish Steve spam` warns Steve
+  the first time, mutes him for an hour the second time, and so on - steps
+  per template in `punishment-templates.yml` (five examples in the server's
+  language), counting earlier uses of the same template within 90 days (per
+  template; `0` = forever). Also as **Punish with Template** in the moderation
+  menu and `/punish` in the Discord bot. `/punish <player>` still opens the
+  moderation menu (now with the templates first); from the console it lists
+  what each template would do. Each step still needs its own permission. New
+  permission `universaladmin.moderation.punish`. See
+  [docs/user/modules/moderation.md](docs/user/modules/moderation.md#punishment-templates)
+  and [ADR 0018](docs/architecture/decisions/0018-punishment-templates.md).
+- **Network whitelist** (`/admin whitelist network on|off|status|add|remove|list`):
+  one list for every server of the network, on top of each server's own,
+  also enforced at the proxy by UniversalAdmin Velocity
+  (`whitelist-check`). New permissions `universaladmin.whitelist.network`
+  and `universaladmin.bypass.network-whitelist`. See
+  [docs/user/modules/whitelist.md](docs/user/modules/whitelist.md#network-whitelist).
+- **Vanish across the network**: vanished players are left out of the
+  network list, `/admin find`, player counts, tab completion and the
+  network placeholders for everyone without `universaladmin.bypass.vanish`,
+  and stay vanished when switching servers even with
+  `vanish.restore-on-reconnect: false`
+  ([ADR 0019](docs/architecture/decisions/0019-network-whitelist-and-vanish.md)).
+- Extension API 1.3: `NetworkService#vanished(UUID)`.
+
+### Fixed
+
+- **Whitelist metadata in network mode** was one table for every server, so
+  one server's expiry sweep could remove a player from another server's
+  whitelist. Each server now keeps its own; temporary entries keep their
+  expiry after the upgrade.
+- `%universaladmin_network_online%` and `%universaladmin_network_online_<server>%`
+  no longer count vanished players.
+
+### Upgrading
+
+- Replace the jars - the plugin on every server, UniversalAdmin Velocity on
+  the proxy, and the extensions (UniversalAdmin Placeholders 1.3 needs
+  UniversalAdmin 1.3) - and restart. New tables and columns are created
+  automatically, `punishment-templates.yml` is written on the first start.
+  In a network, give the servers a minute to restart together: a server
+  that is still on 1.2 keeps working, but does not know the network
+  whitelist.
+
 ## [1.2.1] - 2026-10-22
 
 Maintenance done right in a network: one server or all of them.

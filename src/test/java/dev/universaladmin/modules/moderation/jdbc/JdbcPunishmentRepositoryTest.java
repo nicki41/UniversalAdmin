@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.universaladmin.modules.moderation.ModerationPunishmentIndexMigration;
 import dev.universaladmin.modules.moderation.ModerationPunishmentMigration;
+import dev.universaladmin.modules.moderation.PunishmentTemplateMigration;
 import dev.universaladmin.modules.moderation.Punishment;
 import dev.universaladmin.modules.moderation.PunishmentQuery;
 import dev.universaladmin.modules.moderation.PunishmentType;
@@ -79,6 +80,29 @@ class JdbcPunishmentRepositoryTest {
             Punishment updated = repository.save(loaded.get().revoke(now, "Moderator")).join();
             assertFalse(updated.active());
             assertEquals(1, repository.findAll().join().size());
+        } finally {
+            ((AutoCloseable) dataSource).close();
+        }
+    }
+
+    @Test
+    void storesTheTemplateAndFindsOnlyTemplatePunishmentsOfTheTarget(@TempDir Path dir) throws Exception {
+        DataSource dataSource = openDatabase(dir, "templates.db");
+        try {
+            JdbcPunishmentRepository repository = new JdbcPunishmentRepository(dataSource, IMMEDIATE);
+            UUID target = UUID.randomUUID();
+            repository.save(Punishment.issue(PunishmentType.WARN, target, "Steve", null, null, "Mod", "Spam", null, "spam")).join();
+            repository.save(Punishment.issue(PunishmentType.WARN, target, "Steve", null, null, "Mod", "Be nice", null)).join();
+            repository.save(Punishment.kick(target, "Steve", null, "Mod", "Spam", "spam")).join();
+            repository.save(Punishment.issue(PunishmentType.WARN, UUID.randomUUID(), "Alex", null, null, "Mod", "Spam", null, "spam")).join();
+
+            List<Punishment> found = repository.findWithTemplate(target).join();
+
+            assertEquals(2, found.size());
+            assertTrue(found.stream().allMatch(punishment -> "spam".equals(punishment.template())));
+            Punishment warn = found.stream().filter(punishment -> punishment.type() == PunishmentType.WARN).findFirst().orElseThrow();
+            Punishment revoked = repository.save(warn.revoke(Instant.now(), "Mod")).join();
+            assertEquals("spam", repository.findById(revoked.id()).join().orElseThrow().template());
         } finally {
             ((AutoCloseable) dataSource).close();
         }
@@ -272,6 +296,7 @@ class JdbcPunishmentRepositoryTest {
         MigrationRunner migrations = new MigrationRunner(dataSource, Logger.getLogger("test"));
         migrations.register(new ModerationPunishmentMigration());
         migrations.register(new ModerationPunishmentIndexMigration());
+        migrations.register(new PunishmentTemplateMigration());
         migrations.runPending();
         return dataSource;
     }

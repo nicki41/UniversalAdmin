@@ -25,12 +25,16 @@ import dev.universaladmin.modules.moderation.action.KickInput;
 import dev.universaladmin.modules.moderation.action.ModerationActionIds;
 import dev.universaladmin.modules.moderation.action.MuteInput;
 import dev.universaladmin.modules.moderation.action.RemoveWarnInput;
+import dev.universaladmin.modules.moderation.action.TemplateInput;
 import dev.universaladmin.modules.moderation.action.UnbanInput;
 import dev.universaladmin.modules.moderation.action.UnfreezeInput;
 import dev.universaladmin.modules.moderation.action.UnmuteInput;
 import dev.universaladmin.modules.moderation.action.WarnInput;
 import dev.universaladmin.modules.moderation.gui.ModeratePlayerPage;
 import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
+import dev.universaladmin.modules.moderation.templates.PunishmentTemplate;
+import dev.universaladmin.modules.moderation.templates.PunishmentTemplateService;
+import dev.universaladmin.modules.moderation.templates.TemplateTexts;
 import dev.universaladmin.permission.PermissionNode;
 import dev.universaladmin.settings.SettingsService;
 import java.time.Duration;
@@ -43,6 +47,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.bukkit.entity.Player;
 
 /**
@@ -62,7 +67,7 @@ public final class ModerationCommands {
     /** Dependencies the commands read from directly (lookups only; every mutation goes through an action). */
     public record Dependencies(
             PunishmentService punishments, StaffModeService staffMode, ModerationGuiContext gui,
-            SettingsService settings, MessageService messages) {
+            SettingsService settings, MessageService messages, PunishmentTemplateService templates) {
     }
 
     /** Every Moderation command, ready to register. */
@@ -76,6 +81,7 @@ public final class ModerationCommands {
                 new Punish(Kind.TEMPMUTE, deps),
                 new Punish(Kind.WARN, deps),
                 new Punish(Kind.FREEZE, deps),
+                new PunishWithTemplate(deps),
                 new Revoke("unban", ModerationPermissions.UNBAN, ModerationActionIds.UNBAN, UnbanInput::new,
                         "commands.unban.usage", "commands.unban.description"),
                 new Revoke("unmute", ModerationPermissions.UNMUTE, ModerationActionIds.UNMUTE, UnmuteInput::new,
@@ -487,7 +493,11 @@ public final class ModerationCommands {
         }
     }
 
-    /** {@code /admin moderate <player>} - opens the punishment wizard GUI for a player. */
+    /**
+     * {@code /admin moderate <player>} - opens the punishment wizard GUI for a
+     * player. {@code /punish <player>} does the same for players (see
+     * {@link PunishWithTemplate}).
+     */
     static final class Moderate extends BaseAdminCommand {
 
         private final Dependencies deps;
@@ -496,8 +506,6 @@ public final class ModerationCommands {
             super("moderate", ModerationPermissions.USE,
                     MessageKey.of("commands.moderate.usage"), MessageKey.of("commands.moderate.description"));
             this.deps = deps;
-            aliases("punish");
-            shortcuts("punish");
             playersOnly();
         }
 
@@ -532,5 +540,87 @@ public final class ModerationCommands {
         }
         return messages.get(MessageKey.of(punishment.isActiveAt(Instant.now())
                 ? "commands.history.status-active" : "commands.history.status-expired"));
+    }
+
+    /**
+     * {@code /admin punish <player> [template] [note]} - the next step of a
+     * punishment template ({@code punishment-templates.yml}). Without a
+     * template a player gets the punishment wizard (as {@code /punish} did
+     * before templates, now with the template button first); the console
+     * and Discord get every template with the step this player would get.
+     * The command needs {@code moderation.use} like the wizard; applying a
+     * template is checked by its action ({@code moderation.punish}).
+     */
+    static final class PunishWithTemplate extends BaseAdminCommand {
+
+        private final Dependencies deps;
+
+        PunishWithTemplate(Dependencies deps) {
+            super("punish", ModerationPermissions.USE, MessageKey.of("commands.punish.usage"),
+                    MessageKey.of("commands.punish.description"));
+            this.deps = deps;
+            shortcuts("punish");
+        }
+
+        @Override
+        public void execute(CommandInvocation invocation) {
+            if (invocation.argCount() < 1) {
+                invocation.usage(this);
+                listTemplates(invocation);
+                return;
+            }
+            invocation.withPlayer(0, target -> {
+                PlayerRef player = target;
+                if (invocation.argCount() < 2) {
+                    invocation.player().ifPresentOrElse(
+                            viewer -> new ModeratePlayerPage(deps.gui(), player.id(), player.name()).open(viewer),
+                            () -> preview(invocation, player));
+                    return;
+                }
+                String note = invocation.joinArgs(2).trim();
+                invocation.run(ModerationActionIds.PUNISH,
+                        new TemplateInput(player.id(), invocation.args().get(1), note.isEmpty() ? null : note));
+            });
+        }
+
+        private void listTemplates(CommandInvocation invocation) {
+            List<PunishmentTemplate> templates = deps.templates().templates();
+            if (templates.isEmpty()) {
+                invocation.line("moderation.template.none");
+            } else {
+                invocation.line("moderation.template.list",
+                        templates.stream().map(PunishmentTemplate::id).collect(Collectors.joining(", ")));
+            }
+        }
+
+        private void preview(CommandInvocation invocation, PlayerRef player) {
+            if (deps.templates().templates().isEmpty()) {
+                invocation.reply("moderation.template.none");
+                return;
+            }
+            deps.templates().preview(player.id()).whenComplete((choices, error) -> {
+                if (error != null) {
+                    invocation.reply("command.error.internal");
+                    return;
+                }
+                invocation.line("moderation.template.preview-header", player.name());
+                for (PunishmentTemplateService.Choice choice : choices) {
+                    invocation.line("moderation.template.preview-line", player.name(), choice.template().id(),
+                            choice.template().name(), TemplateTexts.step(deps.messages(), choice.step()),
+                            String.valueOf(choice.stepNumber()), String.valueOf(choice.template().steps().size()));
+                }
+            });
+        }
+
+        @Override
+        public List<String> complete(CommandInvocation invocation) {
+            if (invocation.argCount() <= 1) {
+                return Arguments.visiblePlayerNames(invocation.sender());
+            }
+            if (invocation.argCount() == 2) {
+                return deps.templates().templates().stream().map(PunishmentTemplate::id).toList();
+            }
+            return List.of();
+        }
     }
 }

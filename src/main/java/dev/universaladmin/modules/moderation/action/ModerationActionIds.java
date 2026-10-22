@@ -22,6 +22,8 @@ public final class ModerationActionIds {
     public static final ActionId MUTE = ActionId.core("moderation.mute");
     public static final ActionId TEMP_MUTE = ActionId.core("moderation.tempmute");
     public static final ActionId WARN = ActionId.core("moderation.warn");
+    /** The next step of a punishment template ({@code /punish}) - runs one of the actions above. */
+    public static final ActionId PUNISH = ActionId.core("moderation.punish");
     public static final ActionId UNBAN = ActionId.core("moderation.unban");
     public static final ActionId UNMUTE = ActionId.core("moderation.unmute");
     public static final ActionId REMOVE_WARN = ActionId.core("moderation.removewarn");

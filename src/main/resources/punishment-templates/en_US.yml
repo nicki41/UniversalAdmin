@@ -1,0 +1,61 @@
+# UniversalAdmin punishment templates.
+#
+# Use them with /punish <player> <template> [note] or the "Punish with
+# Template" button in a player's moderation menu. Changes apply after
+# /admin reload.
+#
+# Every template has a reason (what the player sees) and steps. The first
+# time a player is punished with a template they get the first step, the
+# second time the second step, and so on; after the last step the last one
+# repeats. Only earlier punishments with the same template within the
+# window count (default-window below, or "window" per template; 0 = forever).
+# Lifted bans and mutes still count, removed warnings do not.
+#
+# A step is one of:  warn | kick | mute [duration] | ban [duration]
+# Without a duration, mute and ban are permanent. Durations: 30m, 12h, 7d, 2w.
+#
+# Staff need universaladmin.moderation.punish plus the permission of the
+# step's punishment (warn, kick, mute, tempmute, ban or tempban).
+# In a network, use the same file on every server.
+
+default-window: 90d
+
+templates:
+  spam:
+    name: "Spam"
+    reason: "Spam"
+    steps:
+      - warn
+      - mute 1h
+      - mute 1d
+      - ban 7d
+  insults:
+    name: "Insults"
+    reason: "Insulting other players"
+    steps:
+      - warn
+      - mute 1d
+      - mute 7d
+      - ban 30d
+  advertising:
+    name: "Advertising"
+    reason: "Advertising other servers"
+    steps:
+      - mute 1d
+      - ban 7d
+      - ban
+  griefing:
+    name: "Griefing"
+    reason: "Griefing"
+    window: 0
+    steps:
+      - ban 3d
+      - ban 30d
+      - ban
+  cheating:
+    name: "Cheating"
+    reason: "Unfair advantages (hacked client)"
+    window: 0
+    steps:
+      - ban 30d
+      - ban

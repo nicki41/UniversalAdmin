@@ -42,6 +42,7 @@ permission listed is checked by the action itself, not just by the command.
 | `/admin mute <player> [duration] [reason]` | `/mute` | `moderation.mute` (`moderation.tempmute` with a duration) | Mute |
 | `/admin tempmute <player> <duration> [reason]` | `/tempmute` | `moderation.tempmute` | Temporary mute |
 | `/admin warn <player> [reason]` | `/warn` | `moderation.warn` | Warning (shown to the player, kept in history) |
+| `/admin punish <player> [template] [note]` | `/punish` | `moderation.use`; applying a template `moderation.punish` + the step's own node | The next step of a punishment template - see [moderation.md](modules/moderation.md#punishment-templates). Without a template: the punishment wizard (console and Discord: what each template would do) |
 | `/admin unban <player>` | `/unban` | `moderation.unban` | Lift a ban |
 | `/admin unmute <player>` | `/unmute` | `moderation.unmute` | Lift a mute |
 | `/admin unwarn <id>` | `/unwarn` | `moderation.removewarn` | Remove a warning (id from `/history`) |
@@ -49,7 +50,7 @@ permission listed is checked by the action itself, not just by the command.
 | `/admin unfreeze <player>` | `/unfreeze` | `moderation.unfreeze` | Unfreeze |
 | `/admin history <player> [page]` | `/history` | `moderation.view` | Full punishment history with ids |
 | `/admin check <player>` | `/checkban` | `moderation.view` | Banned / muted / frozen right now? |
-| `/admin moderate <player>` | `/punish` | `moderation.use` | Opens the punishment wizard GUI |
+| `/admin moderate <player>` | - | `moderation.use` | Opens the punishment wizard GUI (also `/punish <player>`) |
 | `/admin notes <player> [add <text>]` · `/admin notes remove <id>` | - | `moderation.notes` | Staff notes about a player |
 | `/admin vanish` | `/vanish`, `/v` | `moderation.vanish` | Toggle your vanish |
 | `/admin godmode` | `/god` | `moderation.godmode` | Toggle your godmode |
@@ -144,6 +145,7 @@ Leave out `[world]` to use the world you are in.
 | `/admin whitelist add <player> [duration] [reason]` | `/wl` | `whitelist.add` (`whitelist.temporary` with a duration) | Works for players who never joined |
 | `/admin whitelist remove <player>` | `/wl` | `whitelist.remove` | |
 | `/admin whitelist list` | `/wl` | `whitelist.view` | |
+| `/admin whitelist network on\|off\|status\|add\|remove\|list ...` | `/wl` | as above + `whitelist.network` | The network whitelist (network mode) - see [whitelist.md](modules/whitelist.md#network-whitelist) |
 
 ## Performance
 

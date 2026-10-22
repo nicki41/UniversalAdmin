@@ -17,8 +17,12 @@ public interface NetworkRepository {
     record ServerRow(String name, int onlinePlayers, int maxPlayers, double tps, String version, Instant startedAt, Instant lastSeen) {
     }
 
-    /** One player and the server they are on. */
-    record PlayerRow(UUID playerId, String name, String server, Instant joinedAt) {
+    /** One player and the server they are on; {@code vanished} on that server. */
+    record PlayerRow(UUID playerId, String name, String server, Instant joinedAt, boolean vanished) {
+
+        public PlayerRow(UUID playerId, String name, String server, Instant joinedAt) {
+            this(playerId, name, server, joinedAt, false);
+        }
     }
 
     /** One message on the channel between the servers. */

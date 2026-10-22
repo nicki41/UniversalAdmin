@@ -7,31 +7,37 @@ import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.whitelist.WhitelistEntry;
+import dev.universaladmin.modules.whitelist.WhitelistScope;
 import dev.universaladmin.modules.whitelist.WhitelistService;
 import java.util.concurrent.CompletableFuture;
 
 /** Adds a player to the whitelist with UniversalAdmin's own metadata - see {@link WhitelistService#add}. */
 public final class AddWhitelistEntryAction implements Action<AddWhitelistEntryInput, WhitelistEntry> {
 
-    public static final ActionId ID = WhitelistActionIds.ADD;
-
     private final WhitelistService whitelistService;
+    private final WhitelistScope scope;
 
-    public AddWhitelistEntryAction(WhitelistService whitelistService) {
+    /** @param whitelistService the service of {@code scope}: this server's or the network's */
+    public AddWhitelistEntryAction(WhitelistService whitelistService, WhitelistScope scope) {
         this.whitelistService = whitelistService;
+        this.scope = scope;
     }
 
     @Override
     public ActionId id() {
-        return ID;
+        return scope == WhitelistScope.NETWORK ? WhitelistActionIds.NETWORK_ADD : WhitelistActionIds.ADD;
     }
 
     @Override
     public CompletableFuture<ActionResult<WhitelistEntry>> execute(ActionContext context, AddWhitelistEntryInput input) {
         return whitelistService.add(input.playerId(), input.playerName(), context.actor(), input.reason(), input.notes(), input.expiresAt())
                 .thenApply(entry -> entry.expiresAt() == null
-                        ? ActionResult.success(entry, MessageKey.of("whitelist.result.added"), entry.playerName())
-                        : ActionResult.success(entry, MessageKey.of("whitelist.result.added-temporary"),
+                        ? ActionResult.success(entry, MessageKey.of(key("added")), entry.playerName())
+                        : ActionResult.success(entry, MessageKey.of(key("added-temporary")),
                                 entry.playerName(), DurationParser.formatRemaining(entry.expiresAt())));
+    }
+
+    private String key(String name) {
+        return "whitelist.result." + (scope == WhitelistScope.NETWORK ? "network-" : "") + name;
     }
 }

@@ -23,6 +23,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.kyori.adventure.text.Component;
@@ -79,6 +80,8 @@ public final class DefaultNetworkService implements NetworkService {
     private final Instant startedAt = Instant.now();
     private final Gson gson = new Gson();
     private final ProxyChannel proxy;
+    /** Whether a player on this server is vanished - asked of the Moderation module's {@code PlayerStatus}. */
+    private final Predicate<UUID> locallyVanished;
     private final Map<String, List<NetworkListener>> listeners = new ConcurrentHashMap<>();
     private final Map<UUID, Arrival> arrivals = new ConcurrentHashMap<>();
     private final Map<UUID, Instant> joinedAt = new ConcurrentHashMap<>();
@@ -89,6 +92,7 @@ public final class DefaultNetworkService implements NetworkService {
     private volatile boolean nameConfirmed;
     private volatile List<NetworkServer> serverSnapshot = List.of();
     private volatile List<NetworkPlayer> playerSnapshot = List.of();
+    private volatile Set<UUID> vanishedSnapshot = Set.of();
     private volatile Map<String, List<String>> proxySnapshot = Map.of();
     private volatile long lastMessageId = -1;
     private volatile boolean polling;
@@ -99,10 +103,12 @@ public final class DefaultNetworkService implements NetworkService {
     /**
      * @param enabled          network mode requested and a shared MySQL/MariaDB database in use
      * @param configuredName   {@code network.server-name}; empty = ask the proxy once a player joins
+     * @param locallyVanished  whether a player on this server is vanished
      */
     public DefaultNetworkService(
             Plugin plugin, NetworkRepository repository, TaskScheduler scheduler, Logger logger, String version,
-            boolean enabled, String configuredName, Duration pollInterval, boolean listOtherServers) {
+            boolean enabled, String configuredName, Duration pollInterval, boolean listOtherServers,
+            Predicate<UUID> locallyVanished) {
         this.plugin = plugin;
         this.repository = repository;
         this.scheduler = scheduler;
@@ -112,6 +118,7 @@ public final class DefaultNetworkService implements NetworkService {
         this.pollInterval = pollInterval;
         this.listOtherServers = listOtherServers;
         this.proxy = new ProxyChannel(plugin, logger);
+        this.locallyVanished = locallyVanished;
         boolean named = configuredName != null && !configuredName.isBlank();
         this.serverName = named ? configuredName : "server-" + plugin.getServer().getPort();
         this.nameConfirmed = named;
@@ -238,6 +245,14 @@ public final class DefaultNetworkService implements NetworkService {
             return player(local.getUniqueId());
         }
         return enabled ? players().stream().filter(player -> player.name().equalsIgnoreCase(name)).findFirst() : Optional.empty();
+    }
+
+    @Override
+    public boolean vanished(UUID playerId) {
+        if (Bukkit.getPlayer(playerId) != null) {
+            return locallyVanished.test(playerId);
+        }
+        return enabled && vanishedSnapshot.contains(playerId);
     }
 
     @Override
@@ -397,7 +412,8 @@ public final class DefaultNetworkService implements NetworkService {
         if (!enabled) {
             return;
         }
-        repository.playerJoined(new PlayerRow(player.getUniqueId(), player.getName(), serverName, now));
+        repository.playerJoined(new PlayerRow(player.getUniqueId(), player.getName(), serverName, now,
+                locallyVanished.test(player.getUniqueId())));
         if (!nameConfirmed && proxy.behindProxy()) {
             proxy.serverName(player).thenAccept(this::adoptProxyName).exceptionally(error -> null);
         }
@@ -447,11 +463,15 @@ public final class DefaultNetworkService implements NetworkService {
 
     private void heartbeat() {
         List<PlayerRow> players = new ArrayList<>();
+        int visible = 0;
         for (Player player : Bukkit.getOnlinePlayers()) {
+            boolean vanished = locallyVanished.test(player.getUniqueId());
             players.add(new PlayerRow(player.getUniqueId(), player.getName(), serverName,
-                    joinedAt.getOrDefault(player.getUniqueId(), Instant.now())));
+                    joinedAt.getOrDefault(player.getUniqueId(), Instant.now()), vanished));
+            visible += vanished ? 0 : 1;
         }
-        ServerRow row = new ServerRow(serverName, players.size(), Bukkit.getMaxPlayers(), currentTps(), version, startedAt, Instant.now());
+        // The count other servers show - vanished players are not in it.
+        ServerRow row = new ServerRow(serverName, visible, Bukkit.getMaxPlayers(), currentTps(), version, startedAt, Instant.now());
         repository.heartbeat(row, players).exceptionally(error -> {
             logger.log(Level.WARNING, "Network mode: heartbeat failed", error);
             return null;
@@ -484,8 +504,13 @@ public final class DefaultNetworkService implements NetworkService {
                 .filter(row -> online.contains(row.server()))
                 .map(row -> new NetworkPlayer(row.playerId(), row.name(), row.server(), row.joinedAt()))
                 .toList();
+        Set<UUID> vanished = playerRows.stream()
+                .filter(row -> row.vanished() && online.contains(row.server()))
+                .map(PlayerRow::playerId)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
         serverSnapshot = List.copyOf(servers);
         playerSnapshot = players;
+        vanishedSnapshot = vanished;
         return null;
     }
 
@@ -567,7 +592,8 @@ public final class DefaultNetworkService implements NetworkService {
     }
 
     private NetworkServer localServer() {
-        return new NetworkServer(serverName, true, true, Bukkit.getOnlinePlayers().size(), Bukkit.getMaxPlayers(),
+        int visible = (int) Bukkit.getOnlinePlayers().stream().filter(player -> !locallyVanished.test(player.getUniqueId())).count();
+        return new NetworkServer(serverName, true, true, visible, Bukkit.getMaxPlayers(),
                 currentTps(), version, Instant.now());
     }
 

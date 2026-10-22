@@ -18,13 +18,14 @@ import dev.universaladmin.modules.whitelist.action.WhitelistActionIds;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -166,6 +167,11 @@ class WhitelistExpirySweeperTest {
         public CompletableFuture<Void> deleteById(UUID id) {
             store.remove(id);
             return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public CompletableFuture<Integer> adopt(String fromScope, Set<UUID> playerIds) {
+            return CompletableFuture.completedFuture(0);
         }
     }
 }

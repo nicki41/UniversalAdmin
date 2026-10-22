@@ -10,9 +10,35 @@ audited the same way regardless of frontend.
 Open via `/admin` → **Whitelist** (needs `universaladmin.whitelist.view`).
 
 **The native whitelist (`whitelist.json`) is always the source of truth for
-who is actually whitelisted.** UniversalAdmin's own `whitelist_entries`
-table only ever adds metadata on top of that - see "Ownership & the expiry
-sweep" below for why this matters.
+who is actually whitelisted.** UniversalAdmin's own `ua_whitelist` table
+only ever adds metadata on top of that - see "Ownership & the expiry sweep"
+below for why this matters.
+
+## Network whitelist
+
+In network mode there is a second whitelist for the **whole network**,
+kept in the shared database instead of a server's `whitelist.json`:
+`/admin whitelist network on|off|status|add|remove|list` (same arguments as
+for this server's whitelist, `add` with an optional duration and reason) and
+a second row on the Whitelist page.
+
+- While it is on, a player gets onto **any** server with UniversalAdmin -
+  and through the proxy with UniversalAdmin Velocity - only if they are on
+  it and their entry has not expired, or hold
+  `universaladmin.bypass.network-whitelist` (op by default). It applies on
+  top of each server's own whitelist, which keeps working as before.
+- Switching it on does not kick anyone who is already online - like the
+  vanilla whitelist.
+- Changes reach every server within a second; expired entries let nobody in
+  and are cleaned up by the hourly sweep.
+- Managing it needs `universaladmin.whitelist.network` in addition to
+  `.toggle`/`.add`/`.remove`.
+
+Each server's own metadata is kept per server (`server:<name>` scope) - until
+1.3.0 every server of a network shared one table, so one server's expiry
+sweep could un-whitelist a player on another. On the first start of 1.3.0 a
+network server takes over the entries for the players on its own native
+whitelist.
 
 ## GUI
 
@@ -64,7 +90,7 @@ distinguishable by actor.
 **UniversalAdmin only ever tracks metadata for whitelist entries it created
 itself.** A player who is natively whitelisted by some other means - vanilla
 `/whitelist add`, a hand-edited `whitelist.json`, another plugin - simply
-has no row in `whitelist_entries`. No row means UniversalAdmin has no
+has no row in `ua_whitelist`. No row means UniversalAdmin has no
 opinion about that entry at all.
 
 This matters because the automatic paths (the join-time check and the
@@ -99,6 +125,8 @@ ownership history for what it deletes.
 | `universaladmin.whitelist.add` | op | Add a player to the whitelist |
 | `universaladmin.whitelist.remove` | op | Remove a player from the whitelist |
 | `universaladmin.whitelist.temporary` | op | Give a whitelist entry an expiration |
+| `universaladmin.whitelist.network` | op | Manage the network whitelist (with toggle/add/remove) |
+| `universaladmin.bypass.network-whitelist` | op | Join while the network whitelist is on without being on it |
 
 See [docs/user/permissions.md](../permissions.md) for how these fit into
 the platform-wide list, and [docs/architecture/actions.md](../architecture/actions.md)
@@ -115,15 +143,21 @@ Registered under the module's own `whitelist` settings namespace (see
 
 ## Database
 
-`whitelist_entries` (`WhitelistMigration`, version 1007) - one row per
-UniversalAdmin-managed whitelist entry: `player_id` (primary key),
-`player_name`, `source`, `added_by_id`/`added_by_name`, `added_at`,
-`reason` (nullable), `notes` (nullable), `expires_at` (nullable - `NULL`
-means permanent). Never the source of truth for whitelist *membership* -
-see "Ownership & the expiry sweep" above.
+`ua_whitelist` (`WhitelistScopeMigration`, version 1014) - one row per
+UniversalAdmin-managed whitelist entry and scope: `scope` (`local` without
+network mode, `server:<name>` per network server, `network` for the network
+whitelist) and `player_id` (together the primary key), `player_name`,
+`source`, `added_by_id`/`added_by_name`, `added_at`, `reason` (nullable),
+`notes` (nullable), `expires_at` (nullable - `NULL` means permanent). For a
+server's own whitelist never the source of truth for *membership* - see
+"Ownership & the expiry sweep" above; for the network whitelist it is the
+list itself. `ua_whitelist_state` holds the network whitelist's on/off
+switch. The table used before 1.3.0, `whitelist_entries` (version 1007), was
+copied to the `local` scope and is no longer written.
 
 ## Commands
 
-`/admin whitelist on|off|add <player> [duration] [reason]|remove <player>|list`
-(alias and shortcut `/wl`). `add` also works for players who never joined
+`/admin whitelist [network] on|off|add <player> [duration] [reason]|remove <player>|list`
+(alias and shortcut `/wl`; `network` for the network whitelist, which also has
+`status`). `add` also works for players who never joined
 (online-mode servers). See [commands.md](../commands.md#whitelist).

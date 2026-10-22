@@ -3,6 +3,8 @@ package dev.universaladmin.modules.whitelist.gui;
 import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.localization.MessageService;
+import dev.universaladmin.modules.whitelist.NetworkWhitelistService;
+import dev.universaladmin.modules.whitelist.WhitelistScope;
 import dev.universaladmin.modules.whitelist.WhitelistService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
@@ -14,5 +16,11 @@ public record WhitelistGuiContext(
         TaskScheduler scheduler,
         ActionExecutor actionExecutor,
         SettingsService settings,
-        WhitelistService whitelistService) {
+        WhitelistService whitelistService,
+        NetworkWhitelistService networkWhitelist) {
+
+    /** The service of {@code scope}: this server's whitelist or the network's. */
+    public WhitelistService service(WhitelistScope scope) {
+        return scope == WhitelistScope.NETWORK ? networkWhitelist : whitelistService;
+    }
 }

@@ -80,11 +80,15 @@ and set `network.enabled: true`:
 - **bans, mutes, warnings, kicks and freezes apply on every server at once**;
 - staff chat, staff notifications, report alerts and `/admin alert` across
   all servers, tagged with the server name;
+- **maintenance and a whitelist for one server or the whole network**;
+- vanished staff stay hidden in every list and count, also when switching
+  servers;
 - one audit log for the whole network.
 
 Optional: the **UniversalAdmin Velocity** plugin (the `-velocity` version on
 this page) keeps banned players out at the proxy, before they reach any
-server. [Network guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md).
+server - and closes the proxy during network maintenance or to players not
+on the network whitelist. [Network guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md).
 
 ## 🔁 Switching from another plugin?
 
@@ -98,7 +102,9 @@ lost. [Import guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/us
 Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn and freeze - with reason
 and duration presets, a step-by-step GUI wizard, full history (`/history`),
 current status (`/checkban`) and **team notifications** for every
-punishment. **Staff notes** let your team leave private notes about players.
+punishment. **Punishment templates** escalate on their own: `/punish Steve spam`
+warns the first time, mutes for an hour the second time, and so on.
+**Staff notes** let your team leave private notes about players.
 
 ## 📣 Reports
 
@@ -130,7 +136,8 @@ mode and clear chat.
 ## 📋 Whitelist
 
 Reasons, notes and **temporary access** that expires by itself - also for
-players who have never joined.
+players who have never joined. In a network, also one whitelist for all
+servers at once.
 
 ## 📈 Performance
 

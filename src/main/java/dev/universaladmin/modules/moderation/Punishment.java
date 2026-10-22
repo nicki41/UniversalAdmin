@@ -15,6 +15,11 @@ import java.util.UUID;
  * {@code expiresAt == null} means permanent. "Currently in force" is never
  * read off {@link #active()} alone - see {@link PunishmentRepository}'s
  * class javadoc for why expiry is always checked at query time instead.
+ *
+ * @param template the id of the punishment template it was issued with
+ *                 ({@code /punish}), {@code null} for one issued directly - what
+ *                 escalation counts, see
+ *                 {@link dev.universaladmin.modules.moderation.templates.PunishmentTemplateService}
  */
 public record Punishment(
         long id,
@@ -30,7 +35,8 @@ public record Punishment(
         boolean active,
         Instant revokedAt,
         String revokedBy,
-        Map<String, String> metadata) {
+        Map<String, String> metadata,
+        String template) {
 
     public Punishment {
         metadata = Map.copyOf(metadata);
@@ -40,8 +46,15 @@ public record Punishment(
     public static Punishment issue(
             PunishmentType type, UUID targetId, String targetLastKnownName, String targetIp,
             UUID actorId, String actorName, String reason, Instant expiresAt) {
+        return issue(type, targetId, targetLastKnownName, targetIp, actorId, actorName, reason, expiresAt, null);
+    }
+
+    /** Like {@link #issue(PunishmentType, UUID, String, String, UUID, String, String, Instant)}, issued with {@code template}. */
+    public static Punishment issue(
+            PunishmentType type, UUID targetId, String targetLastKnownName, String targetIp,
+            UUID actorId, String actorName, String reason, Instant expiresAt, String template) {
         return new Punishment(0, type, targetId, targetLastKnownName, targetIp, actorId, actorName, reason,
-                Instant.now(), expiresAt, true, null, null, Map.of());
+                Instant.now(), expiresAt, true, null, null, Map.of(), template);
     }
 
     /**
@@ -49,9 +62,10 @@ public record Punishment(
      * unlike {@link #issue} it is persisted already inactive: it exists only
      * for "Recent Punishments" history, never for an active-punishment query.
      */
-    public static Punishment kick(UUID targetId, String targetLastKnownName, UUID actorId, String actorName, String reason) {
+    public static Punishment kick(
+            UUID targetId, String targetLastKnownName, UUID actorId, String actorName, String reason, String template) {
         return new Punishment(0, PunishmentType.KICK, targetId, targetLastKnownName, null, actorId, actorName, reason,
-                Instant.now(), null, false, null, null, Map.of());
+                Instant.now(), null, false, null, null, Map.of(), template);
     }
 
     public boolean permanent() {
@@ -65,11 +79,11 @@ public record Punishment(
 
     public Punishment revoke(Instant revokedAt, String revokedBy) {
         return new Punishment(id, type, targetId, targetLastKnownName, targetIp, actorId, actorName, reason,
-                createdAt, expiresAt, false, revokedAt, revokedBy, metadata);
+                createdAt, expiresAt, false, revokedAt, revokedBy, metadata, template);
     }
 
     public Punishment withId(long id) {
         return new Punishment(id, type, targetId, targetLastKnownName, targetIp, actorId, actorName, reason,
-                createdAt, expiresAt, active, revokedAt, revokedBy, metadata);
+                createdAt, expiresAt, active, revokedAt, revokedBy, metadata, template);
     }
 }

@@ -47,7 +47,7 @@ public final class WarnAction implements Action<WarnInput, Punishment> {
         CompletableFuture<ActionResult<Punishment>> future = new CompletableFuture<>();
         scheduler.runOnMainThread(() -> {
             names.nameOf(input.targetId()).thenCompose(targetName -> punishmentService.issue(PunishmentType.WARN, input.targetId(), targetName, null,
-                            context.actor().playerId(), context.actor().displayName(), input.reason(), null))
+                            context.actor().playerId(), context.actor().displayName(), input.reason(), null, input.template()))
                     .whenComplete((punishment, error) -> {
                         if (error != null) {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));

@@ -12,6 +12,7 @@ import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.whitelist.WhitelistEntry;
 import dev.universaladmin.modules.whitelist.WhitelistMemberView;
 import dev.universaladmin.modules.whitelist.WhitelistPermissions;
+import dev.universaladmin.modules.whitelist.WhitelistScope;
 import dev.universaladmin.modules.whitelist.action.WhitelistActionIds;
 import dev.universaladmin.settings.CoreSettings;
 import java.time.ZoneId;
@@ -34,10 +35,12 @@ public final class WhitelistMemberDetailPage extends AbstractGuiPage {
 
     private final WhitelistGuiContext ctx;
     private final WhitelistMemberView member;
+    private final WhitelistScope scope;
 
-    public WhitelistMemberDetailPage(WhitelistGuiContext ctx, WhitelistMemberView member) {
+    public WhitelistMemberDetailPage(WhitelistGuiContext ctx, WhitelistMemberView member, WhitelistScope scope) {
         super(ID, ctx.framework(), ctx.messages());
         this.ctx = ctx;
+        this.scope = scope;
         this.member = member;
     }
 
@@ -88,8 +91,9 @@ public final class WhitelistMemberDetailPage extends AbstractGuiPage {
     private void confirmRemove(Player viewer) {
         // Reopens the Members list rather than "back" (ConfirmationDialog.back()
         // would replay this exact now-stale page) since the member is gone.
-        Runnable apply = () -> WhitelistGuiActions.runAction(ctx, viewer, WhitelistActionIds.REMOVE, member.playerId(),
-                () -> new WhitelistMembersListPage(ctx).open(viewer));
+        Runnable apply = () -> WhitelistGuiActions.runAction(ctx, viewer,
+                scope == WhitelistScope.NETWORK ? WhitelistActionIds.NETWORK_REMOVE : WhitelistActionIds.REMOVE, member.playerId(),
+                () -> new WhitelistMembersListPage(ctx, scope).open(viewer));
         if (!ctx.settings().get(CoreSettings.GUI_CONFIRMATIONS)) {
             apply.run();
             return;

@@ -1,6 +1,5 @@
 package dev.universaladmin.storage;
 
-import dev.universaladmin.modules.moderation.importing.ImportRecordsMigration;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -8,14 +7,19 @@ import dev.universaladmin.audit.AuditSchemaMigration;
 import dev.universaladmin.audit.AuditSchemaMigrationV2;
 import dev.universaladmin.modules.moderation.ModerationPunishmentIndexMigration;
 import dev.universaladmin.modules.moderation.ModerationPunishmentMigration;
+import dev.universaladmin.modules.moderation.PunishmentTemplateMigration;
 import dev.universaladmin.modules.moderation.StaffModeSnapshotMigration;
 import dev.universaladmin.modules.moderation.VanishStateMigration;
+import dev.universaladmin.modules.moderation.importing.ImportRecordsMigration;
 import dev.universaladmin.modules.moderation.notes.PlayerNotesMigration;
 import dev.universaladmin.modules.players.PlayerProfileIndexMigration;
 import dev.universaladmin.modules.players.PlayerProfileMigration;
 import dev.universaladmin.modules.reports.ReportsMigration;
+import dev.universaladmin.modules.reports.ReportsServerMigration;
+import dev.universaladmin.modules.server.MaintenanceScopeMigration;
 import dev.universaladmin.modules.server.ServerMaintenanceMigration;
 import dev.universaladmin.modules.whitelist.WhitelistMigration;
+import dev.universaladmin.modules.whitelist.WhitelistScopeMigration;
 import dev.universaladmin.storage.jdbc.DataSourceFactory;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -49,7 +53,7 @@ class AllMigrationsIntegrationTest {
             assertDoesNotThrow(runner::runPending);
             assertDoesNotThrow(runner::runPending); // a restart against an already-migrated DB must not re-apply or fail
 
-            assertEquals(13, appliedMigrationCount(dataSource));
+            assertEquals(17, appliedMigrationCount(dataSource));
         } finally {
             ((AutoCloseable) dataSource).close();
         }
@@ -81,7 +85,7 @@ class AllMigrationsIntegrationTest {
             registerAllBuiltInMigrations(newVersion);
             assertDoesNotThrow(newVersion::runPending);
 
-            assertEquals(13, appliedMigrationCount(dataSource));
+            assertEquals(17, appliedMigrationCount(dataSource));
             try (Connection connection = dataSource.getConnection();
                     Statement statement = connection.createStatement();
                     ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM whitelist_entries")) {
@@ -106,7 +110,11 @@ class AllMigrationsIntegrationTest {
         runner.register(new WhitelistMigration());
         runner.register(new PlayerNotesMigration());
         runner.register(new ReportsMigration());
+        runner.register(new ReportsServerMigration());
         runner.register(new ImportRecordsMigration());
+        runner.register(new MaintenanceScopeMigration());
+        runner.register(new PunishmentTemplateMigration());
+        runner.register(new WhitelistScopeMigration());
     }
 
     private int appliedMigrationCount(DataSource dataSource) throws Exception {

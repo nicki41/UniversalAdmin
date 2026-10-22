@@ -93,6 +93,15 @@ settings, issue some bans, then upgrade):
       confirm. **Cancel** in the confirmation returns to the previous page
       (not two pages back). Double-clicking confirm bans only once.
 - [ ] Self-punish (`/ban <yourself>`) is refused.
+- [ ] Templates: `/punish Player` opens the moderation menu, Punish with
+      Template shows "Next: Warning"; from the console `/admin punish Player`
+      lists the templates;
+      `/punish Player spam` warns, the second time mutes 1h (step 2 of 4);
+      `/unwarn` the first warning → the next `/punish Player spam` is step 2
+      again. A moderator with `moderation.punish` but without
+      `moderation.tempmute` is refused at the mute step with the template's
+      name. GUI: Moderate → Punish with Template shows the next step per
+      template; `/admin reload` after editing the file picks it up.
 - [ ] Team notification: [H] online, [A] bans Player → [H] sees
       "[Staff] Admin banned Player (...)"; [A] does not get it twice.
       `moderation.notify-staff: false` → silent.
@@ -186,6 +195,10 @@ settings, issue some bans, then upgrade):
       join.
 - [ ] `/wl add Player 2m reason` → after 2 minutes removed and kicked/blocked.
 - [ ] `/wl remove Player`, `/wl list`, GUI member details.
+- [ ] Network (section 24 setup): `/wl network add Admin`, `/wl network on` →
+      Player is refused on lobby and survival (and at the proxy); Admin gets
+      in; `/wl network off`. A temporary entry on survival expires on
+      survival only.
 
 ## 13. Performance
 
@@ -351,4 +364,7 @@ survival.
       the proxy, or `/admin maintenance network allow Admin`) still gets in.
       `/admin maintenance status` on survival shows the network's
       maintenance. `network off` → everyone can join again.
+- [ ] [A] `/vanish` on survival → within ~5 s Player (without
+      `bypass.vanish`) no longer finds Admin with `/admin find`, the network
+      list and counts; Admin switches to lobby → still vanished there.
 - [ ] Stop survival → after ~20 s it shows as offline in the network list.

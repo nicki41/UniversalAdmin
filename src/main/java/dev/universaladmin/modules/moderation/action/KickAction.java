@@ -65,7 +65,8 @@ public final class KickAction implements Action<KickInput, Punishment> {
             }
             String targetName = local != null ? local.getName() : elsewhere.get().name();
             punishmentService.recordKick(
-                            input.targetId(), targetName, context.actor().playerId(), context.actor().displayName(), input.reason())
+                            input.targetId(), targetName, context.actor().playerId(), context.actor().displayName(), input.reason(),
+                            input.template())
                     .whenComplete((punishment, error) -> {
                         if (error != null) {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));

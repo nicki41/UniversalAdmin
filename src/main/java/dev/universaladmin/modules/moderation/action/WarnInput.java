@@ -2,5 +2,10 @@ package dev.universaladmin.modules.moderation.action;
 
 import java.util.UUID;
 
-public record WarnInput(UUID targetId, String reason) {
+/** @param template the punishment template this warning comes from, {@code null} for a direct warning */
+public record WarnInput(UUID targetId, String reason, String template) {
+
+    public WarnInput(UUID targetId, String reason) {
+        this(targetId, reason, null);
+    }
 }

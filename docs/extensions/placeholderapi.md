@@ -9,7 +9,7 @@ scoreboards, tab lists, chat formats, holograms.
 1. Install PlaceholderAPI.
 2. Put `universaladmin-placeholderapi-<version>.jar` from the
    [GitHub release](https://github.com/nicki41/UniversalAdmin/releases) into
-   `plugins/` (it needs UniversalAdmin 1.2 or newer).
+   `plugins/` (version 1.3 needs UniversalAdmin 1.3 or newer).
 3. Restart. `/papi parse me %universaladmin_online%` shows the number of
    visible players. No `/papi ecloud download` needed.
 
@@ -44,9 +44,9 @@ Network mode ([network.md](../user/network.md)):
 | Placeholder | Value |
 |---|---|
 | `%universaladmin_server%` | this server's name, empty without network mode |
-| `%universaladmin_network_online%` | players on the whole network (this server's online count without network mode) |
+| `%universaladmin_network_online%` | players on the whole network, vanished ones left out (like `online` without network mode) |
 | `%universaladmin_network_servers%` | servers online |
-| `%universaladmin_network_online_<server>%` | players on that server, e.g. `%universaladmin_network_online_survival%` |
+| `%universaladmin_network_online_<server>%` | players on that server without vanished ones, e.g. `%universaladmin_network_online_survival%` |
 
 ## Notes
 

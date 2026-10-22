@@ -1,6 +1,7 @@
 package dev.universaladmin.modules.moderation;
 
 import dev.universaladmin.action.ActionDefinition;
+import dev.universaladmin.action.ActionEvent;
 import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionTarget;
@@ -17,6 +18,7 @@ import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
 import dev.universaladmin.module.ModuleId;
+import dev.universaladmin.modules.moderation.action.ApplyTemplateAction;
 import dev.universaladmin.modules.moderation.action.BanAction;
 import dev.universaladmin.modules.moderation.action.BanInput;
 import dev.universaladmin.modules.moderation.action.EnterStaffModeAction;
@@ -66,20 +68,27 @@ import dev.universaladmin.modules.moderation.notes.NoteActions;
 import dev.universaladmin.modules.moderation.notes.NotesSupport;
 import dev.universaladmin.modules.moderation.notes.PlayerNoteRepository;
 import dev.universaladmin.modules.moderation.notes.PlayerNotesMigration;
+import dev.universaladmin.modules.moderation.templates.PunishmentTemplateService;
 import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.NotificationService;
 import dev.universaladmin.scheduler.TaskScheduler;
+import dev.universaladmin.settings.CoreSettings;
+import dev.universaladmin.settings.ReloadConfigAction;
 import dev.universaladmin.settings.SettingsService;
 import dev.universaladmin.status.PlayerStatus;
 import io.papermc.paper.ban.BanListType;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletionException;
+import java.util.logging.Logger;
 import org.bukkit.Server;
 import org.bukkit.ban.IpBanList;
 import org.bukkit.ban.ProfileBanList;
@@ -97,6 +106,9 @@ import org.bukkit.scheduler.BukkitTask;
  * wiring only, same shape as {@code PlayersModule}.
  */
 public final class ModerationModule implements Module {
+
+    /** The punishment templates file in the plugin folder. */
+    static final String TEMPLATES_FILE = "punishment-templates.yml";
 
     public static final ModuleId ID = ModuleId.core("moderation");
 
@@ -127,6 +139,7 @@ public final class ModerationModule implements Module {
         // here rather than in onEnable.
         context.platform().storage().migrations().register(new ModerationPunishmentMigration());
         context.platform().storage().migrations().register(new ModerationPunishmentIndexMigration());
+        context.platform().storage().migrations().register(new PunishmentTemplateMigration());
         context.platform().storage().migrations().register(new VanishStateMigration());
         context.platform().storage().migrations().register(new StaffModeSnapshotMigration());
         context.registerMigration(new PlayerNotesMigration());
@@ -183,7 +196,7 @@ public final class ModerationModule implements Module {
 
         context.resources().listener(new ModerationJoinListener(punishmentService, freezeRuntimeState, enforcer));
         context.resources().listener(new ModerationChatListener(punishmentService, enforcer));
-        context.resources().listener(new VanishReconnectListener(vanishService, vanishRuntimeState));
+        context.resources().listener(new VanishReconnectListener(vanishService, vanishRuntimeState, network));
         context.resources().listener(new VanishEnforcementListener(vanishRuntimeState, context.platform().settings()));
         context.resources().listener(new FreezeGuardListener(freezeRuntimeState, context.platform().settings()));
         context.resources().listener(new FreezeDisconnectListener(freezeRuntimeState, context.platform().actionExecutor()));
@@ -196,7 +209,9 @@ public final class ModerationModule implements Module {
                 freezeRuntimeState, vanishService, godmodeState, collisionState, staffModeState,
                 context.platform().settings(), staffModeService, context.platform().notifications(), enforcer, network,
                 new TargetNames(network, context.platform().services()));
-        ModerationGuiContext guiContext = registerGui(context, punishmentService, vanishService, godmodeState, collisionState, staffModeState);
+        PunishmentTemplateService templates = registerTemplates(context, punishmentService);
+        ModerationGuiContext guiContext = registerGui(
+                context, punishmentService, vanishService, godmodeState, collisionState, staffModeState, templates);
 
         // StaffModeGuardListener needs the GUI context (Player Inspector/
         // Inventory Inspector open GUI pages) - registered after the context exists.
@@ -205,7 +220,7 @@ public final class ModerationModule implements Module {
                 context.platform().settings(), context.platform().services()));
 
         ModerationCommands.all(new ModerationCommands.Dependencies(
-                punishmentService, staffModeService, guiContext, context.platform().settings(), messages))
+                punishmentService, staffModeService, guiContext, context.platform().settings(), messages, templates))
                 .forEach(context::registerCommand);
 
         registerNotes(context);
@@ -249,7 +264,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::targetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(KickInput::reason))
-                .auditSummary(in -> "Kicked " + PlayerNames.of(in.targetId()) + ": " + in.reason())
+                .auditSummary(in -> "Kicked " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
                 .build());
 
         actions.register(ActionDefinition.builder(new BanAction(ModerationActionIds.BAN, scheduler, punishmentService, enforcer, policy, names))
@@ -258,7 +273,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::banTargetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(BanInput::reason))
-                .auditSummary(in -> "Banned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
+                .auditSummary(in -> "Banned " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
                 .build());
         actions.register(ActionDefinition.builder(new BanAction(ModerationActionIds.TEMP_BAN, scheduler, punishmentService, enforcer, policy, names))
                 .permission(ModerationPermissions.TEMPBAN)
@@ -266,7 +281,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::banTargetOf)
                 .forbidSelfTarget()
                 .validator(and(reasonRequired(BanInput::reason), durationRequired(BanInput::expiresAt)))
-                .auditSummary(in -> "Temp-banned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
+                .auditSummary(in -> "Temp-banned " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
                 .build());
         actions.register(ActionDefinition.builder(new IpBanAction(scheduler, punishmentService, enforcer, policy, network))
                 .permission(ModerationPermissions.IPBAN)
@@ -283,7 +298,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::muteTargetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(MuteInput::reason))
-                .auditSummary(in -> "Muted " + PlayerNames.of(in.targetId()) + ": " + in.reason())
+                .auditSummary(in -> "Muted " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
                 .build());
         actions.register(ActionDefinition.builder(new MuteAction(ModerationActionIds.TEMP_MUTE, scheduler, punishmentService, enforcer, policy, names))
                 .permission(ModerationPermissions.TEMPMUTE)
@@ -291,7 +306,7 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::muteTargetOf)
                 .forbidSelfTarget()
                 .validator(and(reasonRequired(MuteInput::reason), durationRequired(MuteInput::expiresAt)))
-                .auditSummary(in -> "Temp-muted " + PlayerNames.of(in.targetId()) + ": " + in.reason())
+                .auditSummary(in -> "Temp-muted " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
                 .build());
 
         actions.register(ActionDefinition.builder(new WarnAction(scheduler, punishmentService, enforcer, policy, names))
@@ -300,7 +315,7 @@ public final class ModerationModule implements Module {
                 .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
                 .forbidSelfTarget()
                 .validator(reasonRequired(WarnInput::reason))
-                .auditSummary(in -> "Warned " + PlayerNames.of(in.targetId()) + ": " + in.reason())
+                .auditSummary(in -> "Warned " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
                 .build());
 
         actions.register(ActionDefinition.builder(new FreezeAction(scheduler, punishmentService, enforcer, policy, names))
@@ -393,6 +408,11 @@ public final class ModerationModule implements Module {
         return Optional.of(ActionTarget.player(input.targetId(), PlayerNames.of(input.targetId())));
     }
 
+
+    /** {@code " (template spam)"} for a punishment issued through a template, else empty. */
+    private static String templateSuffix(String template) {
+        return template == null ? "" : " (template " + template + ")";
+    }
     private static <I> ActionValidator<I> reasonRequired(java.util.function.Function<I, String> reason) {
         return (context, input) -> {
             String value = reason.apply(input);
@@ -418,11 +438,12 @@ public final class ModerationModule implements Module {
 
     private ModerationGuiContext registerGui(
             ModuleContext context, PunishmentService punishmentService, VanishService vanishService,
-            GodmodeState godmodeState, CollisionState collisionState, StaffModeState staffModeState) {
+            GodmodeState godmodeState, CollisionState collisionState, StaffModeState staffModeState,
+            PunishmentTemplateService templates) {
         ModerationGuiContext guiContext = new ModerationGuiContext(
                 context.platform().guiFramework(), context.platform().messages(), context.platform().scheduler(),
                 punishmentService, context.platform().actionExecutor(), context.platform().settings(),
-                vanishService, godmodeState, collisionState, staffModeState);
+                vanishService, godmodeState, collisionState, staffModeState, templates);
 
         ModerationHomePage homePage = new ModerationHomePage(guiContext);
         context.platform().guiPages().register(homePage);
@@ -434,6 +455,51 @@ public final class ModerationModule implements Module {
         // own buttons the same way).
         context.registerPlayerMenuEntry(new ModeratePlayerMenuEntry(guiContext));
         return guiContext;
+    }
+
+    /**
+     * Punishment templates: {@value #TEMPLATES_FILE} (written once from the
+     * jar, in the configured language), the {@code /punish} action, and a
+     * re-read on {@code /admin reload}.
+     */
+    private PunishmentTemplateService registerTemplates(ModuleContext context, PunishmentService punishments) {
+        var platform = context.platform();
+        Path file = platform.plugin().getDataFolder().toPath().resolve(TEMPLATES_FILE);
+        writeDefaultTemplates(platform.plugin(), file, platform.settings().get(CoreSettings.LANGUAGE), context.logger());
+        PunishmentTemplateService templates = new PunishmentTemplateService(punishments, context.logger());
+        templates.reload(file);
+        context.subscribe(event -> {
+            if (event instanceof ActionEvent.Executed<?, ?> executed && executed.id().equals(ReloadConfigAction.ID)) {
+                templates.reload(file);
+            }
+        });
+        context.registerAction(ActionDefinition.builder(
+                        new ApplyTemplateAction(templates, platform.actionExecutor(), platform.messages(), platform.scheduler()))
+                .permission(ModerationPermissions.PUNISH)
+                .module(ID.key().name())
+                .target(in -> Optional.of(ActionTarget.player(in.targetId(), PlayerNames.of(in.targetId()))))
+                .forbidSelfTarget()
+                // The punishment it issues is audited by its own action.
+                .notAudited()
+                .build());
+        return templates;
+    }
+
+    private static void writeDefaultTemplates(Plugin plugin, Path file, String language, Logger logger) {
+        if (Files.exists(file)) {
+            return;
+        }
+        String resource = "punishment-templates/" + ("de_DE".equals(language) ? "de_DE" : "en_US") + ".yml";
+        try (InputStream defaults = plugin.getResource(resource)) {
+            if (defaults == null) {
+                logger.warning("Missing " + resource + " in the plugin jar - no punishment templates.");
+                return;
+            }
+            Files.createDirectories(file.getParent());
+            Files.copy(defaults, file);
+        } catch (IOException e) {
+            logger.warning("Could not write " + file.getFileName() + ": " + e.getMessage());
+        }
     }
 
     /** Staff notes: table, add/remove actions, the profile button, {@code /admin notes} and the join alert. */

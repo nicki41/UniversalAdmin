@@ -62,6 +62,18 @@ class BotLogicTest {
     }
 
     @Test
+    void punishTakesATemplateAndCompletesItAfterThePlayer() {
+        BotCommands.Definition punish = BotCommands.find("punish").orElseThrow();
+
+        assertEquals("punish Steve spam in global chat", line(punish, Map.of("player", "Steve", "template", "spam", "note", "in global  chat")));
+        assertEquals("discord.bot.invalid-template", invalid(punish, Map.of("player", "Steve", "template", "spam confirm")));
+        assertEquals("discord.bot.missing-option", invalid(punish, Map.of("player", "Steve")));
+        assertEquals("punish Steve sp", BotCommands.completionLine(punish, "template", "sp", Map.of("player", " Steve ")::get));
+        assertEquals("punish St", BotCommands.completionLine(punish, "player", "St", Map.<String, String>of()::get));
+        assertEquals("notes St", BotCommands.completionLine(BotCommands.find("ua").orElseThrow(), "command", "notes St", name -> null));
+    }
+
+    @Test
     void requiredOptionsComeFirst() {
         List<String> names = BotCommands.ordered(BotCommands.find("ban").orElseThrow()).stream().map(BotCommands.Option::name).toList();
         assertEquals("player", names.get(0));

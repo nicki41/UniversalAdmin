@@ -82,6 +82,7 @@ a listed role can do nothing. In the audit log and in game they appear as
 | `/mute player [duration] [reason]` | `/admin mute` | `moderation.mute` / `moderation.tempmute` |
 | `/kick player [reason]` | `/admin kick` | `moderation.kick` |
 | `/warn player reason` | `/admin warn` | `moderation.warn` |
+| `/punish player template [note]` | `/admin punish` - the next step of a [punishment template](../user/modules/moderation.md#punishment-templates); templates are completed from the server | `moderation.punish` + the step's own node |
 | `/unban player`, `/unmute player` | `/admin unban`, `/admin unmute` | `moderation.unban`, `moderation.unmute` |
 | `/history player`, `/check player` | punishment history, current status | `moderation.view` |
 | `/find player` | which server a player is on (network mode) | `network.view` |

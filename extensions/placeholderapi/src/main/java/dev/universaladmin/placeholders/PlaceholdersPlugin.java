@@ -13,7 +13,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public final class PlaceholdersPlugin extends JavaPlugin {
 
-    private static final String REQUIRED_API = "1.2";
+    private static final String REQUIRED_API = "1.3";
 
     @Override
     public void onEnable() {

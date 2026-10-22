@@ -6,6 +6,7 @@ import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.MessageKey;
+import dev.universaladmin.modules.whitelist.WhitelistScope;
 import dev.universaladmin.modules.whitelist.WhitelistService;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -19,22 +20,23 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class RemoveWhitelistEntryAction implements Action<UUID, Void> {
 
-    public static final ActionId ID = WhitelistActionIds.REMOVE;
-
     private final WhitelistService whitelistService;
+    private final WhitelistScope scope;
 
-    public RemoveWhitelistEntryAction(WhitelistService whitelistService) {
+    /** @param whitelistService the service of {@code scope}: this server's or the network's */
+    public RemoveWhitelistEntryAction(WhitelistService whitelistService, WhitelistScope scope) {
         this.whitelistService = whitelistService;
+        this.scope = scope;
     }
 
     @Override
     public ActionId id() {
-        return ID;
+        return scope == WhitelistScope.NETWORK ? WhitelistActionIds.NETWORK_REMOVE : WhitelistActionIds.REMOVE;
     }
 
     @Override
     public CompletableFuture<ActionResult<Void>> execute(ActionContext context, UUID playerId) {
         return whitelistService.remove(playerId)
-                .thenApply(ignored -> ActionResult.success(null, MessageKey.of("whitelist.result.removed"), PlayerNames.of(playerId)));
+                .thenApply(ignored -> ActionResult.success(null, MessageKey.of(scope == WhitelistScope.NETWORK ? "whitelist.result.network-removed" : "whitelist.result.removed"), PlayerNames.of(playerId)));
     }
 }

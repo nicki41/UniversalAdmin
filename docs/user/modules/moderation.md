@@ -108,6 +108,62 @@ ipban temporary). `/history <player>` lists everything with ids,
 a warning. Without a reason, the localized "No reason given" is used. Full
 list: [commands.md](../commands.md#moderation).
 
+## Punishment templates
+
+Templates make punishments consistent across a team and escalate on their
+own: `/punish Steve spam` warns Steve the first time, mutes him for an hour
+the second time, and so on. They live in
+`plugins/UniversalAdmin/punishment-templates.yml`, written on the first
+start in the server's language with five examples (spam, insults,
+advertising, griefing, cheating):
+
+```yaml
+default-window: 90d
+
+templates:
+  spam:
+    name: "Spam"
+    reason: "Spam"
+    steps:
+      - warn
+      - mute 1h
+      - mute 1d
+      - ban 7d
+  cheating:
+    name: "Cheating"
+    reason: "Unfair advantages (hacked client)"
+    window: 0
+    steps:
+      - ban 30d
+      - ban
+```
+
+- **A step** is `warn`, `kick`, `mute [duration]` or `ban [duration]`; without
+  a duration mute and ban are permanent.
+- **Which step**: the number of the player's earlier punishments with the
+  same template within the window decides - none: the first step, one: the
+  second, and so on; after the last step the last one repeats. `window` per
+  template (or `default-window`, 90 days); `0` or `forever` = every earlier
+  use counts. Lifted bans and mutes still count, removed warnings do not -
+  removing a warning is how a mistake is taken back.
+- **Where**: `/punish <player> <template> [note]` (the note is added to the
+  reason); the **Punish with Template** button in the moderation menu, which
+  shows the step each template would give this player (`/punish <player>`
+  opens that menu, as before 1.3.0; from the console it lists the
+  templates instead); and `/punish` in the Discord bot.
+- **Permissions**: `universaladmin.moderation.punish`, plus the permission
+  of the step's punishment (`warn`, `kick`, `mute`/`tempmute`,
+  `ban`/`tempban`) - a moderator who may not ban cannot ban through a
+  template either; the reply says which step was refused.
+- **Underneath** a template runs the normal punishment action, so
+  enforcement, the network, staff notifications and the audit log work as
+  for any punishment; the punishment remembers its template (history and
+  detail page show it).
+- Changes to the file apply after `/admin reload`; a broken template is
+  skipped with a warning in the log, the others keep working. In a network,
+  use the same file on every server - the punishments that count are shared
+  anyway.
+
 ## Team notifications
 
 Every punishment and pardon - from the GUI, a command or an extension - is
@@ -161,6 +217,7 @@ up automatically, with zero hierarchy logic shipped in this module itself.
 | `universaladmin.moderation.mute` | op | Permanently mute a player |
 | `universaladmin.moderation.tempmute` | op | Temporarily mute a player |
 | `universaladmin.moderation.warn` | op | Warn a player |
+| `universaladmin.moderation.punish` | op | Punish with a template (each step also needs its own punishment's node) |
 | `universaladmin.moderation.unban` | op | Revoke an active ban |
 | `universaladmin.moderation.unmute` | op | Revoke an active mute |
 | `universaladmin.moderation.removewarn` | op | Remove a single warning |
@@ -193,8 +250,9 @@ listed in [staff-tools.md](staff-tools.md).
 
 `punishments` (id, type, target_id, target_last_known_name, target_ip,
 actor_id, actor_name, reason, created_at, expires_at, active, revoked_at,
-revoked_by, metadata) - created by `ModerationPunishmentMigration` (version
-1002); `ModerationPunishmentIndexMigration` (version 1003) indexes
+revoked_by, metadata, template) - created by `ModerationPunishmentMigration` (version
+1002), `template` added by `PunishmentTemplateMigration` (version 1013, with an
+index on `(target_id, template)`); `ModerationPunishmentIndexMigration` (version 1003) indexes
 `(target_id, type, active)` for the join/chat checks, `(active,
 expires_at)` for the housekeeping sweep, and `target_ip` for the IP-ban
 join check. Staff notes live in `ua_player_notes` (`PlayerNotesMigration`,

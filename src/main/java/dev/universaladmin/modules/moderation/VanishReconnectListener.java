@@ -1,5 +1,7 @@
 package dev.universaladmin.modules.moderation;
 
+import dev.universaladmin.network.NetworkService;
+import java.util.UUID;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,25 +18,40 @@ import org.bukkit.event.player.PlayerQuitEvent;
  * before a {@code Player} object even exists - the standard idiom, same as
  * the ban check) so {@link #onJoin} (synchronous, on the main thread) only
  * ever does an in-memory {@link VanishRuntimeState} read, never blocks on IO.
+ *
+ * <p>In network mode a vanished player switching servers stays vanished even
+ * with {@code vanish.restore-on-reconnect} off: a server switch is not a
+ * reconnect. They count as switching while the network still lists them on
+ * another server - the proxy connects them here before the old server sees
+ * them leave.
  */
 public final class VanishReconnectListener implements Listener {
 
     private final VanishService vanishService;
     private final VanishRuntimeState runtimeState;
+    private final NetworkService network;
 
-    public VanishReconnectListener(VanishService vanishService, VanishRuntimeState runtimeState) {
+    public VanishReconnectListener(VanishService vanishService, VanishRuntimeState runtimeState, NetworkService network) {
         this.vanishService = vanishService;
         this.runtimeState = runtimeState;
+        this.network = network;
     }
 
     @EventHandler
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
-        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED || !vanishService.restoreOnReconnectEnabled()) {
+        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED
+                || !(vanishService.restoreOnReconnectEnabled() || switchingServers(event.getUniqueId()))) {
             return;
         }
         if (vanishService.hasPersistedVanish(event.getUniqueId()).join()) {
             runtimeState.setVanished(event.getUniqueId(), true);
         }
+    }
+
+    private boolean switchingServers(UUID playerId) {
+        return network.enabled() && network.player(playerId)
+                .filter(elsewhere -> !elsewhere.server().equalsIgnoreCase(network.serverName()))
+                .isPresent();
     }
 
     @EventHandler
