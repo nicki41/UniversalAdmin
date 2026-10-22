@@ -67,7 +67,7 @@ public record ImportedPunishment(
             metadata.put("server", server);
         }
         return new Punishment(0, type, targetId, targetName, targetIp, actorId, actorName, reason,
-                createdAt, expiresAt, active, revokedAt, revokedBy, metadata);
+                createdAt, expiresAt, active, revokedAt, revokedBy, metadata, null);
     }
 
     /** Whether this punishment is in force at {@code now} - for the preview's "active" counts. */

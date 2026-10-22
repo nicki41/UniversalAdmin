@@ -98,13 +98,14 @@ universaladmin.*
 | `universaladmin.moderation.ban` / `.tempban` / `.ipban` | op | Bans |
 | `universaladmin.moderation.mute` / `.tempmute` | op | Mutes |
 | `universaladmin.moderation.warn` / `.removewarn` | op | Warnings |
+| `universaladmin.moderation.punish` | op | Punishment templates (`/punish`); each step also needs its own punishment's node |
 | `universaladmin.moderation.unban` / `.unmute` | op | Lift bans/mutes |
 | `universaladmin.moderation.freeze` / `.unfreeze` | op | Freeze |
 | `universaladmin.moderation.notes` | op | Staff notes; "player with notes joined" alert |
 | `universaladmin.moderation.import` | op | `/admin import` - import punishments from other plugins |
 | `universaladmin.moderation.notify` | op | Be told when staff punish or pardon someone |
 | `universaladmin.moderation.vanish` | op | Vanish yourself |
-| `universaladmin.bypass.vanish` | op | See vanished players |
+| `universaladmin.bypass.vanish` | op | See vanished players - also in network lists, `/admin find` and counts |
 | `universaladmin.moderation.godmode` | op | Godmode for yourself |
 | `universaladmin.moderation.collision` | op | No-collision for yourself |
 | `universaladmin.moderation.staffmode` | op | Staff mode |
@@ -133,6 +134,8 @@ universaladmin.*
 | **Whitelist** | | |
 | `universaladmin.whitelist.view` / `.toggle` / `.add` / `.remove` | op | Whitelist |
 | `universaladmin.whitelist.temporary` | op | Whitelist with an expiry date |
+| `universaladmin.whitelist.network` | op | Manage the network whitelist (with `.toggle`/`.add`/`.remove`) |
+| `universaladmin.bypass.network-whitelist` | op | Join while the network whitelist is on without being on it |
 | **Performance** | | |
 | `universaladmin.performance.view` | op | Dashboard, `/admin perf`; receives performance alerts |
 | `universaladmin.performance.entity-clear` | op | Entity clear |

@@ -19,15 +19,18 @@ final class BotCommands {
     static final String DURATION = "duration";
     static final String REASON = "reason";
     static final String COMMAND = "command";
+    static final String TEMPLATE = "template";
+    static final String NOTE = "note";
 
     private static final Pattern PLAYER_NAME = Pattern.compile("[A-Za-z0-9_]{1,16}|[0-9a-fA-F-]{32,36}");
+    private static final Pattern TEMPLATE_NAME = Pattern.compile("[A-Za-z0-9_-]{1,64}");
     private static final Pattern DURATION_TEXT = Pattern.compile("(?i)(\\d+[smhdwy])+|perm(anent)?");
 
     /** One slash command: its name, the {@code /admin} subcommand and which options it takes. */
     record Definition(String name, String adminCommand, List<Option> options) {
     }
 
-    /** @param autocomplete players are completed from the server */
+    /** @param autocomplete completed from the server: players, or a punishment template after the player */
     record Option(String name, boolean required, boolean autocomplete) {
     }
 
@@ -36,6 +39,7 @@ final class BotCommands {
             new Definition("mute", "mute", List.of(player(), optional(DURATION), optional(REASON))),
             new Definition("kick", "kick", List.of(player(), optional(REASON))),
             new Definition("warn", "warn", List.of(player(), new Option(REASON, true, false))),
+            new Definition("punish", "punish", List.of(player(), new Option(TEMPLATE, true, true), optional(NOTE))),
             new Definition("unban", "unban", List.of(player())),
             new Definition("unmute", "unmute", List.of(player())),
             new Definition("history", "history", List.of(player())),
@@ -88,6 +92,11 @@ final class BotCommands {
                         return new Result(null, new Invalid("discord.bot.invalid-player"));
                     }
                 }
+                case TEMPLATE -> {
+                    if (!TEMPLATE_NAME.matcher(value).matches()) {
+                        return new Result(null, new Invalid("discord.bot.invalid-template"));
+                    }
+                }
                 case DURATION -> {
                     if (!DURATION_TEXT.matcher(value).matches()) {
                         return new Result(null, new Invalid("discord.bot.invalid-duration"));
@@ -101,6 +110,22 @@ final class BotCommands {
             words.add(value);
         }
         return new Result(String.join(" ", words), null);
+    }
+
+    /**
+     * The {@code /admin} line to complete while {@code focused} is typed: the
+     * subcommand and the value typed so far, and for a template the player
+     * chosen before it ({@code punish Steve sp}).
+     */
+    static String completionLine(Definition definition, String focused, String typed, Function<String, String> option) {
+        if (definition.adminCommand().isEmpty()) {
+            return typed;
+        }
+        if (TEMPLATE.equals(focused)) {
+            String player = option.apply(PLAYER);
+            return definition.adminCommand() + " " + (player == null ? "" : player.trim()) + " " + typed;
+        }
+        return definition.adminCommand() + " " + typed;
     }
 
     /** Exactly one of the two is set. */

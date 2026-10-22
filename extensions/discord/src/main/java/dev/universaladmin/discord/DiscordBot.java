@@ -437,7 +437,10 @@ final class DiscordBot {
                 return;
             }
             String typed = event.getFocusedOption().getValue();
-            String line = definition.get().adminCommand().isEmpty() ? typed : definition.get().adminCommand() + " " + typed;
+            String line = BotCommands.completionLine(definition.get(), event.getFocusedOption().getName(), typed, name -> {
+                OptionMapping value = event.getOption(name);
+                return value == null ? null : value.getAsString();
+            });
             commands.get().complete(actor(member), line)
                     .completeOnTimeout(List.of(), 2, TimeUnit.SECONDS)
                     .thenAccept(choices -> event.replyChoiceStrings(complete(definition.get(), typed, choices)).queue(null, error -> { }));

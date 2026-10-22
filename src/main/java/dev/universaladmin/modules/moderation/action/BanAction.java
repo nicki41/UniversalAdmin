@@ -66,7 +66,7 @@ public final class BanAction implements Action<BanInput, Punishment> {
         CompletableFuture<ActionResult<Punishment>> future = new CompletableFuture<>();
         scheduler.runOnMainThread(() -> {
             names.nameOf(input.targetId()).thenCompose(targetName -> punishmentService.issue(type, input.targetId(), targetName, null,
-                            context.actor().playerId(), context.actor().displayName(), input.reason(), expiresAt))
+                            context.actor().playerId(), context.actor().displayName(), input.reason(), expiresAt, input.template()))
                     .whenComplete((punishment, error) -> {
                         if (error != null) {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));

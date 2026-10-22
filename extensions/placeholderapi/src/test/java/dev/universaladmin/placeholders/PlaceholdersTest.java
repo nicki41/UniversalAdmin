@@ -53,7 +53,7 @@ class PlaceholdersTest {
         assertEquals("4", placeholders.resolve(null, "open_reports"));
         assertEquals("no", placeholders.resolve(null, "maintenance"));
         assertEquals("", placeholders.resolve(null, "server"));
-        assertEquals("3", placeholders.resolve(null, "network_online"));
+        assertEquals("2", placeholders.resolve(null, "network_online")); // without network mode: like "online"
         assertEquals("1", placeholders.resolve(null, "network_servers"));
         assertNull(placeholders.resolve(null, "no_such_placeholder"));
     }
@@ -70,7 +70,7 @@ class PlaceholdersTest {
         Placeholders placeholders = new Placeholders(new Fake(network(true, servers, players), true));
 
         assertEquals("lobby", placeholders.resolve(null, "server"));
-        assertEquals("2", placeholders.resolve(null, "network_online"));
+        assertEquals("1", placeholders.resolve(null, "network_online")); // Alex is vanished on survival
         assertEquals("2", placeholders.resolve(null, "network_servers"));
         assertEquals("30", placeholders.resolve(null, "network_online_survival"));
         assertEquals("0", placeholders.resolve(null, "network_online_event"));
@@ -100,6 +100,7 @@ class PlaceholdersTest {
                     case "serverName" -> enabled ? "lobby" : "";
                     case "servers" -> servers;
                     case "players" -> players;
+                    case "vanished" -> ALEX.equals(args[0]);
                     default -> throw new UnsupportedOperationException(method.getName());
                 });
     }

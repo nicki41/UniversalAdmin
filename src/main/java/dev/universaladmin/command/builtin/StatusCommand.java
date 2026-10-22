@@ -7,6 +7,7 @@ import dev.universaladmin.core.UniversalAdmin;
 import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.network.NetworkService;
+import dev.universaladmin.network.NetworkVisibility;
 import dev.universaladmin.permission.PermissionNode;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,7 +64,7 @@ public final class StatusCommand implements AdminCommand {
         NetworkService network = platform.network();
         if (network.enabled()) {
             invocation.line("command.status.network", network.serverName(), Integer.toString(network.servers().size()),
-                    Integer.toString(network.players().size()));
+                    Integer.toString(NetworkVisibility.players(invocation.sender(), network).size()));
         } else {
             invocation.line("command.status.network-off");
         }

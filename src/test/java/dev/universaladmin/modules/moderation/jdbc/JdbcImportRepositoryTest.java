@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.universaladmin.modules.moderation.ModerationPunishmentIndexMigration;
 import dev.universaladmin.modules.moderation.ModerationPunishmentMigration;
+import dev.universaladmin.modules.moderation.PunishmentTemplateMigration;
 import dev.universaladmin.modules.moderation.Punishment;
 import dev.universaladmin.modules.moderation.PunishmentType;
 import dev.universaladmin.modules.moderation.importing.ImportRecordsMigration;
@@ -64,6 +65,7 @@ class JdbcImportRepositoryTest {
             MigrationRunner migrations = new MigrationRunner(dataSource, Logger.getLogger("test"));
             migrations.register(new ModerationPunishmentMigration());
             migrations.register(new ModerationPunishmentIndexMigration());
+            migrations.register(new PunishmentTemplateMigration());
             migrations.register(new PlayerNotesMigration());
             migrations.register(new ImportRecordsMigration());
             migrations.register(new PlayerProfileMigration());

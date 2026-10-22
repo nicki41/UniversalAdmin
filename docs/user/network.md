@@ -16,10 +16,13 @@ network mode, and the servers know each other.
 | **One audit log** for the whole network, every entry tagged with its server | shared database |
 | Commands find **every player of the network**, also ones who only ever played on another server | shared player profiles |
 | **Maintenance for one server or the whole network**: `/admin maintenance on` closes this server, `/admin maintenance network on` every server at once | shared database + a message between the servers |
+| **A network whitelist**: `/admin whitelist network on` - one list for every server (and the proxy), on top of each server's own | shared database + a message between the servers |
+| **Vanish across the network**: a vanished player stays vanished when switching servers and does not show up in the network list, `/admin find` or player counts for anyone without `universaladmin.bypass.vanish` | heartbeat in the shared database |
 
 Optional: the **UniversalAdmin Velocity** plugin turns banned players away at
 the proxy itself - before they reach any server, including servers without
-UniversalAdmin - and keeps the proxy closed during network maintenance.
+UniversalAdmin - and keeps the proxy closed during network maintenance and to
+players who are not on the network whitelist while that is on.
 
 ## Setup
 
@@ -113,6 +116,11 @@ and, in red instead of the player count, `maintenance-check.version-text`
 (empty = unchanged). `maintenance-check.enabled: false` switches this off;
 the servers still refuse players on join. A server's own maintenance does not
 concern the proxy: players are refused when they switch to that server.
+
+While the [network whitelist](modules/whitelist.md#network-whitelist) is on,
+the proxy also refuses every login that is not on it, except players with
+`universaladmin.bypass.network-whitelist` on the proxy
+(`whitelist-check.enabled`, message `messages.not-whitelisted`).
 
 Works on Velocity 3.4+ and 4.x.
 
@@ -209,7 +217,11 @@ second row for the network.
   Velocity) or on the next UniversalAdmin server.
 - **IP bans** need the player on the server where the ban is issued (their
   address is only known there): `/admin tp <player>` first, or ban by name.
-- **Freeze** follows the player when they switch servers; staff mode,
-  vanish, godmode and live inventory editors are per server.
-- **The whitelist, gamerules, worlds** stay per server - they usually differ
-  between servers. Maintenance can be either - see [Maintenance](#maintenance).
+- **Freeze** and **vanish** follow the player when they switch servers (vanish
+  also with `vanish.restore-on-reconnect: false`); staff mode, godmode and
+  live inventory editors are per server. Another server learns that someone
+  vanished with its next heartbeat - a few seconds.
+- **Gamerules and worlds** stay per server - they usually differ between
+  servers. Maintenance and the whitelist can be either - see
+  [Maintenance](#maintenance) and the
+  [network whitelist](modules/whitelist.md#network-whitelist).

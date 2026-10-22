@@ -5,6 +5,7 @@ import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.network.NetworkListener;
 import dev.universaladmin.network.NetworkMessage;
 import dev.universaladmin.network.NetworkService;
+import dev.universaladmin.network.ScopeKeys;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.CoreSettings;
 import dev.universaladmin.settings.SettingsService;
@@ -41,9 +42,8 @@ public final class DefaultMaintenanceService implements MaintenanceService, Netw
 
     /** Network channel topic: the network's maintenance changed - reload it, and with {@code kick=true} remove refused players. */
     public static final String NETWORK_TOPIC = "server.maintenance";
-    static final String LOCAL_SCOPE = "local";
-    static final String NETWORK_SCOPE = "network";
-    private static final String SERVER_SCOPE_PREFIX = "server:";
+    static final String LOCAL_SCOPE = ScopeKeys.LOCAL;
+    static final String NETWORK_SCOPE = ScopeKeys.NETWORK;
 
     private final MaintenanceStateRepository repository;
     private final SettingsService settings;
@@ -207,7 +207,7 @@ public final class DefaultMaintenanceService implements MaintenanceService, Netw
     }
 
     private String serverKey() {
-        return network.enabled() ? SERVER_SCOPE_PREFIX + network.serverName() : LOCAL_SCOPE;
+        return ScopeKeys.server(network);
     }
 
     private String key(MaintenanceScope scope) {

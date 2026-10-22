@@ -21,6 +21,7 @@ import dev.universaladmin.modules.players.action.TeleportKind;
 import dev.universaladmin.modules.players.gui.PlayersGui;
 import dev.universaladmin.network.NetworkPlayer;
 import dev.universaladmin.network.NetworkService;
+import dev.universaladmin.network.NetworkVisibility;
 import dev.universaladmin.permission.PermissionNode;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -450,11 +451,11 @@ public final class PlayerCommands {
                 && network.player(name).filter(player -> !player.server().equalsIgnoreCase(network.serverName())).isPresent();
     }
 
-    /** Local names plus, in network mode, everyone on the other servers. */
+    /** Local names plus, in network mode, everyone on the other servers the sender may see. */
     private static List<String> withNetworkPlayers(NetworkService network, CommandInvocation invocation) {
         List<String> names = new ArrayList<>(Arguments.visiblePlayerNames(invocation.sender()));
         if (network.enabled()) {
-            network.players().stream().map(NetworkPlayer::name)
+            NetworkVisibility.players(invocation.sender(), network).stream().map(NetworkPlayer::name)
                     .filter(name -> !names.contains(name)).forEach(names::add);
         }
         return names;

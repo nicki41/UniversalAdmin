@@ -7,6 +7,7 @@ import dev.universaladmin.network.NetworkRepository.MessageRow;
 import dev.universaladmin.network.NetworkRepository.PlayerRow;
 import dev.universaladmin.network.NetworkRepository.ServerRow;
 import dev.universaladmin.network.NetworkSchemaMigration;
+import dev.universaladmin.network.NetworkVanishMigration;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.storage.DatabaseConfig;
 import dev.universaladmin.storage.MigrationRunner;
@@ -63,6 +64,7 @@ class JdbcNetworkRepositoryTest {
         dataSource = DataSourceFactory.create(DatabaseConfig.sqlite("network.db"), dir);
         MigrationRunner migrations = new MigrationRunner(dataSource, Logger.getLogger("test"));
         migrations.register(new NetworkSchemaMigration());
+        migrations.register(new NetworkVanishMigration());
         migrations.runPending();
         repository = new JdbcNetworkRepository(dataSource, IMMEDIATE);
     }
@@ -91,6 +93,17 @@ class JdbcNetworkRepositoryTest {
         assertEquals(1, servers.size());
         assertEquals(1, servers.get(0).onlinePlayers());
         assertEquals(List.of("Steve"), repository.players().join().stream().map(PlayerRow::name).toList());
+    }
+
+    @Test
+    void storesWhetherAPlayerIsVanished() {
+        UUID steve = UUID.randomUUID();
+        UUID alex = UUID.randomUUID();
+        repository.heartbeat(server("lobby", 1), List.of(
+                new PlayerRow(steve, "Steve", "lobby", NOW, true), new PlayerRow(alex, "Alex", "lobby", NOW))).join();
+
+        List<PlayerRow> players = repository.players().join();
+        assertEquals(List.of(false, true), players.stream().map(PlayerRow::vanished).toList()); // ordered by name
     }
 
     @Test

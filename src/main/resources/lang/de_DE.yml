@@ -217,6 +217,21 @@ moderation:
       by: "<gray>von <white>{0}</white>, {1}"
       delete-hint: "<dark_gray>Rechtsklick zum Löschen"
       delete-title: "<yellow>Diese Notiz löschen?"
+  template:
+    unknown: "<red>Es gibt keine Vorlage <white>{0}</white>. Vorlagen: {1}"
+    applied: "<gray>Vorlage <white>{0}</white>, Stufe {1} von {2}:</gray> {3}"
+    step-not-permitted: "<red>Die nächste Stufe von <white>{0}</white> ist <white>{1}</white> - das darfst du nicht."
+    none: "<yellow>Es gibt keine Strafvorlagen - siehe punishment-templates.yml im Plugin-Ordner."
+    list: "<gray>Vorlagen: <white>{0}"
+    preview-header: "<gold>Vorlagen für <white>{0}</white> - zum Benutzen anklicken:"
+    preview-line: "<click:suggest_command:''/admin punish {0} {1}''><white>{2}</white></click> <dark_gray>-</dark_gray> <gray>als Nächstes: <yellow>{3}</yellow> <dark_gray>(Stufe {4} von {5})"
+    step:
+      warn: "Verwarnung"
+      kick: "Kick"
+      mute: "Mute {0}"
+      mute-permanent: "Dauerhafter Mute"
+      ban: "Bann {0}"
+      ban-permanent: "Dauerhafter Bann"
   import:
     sources-header: "<gold>Strafen aus einem anderen Plugin importieren:"
     source-found: "<white>{0}</white> <dark_gray>-</dark_gray> <gray>{1}</gray> <click:suggest_command:''/admin import {2}''><yellow><u>[Vorschau]</u></yellow></click>"
@@ -352,6 +367,7 @@ moderation:
       status-active: "<red>Status: Aktiv"
       status-inactive: "<dark_gray>Status: Inaktiv"
       revoked: "<gray>Aufgehoben am {0} von {1}"
+      field-template: "<gray>Vorlage: {0}"
     moderate:
       title: "<gold>Moderieren - {0}"
       kick: "<yellow>Kick"
@@ -375,6 +391,11 @@ moderation:
       confirm-target: "<gray>Ziel: <white>{0}"
       confirm-reason: "<gray>Grund: <white>{0}"
       confirm-expires: "<gray>Läuft ab: <white>{0}"
+      template: "<gold>Mit Vorlage bestrafen"
+      template-lore: "<gray>Die Stufe hängt von früheren Strafen mit der Vorlage ab."
+      select-template: "Vorlage wählen"
+      template-next: "<gray>Als Nächstes: <yellow>{0}</yellow> <dark_gray>(Stufe {1} von {2})"
+      confirm-template: "<gray>Vorlage: <white>{0}</white> - <yellow>{1}</yellow> <dark_gray>(Stufe {2} von {3})"
     staffmode:
       tool:
         player-inspector: "<gold>Spieler-Inspektor"
@@ -599,8 +620,10 @@ worlds:
 whitelist:
   action:
     temporary-not-permitted: "<red>Du darfst keine Ablaufzeit für einen Whitelist-Eintrag setzen."
+    network-required: "<red>Die Netzwerk-Whitelist braucht den Netzwerkmodus (network.enabled in der config.yml)."
   enforcement:
     expired: "<red>Dein befristeter Whitelist-Zugang ist abgelaufen."
+    network: "<red>Dieses Netzwerk hat eine Whitelist - du stehst nicht darauf."
   gui:
     action:
       success: "<green>Erledigt."
@@ -615,8 +638,16 @@ whitelist:
       members-lore: "<gray>Whitelist-Spieler durchsuchen."
       add: "<yellow>Hinzufügen"
       add-lore: "<gray>Einen Offline-Spieler suchen und whitelisten."
+      network-status-on: "<green>Netzwerk-Whitelist: AN"
+      network-status-off: "<red>Netzwerk-Whitelist: AUS"
+      network-lore: "<gray>{0} Spieler - gilt auf jedem Server des Netzwerks"
+      network-enable: "<green>Für das Netzwerk aktivieren"
+      network-disable: "<red>Für das Netzwerk deaktivieren"
+      network-members: "<aqua>Netzwerk-Mitglieder"
+      network-add: "<yellow>Zum Netzwerk hinzufügen"
     members:
       title: "<gold>Whitelist-Mitglieder"
+      network-title: "<gold>Netzwerk-Whitelist"
       managed: "<green>Von UniversalAdmin verwaltet"
       external: "<gray>Extern verwaltet"
     member:
@@ -631,6 +662,7 @@ whitelist:
       confirm-remove: "<gray>{0} von der Whitelist entfernen?"
     add:
       title: "<gold>Zur Whitelist hinzufügen"
+      network-title: "<gold>Zur Netzwerk-Whitelist hinzufügen"
       search: "<aqua>Offline-Spieler suchen"
       prompt-search: "Spielernamen eingeben"
       no-matches: "<red>Keine Offline-Spieler mit diesem Namen gefunden."
@@ -645,6 +677,11 @@ whitelist:
     added: "<gray><white>{0}</white> zur Whitelist hinzugefügt."
     added-temporary: "<gray><white>{0}</white> für <aqua>{1}</aqua> zur Whitelist hinzugefügt."
     removed: "<gray><white>{0}</white> von der Whitelist entfernt."
+    network-enabled: "<gray>Netzwerk-Whitelist ist jetzt auf allen Servern <green>AN</green> <dark_gray>({0} Spieler auf der Liste)</dark_gray>."
+    network-disabled: "<gray>Netzwerk-Whitelist ist jetzt <red>AUS</red>."
+    network-added: "<gray><white>{0}</white> zur Netzwerk-Whitelist hinzugefügt."
+    network-added-temporary: "<gray><white>{0}</white> für <aqua>{1}</aqua> zur Netzwerk-Whitelist hinzugefügt."
+    network-removed: "<gray><white>{0}</white> von der Netzwerk-Whitelist entfernt."
 
 performance:
   action:
@@ -896,6 +933,9 @@ commands:
   tempmute:
     usage: "<spieler> <dauer> [grund]"
     description: "Schaltet einen Spieler für eine Dauer stumm."
+  punish:
+    usage: "<spieler> [vorlage] [notiz]"
+    description: "Bestraft mit einer Vorlage - die Stufe hängt von früheren Strafen damit ab. Ohne Vorlage: das Moderationsmenü (Konsole: was jede Vorlage bewirken würde)."
   warn:
     usage: "<spieler> [grund]"
     description: "Verwarnt einen Spieler; Verwarnungen erscheinen in seiner Historie."
@@ -1040,8 +1080,12 @@ commands:
       weather: "<gray>Wetter: <white>{0}"
       border: "<gray>Weltgrenze: <white>{0}</white> Blöcke"
   whitelist:
-    usage: "<on|off|add <spieler> [dauer] [grund]|remove <spieler>|list>"
-    description: "Verwaltet die Whitelist, auch mit zeitlich begrenztem Zugang."
+    usage: "[network] <on|off|add <spieler> [dauer] [grund]|remove <spieler>|list>"
+    description: "Verwaltet die Whitelist, auch mit zeitlich begrenztem Zugang - mit network die für das ganze Netzwerk."
+    network-status-on: "<green>Netzwerk-Whitelist ist AN</green> <gray>- {0} Spieler darauf"
+    network-status-off: "<red>Netzwerk-Whitelist ist AUS</red> <gray>- {0} Spieler darauf"
+    network-list-header-on: "<green>Netzwerk-Whitelist ist AN</green> <gray>- {0} Mitglied(er):"
+    network-list-header-off: "<red>Netzwerk-Whitelist ist AUS</red> <gray>- {0} Mitglied(er):"
     not-listed: "<red><white>{0}</white> steht nicht auf der Whitelist."
     list-header-on: "<green>Whitelist ist AN</green> <gray>- {0} Mitglied(er):"
     list-header-off: "<red>Whitelist ist AUS</red> <gray>- {0} Mitglied(er):"

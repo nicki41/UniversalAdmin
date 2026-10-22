@@ -11,6 +11,7 @@ import dev.universaladmin.modules.network.action.NetworkActions;
 import dev.universaladmin.network.NetworkPlayer;
 import dev.universaladmin.network.NetworkServer;
 import dev.universaladmin.network.NetworkService;
+import dev.universaladmin.network.NetworkVisibility;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -35,8 +36,9 @@ public final class NetworkCommands {
         return List.of(new Network(network), new Find(network), new Send(network), new Connect(network), new Alert());
     }
 
-    private static List<String> playerNames(NetworkService network) {
-        return network.players().stream().map(NetworkPlayer::name).toList();
+    /** The names {@code invocation}'s sender may see - vanished players only for those who see vanished players. */
+    private static List<String> playerNames(NetworkService network, CommandInvocation invocation) {
+        return NetworkVisibility.players(invocation.sender(), network).stream().map(NetworkPlayer::name).toList();
     }
 
     private static List<String> serverNames(NetworkService network) {
@@ -88,7 +90,7 @@ public final class NetworkCommands {
                 invocation.reply("network.action.unknown-server", serverName);
                 return;
             }
-            List<String> names = network.players().stream()
+            List<String> names = NetworkVisibility.players(invocation.sender(), network).stream()
                     .filter(player -> player.server().equalsIgnoreCase(server.get().name()))
                     .map(NetworkPlayer::name)
                     .toList();
@@ -121,7 +123,7 @@ public final class NetworkCommands {
                 return;
             }
             String name = invocation.args().get(0);
-            network.player(name).ifPresentOrElse(
+            network.player(name).filter(player -> NetworkVisibility.canSee(invocation.sender(), network, player)).ifPresentOrElse(
                     player -> invocation.reply(player.since() == null ? "network.find.found" : "network.find.found-since",
                             player.name(), player.server(), since(player.since())),
                     () -> invocation.reply("network.action.player-not-found", name));
@@ -129,7 +131,7 @@ public final class NetworkCommands {
 
         @Override
         public List<String> complete(CommandInvocation invocation) {
-            return invocation.argCount() <= 1 ? playerNames(network) : List.of();
+            return invocation.argCount() <= 1 ? playerNames(network, invocation) : List.of();
         }
     }
 
@@ -155,7 +157,7 @@ public final class NetworkCommands {
         @Override
         public List<String> complete(CommandInvocation invocation) {
             return switch (invocation.argCount()) {
-                case 0, 1 -> playerNames(network);
+                case 0, 1 -> playerNames(network, invocation);
                 case 2 -> serverNames(network);
                 default -> List.of();
             };

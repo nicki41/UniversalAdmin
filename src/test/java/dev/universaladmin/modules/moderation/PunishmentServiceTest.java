@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -261,6 +262,14 @@ class PunishmentServiceTest {
         }
 
         @Override
+        public CompletableFuture<List<Punishment>> findWithTemplate(UUID targetId) {
+            return CompletableFuture.completedFuture(store.values().stream()
+                    .filter(p -> p.targetId().equals(targetId) && p.template() != null)
+                    .sorted(Comparator.comparing(Punishment::createdAt).reversed())
+                    .toList());
+        }
+
+        @Override
         public synchronized CompletableFuture<List<Punishment>> revokeActiveByTarget(
                 UUID targetId, Set<PunishmentType> types, Instant revokedAt, String revokedBy) {
             List<Punishment> revoked = new ArrayList<>();
@@ -291,7 +300,8 @@ class PunishmentServiceTest {
             for (Punishment p : new ArrayList<>(store.values())) {
                 if (p.active() && p.expiresAt() != null && !p.expiresAt().isAfter(now)) {
                     store.put(p.id(), new Punishment(p.id(), p.type(), p.targetId(), p.targetLastKnownName(), p.targetIp(),
-                            p.actorId(), p.actorName(), p.reason(), p.createdAt(), p.expiresAt(), false, p.revokedAt(), p.revokedBy(), p.metadata()));
+                            p.actorId(), p.actorName(), p.reason(), p.createdAt(), p.expiresAt(), false, p.revokedAt(), p.revokedBy(), p.metadata(),
+                            p.template()));
                     count++;
                 }
             }

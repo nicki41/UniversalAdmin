@@ -2,7 +2,8 @@
 #
 # Turns players banned with UniversalAdmin away at the proxy - before they
 # reach any server, including servers that do not run UniversalAdmin - and
-# keeps the network closed during network maintenance. It reads the same
+# keeps the network closed during network maintenance and to everyone not on
+# the network whitelist while that is on. It reads the same
 # MySQL/MariaDB database as your servers (their config.yml -> database) and
 # never writes to it. Setup guide:
 # https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
@@ -38,6 +39,13 @@ maintenance-check:
   # Shown in red instead of the player count during network maintenance; empty = unchanged.
   version-text: "Maintenance"
 
+whitelist-check:
+  # Refuse logins while the network whitelist is on (/admin whitelist network
+  # on) for players who are not on it. Players with
+  # universaladmin.bypass.network-whitelist on the proxy still get in. Needs
+  # UniversalAdmin 1.3.0 or newer on the servers.
+  enabled: true
+
 messages:
   # MiniMessage. <reason>, <expires> and <remaining> are filled in as plain text.
   banned-permanent: "<red><bold>You are banned from this network.</bold></red>\n\n<gray>Reason: <white><reason>"
@@ -46,5 +54,7 @@ messages:
   # Shown to players refused during network maintenance, unless
   # /admin maintenance network set its own message.
   maintenance: "<red><bold>The network is under maintenance.</bold></red>\n\n<gray>Please try again later."
+  # Shown to players refused by the network whitelist.
+  not-whitelisted: "<red><bold>This network is whitelisted.</bold></red>\n\n<gray>You are not on the list."
   # java.time pattern for <expires>.
   date-pattern: "yyyy-MM-dd HH:mm"

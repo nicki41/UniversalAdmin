@@ -145,12 +145,14 @@ across the whole database, not per module:
   migration) and refused.
 
 Used versions: 1-2 audit, 3 network tables (`ua_network_servers`,
-`ua_network_players`, `ua_network_messages`), 1000-1001 players, 1002-1003
+`ua_network_players`, `ua_network_messages`), 4 `ua_network_players.vanished`, 1000-1001 players, 1002-1003
 punishments, 1004 vanish state, 1005 staff-mode snapshots, 1006
 maintenance state, 1007 whitelist, 1008 `ua_player_notes`, 1009
 `ua_reports`, 1010 `ua_reports.server`, 1011 `ua_import_records` (see
 [ADR 0015](decisions/0015-punishment-import.md)), 1012 `ua_maintenance` (see
-[ADR 0017](decisions/0017-maintenance-scopes.md)).
+[ADR 0017](decisions/0017-maintenance-scopes.md)), 1013 `punishments.template` (see
+[ADR 0018](decisions/0018-punishment-templates.md)), 1014 `ua_whitelist` and
+`ua_whitelist_state` (see [ADR 0019](decisions/0019-network-whitelist-and-vanish.md)).
 
 Migrations run at plugin start (`storage.migrations().runPending()` in
 `UniversalAdminPlugin#onEnable`, between every module's `onLoad` and

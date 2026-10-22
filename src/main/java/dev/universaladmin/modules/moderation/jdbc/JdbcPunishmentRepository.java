@@ -73,8 +73,8 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
     static final String INSERT_SQL = """
             INSERT INTO punishments
                 (type, target_id, target_last_known_name, target_ip, actor_id, actor_name, reason,
-                 created_at, expires_at, active, revoked_at, revoked_by, metadata)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 created_at, expires_at, active, revoked_at, revoked_by, metadata, template)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
     private Punishment insert(Connection connection, Punishment entity) throws SQLException {
@@ -93,11 +93,11 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
                 UPDATE punishments SET
                     type = ?, target_id = ?, target_last_known_name = ?, target_ip = ?, actor_id = ?,
                     actor_name = ?, reason = ?, created_at = ?, expires_at = ?, active = ?, revoked_at = ?,
-                    revoked_by = ?, metadata = ?
+                    revoked_by = ?, metadata = ?, template = ?
                 WHERE id = ?
                 """)) {
             bind(statement, entity);
-            statement.setLong(14, entity.id());
+            statement.setLong(15, entity.id());
             statement.executeUpdate();
             return entity;
         }
@@ -125,6 +125,7 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
         }
         statement.setString(12, entity.revokedBy());
         statement.setString(13, MetadataJson.encode(entity.metadata()));
+        statement.setString(14, entity.template());
     }
 
     @Override
@@ -181,6 +182,22 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
     @Override
     public CompletableFuture<Optional<Punishment>> findActiveFreeze(UUID targetId, Instant now) {
         return findActiveOne(Set.of(PunishmentType.FREEZE), "target_id", targetId.toString(), now);
+    }
+
+    @Override
+    public CompletableFuture<List<Punishment>> findWithTemplate(UUID targetId) {
+        return scheduler.supplyAsync(() -> {
+            try (Connection connection = dataSource.getConnection();
+                    PreparedStatement statement = connection.prepareStatement(
+                            "SELECT * FROM punishments WHERE target_id = ? AND template IS NOT NULL ORDER BY created_at DESC, id DESC")) {
+                statement.setString(1, targetId.toString());
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    return mapAll(resultSet);
+                }
+            } catch (SQLException e) {
+                throw new PunishmentStorageException("Failed to load template punishments for " + targetId, e);
+            }
+        });
     }
 
     @Override
@@ -357,6 +374,7 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
                 resultSet.getBoolean("active"),
                 hasRevokedAt ? Instant.ofEpochMilli(revokedAt) : null,
                 resultSet.getString("revoked_by"),
-                MetadataJson.decode(resultSet.getString("metadata")));
+                MetadataJson.decode(resultSet.getString("metadata")),
+                resultSet.getString("template"));
     }
 }

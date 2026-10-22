@@ -47,6 +47,7 @@ implementations, ...) are internal and may change in any release.
 | Run `/admin` commands for someone outside the game (1.2) | `RemoteCommands` service, `Actor.remote` - the same checks and audit as in game ([ADR 0016](decisions/0016-remote-actors.md)) | - |
 | Staff chat bridges (1.2) | `StaffChat` service: send into and subscribe to the staff chat | - |
 | Status for displays (1.2) | `PlayerStatus`, `ReportOverview`, `MaintenanceStatus` services (`dev.universaladmin.status`) - from memory, main-thread safe | - |
+| Who is vanished elsewhere in the network (1.3) | `NetworkService#vanished(UUID)` - lists and counts shown to players leave vanished players out ([ADR 0019](decisions/0019-network-whitelist-and-vanish.md)) | - |
 
 Every `register*` call undoes itself when the module is disabled - which
 happens automatically when the owning plugin is disabled.

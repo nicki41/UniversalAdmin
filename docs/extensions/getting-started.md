@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
-    compileOnly("com.github.nicki41.UniversalAdmin:universaladmin-api:v1.2.0")
+    compileOnly("com.github.nicki41.UniversalAdmin:universaladmin-api:v1.3.0")
 }
 ```
 
@@ -33,10 +33,10 @@ Alternatives if you prefer:
 
 - the plugin jar from Modrinth's Maven:
   `maven("https://api.modrinth.com/maven")` +
-  `compileOnly("maven.modrinth:universaladmin:1.2.0")`,
-- or `universaladmin-api-1.2.0.jar` (with sources and javadoc) from the
+  `compileOnly("maven.modrinth:universaladmin:1.3.0")`,
+- or `universaladmin-api-1.3.0.jar` (with sources and javadoc) from the
   [GitHub release](https://github.com/nicki41/UniversalAdmin/releases),
-  added via `compileOnly(files("libs/universaladmin-api-1.2.0.jar"))`.
+  added via `compileOnly(files("libs/universaladmin-api-1.3.0.jar"))`.
 
 Never shade the API into your jar.
 

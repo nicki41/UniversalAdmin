@@ -4,6 +4,7 @@ Two files, generated on first start:
 
 - `plugins/UniversalAdmin/config.yml` - all settings
 - `plugins/UniversalAdmin/lang/en_US.yml`, `plugins/UniversalAdmin/lang/de_DE.yml` - translations (see [Localization](#localization))
+- `plugins/UniversalAdmin/punishment-templates.yml` - punishment templates (see [moderation.md](modules/moderation.md#punishment-templates))
 
 Every value below is a registered, typed, validated setting (see
 [docs/development/settings.md](../development/settings.md) for how that
@@ -177,7 +178,7 @@ setting:
   reported, same as at startup - reload never leaves the plugin in a
   broken state.
 
-It also re-reads the language files in `lang/`.
+It also re-reads the language files in `lang/` and `punishment-templates.yml`.
 
 This is **not** Bukkit's `/reload` - it never touches any other plugin or
 the server's own state, only UniversalAdmin's own files.

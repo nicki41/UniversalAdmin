@@ -30,19 +30,20 @@ import org.slf4j.Logger;
 
 /**
  * UniversalAdmin for Velocity. Optional in network mode: the servers already
- * refuse banned players and players during maintenance on join, but a
- * server without UniversalAdmin (a minigame, a fallback) would let them in -
- * this checks every login at the proxy, against the database the servers
- * share, and shows the network's maintenance in the server list. It only
- * reads.
+ * refuse banned players, players during maintenance and players not on the
+ * network whitelist on join, but a server without UniversalAdmin (a
+ * minigame, a fallback) would let them in - this checks every login at the
+ * proxy, against the database the servers share, and shows the network's
+ * maintenance in the server list. It only reads.
  */
 @Plugin(id = "universaladmin-velocity", name = "UniversalAdmin Velocity", version = BuildConstants.VERSION,
-        description = "Turns players banned with UniversalAdmin away at the proxy and keeps it closed during network maintenance.",
+        description = "Checks UniversalAdmin bans, network maintenance and the network whitelist at the proxy.",
         url = "https://github.com/nicki41/UniversalAdmin", authors = {"UniversalAdmin"})
 public final class UniversalAdminVelocity {
 
     /** The same node the servers check - granted on the proxy by its permissions plugin (e.g. LuckPerms). */
     private static final String BYPASS_MAINTENANCE = "universaladmin.bypass.maintenance";
+    private static final String BYPASS_NETWORK_WHITELIST = "universaladmin.bypass.network-whitelist";
     private static final long WARNING_INTERVAL_MILLIS = 60_000;
     /** How long the network's maintenance row is trusted before it is read again. */
     private static final long MAINTENANCE_MAX_AGE_MILLIS = 3_000;
@@ -57,14 +58,17 @@ public final class UniversalAdminVelocity {
 
     private final AtomicLong refused = new AtomicLong();
     private final AtomicLong refusedMaintenance = new AtomicLong();
+    private final AtomicLong refusedWhitelist = new AtomicLong();
     private final AtomicLong lastWarning = new AtomicLong();
     private final AtomicLong lastMaintenanceWarning = new AtomicLong();
+    private final AtomicLong lastWhitelistWarning = new AtomicLong();
     private volatile String lastError;
 
     private VelocitySettings settings;
     private HikariDataSource dataSource;
     private BanLookup bans;
     private MaintenanceLookup maintenance;
+    private WhitelistLookup whitelist;
     private BanScreen screen;
 
     @Inject
@@ -83,8 +87,8 @@ public final class UniversalAdminVelocity {
             return;
         }
         screen = new BanScreen(settings.bannedPermanent(), settings.bannedTemporary(), settings.noReason(), settings.datePattern());
-        if (!settings.banCheck() && !settings.maintenanceCheck()) {
-            logger.info("Ban check and maintenance check are switched off (ban-check.enabled, maintenance-check.enabled).");
+        if (!settings.banCheck() && !settings.maintenanceCheck() && !settings.whitelistCheck()) {
+            logger.info("All checks are switched off (ban-check, maintenance-check and whitelist-check in config.yml).");
         } else if (settings.password().isEmpty() && "universaladmin".equals(settings.username())
                 && "localhost".equals(settings.host())) {
             logger.warn("Fill in the database connection in plugins/universaladmin-velocity/config.yml "
@@ -136,12 +140,24 @@ public final class UniversalAdminVelocity {
         } else {
             logger.info("Maintenance check is switched off (maintenance-check.enabled: false).");
         }
+        if (settings.whitelistCheck()) {
+            whitelist = new WhitelistLookup(dataSource, MAINTENANCE_MAX_AGE_MILLIS);
+            boolean on = whitelist.enabled(System.currentTimeMillis());
+            if (whitelist.lastError() == null) {
+                logger.info("Network whitelist check active" + (on ? " - the network whitelist is on." : "."));
+            } else {
+                logger.warn("Network whitelist check started, but its state cannot be read yet (" + whitelist.lastError()
+                        + ") - it is read again on every login. UniversalAdmin 1.3.0 or newer on the servers creates it.");
+            }
+        } else {
+            logger.info("Network whitelist check is switched off (whitelist-check.enabled: false).");
+        }
     }
 
     // Early (the value PostOrder.EARLY stood for), so other plugins see the refusal.
     @Subscribe(priority = Short.MAX_VALUE / 2)
     public EventTask onLogin(LoginEvent event) {
-        if ((bans == null && maintenance == null) || !event.getResult().isAllowed()) {
+        if ((bans == null && maintenance == null && whitelist == null) || !event.getResult().isAllowed()) {
             return null;
         }
         Player player = event.getPlayer();
@@ -149,8 +165,11 @@ public final class UniversalAdminVelocity {
             if (bans != null && refuseBanned(event, player)) {
                 return;
             }
-            if (maintenance != null) {
-                refuseDuringMaintenance(event, player);
+            if (maintenance != null && refuseDuringMaintenance(event, player)) {
+                return;
+            }
+            if (whitelist != null) {
+                refuseUnlisted(event, player);
             }
         });
     }
@@ -184,17 +203,32 @@ public final class UniversalAdminVelocity {
         }
     }
 
-    private void refuseDuringMaintenance(LoginEvent event, Player player) {
+    /** @return whether the login was refused */
+    private boolean refuseDuringMaintenance(LoginEvent event, Player player) {
         MaintenanceLookup.Maintenance state = maintenance.current(System.currentTimeMillis());
         if (maintenance.lastError() != null && rateLimited(lastMaintenanceWarning)) {
             logger.warn("Maintenance check failed: " + maintenance.lastError() + " - letting players in, the servers check again on join.");
         }
         if (!state.enabled() || state.allows(player.getUsername()) || player.hasPermission(BYPASS_MAINTENANCE)) {
-            return;
+            return false;
         }
         refusedMaintenance.incrementAndGet();
         String message = state.message() == null || state.message().isBlank() ? settings.maintenanceMessage() : state.message();
         event.setResult(ResultedEvent.ComponentResult.denied(MiniMessage.miniMessage().deserialize(message)));
+        return true;
+    }
+
+    private void refuseUnlisted(LoginEvent event, Player player) {
+        long now = System.currentTimeMillis();
+        boolean on = whitelist.enabled(now);
+        if (whitelist.lastError() != null && rateLimited(lastWhitelistWarning)) {
+            logger.warn("Network whitelist check failed: " + whitelist.lastError() + " - letting players in, the servers check again on join.");
+        }
+        if (!on || player.hasPermission(BYPASS_NETWORK_WHITELIST) || whitelist.listed(player.getUniqueId(), now)) {
+            return;
+        }
+        refusedWhitelist.incrementAndGet();
+        event.setResult(ResultedEvent.ComponentResult.denied(MiniMessage.miniMessage().deserialize(settings.notWhitelisted())));
     }
 
     /** During network maintenance: the configured server-list text instead of the usual one. */
@@ -231,6 +265,7 @@ public final class UniversalAdminVelocity {
     private void close() {
         bans = null;
         maintenance = null;
+        whitelist = null;
         if (dataSource != null) {
             dataSource.close();
             dataSource = null;
@@ -253,12 +288,23 @@ public final class UniversalAdminVelocity {
                         ? "<yellow>active, last error: <white>" + maintenance.lastError()
                         : "<green>active <gray>- network maintenance: " + (on ? "<red>on" : "<green>off");
             }
+            String whitelistState;
+            if (whitelist == null) {
+                whitelistState = "<red>off <gray>(see the proxy log)";
+            } else {
+                boolean on = whitelist.enabled(System.currentTimeMillis());
+                whitelistState = whitelist.lastError() != null
+                        ? "<yellow>active, last error: <white>" + whitelist.lastError()
+                        : "<green>active <gray>- network whitelist: " + (on ? "<red>on" : "<green>off");
+            }
             invocation.source().sendMessage(MiniMessage.miniMessage().deserialize(
                     "<gradient:#55ddff:#3399ff><bold>UniversalAdmin Velocity</bold></gradient> <gray>" + BuildConstants.VERSION
                             + "\n<gray>Ban check: " + banState
                             + "\n<gray>Maintenance check: " + maintenanceState
+                            + "\n<gray>Network whitelist check: " + whitelistState
                             + "\n<gray>Refused logins since start: <white>" + refused.get() + "</white> banned, <white>"
-                            + refusedMaintenance.get() + "</white> during maintenance"));
+                            + refusedMaintenance.get() + "</white> during maintenance, <white>" + refusedWhitelist.get()
+                            + "</white> not whitelisted"));
         }
 
         @Override

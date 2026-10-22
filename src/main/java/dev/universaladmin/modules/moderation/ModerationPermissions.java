@@ -27,6 +27,8 @@ public final class ModerationPermissions {
     public static final PermissionNode MUTE = PermissionNode.core("moderation.mute");
     public static final PermissionNode TEMPMUTE = PermissionNode.core("moderation.tempmute");
     public static final PermissionNode WARN = PermissionNode.core("moderation.warn");
+    /** Use punishment templates ({@code /punish}); each step also needs its own punishment's node. */
+    public static final PermissionNode PUNISH = PermissionNode.core("moderation.punish");
     public static final PermissionNode UNBAN = PermissionNode.core("moderation.unban");
     public static final PermissionNode UNMUTE = PermissionNode.core("moderation.unmute");
     public static final PermissionNode REMOVE_WARN = PermissionNode.core("moderation.removewarn");
@@ -61,6 +63,8 @@ public final class ModerationPermissions {
                 new PermissionDefinition(MUTE, "Permanently mute a player", PermissionDefault.OP),
                 new PermissionDefinition(TEMPMUTE, "Temporarily mute a player", PermissionDefault.OP),
                 new PermissionDefinition(WARN, "Warn a player", PermissionDefault.OP),
+                new PermissionDefinition(PUNISH, "Punish with a template (each step also needs its own punishment's permission)",
+                        PermissionDefault.OP),
                 new PermissionDefinition(UNBAN, "Revoke an active ban", PermissionDefault.OP),
                 new PermissionDefinition(UNMUTE, "Revoke an active mute", PermissionDefault.OP),
                 new PermissionDefinition(REMOVE_WARN, "Remove a single warning", PermissionDefault.OP),

@@ -80,11 +80,12 @@ public final class JdbcNetworkRepository implements NetworkRepository {
             delete.executeUpdate();
         }
         try (PreparedStatement insert = connection.prepareStatement(
-                "INSERT INTO ua_network_players (player_id, name, server, joined_at) VALUES (?, ?, ?, ?)")) {
+                "INSERT INTO ua_network_players (player_id, name, server, joined_at, vanished) VALUES (?, ?, ?, ?, ?)")) {
             insert.setString(1, player.playerId().toString());
             insert.setString(2, player.name());
             insert.setString(3, player.server());
             insert.setLong(4, player.joinedAt().toEpochMilli());
+            insert.setBoolean(5, player.vanished());
             insert.executeUpdate();
         }
     }
@@ -128,7 +129,8 @@ public final class JdbcNetworkRepository implements NetworkRepository {
     public CompletableFuture<List<PlayerRow>> players() {
         return scheduler.supplyAsync(() -> query("SELECT * FROM ua_network_players ORDER BY name", statement -> { }, resultSet ->
                 new PlayerRow(UUID.fromString(resultSet.getString("player_id")), resultSet.getString("name"),
-                        resultSet.getString("server"), Instant.ofEpochMilli(resultSet.getLong("joined_at")))));
+                        resultSet.getString("server"), Instant.ofEpochMilli(resultSet.getLong("joined_at")),
+                        resultSet.getBoolean("vanished"))));
     }
 
     @Override

@@ -5,6 +5,7 @@ import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.modules.whitelist.WhitelistMemberView;
+import dev.universaladmin.modules.whitelist.WhitelistScope;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
@@ -25,20 +26,23 @@ public final class WhitelistMembersListPage extends AbstractListGuiPage<Whitelis
     public static final GuiPageId ID = GuiPageId.core("whitelist.members");
 
     private final WhitelistGuiContext ctx;
+    private final WhitelistScope scope;
 
-    public WhitelistMembersListPage(WhitelistGuiContext ctx) {
+    /** @param scope this server's whitelist or the network whitelist (all of whose entries UniversalAdmin manages) */
+    public WhitelistMembersListPage(WhitelistGuiContext ctx, WhitelistScope scope) {
         super(ID, ctx.framework(), ctx.messages(), ctx.scheduler());
         this.ctx = ctx;
+        this.scope = scope;
     }
 
     @Override
     protected Component title(Player viewer) {
-        return text("whitelist.gui.members.title");
+        return text(scope == WhitelistScope.NETWORK ? "whitelist.gui.members.network-title" : "whitelist.gui.members.title");
     }
 
     @Override
     protected CompletableFuture<List<WhitelistMemberView>> loadItems(Player viewer) {
-        return ctx.whitelistService().listMembers();
+        return ctx.service(scope).listMembers();
     }
 
     @Override
@@ -53,6 +57,6 @@ public final class WhitelistMembersListPage extends AbstractListGuiPage<Whitelis
 
     @Override
     protected void onSelect(GuiClickContext context, WhitelistMemberView member) {
-        context.open(new WhitelistMemberDetailPage(ctx, member));
+        context.open(new WhitelistMemberDetailPage(ctx, member, scope));
     }
 }

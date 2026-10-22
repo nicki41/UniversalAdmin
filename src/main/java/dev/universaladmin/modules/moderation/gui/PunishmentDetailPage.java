@@ -17,6 +17,7 @@ import dev.universaladmin.modules.moderation.action.RemoveWarnInput;
 import dev.universaladmin.modules.moderation.action.UnbanInput;
 import dev.universaladmin.modules.moderation.action.UnfreezeInput;
 import dev.universaladmin.modules.moderation.action.UnmuteInput;
+import dev.universaladmin.modules.moderation.templates.PunishmentTemplate;
 import dev.universaladmin.permission.PermissionNode;
 import java.util.List;
 import net.kyori.adventure.text.Component;
@@ -74,9 +75,12 @@ public final class PunishmentDetailPage extends AbstractGuiPage {
         String reason = punishment.reason() == null || punishment.reason().isBlank()
                 ? messages.get(MessageKey.of("common.none"))
                 : punishment.reason();
+        String template = ctx.templates().find(punishment.template())
+                .map(PunishmentTemplate::name).orElse(punishment.template());
         return List.of(
                 text("moderation.gui.detail.field-target", punishment.targetLastKnownName()),
                 text("moderation.gui.detail.field-reason", reason),
+                template == null ? Component.empty() : text("moderation.gui.detail.field-template", template),
                 text("moderation.gui.detail.field-actor", punishment.actorName()),
                 text("moderation.gui.detail.field-created", ModerationFormat.instant(punishment.createdAt(), ctx.settings())),
                 text("moderation.gui.detail.field-expires", ModerationFormat.expiry(punishment.expiresAt(), ctx.settings(), messages)),

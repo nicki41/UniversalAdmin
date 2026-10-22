@@ -48,6 +48,19 @@ public interface NetworkService {
     Optional<NetworkPlayer> player(String name);
 
     /**
+     * Whether {@code playerId} is vanished on the server they are on - for
+     * another server as of its last heartbeat, a few seconds at most. Lists
+     * and counts shown to players should leave vanished players out for
+     * viewers without {@code universaladmin.bypass.vanish}; {@link #players()}
+     * itself lists everyone.
+     *
+     * @since 1.3
+     */
+    default boolean vanished(UUID playerId) {
+        return false;
+    }
+
+    /**
      * Sends a message to every other server running UniversalAdmin. Each
      * one passes it to the listeners {@link #subscribe subscribed} to
      * {@code topic}, on its main thread, usually within a second. The

@@ -220,6 +220,21 @@ moderation:
       by: "<gray>by <white>{0}</white>, {1}"
       delete-hint: "<dark_gray>Right-click to delete"
       delete-title: "<yellow>Delete this note?"
+  template:
+    unknown: "<red>There is no template <white>{0}</white>. Templates: {1}"
+    applied: "<gray>Template <white>{0}</white>, step {1} of {2}:</gray> {3}"
+    step-not-permitted: "<red>The next step of <white>{0}</white> is <white>{1}</white> - you are not allowed to do that."
+    none: "<yellow>There are no punishment templates - see punishment-templates.yml in the plugin folder."
+    list: "<gray>Templates: <white>{0}"
+    preview-header: "<gold>Templates for <white>{0}</white> - click one to use it:"
+    preview-line: "<click:suggest_command:''/admin punish {0} {1}''><white>{2}</white></click> <dark_gray>-</dark_gray> <gray>next: <yellow>{3}</yellow> <dark_gray>(step {4} of {5})"
+    step:
+      warn: "Warning"
+      kick: "Kick"
+      mute: "Mute {0}"
+      mute-permanent: "Permanent mute"
+      ban: "Ban {0}"
+      ban-permanent: "Permanent ban"
   import:
     sources-header: "<gold>Import punishments from another plugin:"
     source-found: "<white>{0}</white> <dark_gray>-</dark_gray> <gray>{1}</gray> <click:suggest_command:''/admin import {2}''><yellow><u>[Preview]</u></yellow></click>"
@@ -355,6 +370,7 @@ moderation:
       status-active: "<red>Status: Active"
       status-inactive: "<dark_gray>Status: Inactive"
       revoked: "<gray>Revoked {0} by {1}"
+      field-template: "<gray>Template: {0}"
     moderate:
       title: "<gold>Moderate - {0}"
       kick: "<yellow>Kick"
@@ -378,6 +394,11 @@ moderation:
       confirm-target: "<gray>Target: <white>{0}"
       confirm-reason: "<gray>Reason: <white>{0}"
       confirm-expires: "<gray>Expires: <white>{0}"
+      template: "<gold>Punish with Template"
+      template-lore: "<gray>The step depends on earlier punishments with the template."
+      select-template: "Select a template"
+      template-next: "<gray>Next: <yellow>{0}</yellow> <dark_gray>(step {1} of {2})"
+      confirm-template: "<gray>Template: <white>{0}</white> - <yellow>{1}</yellow> <dark_gray>(step {2} of {3})"
     staffmode:
       tool:
         player-inspector: "<gold>Player Inspector"
@@ -602,8 +623,10 @@ worlds:
 whitelist:
   action:
     temporary-not-permitted: "<red>You are not allowed to set an expiration on a whitelist entry."
+    network-required: "<red>The network whitelist needs network mode (network.enabled in config.yml)."
   enforcement:
     expired: "<red>Your temporary whitelist access has expired."
+    network: "<red>This network is whitelisted - you are not on the list."
   gui:
     action:
       success: "<green>Done."
@@ -618,8 +641,16 @@ whitelist:
       members-lore: "<gray>Browse and search whitelisted players."
       add: "<yellow>Add"
       add-lore: "<gray>Search an offline player and whitelist them."
+      network-status-on: "<green>Network whitelist: ON"
+      network-status-off: "<red>Network whitelist: OFF"
+      network-lore: "<gray>{0} player(s) - applies on every server of the network"
+      network-enable: "<green>Enable for the Network"
+      network-disable: "<red>Disable for the Network"
+      network-members: "<aqua>Network Members"
+      network-add: "<yellow>Add to Network"
     members:
       title: "<gold>Whitelist Members"
+      network-title: "<gold>Network Whitelist"
       managed: "<green>Managed by UniversalAdmin"
       external: "<gray>Externally managed"
     member:
@@ -634,6 +665,7 @@ whitelist:
       confirm-remove: "<gray>Remove {0} from the whitelist?"
     add:
       title: "<gold>Add to Whitelist"
+      network-title: "<gold>Add to Network Whitelist"
       search: "<aqua>Search Offline Player"
       prompt-search: "Enter a player name"
       no-matches: "<red>No offline players matched that name."
@@ -648,6 +680,11 @@ whitelist:
     added: "<gray>Added <white>{0}</white> to the whitelist."
     added-temporary: "<gray>Added <white>{0}</white> to the whitelist for <aqua>{1}</aqua>."
     removed: "<gray>Removed <white>{0}</white> from the whitelist."
+    network-enabled: "<gray>Network whitelist is now <green>ON</green> on every server <dark_gray>({0} player(s) listed)</dark_gray>."
+    network-disabled: "<gray>Network whitelist is now <red>OFF</red>."
+    network-added: "<gray>Added <white>{0}</white> to the network whitelist."
+    network-added-temporary: "<gray>Added <white>{0}</white> to the network whitelist for <aqua>{1}</aqua>."
+    network-removed: "<gray>Removed <white>{0}</white> from the network whitelist."
 
 performance:
   action:
@@ -899,6 +936,9 @@ commands:
   tempmute:
     usage: "<player> <duration> [reason]"
     description: "Mutes a player for a duration."
+  punish:
+    usage: "<player> [template] [note]"
+    description: "Punishes with a template - the step depends on earlier punishments with it. Without a template: the moderation menu (console: what each template would do)."
   warn:
     usage: "<player> [reason]"
     description: "Warns a player; warnings show up in their history."
@@ -1043,8 +1083,12 @@ commands:
       weather: "<gray>Weather: <white>{0}"
       border: "<gray>World border: <white>{0}</white> blocks"
   whitelist:
-    usage: "<on|off|add <player> [duration] [reason]|remove <player>|list>"
-    description: "Manages the whitelist, including temporary access."
+    usage: "[network] <on|off|add <player> [duration] [reason]|remove <player>|list>"
+    description: "Manages the whitelist, including temporary access - with network, the one for the whole network."
+    network-status-on: "<green>Network whitelist is ON</green> <gray>- {0} player(s) on it"
+    network-status-off: "<red>Network whitelist is OFF</red> <gray>- {0} player(s) on it"
+    network-list-header-on: "<green>Network whitelist is ON</green> <gray>- {0} member(s):"
+    network-list-header-off: "<red>Network whitelist is OFF</red> <gray>- {0} member(s):"
     not-listed: "<red><white>{0}</white> is not on the whitelist."
     list-header-on: "<green>Whitelist is ON</green> <gray>- {0} member(s):"
     list-header-off: "<red>Whitelist is OFF</red> <gray>- {0} member(s):"

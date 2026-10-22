@@ -13,6 +13,7 @@ import dev.universaladmin.gui.SelectionDialog;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.whitelist.WhitelistPermissions;
+import dev.universaladmin.modules.whitelist.WhitelistScope;
 import dev.universaladmin.modules.whitelist.WhitelistSettings;
 import dev.universaladmin.modules.whitelist.action.AddWhitelistEntryInput;
 import dev.universaladmin.modules.whitelist.action.WhitelistActionIds;
@@ -44,10 +45,13 @@ public final class WhitelistAddPage extends AbstractGuiPage {
     public static final GuiPageId ID = GuiPageId.core("whitelist.add");
 
     private final WhitelistGuiContext ctx;
+    private final WhitelistScope scope;
 
-    public WhitelistAddPage(WhitelistGuiContext ctx) {
+    /** @param scope which whitelist the player is added to */
+    public WhitelistAddPage(WhitelistGuiContext ctx, WhitelistScope scope) {
         super(ID, ctx.framework(), ctx.messages());
         this.ctx = ctx;
+        this.scope = scope;
     }
 
     @Override
@@ -57,7 +61,7 @@ public final class WhitelistAddPage extends AbstractGuiPage {
 
     @Override
     protected Component title(Player viewer) {
-        return text("whitelist.gui.add.title");
+        return text(scope == WhitelistScope.NETWORK ? "whitelist.gui.add.network-title" : "whitelist.gui.add.title");
     }
 
     @Override
@@ -152,8 +156,9 @@ public final class WhitelistAddPage extends AbstractGuiPage {
 
     private void confirmAdd(Player viewer, UUID targetId, String targetName, String reason, String notes, Instant expiresAt) {
         AddWhitelistEntryInput input = new AddWhitelistEntryInput(targetId, targetName, reason, notes, expiresAt);
-        Runnable apply = () -> WhitelistGuiActions.runAction(ctx, viewer, WhitelistActionIds.ADD, input,
-                () -> new WhitelistMembersListPage(ctx).open(viewer));
+        Runnable apply = () -> WhitelistGuiActions.runAction(ctx, viewer,
+                scope == WhitelistScope.NETWORK ? WhitelistActionIds.NETWORK_ADD : WhitelistActionIds.ADD, input,
+                () -> new WhitelistMembersListPage(ctx, scope).open(viewer));
         if (!ctx.settings().get(CoreSettings.GUI_CONFIRMATIONS)) {
             apply.run();
             return;

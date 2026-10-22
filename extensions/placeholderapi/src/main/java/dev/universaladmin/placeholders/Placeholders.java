@@ -79,9 +79,11 @@ final class Placeholders {
             case "open_reports" -> environment.reports().map(reports -> String.valueOf(reports.openReports())).orElse("");
             case "maintenance" -> environment.maintenance().map(maintenance -> bool(maintenance.active())).orElse("");
             case "server" -> environment.network().enabled() ? environment.network().serverName() : "";
+            // Like "online": vanished players are not counted.
             case "network_online" -> String.valueOf(environment.network().enabled()
-                    ? environment.network().players().size()
-                    : environment.online().size());
+                    ? environment.network().players().stream()
+                            .filter(other -> other.id() == null || !environment.network().vanished(other.id())).count()
+                    : visibleOnline(false));
             case "network_servers" -> String.valueOf(environment.network().enabled()
                     ? environment.network().servers().stream().filter(NetworkServer::online).count()
                     : 1);
@@ -112,7 +114,7 @@ final class Placeholders {
     private String serverOnline(String server) {
         NetworkService network = environment.network();
         if (!network.enabled()) {
-            return server.equalsIgnoreCase(network.serverName()) ? String.valueOf(environment.online().size()) : "";
+            return server.equalsIgnoreCase(network.serverName()) ? String.valueOf(visibleOnline(false)) : "";
         }
         return network.servers().stream()
                 .filter(candidate -> candidate.name().equalsIgnoreCase(server))

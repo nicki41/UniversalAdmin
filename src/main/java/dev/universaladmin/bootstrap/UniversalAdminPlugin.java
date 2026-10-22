@@ -52,6 +52,7 @@ import dev.universaladmin.modules.worlds.WorldsModule;
 import dev.universaladmin.network.DefaultNetworkService;
 import dev.universaladmin.network.NetworkPresenceListener;
 import dev.universaladmin.network.NetworkSchemaMigration;
+import dev.universaladmin.network.NetworkVanishMigration;
 import dev.universaladmin.network.jdbc.JdbcNetworkRepository;
 import dev.universaladmin.notification.InGameNotificationService;
 import dev.universaladmin.notification.NotificationService;
@@ -66,6 +67,7 @@ import dev.universaladmin.settings.SettingKey;
 import dev.universaladmin.settings.SettingRegistry;
 import dev.universaladmin.settings.SettingsService;
 import dev.universaladmin.settings.YamlSettingsService;
+import dev.universaladmin.status.PlayerStatus;
 import dev.universaladmin.storage.DatabaseConfig;
 import dev.universaladmin.storage.DatabaseType;
 import dev.universaladmin.storage.jdbc.JdbcStorageService;
@@ -271,6 +273,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         storage.migrations().register(new AuditSchemaMigration());
         storage.migrations().register(new AuditSchemaMigrationV2());
         storage.migrations().register(new NetworkSchemaMigration());
+        storage.migrations().register(new NetworkVanishMigration());
 
         ServiceRegistry services = new ServiceRegistry();
         ActionRegistry actions = new ActionRegistry();
@@ -283,7 +286,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         ModuleRegistry moduleRegistry = new ModuleRegistry();
         permissionSync = new BukkitPermissionSync(getServer().getPluginManager(), permissions);
         extensions = new DefaultExtensionManager(moduleRegistry, storage.migrations(), permissionSync, getLogger());
-        network = createNetwork(settingsService);
+        network = createNetwork(settingsService, services);
         DefaultNetworkService networkService = network;
         AuditService auditService = new DefaultAuditService(new JdbcAuditEventRepository(storage.dataSource(), scheduler),
                 settingsService, () -> networkService.enabled() ? networkService.serverName() : null);
@@ -351,7 +354,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
      * Network mode needs a database every server shares - with SQLite each
      * server has its own file, so it stays off (and says why).
      */
-    private DefaultNetworkService createNetwork(SettingsService settings) {
+    private DefaultNetworkService createNetwork(SettingsService settings, ServiceRegistry services) {
         boolean requested = settings.get(CoreSettings.NETWORK_ENABLED);
         boolean shared = storage.type() == DatabaseType.MYSQL;
         if (requested && !shared) {
@@ -360,7 +363,9 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         }
         return new DefaultNetworkService(this, new JdbcNetworkRepository(storage.dataSource(), scheduler), scheduler, getLogger(),
                 getPluginMeta().getVersion(), requested && shared, settings.get(CoreSettings.NETWORK_SERVER_NAME),
-                settings.get(CoreSettings.NETWORK_POLL_INTERVAL), settings.get(CoreSettings.NETWORK_PROXY_SERVER_LIST));
+                settings.get(CoreSettings.NETWORK_POLL_INTERVAL), settings.get(CoreSettings.NETWORK_PROXY_SERVER_LIST),
+                // Vanish belongs to the Moderation module; its PlayerStatus answers from memory.
+                playerId -> services.get(PlayerStatus.class).map(status -> status.vanished(playerId)).orElse(false));
     }
 
     /** The core's own {@code /admin} subcommands; every module adds its own in its {@code onEnable}. */

@@ -25,13 +25,36 @@ public final class PunishmentService {
     public CompletableFuture<Punishment> issue(
             PunishmentType type, UUID targetId, String targetLastKnownName, String targetIp,
             UUID actorId, String actorName, String reason, Instant expiresAt) {
-        return repository.save(Punishment.issue(type, targetId, targetLastKnownName, targetIp, actorId, actorName, reason, expiresAt));
+        return issue(type, targetId, targetLastKnownName, targetIp, actorId, actorName, reason, expiresAt, null);
+    }
+
+    /** Like {@link #issue(PunishmentType, UUID, String, String, UUID, String, String, Instant)}, tagged with a punishment template ({@code null} = none). */
+    public CompletableFuture<Punishment> issue(
+            PunishmentType type, UUID targetId, String targetLastKnownName, String targetIp,
+            UUID actorId, String actorName, String reason, Instant expiresAt, String template) {
+        return repository.save(Punishment.issue(type, targetId, targetLastKnownName, targetIp, actorId, actorName, reason, expiresAt,
+                template));
     }
 
     /** Records a kick for history - see {@link Punishment#kick}. Kicking the live player is the action's own responsibility. */
     public CompletableFuture<Punishment> recordKick(
             UUID targetId, String targetLastKnownName, UUID actorId, String actorName, String reason) {
-        return repository.save(Punishment.kick(targetId, targetLastKnownName, actorId, actorName, reason));
+        return recordKick(targetId, targetLastKnownName, actorId, actorName, reason, null);
+    }
+
+    /** Like {@link #recordKick(UUID, String, UUID, String, String)}, tagged with a punishment template ({@code null} = none). */
+    public CompletableFuture<Punishment> recordKick(
+            UUID targetId, String targetLastKnownName, UUID actorId, String actorName, String reason, String template) {
+        return repository.save(Punishment.kick(targetId, targetLastKnownName, actorId, actorName, reason, template));
+    }
+
+    /**
+     * Every punishment of {@code targetId} issued with a template (any), newest
+     * first - what template escalation counts, see
+     * {@link dev.universaladmin.modules.moderation.templates.PunishmentTemplateService}.
+     */
+    public CompletableFuture<List<Punishment>> templateHistory(UUID targetId) {
+        return repository.findWithTemplate(targetId);
     }
 
     /** The currently-in-force ban (permanent or temp) for {@code targetId}, if any - the join-check query. */

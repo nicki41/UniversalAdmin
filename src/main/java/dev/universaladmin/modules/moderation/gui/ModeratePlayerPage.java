@@ -1,6 +1,8 @@
 package dev.universaladmin.modules.moderation.gui;
 
 import dev.universaladmin.action.ActionId;
+import dev.universaladmin.core.time.DurationParseException;
+import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.ConfirmationDialog;
 import dev.universaladmin.gui.GuiButton;
@@ -13,8 +15,6 @@ import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.SelectionDialog;
 import dev.universaladmin.localization.MessageKey;
-import dev.universaladmin.core.time.DurationParseException;
-import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.modules.moderation.ModerationFormat;
 import dev.universaladmin.modules.moderation.ModerationPermissions;
 import dev.universaladmin.modules.moderation.ModerationSettings;
@@ -24,10 +24,14 @@ import dev.universaladmin.modules.moderation.action.IpBanInput;
 import dev.universaladmin.modules.moderation.action.KickInput;
 import dev.universaladmin.modules.moderation.action.ModerationActionIds;
 import dev.universaladmin.modules.moderation.action.MuteInput;
+import dev.universaladmin.modules.moderation.action.TemplateInput;
 import dev.universaladmin.modules.moderation.action.UnbanInput;
 import dev.universaladmin.modules.moderation.action.UnfreezeInput;
 import dev.universaladmin.modules.moderation.action.UnmuteInput;
 import dev.universaladmin.modules.moderation.action.WarnInput;
+import dev.universaladmin.modules.moderation.templates.PunishmentTemplateService;
+import dev.universaladmin.modules.moderation.templates.TemplateStep;
+import dev.universaladmin.modules.moderation.templates.TemplateTexts;
 import dev.universaladmin.permission.PermissionNode;
 import dev.universaladmin.settings.CoreSettings;
 import java.time.Duration;
@@ -87,6 +91,11 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
         GuiView view = context.view();
         Player viewer = context.viewer();
         List<GuiButton> buttons = new ArrayList<>();
+        if (!ctx.templates().templates().isEmpty()) {
+            buttons.add(new GuiButton(GuiItem.of(Material.ANVIL, text("moderation.gui.moderate.template"),
+                    List.of(text("moderation.gui.moderate.template-lore"))), ModerationPermissions.PUNISH,
+                    clickCtx -> promptTemplate(clickCtx.viewer())));
+        }
         for (WizardType type : WizardType.values()) {
             buttons.add(new GuiButton(GuiItem.of(type.material, text(type.labelKey)), type.permission,
                     clickCtx -> onTypeSelected(clickCtx, type)));
@@ -112,6 +121,53 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
             case REMOVE_WARN -> clickCtx.open(PunishmentListPage.warningsForTarget(ctx, targetId));
             default -> promptReason(viewer, type);
         }
+    }
+
+    /** Template -&gt; Confirmation -&gt; {@code moderation.punish}; each template shows the step this player would get. */
+    private void promptTemplate(Player viewer) {
+        ctx.templates().preview(targetId).whenComplete((choices, error) -> ctx.scheduler().runOnMainThread(() -> {
+            if (error != null || choices.isEmpty()) {
+                ModerationGuiActions.notifyError(viewer, messages);
+                this.open(viewer);
+                return;
+            }
+            SelectionDialog.open(viewer, framework, messages, ctx.scheduler(), text("moderation.gui.moderate.select-template"), choices,
+                    choice -> GuiItem.of(templateMaterial(choice.step()), Component.text(choice.template().name()), List.of(
+                            text("moderation.gui.moderate.template-next", TemplateTexts.step(messages, choice.step()),
+                                    choice.stepNumber(), choice.template().steps().size()),
+                            text("moderation.gui.moderate.confirm-reason", choice.template().reason()))),
+                    (clickCtx, choice) -> confirmTemplate(viewer, choice));
+        }));
+    }
+
+    private void confirmTemplate(Player viewer, PunishmentTemplateService.Choice choice) {
+        Runnable apply = () -> ModerationGuiActions.runAction(ctx, viewer, ModerationActionIds.PUNISH,
+                new TemplateInput(targetId, choice.template().id(), null), () -> this.open(viewer));
+        if (!ctx.settings().get(CoreSettings.GUI_CONFIRMATIONS)) {
+            apply.run();
+            return;
+        }
+        List<Component> description = List.of(
+                text("moderation.gui.moderate.confirm-target", targetName),
+                text("moderation.gui.moderate.confirm-template", choice.template().name(),
+                        TemplateTexts.step(messages, choice.step()), choice.stepNumber(), choice.template().steps().size()),
+                text("moderation.gui.moderate.confirm-reason", choice.template().reason()));
+        ConfirmationDialog.DangerLevel danger = switch (choice.step().kind()) {
+            case BAN -> ConfirmationDialog.DangerLevel.DANGEROUS;
+            case MUTE, KICK -> ConfirmationDialog.DangerLevel.WARNING;
+            case WARN -> ConfirmationDialog.DangerLevel.NORMAL;
+        };
+        ConfirmationDialog.open(viewer, framework, messages, text("moderation.gui.moderate.template"), description, danger,
+                confirmCtx -> apply.run(), confirmCtx -> confirmCtx.back());
+    }
+
+    private static Material templateMaterial(TemplateStep step) {
+        return switch (step.kind()) {
+            case WARN -> Material.BOOK;
+            case KICK -> Material.LEATHER_BOOTS;
+            case MUTE -> step.permanent() ? Material.NOTE_BLOCK : Material.JUKEBOX;
+            case BAN -> step.permanent() ? Material.BARRIER : Material.IRON_BARS;
+        };
     }
 
     private void promptReason(Player viewer, WizardType type) {

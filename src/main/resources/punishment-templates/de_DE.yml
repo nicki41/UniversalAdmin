@@ -1,0 +1,61 @@
+# UniversalAdmin - Strafvorlagen.
+#
+# Benutzt mit /punish <spieler> <vorlage> [notiz] oder dem Knopf "Mit Vorlage
+# bestrafen" im Moderationsmenü eines Spielers. Änderungen gelten nach
+# /admin reload.
+#
+# Jede Vorlage hat einen Grund (den sieht der Spieler) und Stufen. Beim
+# ersten Mal mit einer Vorlage bekommt ein Spieler die erste Stufe, beim
+# zweiten Mal die zweite und so weiter; nach der letzten Stufe bleibt es bei
+# der letzten. Es zählen nur frühere Strafen mit derselben Vorlage innerhalb
+# des Zeitraums (default-window unten oder "window" pro Vorlage; 0 = für
+# immer). Aufgehobene Banns und Mutes zählen mit, gelöschte Warnungen nicht.
+#
+# Eine Stufe ist:  warn | kick | mute [dauer] | ban [dauer]
+# Ohne Dauer sind mute und ban dauerhaft. Dauern: 30m, 12h, 7d, 2w.
+#
+# Das Team braucht universaladmin.moderation.punish und zusätzlich die
+# Berechtigung der jeweiligen Strafe (warn, kick, mute, tempmute, ban oder
+# tempban). Im Netzwerk auf jedem Server dieselbe Datei verwenden.
+
+default-window: 90d
+
+templates:
+  spam:
+    name: "Spam"
+    reason: "Spam"
+    steps:
+      - warn
+      - mute 1h
+      - mute 1d
+      - ban 7d
+  beleidigung:
+    name: "Beleidigung"
+    reason: "Beleidigung anderer Spieler"
+    steps:
+      - warn
+      - mute 1d
+      - mute 7d
+      - ban 30d
+  werbung:
+    name: "Werbung"
+    reason: "Werbung für andere Server"
+    steps:
+      - mute 1d
+      - ban 7d
+      - ban
+  griefing:
+    name: "Griefing"
+    reason: "Griefing"
+    window: 0
+    steps:
+      - ban 3d
+      - ban 30d
+      - ban
+  cheating:
+    name: "Cheating"
+    reason: "Unerlaubte Vorteile (Hacked Client)"
+    window: 0
+    steps:
+      - ban 30d
+      - ban

@@ -38,6 +38,9 @@ public interface PunishmentRepository extends Repository<Punishment, Long> {
     /** How many rows {@link #findByQuery} would find without its limit - for counts on displays. */
     CompletableFuture<Integer> count(PunishmentQuery query);
 
+    /** Every punishment of {@code targetId} with a template ({@link Punishment#template()} set), newest first. */
+    CompletableFuture<List<Punishment>> findWithTemplate(UUID targetId);
+
     /**
      * Revokes every currently-active row of {@code types} for {@code targetId}
      * (UNBAN/UNMUTE) - each row is only flipped if it was still

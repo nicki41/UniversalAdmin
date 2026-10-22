@@ -8,6 +8,7 @@ import dev.universaladmin.modules.moderation.GodmodeState;
 import dev.universaladmin.modules.moderation.PunishmentService;
 import dev.universaladmin.modules.moderation.StaffModeState;
 import dev.universaladmin.modules.moderation.VanishService;
+import dev.universaladmin.modules.moderation.templates.PunishmentTemplateService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
 
@@ -30,5 +31,6 @@ public record ModerationGuiContext(
         VanishService vanishService,
         GodmodeState godmodeState,
         CollisionState collisionState,
-        StaffModeState staffModeState) {
+        StaffModeState staffModeState,
+        PunishmentTemplateService templates) {
 }
