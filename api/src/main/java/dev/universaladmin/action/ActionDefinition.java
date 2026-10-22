@@ -49,8 +49,8 @@ public record ActionDefinition<I, R>(
      * Builds an {@link ActionDefinition}. Same purpose as {@code ModuleDescriptor.Builder}:
      * a readable way to construct a record with several optional fields,
      * with sensible defaults for actions that need none of them (see
-     * {@link dev.universaladmin.modules.players.action.GetPlayerProfileAction}'s
-     * registration for a minimal example, {@link dev.universaladmin.settings.ReloadConfigAction}'s
+     * {@code GetPlayerProfileAction}'s
+     * registration for a minimal example, {@code ReloadConfigAction}'s
      * for a permission-only one).
      */
     public static final class Builder<I, R> {

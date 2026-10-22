@@ -7,7 +7,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Application-level entry point for audit logging. {@link dev.universaladmin.action.ActionExecutor}
  * calls {@link #record} after a successful (or, if opted in, a failed)
- * action; nothing else writes to {@link AuditEventRepository} directly - see
+ * action; nothing else writes to {@code AuditEventRepository} directly - see
  * docs/architecture/actions.md#audit-hook.
  */
 public interface AuditService {

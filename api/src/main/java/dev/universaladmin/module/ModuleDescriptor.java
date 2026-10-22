@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Static metadata about a {@link Module} - everything knowable about it
  * without running any of its lifecycle methods. {@link ModuleRegistry} and
- * {@link ModuleManager} use this to enforce unique IDs, order modules by
+ * {@code ModuleManager} use this to enforce unique IDs, order modules by
  * {@link #dependencies()}, and (later) render a module list in a GUI/status
  * page without instantiating services.
  *

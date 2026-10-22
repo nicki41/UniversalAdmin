@@ -2,7 +2,7 @@ package dev.universaladmin.module;
 
 /**
  * Lifecycle state of a {@link Module} as tracked by {@link ModuleRegistry}.
- * Transitions are driven exclusively by {@link ModuleManager}:
+ * Transitions are driven exclusively by {@code ModuleManager}:
  *
  * <pre>
  * DISCOVERED --loadAll()--&gt; LOADED --enableAll()--&gt; ENABLED --disableAll()--&gt; DISABLED

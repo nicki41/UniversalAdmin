@@ -8,11 +8,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * Owns every active {@link GuiSession}, keyed by player {@link UUID}.
  *
  * <p><b>Lifecycle, and why this can't leak:</b> a session is created lazily
- * on first {@link #sessionFor}, and removed by {@link GuiListener} the
+ * on first {@link #sessionFor}, and removed by {@code GuiListener} the
  * moment a player's GUI inventory closes for a "real" reason (manually
  * closed, disconnected, teleported, ...) - not when navigating between
  * pages, which closes and reopens an inventory internally but must keep the
- * session alive. {@link GuiListener} also removes it unconditionally on
+ * session alive. {@code GuiListener} also removes it unconditionally on
  * {@code PlayerQuitEvent} as a second, defensive cleanup path. A session
  * that is never explicitly removed (e.g. a bug in that cleanup) still
  * cannot accumulate across restarts - this map is in-memory only - but

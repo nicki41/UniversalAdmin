@@ -11,7 +11,7 @@ import org.bukkit.scheduler.BukkitTask;
 /**
  * Lifecycle-aware resource tracking for a single module. One instance lives
  * on each module's {@link ModuleContext}, created before {@link Module#onEnable}
- * runs and released by {@link ModuleManager} after {@link Module#onDisable} -
+ * runs and released by {@code ModuleManager} after {@link Module#onDisable} -
  * or immediately, if {@code onEnable} itself throws, so a module that fails
  * halfway through registering listeners never leaks them.
  *

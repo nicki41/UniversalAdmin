@@ -27,7 +27,7 @@ import org.bukkit.event.Listener;
  * (especially an extension that can be disabled at runtime) never leaves a
  * dangling command, page, action or listener behind.
  *
- * <p>One context is built per module by {@link ModuleManager} and reused
+ * <p>One context is built per module by {@code ModuleManager} and reused
  * across all three lifecycle calls.
  */
 public record ModuleContext(ModuleId moduleId, UniversalAdmin platform, Logger logger, ModuleResources resources) {

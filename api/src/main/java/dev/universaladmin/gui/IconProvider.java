@@ -10,7 +10,7 @@ import org.bukkit.Material;
  * should reference {@link Material} directly for a module icon or a
  * standard framework control; it asks an {@code IconProvider} instead, so
  * a future resource-pack-aware provider (custom model data, not just a
- * vanilla {@code Material}) can replace {@link MaterialIconProvider}
+ * vanilla {@code Material}) can replace {@code MaterialIconProvider}
  * without touching a single page.
  *
  * <p>The default methods are the small, fixed set of icons the framework
