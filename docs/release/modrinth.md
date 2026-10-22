@@ -87,9 +87,8 @@ and set `network.enabled: true`:
 
 Optional: the **UniversalAdmin Velocity** or **BungeeCord** plugin (the
 `-velocity` and `-bungee` versions on this page) keeps banned players out at
-the proxy, before they reach any
-server - and closes the proxy during network maintenance or to players not
-on the network whitelist. [Network guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md).
+the proxy, before they reach any server - and closes the proxy during
+network maintenance or to players not on the network whitelist. [Network guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md).
 
 ## 🔁 Switching from another plugin?
 
@@ -105,9 +104,9 @@ and duration presets, a step-by-step GUI wizard, full history (`/history`),
 current status (`/checkban`) and **team notifications** for every
 punishment. **Punishment templates** escalate on their own: `/punish Steve spam`
 warns the first time, mutes for an hour the second time, and so on.
-Optional **alt detection** shows accounts that connect from the same address
-- privacy-friendly: only keyed hashes are stored, and only if you switch it
-on.
+Optional **alt detection** shows accounts that connect from the same
+address - privacy-friendly: only keyed hashes are stored, and only if you
+switch it on.
 **Staff notes** let your team leave private notes about players.
 
 ## 📣 Reports
