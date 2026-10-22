@@ -74,7 +74,7 @@ The same from the console or chat: `/admin maintenance on [kick] [reason]`,
 (`/admin maintenance network ...`, a second row on the GUI page,
 `universaladmin.server.maintenance.network`): every server refuses players
 while either its own or the network's maintenance refuses them, and
-UniversalAdmin Velocity refuses them at the proxy. Each server of a network
+UniversalAdmin Velocity / BungeeCord refuses them at the proxy. Each server of a network
 keeps its own maintenance - switching one server into maintenance leaves the
 others open. Details in [network.md](../network.md#maintenance).
 

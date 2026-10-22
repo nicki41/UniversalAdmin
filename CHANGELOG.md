@@ -7,6 +7,45 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-22
+
+Find second accounts of banned players - without storing addresses - and
+the proxy checks for BungeeCord networks too.
+
+### Added
+
+- **Alt detection** (opt-in, `moderation.alts.enabled`): every login stores
+  a keyed hash of the address - never the address itself; IPv6 counts by its
+  /64 network - and accounts that share one show up as possible alts:
+  `/admin alts <player>`, the **Possible Alts** button on a profile, and a
+  staff hint when a player joins who shares an address with a banned
+  account (on every server of a network). Optionally refuse such players
+  (`moderation.alts.refuse-banned-alts`, off by default;
+  `universaladmin.bypass.alt-check` exempts players). Addresses are forgotten
+  after `moderation.alts.retention` (90 days); `/admin alts <player> forget`
+  deletes a player's on request; viewing and forgetting are audited. New
+  permissions `universaladmin.moderation.alts`, `.alts.forget` and
+  `universaladmin.bypass.alt-check`. See
+  [docs/user/modules/moderation.md](docs/user/modules/moderation.md#alt-detection)
+  and [ADR 0020](docs/architecture/decisions/0020-alt-detection.md).
+- **UniversalAdmin BungeeCord**: the proxy plugin for BungeeCord networks -
+  bans, network maintenance, the network whitelist and the server-list text,
+  the same `config.yml` as the Velocity plugin, `/uabungee`. On GitHub and as
+  the `-bungee` version on Modrinth
+  ([ADR 0021](docs/architecture/decisions/0021-bungeecord-proxy-plugin.md)).
+
+### Changed
+
+- The proxy checks live in one place (`proxy/common`) for both proxy
+  plugins; UniversalAdmin Velocity behaves as before.
+
+### Upgrading
+
+- Replace the jars and restart; a new table is created automatically. Alt
+  detection stays off until you switch it on. On a BungeeCord proxy, add
+  `universaladmin-bungee-<version>.jar` and fill in its `config.yml` like the
+  Velocity plugin's.
+
 ## [1.3.0] - 2026-10-22
 
 Consistent punishments that escalate on their own, and a network that can

@@ -56,12 +56,14 @@ welcome as [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues).
 - [x] **Network whitelist** and **vanish across the network**
       ([ADR 0019](docs/architecture/decisions/0019-network-whitelist-and-vanish.md))
 
-## Next - 1.4.0
+## Done - 1.4.0
 
-- [ ] **Alt detection** based on hashed IPs (opt-in, privacy-friendly - raw
-      IPs are not stored for this): possible alts on the profile and a staff
-      hint when an alt of a banned player joins
-- [ ] A **BungeeCord** proxy plugin next to the Velocity one
+- [x] **Alt detection** based on keyed address hashes (opt-in, raw addresses
+      are not stored): possible alts on the profile and a staff hint when an
+      alt of a banned account joins
+      ([ADR 0020](docs/architecture/decisions/0020-alt-detection.md))
+- [x] A **BungeeCord** proxy plugin next to the Velocity one, both on shared
+      proxy code ([ADR 0021](docs/architecture/decisions/0021-bungeecord-proxy-plugin.md))
 
 ## Later - 1.x
 

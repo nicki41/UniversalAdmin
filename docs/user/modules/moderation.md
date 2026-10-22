@@ -164,6 +164,38 @@ templates:
   use the same file on every server - the punishments that count are shared
   anyway.
 
+## Alt detection
+
+Off by default (`moderation.alts.enabled: false`). Once switched on, every
+login stores a keyed hash of the address the player connected from - never
+the address itself - and accounts that share one count as possible alts:
+
+- `/admin alts <player>` and the **Possible Alts** button on a player's
+  profile list them, with how many addresses they share and when they were
+  last seen; banned accounts are marked.
+- When a player joins who shares an address with a **banned** account, staff
+  with `universaladmin.moderation.alts` get a hint - in a network on every
+  server (`moderation.alts.notify-staff`).
+- `moderation.alts.refuse-banned-alts: true` refuses such players instead;
+  `universaladmin.bypass.alt-check` lets individual players in. It is off by
+  default for a reason: families, schools, dorms and mobile networks share
+  addresses too.
+- Looking at someone's alts and deleting their addresses
+  (`/admin alts <player> forget`, `universaladmin.moderation.alts.forget`)
+  are both recorded in the audit log.
+
+**What is stored**, in `ua_player_addresses`: the player's UUID and name, an
+HMAC-SHA256 of the address - for IPv4 the whole address, for IPv6 its /64
+network, because providers give every household one and devices keep
+changing the rest - and when it was first and last seen. The key of the hash
+is random, created once and kept in `ua_alt_key`, so every server of a
+network computes the same hashes. Addresses not seen within
+`moderation.alts.retention` (90 days) are deleted every hour, also while alt
+detection is off. A hash is not the address, but whoever has both the
+database and the key could test which address it was - there are only so
+many IPv4 addresses. Treat the database as you treat the server logs, which
+contain addresses anyway.
+
 ## Team notifications
 
 Every punishment and pardon - from the GUI, a command or an extension - is
@@ -225,6 +257,9 @@ up automatically, with zero hierarchy logic shipped in this module itself.
 | `universaladmin.moderation.unfreeze` | op | Unfreeze a player |
 | `universaladmin.moderation.notes` | op | Read/write staff notes, get the join hint |
 | `universaladmin.moderation.notify` | op | Be told when staff punish or pardon someone |
+| `universaladmin.moderation.alts` | op | See possible alts, get the hint when an alt of a banned account joins |
+| `universaladmin.moderation.alts.forget` | op | Delete the stored addresses of a player |
+| `universaladmin.bypass.alt-check` | op | Join although an account sharing the address is banned (with `refuse-banned-alts`) |
 
 See [docs/user/permissions.md](../permissions.md) for how these fit into
 the platform-wide list, and [staff-tools.md](staff-tools.md#permissions)
@@ -238,6 +273,10 @@ for Vanish/Godmode/Collision/Staff Mode's nodes.
 | `moderation.durations.presets` | 10m, 30m, 1h, 6h, 1d, 3d, 7d, 30d, permanent | Duration presets offered in the GUI wizard (and in tab completion) |
 | `moderation.notify-staff` | true | Announce punishments/pardons to staff |
 | `moderation.notes.join-alert` | true | Hint for staff when a player with notes joins |
+| `moderation.alts.enabled` | false | Alt detection on/off - see [Alt detection](#alt-detection) |
+| `moderation.alts.retention` | 90d | How long a login address is kept (at least 1d) |
+| `moderation.alts.notify-staff` | true | Hint for staff when an alt of a banned account joins |
+| `moderation.alts.refuse-banned-alts` | false | Refuse such players instead |
 | `moderation.expiry.date-pattern` | yyyy-MM-dd HH:mm | Date format for punishment times |
 | `moderation.expiry.show-timezone` | true | Append the server time zone to dates |
 
@@ -256,7 +295,9 @@ index on `(target_id, template)`); `ModerationPunishmentIndexMigration` (version
 `(target_id, type, active)` for the join/chat checks, `(active,
 expires_at)` for the housekeeping sweep, and `target_ip` for the IP-ban
 join check. Staff notes live in `ua_player_notes` (`PlayerNotesMigration`,
-version 1008).
+version 1008); alt detection uses `ua_player_addresses` (player, address
+hash, name, first and last seen; index on the hash) and `ua_alt_key`
+(`AltsMigration`, version 1015).
 
 ## Tests
 

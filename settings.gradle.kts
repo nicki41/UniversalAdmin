@@ -35,5 +35,9 @@ project(":universaladmin-placeholderapi").projectDir = file("extensions/placehol
 // UniversalAdmin for Velocity - an optional proxy plugin for network mode
 // (ban check at the proxy). Not a Paper plugin; Java 21 bytecode so it runs
 // on Velocity 3.4+ and 4.x.
+include("universaladmin-proxy-common")
+project(":universaladmin-proxy-common").projectDir = file("proxy/common")
 include("universaladmin-velocity")
 project(":universaladmin-velocity").projectDir = file("proxy/velocity")
+include("universaladmin-bungee")
+project(":universaladmin-bungee").projectDir = file("proxy/bungee")

@@ -152,7 +152,8 @@ maintenance state, 1007 whitelist, 1008 `ua_player_notes`, 1009
 [ADR 0015](decisions/0015-punishment-import.md)), 1012 `ua_maintenance` (see
 [ADR 0017](decisions/0017-maintenance-scopes.md)), 1013 `punishments.template` (see
 [ADR 0018](decisions/0018-punishment-templates.md)), 1014 `ua_whitelist` and
-`ua_whitelist_state` (see [ADR 0019](decisions/0019-network-whitelist-and-vanish.md)).
+`ua_whitelist_state` (see [ADR 0019](decisions/0019-network-whitelist-and-vanish.md)), 1015
+`ua_player_addresses` and `ua_alt_key` (see [ADR 0020](decisions/0020-alt-detection.md)).
 
 Migrations run at plugin start (`storage.migrations().runPending()` in
 `UniversalAdminPlugin#onEnable`, between every module's `onLoad` and

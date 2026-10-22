@@ -85,8 +85,9 @@ and set `network.enabled: true`:
   servers;
 - one audit log for the whole network.
 
-Optional: the **UniversalAdmin Velocity** plugin (the `-velocity` version on
-this page) keeps banned players out at the proxy, before they reach any
+Optional: the **UniversalAdmin Velocity** or **BungeeCord** plugin (the
+`-velocity` and `-bungee` versions on this page) keeps banned players out at
+the proxy, before they reach any
 server - and closes the proxy during network maintenance or to players not
 on the network whitelist. [Network guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md).
 
@@ -104,6 +105,9 @@ and duration presets, a step-by-step GUI wizard, full history (`/history`),
 current status (`/checkban`) and **team notifications** for every
 punishment. **Punishment templates** escalate on their own: `/punish Steve spam`
 warns the first time, mutes for an hour the second time, and so on.
+Optional **alt detection** shows accounts that connect from the same address
+- privacy-friendly: only keyed hashes are stored, and only if you switch it
+on.
 **Staff notes** let your team leave private notes about players.
 
 ## 📣 Reports
@@ -175,7 +179,7 @@ Developers: see the
 - Nothing else. Optional: MySQL/MariaDB (needed for network mode),
   LuckPerms (any permission plugin works).
 - Networks: Velocity 3.4+ or BungeeCord/Waterfall; the UniversalAdmin
-  Velocity plugin is optional.
+  Velocity and BungeeCord plugins are optional.
 
 ## 🚀 Getting started
 
@@ -242,16 +246,18 @@ for the description, uploaded to YouTube and embedded.
 
 ## Version uploads
 
-Automatic - every GitHub release uploads two Modrinth versions with the
+Automatic - every GitHub release uploads three Modrinth versions with the
 changelog section as notes:
 
 - `<v>` - `universaladmin-core-<v>.jar`, loaders Paper and Purpur, every
   game version in `supported-versions.txt`;
-- `<v>-velocity` - `universaladmin-velocity-<v>.jar`, loader Velocity.
+- `<v>-velocity` - `universaladmin-velocity-<v>.jar`, loader Velocity;
+- `<v>-bungee` - `universaladmin-bungee-<v>.jar`, loaders BungeeCord and
+  Waterfall.
 
 The type is derived from the version (`1.1.0` -> release, `-beta`/`-rc` ->
 beta, `-alpha` -> alpha). When a new Paper version passes the weekly
-compatibility check, it is added to the newest release on both versions
+compatibility check, it is added to the newest release of each of them
 (see [releasing.md](releasing.md#compatibility)). The Discord extension is
 not uploaded to this project; create a separate Modrinth project for it if
 wanted (then add another `mc-publish` step in `release.yml`).

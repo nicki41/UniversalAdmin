@@ -19,7 +19,7 @@ network mode, and the servers know each other.
 | **A network whitelist**: `/admin whitelist network on` - one list for every server (and the proxy), on top of each server's own | shared database + a message between the servers |
 | **Vanish across the network**: a vanished player stays vanished when switching servers and does not show up in the network list, `/admin find` or player counts for anyone without `universaladmin.bypass.vanish` | heartbeat in the shared database |
 
-Optional: the **UniversalAdmin Velocity** plugin turns banned players away at
+Optional: the **UniversalAdmin Velocity** or **BungeeCord** plugin turns banned players away at
 the proxy itself - before they reach any server, including servers without
 UniversalAdmin - and keeps the proxy closed during network maintenance and to
 players who are not on the network whitelist while that is on.
@@ -85,11 +85,14 @@ Restart the servers. The log says
 All servers may start at the same time, also on an empty database: the
 schema is created under a database lock, one server after the other.
 
-### 3. Optional: UniversalAdmin Velocity
+### 3. Optional: UniversalAdmin Velocity / BungeeCord
 
-Put `universaladmin-velocity-<version>.jar` (from the GitHub release or
-Modrinth) into the proxy's `plugins/` folder, start the proxy once, then fill
-in `plugins/universaladmin-velocity/config.yml` with the **same database**:
+Put `universaladmin-velocity-<version>.jar` (Velocity) or
+`universaladmin-bungee-<version>.jar` (BungeeCord and its forks) from the
+GitHub release or Modrinth into the proxy's `plugins/` folder, start the
+proxy once, then fill in `plugins/universaladmin-velocity/config.yml`
+(`plugins/universaladmin-bungee/config.yml` on BungeeCord) with the **same
+database**:
 
 ```yaml
 database:
@@ -101,8 +104,10 @@ database:
 ```
 
 Restart the proxy. `/uavelocity` (permission
-`universaladmin.velocity.status`) shows whether the checks run and how many
-logins they refused. It only reads from the database. If the proxy starts
+`universaladmin.velocity.status`) or `/uabungee`
+(`universaladmin.bungee.status`) shows whether the checks run and how many
+logins they refused. Both plugins do the same; the file and its options are
+identical. It only reads from the database. If the proxy starts
 before the database is ready, it keeps checking on every login instead of
 giving up. `ban-check.allow-on-error` decides what happens while the database
 is unreachable: let players in (default - the servers still check on join)
@@ -122,7 +127,10 @@ the proxy also refuses every login that is not on it, except players with
 `universaladmin.bypass.network-whitelist` on the proxy
 (`whitelist-check.enabled`, message `messages.not-whitelisted`).
 
-Works on Velocity 3.4+ and 4.x.
+Works on Velocity 3.4+ and 4.x, and on BungeeCord 1.21+ (Java 21). On
+BungeeCord a player's permissions are only known once they logged in, so a
+ban refuses right away and maintenance and the network whitelist right after
+the login - before the player reaches a server.
 
 ## Settings
 

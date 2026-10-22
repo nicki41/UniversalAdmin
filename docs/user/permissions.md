@@ -99,6 +99,8 @@ universaladmin.*
 | `universaladmin.moderation.mute` / `.tempmute` | op | Mutes |
 | `universaladmin.moderation.warn` / `.removewarn` | op | Warnings |
 | `universaladmin.moderation.punish` | op | Punishment templates (`/punish`); each step also needs its own punishment's node |
+| `universaladmin.moderation.alts` / `.alts.forget` | op | Possible alts and the alt hint on join / delete a player's stored addresses |
+| `universaladmin.bypass.alt-check` | op | Join although an account sharing the address is banned (with `moderation.alts.refuse-banned-alts`) |
 | `universaladmin.moderation.unban` / `.unmute` | op | Lift bans/mutes |
 | `universaladmin.moderation.freeze` / `.unfreeze` | op | Freeze |
 | `universaladmin.moderation.notes` | op | Staff notes; "player with notes joined" alert |
@@ -149,8 +151,9 @@ universaladmin.*
 | `universaladmin.network.alert` | op | `/admin alert` on every server |
 | **Discord extension** | | |
 | `universaladmin.discord.manage` | op | `/admin discord` |
-| **Velocity plugin** (on the proxy) | | |
-| `universaladmin.velocity.status` | - | `/uavelocity` |
+| **Proxy plugins** (on the proxy) | | |
+| `universaladmin.velocity.status` | - | `/uavelocity` (Velocity) |
+| `universaladmin.bungee.status` | - | `/uabungee` (BungeeCord) |
 
 ## How checks work
 

@@ -115,9 +115,9 @@ jobs:
           set -euo pipefail
           UA='nicki41/UniversalAdmin compatibility'
           VERSIONS="$(curl -fsS -A "$UA" "https://api.modrinth.com/v2/project/wGP5uSse/version")"
-          # The newest release-type version per loader family (Paper plugin, Velocity plugin),
+          # The newest release-type version per loader family (Paper, Velocity and BungeeCord plugin),
           # and of each official extension's own project.
-          for LOADER in paper velocity; do
+          for LOADER in paper velocity bungeecord; do
             ID="$(jq -r --arg loader "$LOADER" '[.[] | select(.version_type == "release" and (.loaders | index($loader)))][0].id // empty' <<< "$VERSIONS")"
             [ -z "$ID" ] && continue
             CURRENT="$(jq -c --arg id "$ID" '.[] | select(.id == $id) | .game_versions' <<< "$VERSIONS")"

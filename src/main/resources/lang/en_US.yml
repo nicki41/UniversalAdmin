@@ -220,6 +220,22 @@ moderation:
       by: "<gray>by <white>{0}</white>, {1}"
       delete-hint: "<dark_gray>Right-click to delete"
       delete-title: "<yellow>Delete this note?"
+  alts:
+    disabled: "<yellow>Alt detection is off (moderation.alts.enabled) - no new addresses are being recorded."
+    none: "<gray>No possible alts of <white>{0}</white> found."
+    header: "<gold>Possible alts of <white>{0}</white> <gray>({1}) - accounts that connected from the same address:"
+    entry: "<white>{0}</white> <dark_gray>-</dark_gray> <gray>{1} shared address(es), last seen {2}"
+    entry-banned: "<red>{0} (banned)</red> <dark_gray>-</dark_gray> <gray>{1} shared address(es), last seen {2}"
+    forgotten: "<gray>Forgot <white>{0}</white> stored address(es) of <white>{1}</white>."
+    join-alert: "<gold>[Alts]</gold> <white>{0}</white> <gray>shares an address with banned</gray> <red>{1}</red> <click:run_command:''/admin alts {0}''><yellow><u>[Details]</u></yellow></click>"
+    join-alert-network: "<gold>[Alts]</gold> <dark_gray>[{2}]</dark_gray> <white>{0}</white> <gray>shares an address with banned</gray> <red>{1}</red>"
+    refused: "<red>You cannot join: this connection is linked to a banned account."
+    gui:
+      button: "<aqua>Possible Alts"
+      title: "<gold>Possible Alts - {0}"
+      banned: "<red>Banned"
+      shared: "<gray>Shared addresses: <white>{0}"
+      last-seen: "<gray>Last seen: <white>{0}"
   template:
     unknown: "<red>There is no template <white>{0}</white>. Templates: {1}"
     applied: "<gray>Template <white>{0}</white>, step {1} of {2}:</gray> {3}"
@@ -936,6 +952,9 @@ commands:
   tempmute:
     usage: "<player> <duration> [reason]"
     description: "Mutes a player for a duration."
+  alts:
+    usage: "<player> [forget]"
+    description: "Possible alts of a player (accounts from the same address); forget deletes their stored addresses."
   punish:
     usage: "<player> [template] [note]"
     description: "Punishes with a template - the step depends on earlier punishments with it. Without a template: the moderation menu (console: what each template would do)."

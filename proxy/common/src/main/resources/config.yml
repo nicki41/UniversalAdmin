@@ -1,4 +1,4 @@
-# UniversalAdmin for Velocity.
+# UniversalAdmin for Velocity / BungeeCord.
 #
 # Turns players banned with UniversalAdmin away at the proxy - before they
 # reach any server, including servers that do not run UniversalAdmin - and
@@ -8,8 +8,9 @@
 # never writes to it. Setup guide:
 # https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
 #
-# /uavelocity shows whether the checks run (permission:
-# universaladmin.velocity.status). Changes here need a proxy restart.
+# /uavelocity (Velocity) or /uabungee (BungeeCord) shows whether the checks
+# run (permission universaladmin.velocity.status or
+# universaladmin.bungee.status). Changes here need a proxy restart.
 
 database:
   host: localhost

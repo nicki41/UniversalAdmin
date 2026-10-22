@@ -106,6 +106,19 @@ moderation:
   notes:
     # Tell staff when a player with staff notes joins.
     join-alert: true
+  alts:
+    # Alt detection - off unless you switch it on. Stores, per login, a
+    # keyed hash of the address (never the address itself; IPv6: the /64
+    # network) to find accounts that share one. /admin alts <player>.
+    enabled: false
+    # Addresses not seen for this long are forgotten (also while off).
+    retention: 90d
+    # Tell staff (universaladmin.moderation.alts) when a player joins who
+    # shares an address with a banned account.
+    notify-staff: true
+    # Refuse such players (universaladmin.bypass.alt-check lets them in).
+    # Shared homes, schools and mobile networks share addresses too.
+    refuse-banned-alts: false
   reasons:
     # Reasons offered in the moderation GUI (plus a custom option).
     presets: [Cheating, Griefing, Spam, Advertising, Harassment, Bug Abuse, Other]

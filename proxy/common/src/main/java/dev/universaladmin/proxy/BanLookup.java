@@ -1,4 +1,4 @@
-package dev.universaladmin.velocity;
+package dev.universaladmin.proxy;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,10 +15,10 @@ import javax.sql.DataSource;
  * player's UUID, or an IP ban for their address, that is active and not yet
  * expired. Read-only.
  */
-final class BanLookup {
+public final class BanLookup {
 
     /** What the ban screen needs. {@code expiresAt == null} means permanent. */
-    record Ban(String reason, Instant expiresAt) {
+    public record Ban(String reason, Instant expiresAt) {
     }
 
     private static final String SQL = """
@@ -29,12 +29,12 @@ final class BanLookup {
 
     private final DataSource dataSource;
 
-    BanLookup(DataSource dataSource) {
+    public BanLookup(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
     /** @param ip the player's address, {@code null} if unknown (then only the UUID is checked) */
-    Optional<Ban> activeBan(UUID playerId, String ip, Instant now) throws SQLException {
+    public Optional<Ban> activeBan(UUID playerId, String ip, Instant now) throws SQLException {
         try (Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL)) {
             statement.setString(1, playerId.toString());

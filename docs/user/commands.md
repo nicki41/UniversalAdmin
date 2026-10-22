@@ -49,6 +49,7 @@ permission listed is checked by the action itself, not just by the command.
 | `/admin freeze <player> [reason]` | `/freeze` | `moderation.freeze` | Freeze in place |
 | `/admin unfreeze <player>` | `/unfreeze` | `moderation.unfreeze` | Unfreeze |
 | `/admin history <player> [page]` | `/history` | `moderation.view` | Full punishment history with ids |
+| `/admin alts <player> [forget]` | - | `moderation.alts` (`forget`: `moderation.alts.forget`) | Possible alts - accounts from the same address (opt-in, see [moderation.md](modules/moderation.md#alt-detection)) |
 | `/admin check <player>` | `/checkban` | `moderation.view` | Banned / muted / frozen right now? |
 | `/admin moderate <player>` | - | `moderation.use` | Opens the punishment wizard GUI (also `/punish <player>`) |
 | `/admin notes <player> [add <text>]` · `/admin notes remove <id>` | - | `moderation.notes` | Staff notes about a player |

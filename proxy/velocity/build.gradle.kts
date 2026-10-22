@@ -1,6 +1,8 @@
 // UniversalAdmin for Velocity - an optional proxy plugin for network mode:
 // turns banned players away at the proxy itself, before they reach any
-// server (also servers that do not run UniversalAdmin). Reads the same
+// server (also servers that do not run UniversalAdmin), and keeps it closed
+// during network maintenance and to players not on the network whitelist.
+// The checks are proxy/common; this is the Velocity adapter. Reads the same
 // MySQL/MariaDB database as the servers; it never writes to it.
 //
 // Built against the Velocity 3.4 API with Java 21 bytecode, so one jar runs
@@ -31,18 +33,8 @@ repositories {
 dependencies {
     compileOnly("com.velocitypowered:velocity-api:3.4.0")
     annotationProcessor("com.velocitypowered:velocity-api:3.4.0")
-    // Same driver and pool as the plugin, relocated below.
-    implementation("org.mariadb.jdbc:mariadb-java-client:3.5.3")
-    implementation("com.zaxxer:HikariCP:6.3.0") {
-        // Velocity already ships slf4j.
-        exclude(group = "org.slf4j")
-    }
-
-    testImplementation(platform("org.junit:junit-bom:5.12.2"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("com.velocitypowered:velocity-api:3.4.0")
-    testImplementation("org.xerial:sqlite-jdbc:3.49.1.0")
+    // The checks, with the same driver and pool as the plugin (relocated below).
+    implementation(project(":universaladmin-proxy-common"))
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -79,10 +71,6 @@ val generateBuildConstants = tasks.register("generateBuildConstants") {
 
 sourceSets.main {
     java.srcDir(generateBuildConstants)
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 
 tasks.named<ShadowJar>("shadowJar") {

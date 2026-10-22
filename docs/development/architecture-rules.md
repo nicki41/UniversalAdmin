@@ -108,9 +108,11 @@ template - see
   built-in modules), `universaladmin-discord` (`extensions/discord`, the
   official Discord extension), `universaladmin-placeholderapi`
   (`extensions/placeholderapi`, the official PlaceholderAPI extension),
-  `universaladmin-velocity` (`proxy/velocity`,
-  the optional Velocity plugin for network mode - a Velocity plugin, it
-  depends on neither the API nor the core) and `example-extension`
+  `universaladmin-proxy-common` (`proxy/common`, the checks both proxy
+  plugins share), `universaladmin-velocity` (`proxy/velocity`) and
+  `universaladmin-bungee` (`proxy/bungee`) - the optional proxy plugins for
+  network mode, which depend on neither the API nor the core - and
+  `example-extension`
   (`examples/example-extension`). The API and the core share package names;
   an API class must never import a core class (the build enforces it - the
   API project does not see the core). See
@@ -310,7 +312,7 @@ along with a feature PR.
 ```bash
 ./gradlew build   # every project: tests, shaded plugin jar (build/libs/universaladmin-core-*.jar),
                   # API jars (api/build/libs), Discord and PlaceholderAPI extensions (extensions/*/build/libs),
-                  # Velocity plugin (proxy/velocity/build/libs)
+                  # Velocity and BungeeCord plugins (proxy/velocity, proxy/bungee: build/libs)
 ./gradlew test    # tests only
 ```
 

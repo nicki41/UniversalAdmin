@@ -97,9 +97,11 @@ BungeeCord plugin messaging channel. Cross-server operations are ordinary
 actions of the `network` module. Without network mode the service is a
 no-op. Maintenance and the whitelist exist per server or for the whole
 network, keyed by scope in the shared tables, and vanished players are left
-out of what the network shows. The optional `proxy/velocity` plugin refuses
+out of what the network shows. The optional proxy plugins (`proxy/velocity`,
+`proxy/bungee`, both on `proxy/common`) refuse
 banned players - and everyone without access during network maintenance or
-while the network whitelist is on - at the proxy. See
+while the network whitelist is on - at the proxy
+([ADR 0021](docs/architecture/decisions/0021-bungeecord-proxy-plugin.md)). See
 [docs/user/network.md](docs/user/network.md),
 [ADR 0013](docs/architecture/decisions/0013-network-mode.md),
 [ADR 0017](docs/architecture/decisions/0017-maintenance-scopes.md) and
@@ -127,7 +129,9 @@ share extensions - [docs/architecture/extension-builder.md](docs/architecture/ex
 | `universaladmin-discord` | `extensions/discord/` | Official Discord extension (own plugin jar) |
 | `universaladmin-placeholderapi` | `extensions/placeholderapi/` | Official PlaceholderAPI extension (own plugin jar) |
 | `example-extension` | `examples/example-extension/` | Template extension, built in CI only |
+| `universaladmin-proxy-common` | `proxy/common/` | The checks both proxy plugins share (bans, network maintenance, network whitelist) |
 | `universaladmin-velocity` | `proxy/velocity/` | Optional Velocity plugin for network mode (own jar) |
+| `universaladmin-bungee` | `proxy/bungee/` | Optional BungeeCord plugin for network mode (own jar) |
 
 Every jar is Java 21 bytecode with `api-version: '1.21.7'` and runs on
 every version in [supported-versions.txt](supported-versions.txt) - see

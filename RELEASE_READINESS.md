@@ -1,26 +1,26 @@
-# Release Readiness - 1.3.0
+# Release Readiness - 1.4.0
 
-Status of the 1.3.0 release: punishment templates with escalation, the
-network whitelist and vanish across the network, on top of 1.2.x (details
-in the [changelog](CHANGELOG.md)). What a manual pass covers is in the
-[test plan](docs/release/test-plan.md); what was verified for 1.1.0 and
-1.2.x below still holds.
+Status of the 1.4.0 release: opt-in alt detection and the BungeeCord proxy
+plugin, on top of 1.3.0's punishment templates, network whitelist and vanish
+across the network (details in the [changelog](CHANGELOG.md)). What a manual
+pass covers is in the [test plan](docs/release/test-plan.md); what was
+verified for earlier versions below still holds.
 
 ## Overview
 
 | Item | Status |
 |---|---|
-| **Version** | `1.3.0` (`build.gradle.kts`; `./gradlew -q printVersion`) |
+| **Version** | `1.4.0` (`build.gradle.kts`; `./gradlew -q printVersion`) |
 | **Build** | `./gradlew clean build` green - all projects, including `verifyShadedJarDrivers` (real SQLite connection through the finished jar) |
 | **Tests** | unit and integration tests for services, actions, migrations (real SQLite), settings, localization, commands' building blocks, live inventory sync, the network repository, the Discord extension and the Velocity plugin |
 | **Supported server** | Paper/Purpur 1.21.7 - 1.21.11 and 26.1.1 - 26.3, Java 21+ - see [installation.md](docs/user/installation.md#supported-versions) and [supported-versions.txt](supported-versions.txt) |
 | **Modules** | Players, Moderation (+ staff tools, notes), Reports, Chat, Server, Worlds, Whitelist, Performance, Audit Log, Settings; Network (with network mode) |
 | **Commands** | every module, `/admin help`, shortcuts - [commands.md](docs/user/commands.md) |
 | **Extension API** | `universaladmin-api` 1.3, semantically versioned - [ADR 0010](docs/architecture/decisions/0010-extension-api.md) |
-| **Official extensions** | UniversalAdmin Discord (webhook or bot), UniversalAdmin Placeholders (PlaceholderAPI); proxy plugin UniversalAdmin Velocity |
-| **Release pipeline** | tag → GitHub release (plugin, Discord extension, Velocity plugin, API jars, checksums) + Modrinth versions for every supported game version; new Paper versions tested weekly - [releasing.md](docs/release/releasing.md) |
+| **Official extensions** | UniversalAdmin Discord (webhook or bot), UniversalAdmin Placeholders (PlaceholderAPI); proxy plugins UniversalAdmin Velocity and UniversalAdmin BungeeCord |
+| **Release pipeline** | tag → GitHub release (plugin, Discord and Placeholders extensions, Velocity and BungeeCord plugins, API jars, checksums) + Modrinth versions for every supported game version; new Paper versions tested weekly - [releasing.md](docs/release/releasing.md) |
 | **Telemetry** | on by default, fully documented, single switch `telemetry.enabled` - [telemetry.md](docs/user/telemetry.md) |
-| **Upgrade path** | 1.2.x → 1.3.0 and 1.1.x → 1.3.0: replace the jars (new tables and columns, maintenance and whitelist metadata taken over). 0.1.0-alpha → 1.3.0 automatic: config migration v3, new tables, layered language files - see the changelog |
+| **Upgrade path** | 1.1.x - 1.3.x → 1.4.0: replace the jars (new tables and columns created, maintenance and whitelist metadata taken over). 0.1.0-alpha → 1.4.0 automatic: config migration v3, new tables, layered language files - see the changelog |
 
 ## Verified
 
@@ -86,6 +86,19 @@ hidden in another server's lists (test plan sections 12 and 24). A first
 live run caught `/punish` clashing with the old alias of `/admin moderate`,
 which kept the Moderation module from starting - fixed, and a test now
 checks the labels.
+
+For 1.4.0 additionally: 426 automated tests (address hashing for IPv4,
+IPv6 /64 and mapped addresses; alt detection against SQLite - recording,
+matching, ban status, retention, forgetting, nothing stored while off; the
+shared proxy checks - which refusal a bypass node lifts); live on the test
+network: migration 1015, `/admin alts`, the reworked Velocity plugin
+(all three checks, "Maintenance" in the server list during network
+maintenance), and a BungeeCord proxy (latest build) with
+UniversalAdmin BungeeCord on the same database: start without a database
+configured, all three checks active once it was, "Maintenance" in the server
+list during network maintenance and back after, `/uabungee`. Not yet with
+real clients: alt hints and refusals (they need two accounts logging in),
+logins refused by the BungeeCord plugin (test plan sections 4 and 24).
 
 ## Not verifiable without game clients
 

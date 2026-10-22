@@ -23,7 +23,7 @@ for this server's whitelist, `add` with an optional duration and reason) and
 a second row on the Whitelist page.
 
 - While it is on, a player gets onto **any** server with UniversalAdmin -
-  and through the proxy with UniversalAdmin Velocity - only if they are on
+  and through the proxy with UniversalAdmin Velocity or BungeeCord - only if they are on
   it and their entry has not expired, or hold
   `universaladmin.bypass.network-whitelist` (op by default). It applies on
   top of each server's own whitelist, which keeps working as before.
