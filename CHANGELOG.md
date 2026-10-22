@@ -7,6 +7,50 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-22
+
+Maintenance done right in a network: one server or all of them.
+
+### Added
+
+- **Network maintenance**: `/admin maintenance network on [kick] [reason]`
+  closes every server of the network at once (and the proxy with
+  UniversalAdmin Velocity), with its own reason, message and allow-list;
+  `off`, `status`, `list`, `allow` and `deny` likewise. The GUI page has a
+  second row for it. New permission
+  `universaladmin.server.maintenance.network`. See
+  [docs/user/network.md](docs/user/network.md#maintenance) and
+  [ADR 0017](docs/architecture/decisions/0017-maintenance-scopes.md).
+- **UniversalAdmin Velocity** refuses logins during network maintenance
+  (bypass permission on the proxy or the network allow-list still get in)
+  and shows "Maintenance" in the server list (`maintenance-check` in its
+  config.yml). `/uavelocity` shows both checks.
+- A server in network mode without LuckPerms says at startup that OP and
+  permissions count per server, and how to share them
+  ([network.md](docs/user/network.md#permissions)).
+
+### Fixed
+
+- **Maintenance in network mode was shared by accident**: every server used
+  the same stored state, so putting one server into maintenance closed the
+  others after their next restart. Each server now keeps its own.
+- `/admin maintenance status` and the dashboard tile also show the
+  network's maintenance.
+- Import summary and allow-list audit entries no longer say "1 punishments"
+  or "1 players".
+- UniversalAdmin Velocity names its author in the proxy log, and no longer
+  uses the deprecated event order API.
+- Javadoc of the extension API: no more links to classes that only exist in
+  the plugin.
+
+### Upgrading
+
+- Replace the jars (plugin on every server, and UniversalAdmin Velocity on
+  the proxy if you use it) and restart. A new table (`ua_maintenance`) is
+  created and the old maintenance state copied into it - every server keeps
+  the maintenance it had. In a network, give every server a
+  `network.server-name` if you have not yet.
+
 ## [1.2.0] - 2026-10-21
 
 Switching made easy: bring your bans over from LiteBans, AdvancedBan, the
