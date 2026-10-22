@@ -41,7 +41,7 @@ to be the one admin plugin your server needs.
 
 | | |
 |---|---|
-| **Moderation** | Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn, freeze - with reason and duration presets, a guided GUI wizard, full history and `/checkban`. **Punishment templates** that escalate on their own (`/punish Steve spam`). Team notifications for every punishment. |
+| **Moderation** | Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn, freeze - with reason and duration presets, a guided GUI wizard, full history and `/checkban`. **Punishment templates** that escalate on their own (`/punish Steve spam`), opt-in **alt detection**. Team notifications for every punishment. |
 | **Reports** | `/report` for players, clickable instant alerts for staff, a reports GUI with claim/resolve/reject and one-click teleports. Spam-protected. |
 | **Staff tools** | Vanish (with fake join/leave), godmode, no-collision, and a crash-safe **staff mode** with a toolbar: player inspector, freeze stick, live inventory/ender chest inspectors, teleport picker. |
 | **Staff notes** | Private notes about players, with a heads-up when such a player joins. |
@@ -116,7 +116,7 @@ Templates: [permissions.md](docs/user/permissions.md#role-templates).
 
 **Velocity / BungeeCord network?** Yes - install UniversalAdmin on every
 server, give them one MySQL database and set `network.enabled: true`.
-Optionally add the UniversalAdmin Velocity plugin to the proxy. Guide:
+Optionally add the UniversalAdmin Velocity or BungeeCord plugin to the proxy. Guide:
 [docs/user/network.md](docs/user/network.md).
 
 **Folia / Spigot / Minecraft below 1.21.7?** Not supported - UniversalAdmin

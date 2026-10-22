@@ -6,6 +6,7 @@ import dev.universaladmin.settings.SettingRegistry;
 import dev.universaladmin.settings.SettingTypes;
 import dev.universaladmin.settings.SettingValidator;
 import dev.universaladmin.settings.SettingValidators;
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,12 @@ public final class ModerationSettings {
     public static final SettingKey<Boolean> NOTIFY_STAFF = SettingKey.of("moderation", "moderation.notify-staff");
     public static final SettingKey<Boolean> NOTES_JOIN_ALERT = SettingKey.of("moderation", "moderation.notes.join-alert");
     public static final SettingKey<List<String>> DURATION_PRESETS = SettingKey.of("moderation", "moderation.durations.presets");
+
+    /** Alt detection is opt-in: nothing about addresses is stored while this is off. */
+    public static final SettingKey<Boolean> ALTS_ENABLED = SettingKey.of("moderation", "moderation.alts.enabled");
+    public static final SettingKey<Duration> ALTS_RETENTION = SettingKey.of("moderation", "moderation.alts.retention");
+    public static final SettingKey<Boolean> ALTS_NOTIFY = SettingKey.of("moderation", "moderation.alts.notify-staff");
+    public static final SettingKey<Boolean> ALTS_REFUSE_BANNED = SettingKey.of("moderation", "moderation.alts.refuse-banned-alts");
 
     public static final SettingKey<Boolean> VANISH_HIDE_JOIN_MESSAGE = SettingKey.of("moderation", "moderation.vanish.hide-join-message");
     public static final SettingKey<Boolean> VANISH_HIDE_QUIT_MESSAGE = SettingKey.of("moderation", "moderation.vanish.hide-quit-message");
@@ -78,6 +85,17 @@ public final class ModerationSettings {
 
         registry.register(bool(NOTIFY_STAFF, true, "Tell online staff (universaladmin.moderation.notify) whenever someone is punished or pardoned."));
         registry.register(bool(NOTES_JOIN_ALERT, true, "Tell staff with universaladmin.moderation.notes when a player who has staff notes joins."));
+        registry.register(bool(ALTS_ENABLED, false,
+                "Alt detection: remember a keyed hash (never the address itself) of every login address to find accounts that share one."));
+        registry.register(SettingDefinition.builder(ALTS_RETENTION, SettingTypes.DURATION, Duration.ofDays(90))
+                .description("How long a login address is remembered for alt detection; older ones are deleted, also while it is off.")
+                .validator(value -> value.compareTo(Duration.ofDays(1)) < 0
+                        ? Optional.of("must be at least 1d") : Optional.empty())
+                .build());
+        registry.register(bool(ALTS_NOTIFY, true,
+                "Tell staff with universaladmin.moderation.alts when a player joins who shares an address with a banned account."));
+        registry.register(bool(ALTS_REFUSE_BANNED, false,
+                "Refuse players who share an address with a banned account (universaladmin.bypass.alt-check lets them in)."));
 
         registry.register(bool(VANISH_HIDE_JOIN_MESSAGE, true, "Suppress the real join message when a persistently-vanished player reconnects."));
         registry.register(bool(VANISH_HIDE_QUIT_MESSAGE, true, "Suppress the real quit message when a vanished player disconnects."));

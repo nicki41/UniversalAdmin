@@ -7,12 +7,12 @@ line. Please update to the newest release before reporting.
 
 | Version | Supported |
 |---|---|
-| 1.3.x (latest) | yes |
-| 1.2.x | until 1.4.0 |
+| 1.4.x (latest) | yes |
+| 1.3.x | until 1.5.0 |
 | `main` | yes |
-| 0.1.0-alpha.* | no - please update to 1.3 |
+| 0.1.0-alpha.* | no - please update to 1.4 |
 
-The official Discord extension, the Velocity plugin and the extension API
+The official Discord extension, the proxy plugins and the extension API
 follow the same versions.
 
 ## Reporting a Vulnerability

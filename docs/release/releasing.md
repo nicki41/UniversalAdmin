@@ -7,13 +7,15 @@ and publishes:
 - a GitHub release with `universaladmin-core-<v>.jar` (+ `.sha256`),
   `universaladmin-discord-<v>.jar` (+ `.sha256`),
   `universaladmin-placeholderapi-<v>.jar` (+ `.sha256`),
-  `universaladmin-velocity-<v>.jar` (+ `.sha256`) and
+  `universaladmin-velocity-<v>.jar` (+ `.sha256`),
+  `universaladmin-bungee-<v>.jar` (+ `.sha256`) and
   `universaladmin-api-<v>.jar` with `-sources.jar` and `-javadoc.jar`,
   release notes from the matching `CHANGELOG.md` section;
 - on the Modrinth project (id `wGP5uSse`): the plugin jar as version `<v>`
   (loaders `paper`, `purpur`; every game version in
-  [`supported-versions.txt`](../../supported-versions.txt)) and the Velocity
-  plugin as version `<v>-velocity` (loader `velocity`);
+  [`supported-versions.txt`](../../supported-versions.txt)), the Velocity
+  plugin as version `<v>-velocity` (loader `velocity`) and the BungeeCord
+  plugin as version `<v>-bungee` (loaders `bungeecord`, `waterfall`);
 - on the extensions' own Modrinth projects, each depending on the plugin:
   UniversalAdmin Discord (id `Lq5Ihyzr`) and UniversalAdmin Placeholders
   (id `229V0zwE`, also depending on PlaceholderAPI) - see

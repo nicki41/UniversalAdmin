@@ -1,4 +1,4 @@
-package dev.universaladmin.velocity;
+package dev.universaladmin.proxy;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,25 +10,26 @@ import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * {@code plugins/universaladmin-velocity/config.yml}, copied from the jar on
- * first start. A missing key falls back to the shipped default.
+ * The proxy plugin's {@code config.yml} ({@code plugins/universaladmin-velocity/}
+ * or {@code plugins/universaladmin-bungee/}), copied from the jar on first
+ * start. A missing key falls back to the shipped default.
  */
-record VelocitySettings(
+public record ProxySettings(
         String host, int port, String database, String username, String password, boolean ssl, int poolSize,
         boolean banCheck, boolean allowOnError, String bannedPermanent, String bannedTemporary, String noReason,
         String datePattern, boolean maintenanceCheck, String maintenanceMotd, String maintenanceVersionText,
         String maintenanceMessage, boolean whitelistCheck, String notWhitelisted) {
 
-    static VelocitySettings load(Path dataDirectory) throws IOException {
+    public static ProxySettings load(Path dataDirectory) throws IOException {
         Path file = dataDirectory.resolve("config.yml");
         if (Files.notExists(file)) {
             Files.createDirectories(dataDirectory);
-            try (InputStream defaults = VelocitySettings.class.getResourceAsStream("/config.yml")) {
+            try (InputStream defaults = ProxySettings.class.getResourceAsStream("/config.yml")) {
                 Files.copy(defaults, file);
             }
         }
         Map<String, Object> defaults;
-        try (InputStream in = VelocitySettings.class.getResourceAsStream("/config.yml")) {
+        try (InputStream in = ProxySettings.class.getResourceAsStream("/config.yml")) {
             defaults = new Yaml().load(new String(in.readAllBytes(), StandardCharsets.UTF_8));
         }
         Map<String, Object> values;
@@ -37,7 +38,7 @@ record VelocitySettings(
             values = loaded == null ? Map.of() : loaded;
         }
         Lookup config = new Lookup(values, defaults);
-        return new VelocitySettings(
+        return new ProxySettings(
                 config.string("database.host"), config.integer("database.port"), config.string("database.database"),
                 config.string("database.username"), config.string("database.password"), config.bool("database.ssl"),
                 config.integer("database.pool-size"),
@@ -47,6 +48,11 @@ record VelocitySettings(
                 config.bool("maintenance-check.enabled"), config.string("maintenance-check.motd"),
                 config.string("maintenance-check.version-text"), config.string("messages.maintenance"),
                 config.bool("whitelist-check.enabled"), config.string("messages.not-whitelisted"));
+    }
+
+    /** Whether the database connection was filled in - the shipped file has no password and the default host and user. */
+    public boolean databaseConfigured() {
+        return !(password.isEmpty() && "universaladmin".equals(username) && "localhost".equals(host));
     }
 
     /** Dotted-path reads over the loaded YAML, falling back to the defaults. */

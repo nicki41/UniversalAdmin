@@ -94,6 +94,13 @@ jobs:
           path: proxy/velocity/build/libs/universaladmin-velocity-${{ steps.version.outputs.version }}.jar
           if-no-files-found: error
 
+      - name: Upload BungeeCord plugin jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: UniversalAdminBungee-${{ steps.version.outputs.version }}
+          path: proxy/bungee/build/libs/universaladmin-bungee-${{ steps.version.outputs.version }}.jar
+          if-no-files-found: error
+
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v7
@@ -103,7 +110,7 @@ jobs:
             build/reports/tests/test
             extensions/discord/build/reports/tests/test
             extensions/placeholderapi/build/reports/tests/test
-            proxy/velocity/build/reports/tests/test
+            proxy/common/build/reports/tests/test
           if-no-files-found: ignore
 
   # One jar for every supported Paper version (supported-versions.txt) only

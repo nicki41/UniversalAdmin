@@ -47,6 +47,12 @@ public final class ModerationPermissions {
     public static final PermissionNode NOTIFY = PermissionNode.core("moderation.notify");
     /** Import punishments from LiteBans, AdvancedBan, the vanilla ban lists or EssentialsX ({@code /admin import}). */
     public static final PermissionNode IMPORT = PermissionNode.core("moderation.import");
+    /** See possible alts of a player and get the hint when an alt of a banned account joins. */
+    public static final PermissionNode ALTS = PermissionNode.core("moderation.alts");
+    /** Delete the stored addresses of a player. */
+    public static final PermissionNode ALTS_FORGET = PermissionNode.core("moderation.alts.forget");
+    /** Join although an account sharing the address is banned, with {@code moderation.alts.refuse-banned-alts} on. */
+    public static final PermissionNode BYPASS_ALT_CHECK = PermissionNode.core("bypass.alt-check");
 
     /** Registers every node above with {@link PermissionDefault#OP}, matching every other node in the plugin today. */
     public static void registerAll(PermissionRegistry registry) {
@@ -55,6 +61,9 @@ public final class ModerationPermissions {
                 new PermissionDefinition(NOTES, "Read and write staff notes about players", PermissionDefault.OP),
                 new PermissionDefinition(NOTIFY, "Get notified when staff punish or pardon a player", PermissionDefault.OP),
                 new PermissionDefinition(IMPORT, "Import punishments from other plugins", PermissionDefault.OP),
+                new PermissionDefinition(ALTS, "See possible alts of a player and get alt hints on join", PermissionDefault.OP),
+                new PermissionDefinition(ALTS_FORGET, "Delete the stored addresses of a player", PermissionDefault.OP),
+                new PermissionDefinition(BYPASS_ALT_CHECK, "Join although an account sharing the address is banned", PermissionDefault.OP),
                 new PermissionDefinition(VIEW, "View punishment history, warnings, bans, and mutes", PermissionDefault.OP),
                 new PermissionDefinition(KICK, "Kick a player", PermissionDefault.OP),
                 new PermissionDefinition(BAN, "Permanently ban a player", PermissionDefault.OP),

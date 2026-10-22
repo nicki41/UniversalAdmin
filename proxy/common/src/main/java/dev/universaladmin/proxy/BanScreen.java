@@ -1,4 +1,4 @@
-package dev.universaladmin.velocity;
+package dev.universaladmin.proxy;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -15,21 +15,21 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
  * {@code <remaining>} are inserted as plain text, so a reason can never
  * smuggle formatting or click events into the screen.
  */
-final class BanScreen {
+public final class BanScreen {
 
     private final String permanent;
     private final String temporary;
     private final String noReason;
     private final DateTimeFormatter dates;
 
-    BanScreen(String permanent, String temporary, String noReason, String datePattern) {
+    public BanScreen(String permanent, String temporary, String noReason, String datePattern) {
         this.permanent = permanent;
         this.temporary = temporary;
         this.noReason = noReason;
         this.dates = DateTimeFormatter.ofPattern(datePattern).withZone(ZoneId.systemDefault());
     }
 
-    Component render(BanLookup.Ban ban, Instant now) {
+    public Component render(BanLookup.Ban ban, Instant now) {
         String reason = ban.reason() == null || ban.reason().isBlank() ? noReason : ban.reason();
         if (ban.expiresAt() == null) {
             return MiniMessage.miniMessage().deserialize(permanent, Placeholder.unparsed("reason", reason));

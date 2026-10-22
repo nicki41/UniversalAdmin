@@ -1,0 +1,5 @@
+name: universaladmin-bungee
+main: dev.universaladmin.bungee.UniversalAdminBungee
+version: ${version}
+author: UniversalAdmin
+description: Checks UniversalAdmin bans, network maintenance and the network whitelist at the proxy.

@@ -217,6 +217,22 @@ moderation:
       by: "<gray>von <white>{0}</white>, {1}"
       delete-hint: "<dark_gray>Rechtsklick zum Löschen"
       delete-title: "<yellow>Diese Notiz löschen?"
+  alts:
+    disabled: "<yellow>Die Alt-Erkennung ist aus (moderation.alts.enabled) - es werden keine neuen Adressen gespeichert."
+    none: "<gray>Keine möglichen Alts von <white>{0}</white> gefunden."
+    header: "<gold>Mögliche Alts von <white>{0}</white> <gray>({1}) - Accounts, die sich von derselben Adresse verbunden haben:"
+    entry: "<white>{0}</white> <dark_gray>-</dark_gray> <gray>{1} gemeinsame Adresse(n), zuletzt gesehen {2}"
+    entry-banned: "<red>{0} (gebannt)</red> <dark_gray>-</dark_gray> <gray>{1} gemeinsame Adresse(n), zuletzt gesehen {2}"
+    forgotten: "<gray><white>{0}</white> gespeicherte Adresse(n) von <white>{1}</white> gelöscht."
+    join-alert: "<gold>[Alts]</gold> <white>{0}</white> <gray>teilt eine Adresse mit dem gebannten</gray> <red>{1}</red> <click:run_command:''/admin alts {0}''><yellow><u>[Details]</u></yellow></click>"
+    join-alert-network: "<gold>[Alts]</gold> <dark_gray>[{2}]</dark_gray> <white>{0}</white> <gray>teilt eine Adresse mit dem gebannten</gray> <red>{1}</red>"
+    refused: "<red>Du kannst nicht beitreten: Diese Verbindung gehört zu einem gebannten Account."
+    gui:
+      button: "<aqua>Mögliche Alts"
+      title: "<gold>Mögliche Alts - {0}"
+      banned: "<red>Gebannt"
+      shared: "<gray>Gemeinsame Adressen: <white>{0}"
+      last-seen: "<gray>Zuletzt gesehen: <white>{0}"
   template:
     unknown: "<red>Es gibt keine Vorlage <white>{0}</white>. Vorlagen: {1}"
     applied: "<gray>Vorlage <white>{0}</white>, Stufe {1} von {2}:</gray> {3}"
@@ -933,6 +949,9 @@ commands:
   tempmute:
     usage: "<spieler> <dauer> [grund]"
     description: "Schaltet einen Spieler für eine Dauer stumm."
+  alts:
+    usage: "<spieler> [forget]"
+    description: "Mögliche Alts eines Spielers (Accounts von derselben Adresse); forget löscht seine gespeicherten Adressen."
   punish:
     usage: "<spieler> [vorlage] [notiz]"
     description: "Bestraft mit einer Vorlage - die Stufe hängt von früheren Strafen damit ab. Ohne Vorlage: das Moderationsmenü (Konsole: was jede Vorlage bewirken würde)."

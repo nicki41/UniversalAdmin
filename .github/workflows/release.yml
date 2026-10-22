@@ -103,10 +103,10 @@ jobs:
           echo "checksum=${JAR}.sha256" >> "$GITHUB_OUTPUT"
 
       # Attached next to the plugin jar: the official Discord and
-      # PlaceholderAPI extensions (their own plugin jars), the Velocity plugin
-      # for network mode, and the
+      # PlaceholderAPI extensions (their own plugin jars), the Velocity and
+      # BungeeCord plugins for network mode, and the
       # extension API for developers (binary, sources, javadoc). The plugin
-      # jar and the Velocity jar also go to Modrinth (below).
+      # jar and the proxy jars also go to Modrinth (below).
       - name: Collect extension, proxy and API artifacts
         id: extras
         run: |
@@ -115,8 +115,9 @@ jobs:
           DISCORD="extensions/discord/build/libs/universaladmin-discord-${VERSION}.jar"
           PLACEHOLDERS="extensions/placeholderapi/build/libs/universaladmin-placeholderapi-${VERSION}.jar"
           VELOCITY="proxy/velocity/build/libs/universaladmin-velocity-${VERSION}.jar"
+          BUNGEE="proxy/bungee/build/libs/universaladmin-bungee-${VERSION}.jar"
           API="api/build/libs/universaladmin-api-${VERSION}.jar"
-          for f in "$DISCORD" "$PLACEHOLDERS" "$VELOCITY" "$API" \
+          for f in "$DISCORD" "$PLACEHOLDERS" "$VELOCITY" "$BUNGEE" "$API" \
               "api/build/libs/universaladmin-api-${VERSION}-sources.jar" \
               "api/build/libs/universaladmin-api-${VERSION}-javadoc.jar"; do
             if [ ! -f "$f" ]; then
@@ -130,6 +131,8 @@ jobs:
               > "universaladmin-placeholderapi-${VERSION}.jar.sha256" )
           ( cd proxy/velocity/build/libs && sha256sum "universaladmin-velocity-${VERSION}.jar" \
               > "universaladmin-velocity-${VERSION}.jar.sha256" )
+          ( cd proxy/bungee/build/libs && sha256sum "universaladmin-bungee-${VERSION}.jar" \
+              > "universaladmin-bungee-${VERSION}.jar.sha256" )
           {
             echo "files<<FILES_EOF"
             echo "$DISCORD"
@@ -138,12 +141,15 @@ jobs:
             echo "${PLACEHOLDERS}.sha256"
             echo "$VELOCITY"
             echo "${VELOCITY}.sha256"
+            echo "$BUNGEE"
+            echo "${BUNGEE}.sha256"
             echo "$API"
             echo "api/build/libs/universaladmin-api-${VERSION}-sources.jar"
             echo "api/build/libs/universaladmin-api-${VERSION}-javadoc.jar"
             echo "FILES_EOF"
           } >> "$GITHUB_OUTPUT"
           echo "velocity=$VELOCITY" >> "$GITHUB_OUTPUT"
+          echo "bungee=$BUNGEE" >> "$GITHUB_OUTPUT"
           echo "discord=$DISCORD" >> "$GITHUB_OUTPUT"
           echo "placeholders=$PLACEHOLDERS" >> "$GITHUB_OUTPUT"
 
@@ -252,8 +258,27 @@ jobs:
           name: UniversalAdmin Velocity ${{ steps.version.outputs.version }}
           version: ${{ steps.version.outputs.version }}-velocity
           changelog: |
-            The optional Velocity plugin for UniversalAdmin's network mode: refuses players banned with UniversalAdmin at the proxy. Install UniversalAdmin ${{ steps.version.outputs.version }} on your servers as well - see https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
+            The optional Velocity plugin for UniversalAdmin's network mode: refuses players banned with UniversalAdmin at the proxy, and keeps it closed during network maintenance and to players not on the network whitelist. Install UniversalAdmin ${{ steps.version.outputs.version }} on your servers as well - see https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
           loaders: velocity
+          game-versions: ${{ steps.games.outputs.list }}
+          java: 21
+          fail-mode: warn
+
+      # The same checks for BungeeCord networks, as another version of the
+      # same Modrinth project.
+      - name: Publish the BungeeCord plugin to Modrinth
+        uses: Kira-NT/mc-publish@v3
+        with:
+          modrinth-id: wGP5uSse
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: ${{ steps.extras.outputs.bungee }}
+          name: UniversalAdmin BungeeCord ${{ steps.version.outputs.version }}
+          version: ${{ steps.version.outputs.version }}-bungee
+          changelog: |
+            The optional BungeeCord plugin for UniversalAdmin's network mode: refuses players banned with UniversalAdmin at the proxy, and keeps it closed during network maintenance and to players not on the network whitelist. Install UniversalAdmin ${{ steps.version.outputs.version }} on your servers as well - see https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
+          loaders: |
+            bungeecord
+            waterfall
           game-versions: ${{ steps.games.outputs.list }}
           java: 21
           fail-mode: warn

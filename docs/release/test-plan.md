@@ -93,6 +93,13 @@ settings, issue some bans, then upgrade):
       confirm. **Cancel** in the confirmation returns to the previous page
       (not two pages back). Double-clicking confirm bans only once.
 - [ ] Self-punish (`/ban <yourself>`) is refused.
+- [ ] Alts (`moderation.alts.enabled: true`): Player and a second account
+      join from the same machine; ban the first → when the second joins, staff
+      get "[Alts] ... shares an address with banned ..."; `/admin alts <second>`
+      lists the banned one; Profile → Possible Alts shows it in red; the audit
+      log shows "Viewed possible alts". `refuse-banned-alts: true` → the
+      second account is refused, with `bypass.alt-check` let in.
+      `/admin alts <second> forget` → list empty.
 - [ ] Templates: `/punish Player` opens the moderation menu, Punish with
       Template shows "Next: Warning"; from the console `/admin punish Player`
       lists the templates;
@@ -368,3 +375,9 @@ survival.
       `bypass.vanish`) no longer finds Admin with `/admin find`, the network
       list and counts; Admin switches to lobby → still vanished there.
 - [ ] Stop survival → after ~20 s it shows as offline in the network list.
+- [ ] Same with BungeeCord instead of Velocity and
+      `universaladmin-bungee-<v>.jar` on the proxy: `/uabungee` shows the
+      checks; a banned player is refused at login; during network maintenance
+      and with the network whitelist on, a player without bypass is
+      disconnected right after the login, Admin (bypass via LuckPerms on the
+      proxy) gets in; the server list shows "Maintenance".

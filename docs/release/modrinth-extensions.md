@@ -44,8 +44,9 @@ embeds.
 - 💬 **Staff chat both ways** - `/sc` in game shows up in Discord, and what
   your team writes in the staff channel shows up in game.
 - 🔨 **Moderate from Discord** - `/ban`, `/mute`, `/kick`, `/warn`,
-  `/unban`, `/unmute`, `/history`, `/check`, `/find`, and `/ua` for any
-  other admin command - with player name completion.
+  `/punish` with UniversalAdmin's escalating punishment templates, `/unban`,
+  `/unmute`, `/history`, `/check`, `/find`, and `/ua` for any other admin
+  command - with player name completion.
 - 📣 **Reports with buttons** - every new report appears with **Claim**,
   **Resolve** and **Reject**; the card follows the report's status.
 
@@ -112,14 +113,16 @@ put your admin data on scoreboards, tab lists, chat formats and holograms.
 - `%universaladmin_open_reports%`, `_maintenance` - for staff scoreboards.
 - `%universaladmin_vanished%`, `_staffmode`, `_frozen`, `_godmode`.
 - Networks: `%universaladmin_server%`, `_network_online`,
-  `_network_servers`, `_network_online_<server>`.
+  `_network_servers`, `_network_online_<server>` - vanished players are
+  not counted there either.
 
 All values come from memory - safe for scoreboards that update every tick.
 No `/papi ecloud` download needed.
 
 ## Requirements
 
-- [UniversalAdmin](https://modrinth.com/plugin/universaladmin) 1.2 or newer.
+- [UniversalAdmin](https://modrinth.com/plugin/universaladmin) 1.3 or newer
+  (Placeholders 1.2 works with UniversalAdmin 1.2).
 - [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi).
 
 [Every placeholder](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/placeholderapi.md) ·

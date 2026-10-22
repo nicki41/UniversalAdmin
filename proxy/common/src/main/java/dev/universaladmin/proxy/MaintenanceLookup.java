@@ -1,4 +1,4 @@
-package dev.universaladmin.velocity;
+package dev.universaladmin.proxy;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,19 +22,19 @@ import javax.sql.DataSource;
  * {@link #RETRY_AFTER_FAILURE_MILLIS}, so a missing table does not fill the
  * log with driver warnings on every ping. {@link #lastError()} says why.
  */
-final class MaintenanceLookup {
+public final class MaintenanceLookup {
 
     /** The network's maintenance; {@code message} is the MiniMessage override, blank = the configured default. */
-    record Maintenance(boolean enabled, String message, Set<String> allowedPlayers) {
+    public record Maintenance(boolean enabled, String message, Set<String> allowedPlayers) {
 
-        static final Maintenance OFF = new Maintenance(false, null, Set.of());
+        public static final Maintenance OFF = new Maintenance(false, null, Set.of());
 
-        boolean allows(String playerName) {
+        public boolean allows(String playerName) {
             return allowedPlayers.contains(playerName.toLowerCase(Locale.ROOT));
         }
     }
 
-    static final long RETRY_AFTER_FAILURE_MILLIS = 30_000;
+    public static final long RETRY_AFTER_FAILURE_MILLIS = 30_000;
 
     private static final String SQL = "SELECT enabled, message, allowed_players FROM ua_maintenance WHERE scope = 'network'";
 
@@ -45,13 +45,13 @@ final class MaintenanceLookup {
     private volatile long validUntil;
     private volatile String lastError;
 
-    MaintenanceLookup(DataSource dataSource, long maxAgeMillis) {
+    public MaintenanceLookup(DataSource dataSource, long maxAgeMillis) {
         this.dataSource = dataSource;
         this.maxAgeMillis = maxAgeMillis;
     }
 
     /** The network's maintenance, at most {@code maxAgeMillis} old - reads the database when the kept answer is older. */
-    Maintenance current(long nowMillis) {
+    public Maintenance current(long nowMillis) {
         Maintenance known = cached;
         if (known != null && nowMillis < validUntil) {
             return known;
@@ -71,7 +71,7 @@ final class MaintenanceLookup {
     }
 
     /** Why the last read failed, {@code null} if it worked. */
-    String lastError() {
+    public String lastError() {
         return lastError;
     }
 

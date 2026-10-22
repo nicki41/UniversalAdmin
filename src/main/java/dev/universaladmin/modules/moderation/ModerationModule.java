@@ -43,6 +43,10 @@ import dev.universaladmin.modules.moderation.action.UnmuteAction;
 import dev.universaladmin.modules.moderation.action.VanishAction;
 import dev.universaladmin.modules.moderation.action.WarnAction;
 import dev.universaladmin.modules.moderation.action.WarnInput;
+import dev.universaladmin.modules.moderation.alts.AltActions;
+import dev.universaladmin.modules.moderation.alts.AltService;
+import dev.universaladmin.modules.moderation.alts.AltSupport;
+import dev.universaladmin.modules.moderation.alts.AltsMigration;
 import dev.universaladmin.modules.moderation.command.ModerationCommands;
 import dev.universaladmin.modules.moderation.gui.ModeratePlayerMenuEntry;
 import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
@@ -59,6 +63,7 @@ import dev.universaladmin.modules.moderation.importing.LiteBansImporter;
 import dev.universaladmin.modules.moderation.importing.NoteText;
 import dev.universaladmin.modules.moderation.importing.PunishmentImporter;
 import dev.universaladmin.modules.moderation.importing.VanillaImporter;
+import dev.universaladmin.modules.moderation.jdbc.JdbcAltRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcImportRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcPlayerNoteRepository;
 import dev.universaladmin.modules.moderation.jdbc.JdbcPunishmentRepository;
@@ -88,6 +93,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletionException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.Server;
 import org.bukkit.ban.IpBanList;
@@ -106,6 +112,9 @@ import org.bukkit.scheduler.BukkitTask;
  * wiring only, same shape as {@code PlayersModule}.
  */
 public final class ModerationModule implements Module {
+
+    /** Alt detection forgets old addresses once an hour. */
+    private static final long ALT_SWEEP_TICKS = 20L * 60 * 60;
 
     /** The punishment templates file in the plugin folder. */
     static final String TEMPLATES_FILE = "punishment-templates.yml";
@@ -140,6 +149,7 @@ public final class ModerationModule implements Module {
         context.platform().storage().migrations().register(new ModerationPunishmentMigration());
         context.platform().storage().migrations().register(new ModerationPunishmentIndexMigration());
         context.platform().storage().migrations().register(new PunishmentTemplateMigration());
+        context.platform().storage().migrations().register(new AltsMigration());
         context.platform().storage().migrations().register(new VanishStateMigration());
         context.platform().storage().migrations().register(new StaffModeSnapshotMigration());
         context.registerMigration(new PlayerNotesMigration());
@@ -224,6 +234,7 @@ public final class ModerationModule implements Module {
                 .forEach(context::registerCommand);
 
         registerNotes(context);
+        registerAlts(context, punishmentService);
         registerImport(context);
         StaffPunishmentNotifier notifier = new StaffPunishmentNotifier(messages, context.platform().settings(), scheduler);
         context.subscribe(notifier);
@@ -500,6 +511,45 @@ public final class ModerationModule implements Module {
         } catch (IOException e) {
             logger.warning("Could not write " + file.getFileName() + ": " + e.getMessage());
         }
+    }
+
+    /**
+     * Alt detection (opt-in): the address table, view/forget actions (both
+     * audited), the profile button, {@code /admin alts}, the login check and
+     * an hourly sweep that forgets addresses older than the retention period.
+     */
+    private void registerAlts(ModuleContext context, PunishmentService punishments) {
+        var platform = context.platform();
+        AltService alts = new AltService(new JdbcAltRepository(platform.storage().dataSource(), platform.scheduler()),
+                punishments, platform.settings());
+        String module = ID.key().name();
+        context.registerAction(ActionDefinition.builder(new AltActions.View(alts))
+                .permission(ModerationPermissions.ALTS)
+                .module(module)
+                .target(input -> Optional.of(ActionTarget.player(input.playerId(), input.playerName())))
+                // Who looked at whose connections - the list itself stays out of the audit log.
+                .auditSummary(input -> "Viewed possible alts of " + input.playerName())
+                .build());
+        context.registerAction(ActionDefinition.builder(new AltActions.Forget(alts))
+                .permission(ModerationPermissions.ALTS_FORGET)
+                .module(module)
+                .target(input -> Optional.of(ActionTarget.player(input.playerId(), input.playerName())))
+                .auditSummary(input -> "Forgot the stored addresses of " + input.playerName())
+                .build());
+
+        AltSupport.Context ctx = new AltSupport.Context(platform.guiFramework(), platform.messages(), platform.scheduler(),
+                platform.actionExecutor(), alts, platform.settings(), platform.notifications(), platform.network(), context.logger());
+        context.registerPlayerMenuEntry(AltSupport.menuEntry(ctx));
+        context.registerCommand(new AltSupport.AltsCommand(ctx));
+        AltSupport.JoinListener listener = new AltSupport.JoinListener(ctx);
+        context.resources().listener(listener);
+        platform.network().subscribe(AltSupport.NETWORK_TOPIC, listener);
+        context.resources().closeable(() -> platform.network().unsubscribe(AltSupport.NETWORK_TOPIC, listener));
+        context.resources().task(platform.plugin().getServer().getScheduler().runTaskTimer(platform.plugin(),
+                () -> alts.sweep().exceptionally(error -> {
+                    context.logger().log(Level.WARNING, "Could not forget old addresses", error);
+                    return 0;
+                }), ALT_SWEEP_TICKS, ALT_SWEEP_TICKS));
     }
 
     /** Staff notes: table, add/remove actions, the profile button, {@code /admin notes} and the join alert. */
