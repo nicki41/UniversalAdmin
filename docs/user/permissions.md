@@ -122,8 +122,9 @@ universaladmin.*
 | `universaladmin.server.view` | op | Server dashboard, `/admin server status` |
 | `universaladmin.server.broadcast` | op | Broadcasts, titles, action bars |
 | `universaladmin.server.maintenance` | op | Maintenance mode and its allow-list |
+| `universaladmin.server.maintenance.network` | op | The whole network's maintenance and its allow-list (network mode; also needs `server.maintenance`) |
 | `universaladmin.server.shutdown` / `.restart` | op | Shutdown/restart with countdown |
-| `universaladmin.bypass.maintenance` | op | Join during maintenance |
+| `universaladmin.bypass.maintenance` | op | Join during maintenance - this server's and the network's |
 | **Worlds** | | |
 | `universaladmin.worlds.view` / `.view.seed` | op | World browser; the seed separately |
 | `universaladmin.worlds.teleport` | op | Teleport to a world's spawn |

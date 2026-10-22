@@ -95,9 +95,11 @@ heartbeats, online players and messages between servers live in three
 tables that every server polls; moving players goes through the proxy's
 BungeeCord plugin messaging channel. Cross-server operations are ordinary
 actions of the `network` module. Without network mode the service is a
-no-op. The optional `proxy/velocity` plugin refuses banned players at the
-proxy. See [docs/user/network.md](docs/user/network.md) and
-[ADR 0013](docs/architecture/decisions/0013-network-mode.md).
+no-op. The optional `proxy/velocity` plugin refuses banned players - and
+everyone without access during network maintenance - at the proxy. See
+[docs/user/network.md](docs/user/network.md),
+[ADR 0013](docs/architecture/decisions/0013-network-mode.md) and
+[ADR 0017](docs/architecture/decisions/0017-maintenance-scopes.md).
 
 ## Extensions
 

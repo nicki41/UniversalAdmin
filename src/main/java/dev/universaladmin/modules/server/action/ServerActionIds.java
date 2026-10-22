@@ -14,6 +14,9 @@ public final class ServerActionIds {
     public static final ActionId MAINTENANCE_ENABLE = ActionId.core("server.maintenance.enable");
     public static final ActionId MAINTENANCE_DISABLE = ActionId.core("server.maintenance.disable");
     public static final ActionId MAINTENANCE_SET_ALLOWED_PLAYERS = ActionId.core("server.maintenance.allowed-players");
+    public static final ActionId NETWORK_MAINTENANCE_ENABLE = ActionId.core("server.maintenance.network.enable");
+    public static final ActionId NETWORK_MAINTENANCE_DISABLE = ActionId.core("server.maintenance.network.disable");
+    public static final ActionId NETWORK_MAINTENANCE_SET_ALLOWED_PLAYERS = ActionId.core("server.maintenance.network.allowed-players");
     public static final ActionId SHUTDOWN = ActionId.core("server.shutdown");
     public static final ActionId CANCEL_SHUTDOWN = ActionId.core("server.shutdown.cancel");
     public static final ActionId RESTART = ActionId.core("server.restart");

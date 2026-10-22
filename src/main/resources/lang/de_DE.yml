@@ -233,8 +233,8 @@ moderation:
     preview-nothing: "<green>Nichts Neues aus {0} zu importieren."
     preview-confirm: "<yellow>Importieren mit</yellow> <click:suggest_command:''/admin import {0} confirm''><white><u>/admin import {0} confirm</u></white></click>"
     started: "<gray>Importiere aus {0} - der Fortschritt folgt ..."
-    progress: "<gray>... {0} Einträge importiert"
-    done: "<green><white>{0}</white> Strafen und <white>{1}</white> Team-Notizen aus <white>{2}</white> in {3}s importiert - <white>{4}</white> neue Spieler, {5} übersprungen, {6} schon früher importiert."
+    progress: "<gray>... bisher importiert: {0}"
+    done: "<green>Import aus <white>{2}</white> in {3}s abgeschlossen.</green> <gray>Strafen: <white>{0}</white>, Team-Notizen: <white>{1}</white>, neue Spieler: <white>{4}</white>, übersprungen: {5}, schon früher importiert: {6}"
     unknown-source: "<red>Unbekannte Quelle <white>{0}</white>. Verfügbar: {1}"
     type:
       ban: "Bans"
@@ -438,6 +438,7 @@ server:
     countdown-warning: "<yellow>{0} in {1} Sekunde(n)."
     executing-now: "<red>{0} jetzt."
     countdown-cancelled: "<green>{0} abgebrochen."
+    network-required: "<red>Netzwerk-Wartung braucht den Netzwerkmodus (network.enabled in der config.yml)."
   gui:
     action:
       success: "<green>Erledigt."
@@ -457,6 +458,7 @@ server:
       maintenance-on: "<red>Wartungsmodus: AN"
       maintenance-off: "<green>Wartungsmodus: AUS"
       maintenance-reason: "<gray>Grund: <white>{0}"
+      maintenance-network: "<red>Das ganze Netzwerk ist in Wartung"
       broadcast-message: "<aqua>Nachricht senden"
       broadcast-title: "<aqua>Titel senden"
       broadcast-actionbar: "<aqua>Actionbar senden"
@@ -488,6 +490,13 @@ server:
       kick-prompt: "Aktuell online befindliche Spieler ohne Bypass kicken?"
       kick-yes: "<red>Ja, kicken"
       kick-no: "<green>Nein, belassen"
+      network-status-on: "<red>Netzwerk-Wartung ist AN"
+      network-status-off: "<green>Netzwerk-Wartung ist AUS"
+      network-enable: "<red>Netzwerk-Wartung aktivieren"
+      network-disable: "<green>Netzwerk-Wartung deaktivieren"
+      network-confirm-enable: "<gray>Auf allen Servern des Netzwerks können nur noch Spieler mit Bypass-Berechtigung oder auf der Erlaubnisliste beitreten."
+      network-confirm-disable: "<gray>Jeder Spieler kann dem Netzwerk wieder beitreten."
+      network-allowed-players: "<aqua>Erlaubte Spieler (Netzwerk)"
   result:
     broadcast: "<gray>Nachricht an <white>{0}</white> Spieler gesendet."
     actionbar: "<gray>Action-Bar an <white>{0}</white> Spieler gesendet."
@@ -500,6 +509,10 @@ server:
     maintenance-on-kick: "<gray>Wartungsmodus ist jetzt <red>AN</red> - alle ohne Zugang wurden gekickt. Grund: <white>{0}</white> <dark_gray>({1} Spieler erlaubt)</dark_gray>"
     maintenance-off: "<gray>Wartungsmodus ist jetzt <green>AUS</green> - alle können wieder joinen."
     maintenance-allowed: "<gray>Wartungs-Erlaubnisliste gespeichert: <white>{0}</white> Spieler."
+    network-maintenance-on: "<gray>Netzwerk-Wartung ist jetzt auf allen Servern <red>AN</red>. Grund: <white>{0}</white> <dark_gray>({1} Spieler erlaubt)</dark_gray>"
+    network-maintenance-on-kick: "<gray>Netzwerk-Wartung ist jetzt <red>AN</red> - alle ohne Zugang haben das Netzwerk verlassen. Grund: <white>{0}</white> <dark_gray>({1} Spieler erlaubt)</dark_gray>"
+    network-maintenance-off: "<gray>Netzwerk-Wartung ist jetzt <green>AUS</green> - alle können dem Netzwerk wieder beitreten."
+    network-maintenance-allowed: "<gray>Erlaubnisliste der Netzwerk-Wartung gespeichert: <white>{0}</white> Spieler."
 
 worlds:
   action:
@@ -997,11 +1010,14 @@ commands:
       worlds: "<gray>Welten: <white>{0}"
       database: "<gray>Datenbank: <white>{0}"
   maintenance:
-    usage: "<on [kick] [grund]|off|status|allow <spieler>|deny <spieler>|list>"
-    description: "Wartungsmodus: nur Team und freigegebene Spieler können joinen."
+    usage: "[network] <on [kick] [grund]|off|status|allow <spieler>|deny <spieler>|list>"
+    description: "Wartungsmodus: nur Team und freigegebene Spieler können joinen - dieser Server oder mit network das ganze Netzwerk."
     status-on: "<red>Wartungsmodus ist AN</red> <gray>- Grund: {0}, {1} freigegebene(r) Spieler"
     status-off: "<green>Wartungsmodus ist AUS</green> <gray>({1} Spieler auf der Freigabeliste)"
+    network-status-on: "<red>Netzwerk-Wartung ist AN</red> <gray>- Grund: {0}, {1} freigegebene(r) Spieler"
+    network-status-off: "<green>Netzwerk-Wartung ist AUS</green> <gray>({1} Spieler auf der Freigabeliste)"
     allowed: "<gray>Während der Wartung erlaubt: <white>{0}"
+    network-allowed: "<gray>Während der Netzwerk-Wartung erlaubt: <white>{0}"
     allow-added: "<green><white>{0}</white> darf jetzt während der Wartung joinen."
     allow-removed: "<yellow><white>{0}</white> wurde von der Wartungs-Freigabeliste entfernt."
     already-allowed: "<yellow><white>{0}</white> steht bereits auf der Freigabeliste."

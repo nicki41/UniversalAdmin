@@ -10,6 +10,7 @@ import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
+import dev.universaladmin.modules.server.MaintenanceScope;
 import dev.universaladmin.modules.server.MaintenanceState;
 import dev.universaladmin.modules.server.ServerDashboardSnapshot;
 import dev.universaladmin.modules.server.ServerLifecycleService;
@@ -18,6 +19,7 @@ import dev.universaladmin.modules.server.action.BroadcastTitleInput;
 import dev.universaladmin.modules.server.action.ServerActionIds;
 import dev.universaladmin.settings.CoreSettings;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -86,12 +88,19 @@ public final class ServerHomePage extends AbstractGuiPage {
 
     private void renderMaintenanceTile(GuiView view) {
         MaintenanceState state = ctx.maintenanceService().current();
-        Material material = state.enabled() ? Material.RED_WOOL : Material.LIME_WOOL;
-        List<Component> lore = state.enabled() && state.reason() != null && !state.reason().isBlank()
-                ? List.of(text("server.gui.home.maintenance-reason", state.reason()))
-                : List.of();
+        MaintenanceState network = ctx.maintenanceService().current(MaintenanceScope.NETWORK);
+        boolean active = state.enabled() || network.enabled();
+        Material material = active ? Material.RED_WOOL : Material.LIME_WOOL;
+        List<Component> lore = new ArrayList<>();
+        if (network.enabled()) {
+            lore.add(text("server.gui.home.maintenance-network"));
+        }
+        MaintenanceState shown = state.enabled() ? state : network;
+        if (active && shown.reason() != null && !shown.reason().isBlank()) {
+            lore.add(text("server.gui.home.maintenance-reason", shown.reason()));
+        }
         view.place(TILE_START + GuiLayout.COLUMNS,
-                GuiItem.of(material, text(state.enabled() ? "server.gui.home.maintenance-on" : "server.gui.home.maintenance-off"), lore));
+                GuiItem.of(material, text(active ? "server.gui.home.maintenance-on" : "server.gui.home.maintenance-off"), lore));
     }
 
     private void renderNavigation(GuiView view, Player viewer) {

@@ -8,11 +8,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
 
 /**
- * Denies login while maintenance mode is enabled, for anyone without {@link
- * ServerPermissions#BYPASS_MAINTENANCE} or an allow-listed name - pure
- * event-to-service-call translation, no business logic here (see docs/development/architecture-rules.md's
- * "no Bukkit event listeners with logic" rule; the actual decision is
- * {@link MaintenanceService#isAllowed}).
+ * Denies login while this server's or the network's maintenance is on, for
+ * anyone without {@link ServerPermissions#BYPASS_MAINTENANCE} or an
+ * allow-listed name - pure event-to-service-call translation, no business
+ * logic here (see docs/development/architecture-rules.md's "no Bukkit event
+ * listeners with logic" rule; the actual decision is
+ * {@link MaintenanceService#blockedBy}).
  *
  * <p>Uses {@link PlayerLoginEvent} rather than {@code AsyncPlayerPreLoginEvent}
  * (see {@code ModerationJoinListener}'s ban check) on purpose: the bypass
@@ -40,10 +41,9 @@ public final class MaintenanceJoinListener implements Listener {
         if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
             return;
         }
-        if (!maintenanceService.current().enabled() || maintenanceService.isAllowed(event.getPlayer())) {
-            return;
-        }
-        Component kickMessage = ComponentMessages.render(maintenanceService.effectiveKickMessage());
-        event.disallow(PlayerLoginEvent.Result.KICK_OTHER, kickMessage);
+        maintenanceService.blockedBy(event.getPlayer()).ifPresent(scope -> {
+            Component kickMessage = ComponentMessages.render(maintenanceService.kickMessage(scope));
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, kickMessage);
+        });
     }
 }
