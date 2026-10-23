@@ -15,7 +15,7 @@ the Modrinth collection "UniversalAdmin".
 | Categories | Management, Social, Utility |
 | Environment | Server-side only |
 | Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
-| License | Apache-2.0 |
+| License | GPL-3.0-or-later (from 1.5.0; up to 1.4.0 Apache-2.0) |
 | Icon | `assets/icon-discord.png` |
 | Links | Source and issues: the UniversalAdmin repository; wiki: `docs/extensions/discord.md` |
 
@@ -84,7 +84,7 @@ embeds.
 | Categories | Utility, Management |
 | Environment | Server-side only |
 | Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
-| License | Apache-2.0 |
+| License | GPL-3.0-or-later (from 1.5.0; up to 1.4.0 Apache-2.0) |
 | Icon | `assets/icon-placeholders.png` |
 | Links | Source and issues: the UniversalAdmin repository; wiki: `docs/extensions/placeholderapi.md` |
 

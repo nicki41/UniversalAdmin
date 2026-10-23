@@ -1,7 +1,7 @@
 # UniversalAdmin
 
 [![Build](https://github.com/nicki41/UniversalAdmin/actions/workflows/build.yml/badge.svg)](https://github.com/nicki41/UniversalAdmin/actions/workflows/build.yml)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 [![Modrinth](https://img.shields.io/badge/Modrinth-universaladmin-00AF5C)](https://modrinth.com/plugin/universaladmin)
 [![Servers](https://telemetry.0nicki.de/v1/badge/servers.svg?plugin=universaladmin)](docs/user/telemetry.md)
 [![Players](https://telemetry.0nicki.de/v1/badge/players.svg?plugin=universaladmin&color=blue)](docs/user/telemetry.md)
@@ -37,7 +37,8 @@ to be the one admin plugin your server needs.
 - **No dependencies.** No Vault, ProtocolLib, PlaceholderAPI or Essentials
   required. SQLite works out of the box, MySQL/MariaDB optional.
 - **English and German** out of the box - every text is editable.
-- **Free forever.** Apache-2.0, no premium version, no locked features.
+- **Free forever.** Open source under the GPL, no premium version, no locked
+  features.
 
 ## Features
 
@@ -202,5 +203,8 @@ privately, see [SECURITY.md](SECURITY.md).
 
 ## License
 
-[Apache License 2.0](LICENSE) - free for every server, commercial ones
-included.
+[GNU GPL v3.0 or later](LICENSE) - free for every server, commercial ones
+included. The extension API ([`api/`](api/LICENSE)) and the example
+extension stay under the Apache License 2.0, so extensions can use any
+license. Versions up to 1.4.0 were released under Apache-2.0. Details:
+[docs/release/licensing.md](docs/release/licensing.md).

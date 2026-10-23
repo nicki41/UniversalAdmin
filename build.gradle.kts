@@ -162,3 +162,22 @@ tasks.register("printVersion") {
     val projectVersion = project.version.toString()
     doLast { println(projectVersion) }
 }
+
+// Every jar carries the license it is distributed under as META-INF/LICENSE:
+// a project's own LICENSE file if it has one (the API and the example
+// extension - Apache-2.0), the repository's GPL-3.0-or-later otherwise. The
+// API's goes in as META-INF/LICENSE-api instead: the API is shaded into the
+// core jar, and under the same name it would replace the core's GPL text
+// there. See docs/release/licensing.md.
+allprojects {
+    tasks.withType<Jar>().configureEach {
+        val ownLicense = project.file("LICENSE")
+        val api = project.path == ":universaladmin-api"
+        from(if (ownLicense.exists()) ownLicense else rootProject.file("LICENSE")) {
+            into("META-INF")
+            if (api) {
+                rename { "LICENSE-api" }
+            }
+        }
+    }
+}

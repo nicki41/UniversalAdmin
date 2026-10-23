@@ -19,7 +19,7 @@ everything on this page (texts, gallery, links) is maintained by hand.
 | Environment | Server-side only |
 | Loaders | Paper, Purpur (plugin); Velocity (the `-velocity` versions); BungeeCord, Waterfall (the `-bungee` versions) |
 | Game versions | everything in [`supported-versions.txt`](../../supported-versions.txt) - set by `release.yml`, extended by `compatibility.yml` |
-| License | Apache-2.0 |
+| License | GPL-3.0-or-later (from 1.5.0; up to 1.4.0 Apache-2.0) |
 | Icon | `assets/icon.png` |
 | Source | https://github.com/nicki41/UniversalAdmin |
 | Issues | https://github.com/nicki41/UniversalAdmin/issues |
