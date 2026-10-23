@@ -140,6 +140,8 @@ isn't documented there.
 
 ## License of Contributions
 
-By opening a pull request you submit your contribution under the
-[Apache License 2.0](LICENSE) (§5 of the license text). There is no
+By opening a pull request you submit your contribution under the license of
+the part you change: the [GNU GPL v3.0 or later](LICENSE), or the
+[Apache License 2.0](api/LICENSE) for `api/` and `examples/` - see
+[docs/release/licensing.md](docs/release/licensing.md). There is no
 additional CLA.

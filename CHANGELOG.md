@@ -7,6 +7,15 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+### Changed
+
+- **License: GPL-3.0-or-later** from this version on, for the plugin, the
+  proxy plugins and the official extensions. The extension API
+  (`universaladmin-api`) and the example extension stay under Apache-2.0, so
+  extensions can still use any license. Versions up to 1.4.0 remain
+  available under Apache-2.0. Every jar now carries its license text under
+  `META-INF/` - see [docs/release/licensing.md](docs/release/licensing.md).
+
 ## [1.4.0] - 2026-10-22
 
 Find second accounts of banned players - without storing addresses - and
