@@ -7,6 +7,7 @@ import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.ConfirmationDialog;
 import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiClickContext;
+import dev.universaladmin.gui.GuiForm;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
@@ -14,7 +15,6 @@ import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.SelectionDialog;
-import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.moderation.ModerationFormat;
 import dev.universaladmin.modules.moderation.ModerationPermissions;
 import dev.universaladmin.modules.moderation.ModerationSettings;
@@ -34,10 +34,11 @@ import dev.universaladmin.modules.moderation.templates.TemplateStep;
 import dev.universaladmin.modules.moderation.templates.TemplateTexts;
 import dev.universaladmin.permission.PermissionNode;
 import dev.universaladmin.settings.CoreSettings;
-import java.time.Duration;
+import dev.universaladmin.status.MuteKind;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -45,7 +46,8 @@ import org.bukkit.entity.Player;
 
 /**
  * The moderation wizard entry point: Player -&gt; Moderate -&gt; Type -&gt;
- * Reason -&gt; Duration (if needed) -&gt; Confirmation -&gt; Action. Ephemeral,
+ * one form for reason, duration (if needed) and mute kind (with a voice
+ * chat connected) -&gt; Confirmation -&gt; Action. Ephemeral,
  * built fresh per click with the target baked in (like {@code
  * PlayerProfilePage}), never registered in {@code GuiRegistry}, and
  * published to the Players module via a {@link ModeratePlayerMenuEntry} instead
@@ -64,6 +66,14 @@ import org.bukkit.entity.Player;
 public final class ModeratePlayerPage extends AbstractGuiPage {
 
     public static final GuiPageId ID = GuiPageId.core("moderation.moderate-player");
+
+    private static final String REASON = "reason";
+    private static final String OWN_REASON = "own_reason";
+    private static final String DURATION = "duration";
+    private static final String OWN_DURATION = "own_duration";
+    private static final String KIND = "kind";
+    /** The {@code punishments.reason} column holds 1024; a form keeps it to what fits in a chat line or two. */
+    private static final int MAX_REASON_LENGTH = 255;
 
     private final ModerationGuiContext ctx;
     private final UUID targetId;
@@ -119,7 +129,7 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
             // the target's warnings list, where PunishmentDetailPage's own
             // revoke button (gated on the same permission) does the removal.
             case REMOVE_WARN -> clickCtx.open(PunishmentListPage.warningsForTarget(ctx, targetId));
-            default -> promptReason(viewer, type);
+            default -> promptDetails(viewer, type);
         }
     }
 
@@ -170,78 +180,86 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
         };
     }
 
-    private void promptReason(Player viewer, WizardType type) {
-        String customLabel = messages.get(MessageKey.of("moderation.gui.moderate.custom"));
-        List<String> options = new ArrayList<>(ctx.settings().get(ModerationSettings.REASON_PRESETS));
-        options.add(customLabel);
-        SelectionDialog.open(viewer, framework, messages, ctx.scheduler(), text("moderation.gui.moderate.select-reason"), options,
-                reason -> GuiItem.of(Material.PAPER, Component.text(reason)),
-                (clickCtx, reason) -> {
-                    if (reason.equals(customLabel)) {
-                        promptCustomReason(viewer, type);
-                    } else {
-                        afterReason(viewer, type, reason);
-                    }
-                });
-    }
-
-    private void promptCustomReason(Player viewer, WizardType type) {
-        GuiTextInput.request(viewer, text("moderation.gui.moderate.title", targetName), text("moderation.gui.moderate.prompt-reason"), "",
-                text("gui.confirm"), text("gui.cancel"),
-                submitted -> {
-                    if (submitted == null || submitted.isBlank()) {
-                        ModerationGuiActions.notifyError(viewer, messages);
-                        this.open(viewer);
-                        return;
-                    }
-                    afterReason(viewer, type, submitted.trim());
-                },
-                () -> this.open(viewer));
-    }
-
-    private void afterReason(Player viewer, WizardType type, String reason) {
-        if (type.needsDuration) {
-            promptDuration(viewer, type, reason);
-        } else {
-            promptConfirm(viewer, type, reason, null);
+    /**
+     * Reason, duration and - with a voice chat connected - the mute kind in
+     * one form (ADR 0023). A typed reason or duration wins over the preset
+     * chosen above it.
+     */
+    private void promptDetails(Player viewer, WizardType type) {
+        List<String> reasons = ctx.settings().get(ModerationSettings.REASON_PRESETS);
+        List<String> durations = type.needsDuration ? ctx.settings().get(ModerationSettings.DURATION_PRESETS) : List.of();
+        GuiForm.Builder form = GuiForm.builder(text("moderation.gui.moderate.title", targetName))
+                .message(text(type.labelKey));
+        if (!reasons.isEmpty()) {
+            form.choice(REASON, text("moderation.gui.moderate.form-reason"), presetOptions(reasons), null);
         }
-    }
-
-    private void promptDuration(Player viewer, WizardType type, String reason) {
-        List<String> options = new ArrayList<>(ctx.settings().get(ModerationSettings.DURATION_PRESETS));
-        String customLabel = messages.get(MessageKey.of("moderation.gui.moderate.custom"));
-        options.add(customLabel);
-        SelectionDialog.open(viewer, framework, messages, ctx.scheduler(), text("moderation.gui.moderate.select-duration"), options,
-                duration -> GuiItem.of(Material.CLOCK, Component.text(duration)),
-                (clickCtx, duration) -> {
-                    if (duration.equals(customLabel)) {
-                        promptCustomDuration(viewer, type, reason);
-                    } else {
-                        applyDuration(viewer, type, reason, duration);
-                    }
-                });
-    }
-
-    private void promptCustomDuration(Player viewer, WizardType type, String reason) {
-        GuiTextInput.request(viewer, text("moderation.gui.moderate.title", targetName), text("moderation.gui.moderate.prompt-duration"), "",
-                text("gui.confirm"), text("gui.cancel"),
-                submitted -> applyDuration(viewer, type, reason, submitted),
+        form.text(OWN_REASON, text(reasons.isEmpty() ? "moderation.gui.moderate.form-reason" : "moderation.gui.moderate.form-own-reason"),
+                "", MAX_REASON_LENGTH);
+        if (type.needsDuration) {
+            if (!durations.isEmpty()) {
+                form.choice(DURATION, text("moderation.gui.moderate.form-duration"), presetOptions(durations), null);
+            }
+            form.text(OWN_DURATION, text(durations.isEmpty()
+                    ? "moderation.gui.moderate.prompt-duration" : "moderation.gui.moderate.form-own-duration"), "", 32);
+        }
+        if (type.mutes() && ctx.voiceChat().isPresent()) {
+            form.choice(KIND, text("moderation.gui.moderate.form-kind"), List.of(
+                    new GuiForm.Option(MuteKind.FULL.name(), text("moderation.gui.moderate.kind-full")),
+                    new GuiForm.Option(MuteKind.CHAT.name(), text("moderation.gui.moderate.kind-chat")),
+                    new GuiForm.Option(MuteKind.VOICE.name(), text("moderation.gui.moderate.kind-voice"))), MuteKind.FULL.name());
+        }
+        form.open(viewer, text("moderation.gui.moderate.form-continue"), text("gui.cancel"),
+                response -> onDetails(viewer, type, reasons, durations, response),
                 () -> this.open(viewer));
     }
 
-    private void applyDuration(Player viewer, WizardType type, String reason, String durationText) {
-        try {
-            Instant expiresAt = DurationParser.parse(durationText).map(Instant.now()::plus).orElse(null);
-            promptConfirm(viewer, type, reason, expiresAt);
-        } catch (DurationParseException e) {
+    private void onDetails(Player viewer, WizardType type, List<String> reasons, List<String> durations, GuiForm.Response response) {
+        String reason = Optional.ofNullable(response.textOrNull(OWN_REASON)).orElseGet(() -> preset(reasons, response.choice(REASON)));
+        if (reason == null) {
             ModerationGuiActions.notifyError(viewer, messages);
             this.open(viewer);
+            return;
+        }
+        Instant expiresAt = null;
+        if (type.needsDuration) {
+            String duration = Optional.ofNullable(response.textOrNull(OWN_DURATION)).orElseGet(() -> preset(durations, response.choice(DURATION)));
+            try {
+                expiresAt = duration == null ? null : DurationParser.parse(duration).map(Instant.now()::plus).orElse(null);
+            } catch (DurationParseException e) {
+                ModerationGuiActions.notifyError(viewer, messages);
+                this.open(viewer);
+                return;
+            }
+        }
+        MuteKind kind = MuteKind.FULL;
+        if (type.mutes() && !response.choice(KIND).isEmpty()) {
+            kind = MuteKind.valueOf(response.choice(KIND));
+        }
+        promptConfirm(viewer, type, reason, expiresAt, kind);
+    }
+
+    /** One option per preset, identified by its position. */
+    private static List<GuiForm.Option> presetOptions(List<String> presets) {
+        List<GuiForm.Option> options = new ArrayList<>();
+        for (int i = 0; i < presets.size(); i++) {
+            options.add(new GuiForm.Option(Integer.toString(i), Component.text(presets.get(i))));
+        }
+        return options;
+    }
+
+    /** The preset a choice picked, {@code null} if none. */
+    private static String preset(List<String> presets, String choice) {
+        try {
+            int index = Integer.parseInt(choice);
+            return index >= 0 && index < presets.size() ? presets.get(index) : null;
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 
-    private void promptConfirm(Player viewer, WizardType type, String reason, Instant expiresAt) {
+    private void promptConfirm(Player viewer, WizardType type, String reason, Instant expiresAt, MuteKind kind) {
         if (!ctx.settings().get(CoreSettings.GUI_CONFIRMATIONS)) {
-            apply(viewer, type, reason, expiresAt);
+            apply(viewer, type, reason, expiresAt, kind);
             return;
         }
         List<Component> description = new ArrayList<>();
@@ -250,20 +268,24 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
         if (type.needsDuration) {
             description.add(text("moderation.gui.moderate.confirm-expires", ModerationFormat.expiry(expiresAt, ctx.settings(), messages)));
         }
+        if (type.mutes() && kind != MuteKind.FULL) {
+            description.add(text("moderation.gui.moderate.confirm-kind", text(kind == MuteKind.CHAT
+                    ? "moderation.gui.moderate.kind-chat" : "moderation.gui.moderate.kind-voice")));
+        }
         ConfirmationDialog.open(viewer, framework, messages, text(type.labelKey), description, type.dangerLevel,
-                confirmCtx -> apply(confirmCtx.viewer(), type, reason, expiresAt),
+                confirmCtx -> apply(confirmCtx.viewer(), type, reason, expiresAt, kind),
                 confirmCtx -> confirmCtx.back());
     }
 
-    private void apply(Player viewer, WizardType type, String reason, Instant expiresAt) {
+    private void apply(Player viewer, WizardType type, String reason, Instant expiresAt, MuteKind kind) {
         ActionId actionId = type.actionId;
         Object input = switch (type) {
             case KICK -> new KickInput(targetId, reason);
             case BAN -> new BanInput(targetId, reason, null);
             case TEMP_BAN -> new BanInput(targetId, reason, expiresAt);
             case IP_BAN -> new IpBanInput(targetId, reason, expiresAt);
-            case MUTE -> new MuteInput(targetId, reason, null);
-            case TEMP_MUTE -> new MuteInput(targetId, reason, expiresAt);
+            case MUTE -> new MuteInput(targetId, reason, null, null, kind);
+            case TEMP_MUTE -> new MuteInput(targetId, reason, expiresAt, null, kind);
             case WARN -> new WarnInput(targetId, reason);
             case FREEZE -> new FreezeInput(targetId, reason);
             case UNBAN, UNMUTE, UNFREEZE, REMOVE_WARN -> throw new IllegalStateException("Unreachable: " + type);
@@ -313,6 +335,10 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
             this.actionId = actionId;
             this.needsDuration = needsDuration;
             this.dangerLevel = dangerLevel;
+        }
+
+        boolean mutes() {
+            return this == MUTE || this == TEMP_MUTE;
         }
     }
 }

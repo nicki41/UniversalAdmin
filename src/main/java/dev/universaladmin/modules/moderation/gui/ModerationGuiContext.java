@@ -1,6 +1,7 @@
 package dev.universaladmin.modules.moderation.gui;
 
 import dev.universaladmin.action.ActionExecutor;
+import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.moderation.CollisionState;
@@ -11,6 +12,8 @@ import dev.universaladmin.modules.moderation.VanishService;
 import dev.universaladmin.modules.moderation.templates.PunishmentTemplateService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
+import dev.universaladmin.voice.VoiceChat;
+import java.util.Optional;
 
 /**
  * The dependencies every Moderation GUI page needs, bundled into one
@@ -32,5 +35,11 @@ public record ModerationGuiContext(
         GodmodeState godmodeState,
         CollisionState collisionState,
         StaffModeState staffModeState,
-        PunishmentTemplateService templates) {
+        PunishmentTemplateService templates,
+        ServiceRegistry services) {
+
+    /** The voice chat an extension connected, if any - only then can a mute be limited to the chat or the voice chat. */
+    public Optional<VoiceChat> voiceChat() {
+        return services.get(VoiceChat.class);
+    }
 }

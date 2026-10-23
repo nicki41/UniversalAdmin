@@ -3,6 +3,7 @@ package dev.universaladmin.modules.players.gui;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.GuiButton;
+import dev.universaladmin.gui.GuiForm;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
@@ -30,7 +31,10 @@ import java.util.function.DoubleConsumer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 
 /**
@@ -101,13 +105,16 @@ public final class PlayerActionsPage extends AbstractGuiPage {
         buttons.add(gamemodeButton(Material.ENDER_EYE, GameMode.SPECTATOR));
 
         buttons.add(button(Material.REDSTONE, "players.gui.actions.set-health", PlayerPermissions.SET_HEALTH,
-                clickCtx -> promptNumber(clickCtx.viewer(), "players.gui.actions.prompt-health",
+                clickCtx -> promptSlider(clickCtx.viewer(), "players.gui.actions.prompt-health", 0, maxHealth(), 0.5f,
+                        current(p -> (float) p.getHealth(), 20),
                         v -> runAction(clickCtx.viewer(), PlayerActionIds.SET_HEALTH, new SetDoubleValueInput(targetId, v)))));
         buttons.add(button(Material.BREAD, "players.gui.actions.set-food", PlayerPermissions.SET_FOOD,
-                clickCtx -> promptNumber(clickCtx.viewer(), "players.gui.actions.prompt-food",
-                        v -> runAction(clickCtx.viewer(), PlayerActionIds.SET_FOOD, new SetIntValueInput(targetId, (int) v)))));
+                clickCtx -> promptSlider(clickCtx.viewer(), "players.gui.actions.prompt-food", 0, 20, 1,
+                        current(p -> (float) p.getFoodLevel(), 20),
+                        v -> runAction(clickCtx.viewer(), PlayerActionIds.SET_FOOD, new SetIntValueInput(targetId, (int) Math.round(v))))));
         buttons.add(button(Material.EXPERIENCE_BOTTLE, "players.gui.actions.set-xp", PlayerPermissions.SET_XP,
-                clickCtx -> promptNumber(clickCtx.viewer(), "players.gui.actions.prompt-xp",
+                clickCtx -> promptSlider(clickCtx.viewer(), "players.gui.actions.prompt-xp", 0, 100, 1,
+                        current(p -> p.getExp() * 100, 0),
                         v -> runAction(clickCtx.viewer(), PlayerActionIds.SET_XP, new SetFloatValueInput(targetId, (float) (v / 100.0))))));
         buttons.add(button(Material.ENCHANTED_BOOK, "players.gui.actions.set-level", PlayerPermissions.SET_LEVEL,
                 clickCtx -> promptNumber(clickCtx.viewer(), "players.gui.actions.prompt-level",
@@ -117,10 +124,12 @@ public final class PlayerActionsPage extends AbstractGuiPage {
                 target == null ? null : target.getAllowFlight(),
                 clickCtx -> runAction(clickCtx.viewer(), PlayerActionIds.FLY_TOGGLE, new PlayerTargetInput(targetId))));
         buttons.add(button(Material.SUGAR, "players.gui.actions.fly-speed", PlayerPermissions.FLY_SPEED,
-                clickCtx -> promptNumber(clickCtx.viewer(), "players.gui.actions.prompt-fly-speed",
+                clickCtx -> promptSlider(clickCtx.viewer(), "players.gui.actions.prompt-fly-speed", -1, 1, 0.05f,
+                        current(p -> p.getFlySpeed(), 0.1f),
                         v -> runAction(clickCtx.viewer(), PlayerActionIds.FLY_SPEED, new SetFloatValueInput(targetId, (float) v)))));
         buttons.add(button(Material.SUGAR, "players.gui.actions.walk-speed", PlayerPermissions.WALK_SPEED,
-                clickCtx -> promptNumber(clickCtx.viewer(), "players.gui.actions.prompt-walk-speed",
+                clickCtx -> promptSlider(clickCtx.viewer(), "players.gui.actions.prompt-walk-speed", -1, 1, 0.05f,
+                        current(p -> p.getWalkSpeed(), 0.2f),
                         v -> runAction(clickCtx.viewer(), PlayerActionIds.WALK_SPEED, new SetFloatValueInput(targetId, (float) v)))));
 
         buttons.add(toggleButton(Material.GLOWSTONE_DUST, "players.gui.actions.toggle-glow", PlayerPermissions.GLOW,
@@ -164,39 +173,60 @@ public final class PlayerActionsPage extends AbstractGuiPage {
                 (clickCtx, chosen) -> runAction(viewer, PlayerActionIds.TELEPORT, TeleportInput.toPlayer(targetId, chosen.getUniqueId())));
     }
 
+    /**
+     * x, y and z as fields and the world from a list (ADR 0023), filled in
+     * with where the player is now - or the viewer, if the player is not here.
+     */
     private void promptCoordinates(Player viewer) {
-        GuiTextInput.request(viewer, text("players.gui.actions.title", targetName), text("players.gui.actions.prompt-coordinates"), "",
-                text("gui.confirm"), text("gui.cancel"),
-                submitted -> {
-                    TeleportInput input = parseCoordinates(submitted);
-                    if (input == null) {
+        Player target = Bukkit.getPlayer(targetId);
+        Location from = target != null ? target.getLocation() : viewer.getLocation();
+        List<GuiForm.Option> worlds = Bukkit.getWorlds().stream()
+                .map(world -> new GuiForm.Option(world.getName(), Component.text(world.getName())))
+                .toList();
+        GuiForm.builder(text("players.gui.actions.title", targetName))
+                .choice("world", text("players.gui.actions.prompt-world"), worlds, from.getWorld().getName())
+                .text("x", text("players.gui.actions.prompt-x"), "%.1f".formatted(from.getX()), 16)
+                .text("y", text("players.gui.actions.prompt-y"), "%.1f".formatted(from.getY()), 16)
+                .text("z", text("players.gui.actions.prompt-z"), "%.1f".formatted(from.getZ()), 16)
+                .open(viewer, text("gui.confirm"), text("gui.cancel"), response -> {
+                    try {
+                        runAction(viewer, PlayerActionIds.TELEPORT, TeleportInput.toCoordinates(targetId, response.choice("world"),
+                                coordinate(response.text("x")), coordinate(response.text("y")), coordinate(response.text("z"))));
+                    } catch (NumberFormatException e) {
                         PlayerGuiActions.notifyError(viewer, messages);
                         this.open(viewer);
-                        return;
                     }
-                    runAction(viewer, PlayerActionIds.TELEPORT, input);
-                },
-                () -> this.open(viewer));
+                }, () -> this.open(viewer));
     }
 
-    private TeleportInput parseCoordinates(String submitted) {
-        if (submitted == null) {
-            return null;
+    /** A coordinate as typed - a comma works as the decimal point too, as German keyboards suggest. */
+    private static double coordinate(String typed) {
+        return Double.parseDouble(typed.trim().replace(',', '.'));
+    }
+
+    /** A bounded value as a slider, starting at the player's current value (ADR 0023). */
+    private void promptSlider(Player viewer, String promptKey, float min, float max, float step, float initial, DoubleConsumer onValue) {
+        GuiForm.builder(text("players.gui.actions.title", targetName))
+                .number("value", text(promptKey), min, max, step, initial)
+                .open(viewer, text("gui.confirm"), text("gui.cancel"),
+                        response -> onValue.accept(response.number("value")),
+                        () -> this.open(viewer));
+    }
+
+    /** The player's current value, or {@code fallback} if they are not on this server. */
+    private float current(java.util.function.Function<Player, Float> value, float fallback) {
+        Player target = Bukkit.getPlayer(targetId);
+        return target == null ? fallback : value.apply(target);
+    }
+
+    /** The player's maximum health - attributes can raise it above 20. */
+    private float maxHealth() {
+        Player target = Bukkit.getPlayer(targetId);
+        if (target == null) {
+            return 20;
         }
-        String[] tokens = submitted.trim().split("\\s+");
-        try {
-            if (tokens.length == 4) {
-                return TeleportInput.toCoordinates(targetId, tokens[0],
-                        Double.parseDouble(tokens[1]), Double.parseDouble(tokens[2]), Double.parseDouble(tokens[3]));
-            }
-            if (tokens.length == 3) {
-                return TeleportInput.toCoordinates(targetId, null,
-                        Double.parseDouble(tokens[0]), Double.parseDouble(tokens[1]), Double.parseDouble(tokens[2]));
-            }
-        } catch (NumberFormatException ignored) {
-            // falls through to null below
-        }
-        return null;
+        AttributeInstance attribute = target.getAttribute(Attribute.MAX_HEALTH);
+        return attribute == null ? 20 : (float) attribute.getValue();
     }
 
     private void promptNumber(Player viewer, String promptKey, DoubleConsumer onValue) {

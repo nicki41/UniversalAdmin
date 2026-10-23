@@ -4,13 +4,13 @@ import dev.universaladmin.action.ActionId;
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.ConfirmationDialog;
 import dev.universaladmin.gui.GuiButton;
+import dev.universaladmin.gui.GuiForm;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
-import dev.universaladmin.gui.SelectionDialog;
 import dev.universaladmin.modules.server.MaintenanceScope;
 import dev.universaladmin.modules.server.MaintenanceState;
 import dev.universaladmin.modules.server.ServerPermissions;
@@ -103,25 +103,22 @@ public final class ServerMaintenancePage extends AbstractGuiPage {
                 confirmCtx -> apply.run(), confirmCtx -> confirmCtx.back());
     }
 
+    /** Reason, the message players see and whether to kick right away - one form (ADR 0023). */
     private void promptEnableReason(Player viewer, MaintenanceScope scope) {
-        GuiTextInput.request(viewer, text(key(scope, "enable")), text("server.gui.prompt.reason-optional"), "",
-                text("gui.confirm"), text("gui.cancel"),
-                reason -> promptKickChoice(viewer, scope, reason == null || reason.isBlank() ? null : reason.trim()),
-                () -> this.open(viewer));
+        GuiForm.builder(text(key(scope, "enable")))
+                .text("reason", text("server.gui.prompt.reason-optional"), "", 255)
+                .multilineText("message", text("server.gui.prompt.maintenance-message"), "", 255, 3)
+                .toggle("kick", text("server.gui.maintenance.kick-prompt"), false)
+                .open(viewer, text("gui.confirm"), text("gui.cancel"),
+                        response -> confirmEnable(viewer, scope, response.textOrNull("reason"), response.textOrNull("message"),
+                                response.toggle("kick")),
+                        () -> this.open(viewer));
     }
 
-    private void promptKickChoice(Player viewer, MaintenanceScope scope, String reason) {
-        SelectionDialog.open(viewer, framework, messages, ctx.scheduler(),
-                text("server.gui.maintenance.kick-prompt"), List.of(Boolean.TRUE, Boolean.FALSE),
-                kick -> GuiItem.of(kick ? Material.MAGMA_BLOCK : Material.PAPER,
-                        text(kick ? "server.gui.maintenance.kick-yes" : "server.gui.maintenance.kick-no")),
-                (selectCtx, kick) -> confirmEnable(viewer, scope, reason, kick));
-    }
-
-    private void confirmEnable(Player viewer, MaintenanceScope scope, String reason, boolean kickNonBypass) {
+    private void confirmEnable(Player viewer, MaintenanceScope scope, String reason, String message, boolean kickNonBypass) {
         ActionId action = scope == MaintenanceScope.NETWORK ? ServerActionIds.NETWORK_MAINTENANCE_ENABLE : ServerActionIds.MAINTENANCE_ENABLE;
         Runnable apply = () -> ServerGuiActions.runAction(ctx, viewer, action,
-                new EnableMaintenanceInput(reason, null, kickNonBypass), () -> this.open(viewer));
+                new EnableMaintenanceInput(reason, message, kickNonBypass), () -> this.open(viewer));
         if (!ctx.settings().get(CoreSettings.GUI_CONFIRMATIONS)) {
             apply.run();
             return;

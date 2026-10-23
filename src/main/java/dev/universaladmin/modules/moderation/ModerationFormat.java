@@ -50,7 +50,9 @@ public final class ModerationFormat {
         if (!punishment.isMute() || punishment.muteKind() == MuteKind.FULL) {
             return "";
         }
-        return " (" + messages.get(MessageKey.of("moderation.mute-kind." + punishment.muteKind().name().toLowerCase(Locale.ROOT))) + ")";
+        String kind = messages.get(MessageKey.of(punishment.muteKind() == MuteKind.CHAT
+                ? "moderation.mute-kind.chat" : "moderation.mute-kind.voice"));
+        return " (" + kind + ")";
     }
 
     /**

@@ -470,7 +470,7 @@ public final class ModerationModule implements Module {
         ModerationGuiContext guiContext = new ModerationGuiContext(
                 context.platform().guiFramework(), context.platform().messages(), context.platform().scheduler(),
                 punishmentService, context.platform().actionExecutor(), context.platform().settings(),
-                vanishService, godmodeState, collisionState, staffModeState, templates);
+                vanishService, godmodeState, collisionState, staffModeState, templates, context.platform().services());
 
         ModerationHomePage homePage = new ModerationHomePage(guiContext);
         context.platform().guiPages().register(homePage);
