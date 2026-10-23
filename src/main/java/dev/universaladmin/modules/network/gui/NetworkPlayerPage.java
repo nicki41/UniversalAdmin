@@ -12,6 +12,8 @@ import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.SelectionDialog;
+import dev.universaladmin.localization.ComponentMessages;
+import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.network.NetworkPermissions;
 import dev.universaladmin.modules.network.action.NetworkActions;
 import dev.universaladmin.modules.players.gui.PlayersGui;
@@ -84,7 +86,8 @@ public final class NetworkPlayerPage extends AbstractGuiPage {
                     NetworkPermissions.SEND, click -> move(click, NetworkActions.BRING, player.name())), viewer);
         }
         view.place(GuiLayout.contentSlot(22), new GuiButton(GuiItem.of(Material.COMPASS, text("network.gui.player.send"),
-                List.of(text("network.gui.player.send-lore"))), NetworkPermissions.SEND, this::chooseServer), viewer);
+                List.of(text("network.gui.player.send-lore"))), NetworkPermissions.SEND,
+                click -> chooseServer(ctx, click.viewer(), player)), viewer);
         Optional<PlayersGui> profiles = ctx.services().get(PlayersGui.class);
         if (player.id() != null && profiles.isPresent()) {
             view.place(GuiLayout.contentSlot(24), new GuiButton(GuiItem.of(Material.BOOK, text("network.gui.player.profile"),
@@ -98,18 +101,23 @@ public final class NetworkPlayerPage extends AbstractGuiPage {
         GuiActions.runAndReport(ctx.actionExecutor(), ctx.scheduler(), messages, viewer, action, input, null, viewer::closeInventory);
     }
 
-    private void chooseServer(GuiClickContext click) {
-        Player viewer = click.viewer();
+    /** Lets {@code viewer} pick an online server other than the player's and sends the player there - also {@link NetworkSendEntry}'s click. */
+    static void chooseServer(NetworkGuiContext ctx, Player viewer, NetworkPlayer player) {
         List<NetworkServer> targets = ctx.network().servers().stream()
                 .filter(NetworkServer::online)
                 .filter(server -> !server.name().equalsIgnoreCase(player.server()))
                 .toList();
-        SelectionDialog.open(viewer, framework, messages, ctx.scheduler(), text("network.gui.player.send-title", player.name()), targets,
+        SelectionDialog.open(viewer, ctx.framework(), ctx.messages(), ctx.scheduler(),
+                render(ctx, "network.gui.player.send-title", player.name()), targets,
                 server -> GuiItem.of(server.universalAdmin() ? Material.EMERALD_BLOCK : Material.QUARTZ_BLOCK,
-                        text("network.gui.server.name-online", server.name()),
-                        List.of(text("network.gui.server.players-only", Integer.toString(server.playerCount())))),
-                (choice, server) -> GuiActions.runAndReport(ctx.actionExecutor(), ctx.scheduler(), messages, choice.viewer(),
+                        render(ctx, "network.gui.server.name-online", server.name()),
+                        List.of(render(ctx, "network.gui.server.players-only", Integer.toString(server.playerCount())))),
+                (choice, server) -> GuiActions.runAndReport(ctx.actionExecutor(), ctx.scheduler(), ctx.messages(), choice.viewer(),
                         NetworkActions.SEND, new NetworkActions.SendInput(player.name(), server.name()), null,
                         () -> choice.viewer().closeInventory()));
+    }
+
+    private static Component render(NetworkGuiContext ctx, String key, Object... args) {
+        return ComponentMessages.render(ctx.messages().get(MessageKey.of(key), args));
     }
 }

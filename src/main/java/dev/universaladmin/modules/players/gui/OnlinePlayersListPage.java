@@ -10,10 +10,13 @@ import dev.universaladmin.gui.GuiSession;
 import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.Pagination;
+import dev.universaladmin.network.NetworkServer;
+import dev.universaladmin.network.NetworkVisibility;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -23,7 +26,11 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 /**
- * Currently-online players with World/Gamemode filter-cycle buttons - the
+ * Currently-online players - in network mode every player of the network,
+ * with the server they are on, a server filter and sorting by name or server
+ * (players on other servers open the same profile; what needs them here,
+ * like the live inventory, is left out there). World/Gamemode filter-cycle
+ * buttons - the
  * "prepare a World/Gamemode filter" requirement, meaningful here since
  * both are live state only an online player has. Reading {@link
  * Bukkit#getOnlinePlayers()} and filtering/sorting for display is
@@ -40,6 +47,8 @@ public final class OnlinePlayersListPage extends AbstractGuiPage {
     private static final int WORLD_FILTER_SLOT = 1;
     private static final int GAMEMODE_FILTER_SLOT = 2;
     private static final int SEARCH_SLOT = 3;
+    private static final int SERVER_FILTER_SLOT = 5;
+    private static final int SORT_SLOT = 6;
 
     private final PlayerGuiContext ctx;
 
@@ -60,22 +69,47 @@ public final class OnlinePlayersListPage extends AbstractGuiPage {
         String worldFilter = worldFilterFor(context.session());
         GameMode gamemodeFilter = gamemodeFilterFor(context.session());
         String query = queryFor(context.session());
+        boolean network = ctx.network().enabled();
+        String serverFilter = network ? serverFilterFor(context.session()) : null;
+        boolean byServer = network && sortByServer(context.session());
         placeWorldFilterButton(view, viewer, worldFilter);
         placeGamemodeFilterButton(view, viewer, gamemodeFilter);
         placeSearchButton(view, viewer, query);
+        if (network) {
+            placeServerFilterButton(view, viewer, serverFilter);
+            placeSortButton(view, viewer, byServer);
+        }
 
         // Bukkit.getOnlinePlayers() returns Collection<? extends Player> - copy
         // to a concrete List<Player> first so the stream below isn't stuck
-        // with an unusable captured wildcard type. Already an in-memory,
-        // already-online collection, so the name search below is a plain
-        // substring filter - unlike OfflinePlayersListPage's search, there's
-        // no database query to run async.
+        // with an unusable captured wildcard type. Already in memory (the
+        // network's players are a snapshot too), so the name search below is
+        // a plain substring filter - unlike OfflinePlayersListPage's search,
+        // there's no database query to run async.
         String needle = query.toLowerCase(Locale.ROOT);
-        List<Player> players = new ArrayList<Player>(Bukkit.getOnlinePlayers()).stream()
-                .filter(p -> worldFilter == null || worldFilter.equals(p.getWorld().getName()))
-                .filter(p -> gamemodeFilter == null || gamemodeFilter == p.getGameMode())
-                .filter(p -> needle.isEmpty() || p.getName().toLowerCase(Locale.ROOT).contains(needle))
-                .sorted(Comparator.comparing(Player::getName, String.CASE_INSENSITIVE_ORDER))
+        String here = network ? ctx.network().serverName() : null;
+        List<Row> rows = new ArrayList<>();
+        for (Player player : new ArrayList<Player>(Bukkit.getOnlinePlayers())) {
+            rows.add(new Row(player.getUniqueId(), player.getName(), here, player));
+        }
+        if (network) {
+            // Players on servers without UniversalAdmin have no UUID and no
+            // profile - the Network menu still lists them.
+            NetworkVisibility.players(viewer, ctx.network()).stream()
+                    .filter(player -> player.id() != null && !player.server().equalsIgnoreCase(here))
+                    .forEach(player -> rows.add(new Row(player.id(), player.name(), player.server(), null)));
+        }
+        Comparator<Row> order = Comparator.comparing(Row::name, String.CASE_INSENSITIVE_ORDER);
+        if (byServer) {
+            order = Comparator.comparing((Row row) -> row.server() == null ? "" : row.server(), String.CASE_INSENSITIVE_ORDER).thenComparing(order);
+        }
+        List<Row> players = rows.stream()
+                // World and gamemode are only known for players on this server.
+                .filter(row -> worldFilter == null || row.local() != null && worldFilter.equals(row.local().getWorld().getName()))
+                .filter(row -> gamemodeFilter == null || row.local() != null && gamemodeFilter == row.local().getGameMode())
+                .filter(row -> serverFilter == null || serverFilter.equalsIgnoreCase(row.server()))
+                .filter(row -> needle.isEmpty() || row.name().toLowerCase(Locale.ROOT).contains(needle))
+                .sorted(order)
                 .toList();
 
         if (players.isEmpty()) {
@@ -85,16 +119,18 @@ public final class OnlinePlayersListPage extends AbstractGuiPage {
         }
 
         String pageAttribute = id().toString() + ".page";
-        Pagination<Player> pagination =
+        Pagination<Row> pagination =
                 new Pagination<>(players, GuiLayout.contentSize(), context.session().intAttribute(pageAttribute, 0)).clamped();
         context.session().setAttribute(pageAttribute, pagination.currentPage());
 
-        List<Player> pageItems = pagination.currentPageItems();
+        List<Row> pageItems = pagination.currentPageItems();
         for (int i = 0; i < pageItems.size(); i++) {
-            Player target = pageItems.get(i);
+            Row target = pageItems.get(i);
+            GuiItem item = target.local() != null
+                    ? PlayerGuiItems.onlinePlayerItem(messages, target.local(), target.server())
+                    : PlayerGuiItems.networkPlayerItem(messages, target.id(), target.name(), target.server());
             view.place(GuiLayout.contentSlot(i),
-                    GuiButton.of(PlayerGuiItems.onlinePlayerItem(messages, target),
-                            clickCtx -> clickCtx.open(new PlayerProfilePage(ctx, target.getUniqueId(), target.getName()))),
+                    GuiButton.of(item, clickCtx -> clickCtx.open(new PlayerProfilePage(ctx, target.id(), target.name()))),
                     viewer);
         }
         renderPaginationControls(view, viewer, pagination, pageAttribute);
@@ -116,6 +152,53 @@ public final class OnlinePlayersListPage extends AbstractGuiPage {
             clickCtx.session().setAttribute(id().toString() + ".page", 0);
             this.open(clickCtx.viewer());
         }), viewer);
+    }
+
+    private void placeServerFilterButton(GuiView view, Player viewer, String serverFilter) {
+        Component label = serverFilter == null
+                ? text("players.gui.online.filter-server-all") : text("players.gui.online.filter-server", serverFilter);
+        view.place(SERVER_FILTER_SLOT, GuiButton.of(GuiItem.of(Material.ENDER_EYE, label), clickCtx -> {
+            clickCtx.session().setAttribute(serverFilterKey(), nextServerFilter(serverFilter));
+            clickCtx.session().setAttribute(id().toString() + ".page", 0);
+            this.open(clickCtx.viewer());
+        }), viewer);
+    }
+
+    private void placeSortButton(GuiView view, Player viewer, boolean byServer) {
+        GuiItem item = GuiItem.of(Material.HOPPER,
+                text(byServer ? "players.gui.online.sort-server" : "players.gui.online.sort-name"),
+                List.of(text("players.gui.online.sort-lore")));
+        view.place(SORT_SLOT, GuiButton.of(item, clickCtx -> {
+            clickCtx.session().setAttribute(sortKey(), !byServer);
+            clickCtx.session().setAttribute(id().toString() + ".page", 0);
+            this.open(clickCtx.viewer());
+        }), viewer);
+    }
+
+    /** All servers, then every online one of the network in turn. */
+    private String nextServerFilter(String current) {
+        List<String> options = new ArrayList<>();
+        options.add(null);
+        ctx.network().servers().stream().filter(NetworkServer::online).map(NetworkServer::name).sorted(String.CASE_INSENSITIVE_ORDER)
+                .forEach(options::add);
+        int index = options.indexOf(current);
+        return options.get((index + 1) % options.size());
+    }
+
+    private String serverFilterFor(GuiSession session) {
+        return session.attribute(serverFilterKey()).filter(String.class::isInstance).map(String.class::cast).orElse(null);
+    }
+
+    private boolean sortByServer(GuiSession session) {
+        return session.attribute(sortKey()).filter(Boolean.class::isInstance).map(Boolean.class::cast).orElse(false);
+    }
+
+    private String serverFilterKey() {
+        return id().toString() + ".server";
+    }
+
+    private String sortKey() {
+        return id().toString() + ".sort-server";
     }
 
     private void placeSearchButton(GuiView view, Player viewer, String query) {
@@ -188,7 +271,7 @@ public final class OnlinePlayersListPage extends AbstractGuiPage {
         view.clear(GuiLayout.NEXT_PAGE_SLOT);
     }
 
-    private void renderPaginationControls(GuiView view, Player viewer, Pagination<Player> pagination, String pageAttribute) {
+    private void renderPaginationControls(GuiView view, Player viewer, Pagination<Row> pagination, String pageAttribute) {
         if (pagination.hasPrevious()) {
             view.place(GuiLayout.PREVIOUS_PAGE_SLOT,
                     GuiButton.of(GuiItem.of(framework.icons().previousPage(), text("gui.previous-page")), clickCtx -> {
@@ -211,5 +294,14 @@ public final class OnlinePlayersListPage extends AbstractGuiPage {
         } else {
             view.clear(GuiLayout.NEXT_PAGE_SLOT);
         }
+    }
+
+    /**
+     * One line of the list.
+     *
+     * @param server where the player is ({@code null} outside network mode)
+     * @param local  the player, if they are on this server
+     */
+    private record Row(UUID id, String name, String server, Player local) {
     }
 }

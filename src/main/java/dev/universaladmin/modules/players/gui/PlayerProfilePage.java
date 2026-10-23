@@ -14,6 +14,8 @@ import dev.universaladmin.modules.players.PlayerPermissions;
 import dev.universaladmin.modules.players.PlayerSnapshot;
 import dev.universaladmin.modules.players.action.GetPlayerIpAddressAction;
 import dev.universaladmin.modules.players.action.PlayerTargetInput;
+import dev.universaladmin.network.NetworkPlayer;
+import dev.universaladmin.network.NetworkVisibility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -93,6 +95,10 @@ public final class PlayerProfilePage extends AbstractGuiPage {
 
         List<GuiItem> fields = new ArrayList<>();
         fields.add(header(snapshot));
+        Optional<NetworkPlayer> elsewhere = elsewhere(viewer);
+        if (ctx.network().enabled() && (snapshot.online() || elsewhere.isPresent())) {
+            fields.add(field("players.gui.field.server", elsewhere.map(NetworkPlayer::server).orElse(ctx.network().serverName())));
+        }
         fields.add(field("players.gui.field.first-join", PlayerGuiFormat.instant(snapshot.firstJoin())));
         fields.add(field("players.gui.field.last-join", PlayerGuiFormat.instant(snapshot.lastSeen())));
         if (snapshot.sessionDuration() != null) {
@@ -186,7 +192,24 @@ public final class PlayerProfilePage extends AbstractGuiPage {
         }
     }
 
+    /** Where the player is, if they are online on another server of the network - and the viewer may see them there. */
+    private Optional<NetworkPlayer> elsewhere(Player viewer) {
+        if (!ctx.network().enabled()) {
+            return Optional.empty();
+        }
+        return ctx.network().player(targetId)
+                .filter(player -> !player.server().equalsIgnoreCase(ctx.network().serverName()))
+                .filter(player -> NetworkVisibility.canSee(viewer, ctx.network(), player));
+    }
+
     private GuiItem header(PlayerSnapshot snapshot) {
+        Optional<NetworkPlayer> elsewhere = snapshot.online() ? Optional.empty() : ctx.network().player(targetId)
+                .filter(player -> ctx.network().enabled() && !player.server().equalsIgnoreCase(ctx.network().serverName()));
+        if (elsewhere.isPresent()) {
+            List<Component> lore = List.of(text("players.gui.field.status-elsewhere", elsewhere.get().server()),
+                    Component.text(snapshot.id().toString(), NamedTextColor.DARK_GRAY));
+            return GuiItem.playerHead(Bukkit.getOfflinePlayer(snapshot.id()), Component.text(targetName, NamedTextColor.GOLD), lore);
+        }
         Component statusKey = text(snapshot.online() ? "players.gui.field.status-online" : "players.gui.field.status-offline");
         List<Component> lore = List.of(statusKey, Component.text(snapshot.id().toString(), NamedTextColor.DARK_GRAY));
         if (snapshot.online()) {

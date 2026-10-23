@@ -35,6 +35,8 @@ players:
       world: "Welt: {0}"
       gamemode: "Spielmodus: {0}"
       ping: "Ping: {0}ms"
+      server: "Server: {0}"
+      elsewhere: "<aqua>Auf {0} - im Profil: schicken und teleportieren"
       last-seen: "Zuletzt gesehen: {0}"
       first-join: "Erster Beitritt: {0}"
     field:
@@ -57,10 +59,12 @@ players:
       ip: "IP-Adresse"
       status-online: "<green>Online"
       status-offline: "<gray>Offline"
+      status-elsewhere: "<aqua>Online auf {0}"
+      server: "Server"
     home:
       title: "<gold><bold>Spieler"
       online: "<green>Online-Spieler"
-      online-lore: "<gray>Aktuell online befindliche Spieler durchsuchen."
+      online-lore: "<gray>Aktuell online befindliche Spieler durchsuchen - im Netzwerk auf jedem Server."
       offline: "<gray>Offline-Spieler"
       offline-lore: "<gray>Jeden Spieler durchsuchen, der jemals beigetreten ist."
       recently-seen: "<yellow>Zuletzt gesehen"
@@ -71,6 +75,11 @@ players:
       title: "<gold>Online-Spieler"
       filter-world-all: "<white>Welt: Alle"
       filter-gamemode-all: "<white>Spielmodus: Alle"
+      filter-server-all: "<white>Server: Alle"
+      filter-server: "<white>Server: {0}"
+      sort-name: "<white>Sortiert nach Name"
+      sort-server: "<white>Sortiert nach Server"
+      sort-lore: "<gray>Klicken zum Wechseln"
       search: "<aqua>Suche"
       search-empty: "<gray>Klicken, um nach Namen zu suchen"
       search-prompt: "Namen zum Suchen eingeben"
@@ -315,7 +324,6 @@ moderation:
   mute-kind:
     chat: "nur Chat"
     voice: "nur Voice-Chat"
-    full: "Chat und Voice-Chat"
   action:
     offline: "<red>Dieser Spieler ist nicht mehr online."
     no-ip-address: "<red>Für diesen Spieler ist keine IP-Adresse verfügbar."

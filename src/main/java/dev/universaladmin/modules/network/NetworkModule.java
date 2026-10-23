@@ -11,9 +11,11 @@ import dev.universaladmin.module.ModuleDescriptor;
 import dev.universaladmin.module.ModuleId;
 import dev.universaladmin.modules.network.action.NetworkActions;
 import dev.universaladmin.modules.network.command.NetworkCommands;
+import dev.universaladmin.modules.network.gui.NetworkBringEntry;
 import dev.universaladmin.modules.network.gui.NetworkGuiContext;
 import dev.universaladmin.modules.network.gui.NetworkHomePage;
 import dev.universaladmin.modules.network.gui.NetworkProfileEntry;
+import dev.universaladmin.modules.network.gui.NetworkSendEntry;
 import dev.universaladmin.network.NetworkListener;
 import dev.universaladmin.network.NetworkPlayer;
 import dev.universaladmin.network.NetworkService;
@@ -83,6 +85,8 @@ public final class NetworkModule implements Module {
                 platform.actionExecutor(), network, platform.services());
         context.registerPage(new NetworkHomePage(gui));
         context.registerPlayerMenuEntry(new NetworkProfileEntry(gui));
+        context.registerPlayerMenuEntry(new NetworkBringEntry(gui));
+        context.registerPlayerMenuEntry(new NetworkSendEntry(gui));
         NetworkCommands.all(network).forEach(context::registerCommand);
     }
 

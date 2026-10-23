@@ -38,6 +38,8 @@ players:
       world: "World: {0}"
       gamemode: "Gamemode: {0}"
       ping: "Ping: {0}ms"
+      server: "Server: {0}"
+      elsewhere: "<aqua>On {0} - the profile has send and teleport"
       last-seen: "Last seen: {0}"
       first-join: "First join: {0}"
     field:
@@ -60,10 +62,12 @@ players:
       ip: "IP Address"
       status-online: "<green>Online"
       status-offline: "<gray>Offline"
+      status-elsewhere: "<aqua>Online on {0}"
+      server: "Server"
     home:
       title: "<gold><bold>Players"
       online: "<green>Online Players"
-      online-lore: "<gray>Browse currently online players."
+      online-lore: "<gray>Browse currently online players - in a network on every server."
       offline: "<gray>Offline Players"
       offline-lore: "<gray>Browse every player who has ever joined."
       recently-seen: "<yellow>Recently Seen"
@@ -74,6 +78,11 @@ players:
       title: "<gold>Online Players"
       filter-world-all: "<white>World: All"
       filter-gamemode-all: "<white>Gamemode: All"
+      filter-server-all: "<white>Server: All"
+      filter-server: "<white>Server: {0}"
+      sort-name: "<white>Sorted by name"
+      sort-server: "<white>Sorted by server"
+      sort-lore: "<gray>Click to switch"
       search: "<aqua>Search"
       search-empty: "<gray>Click to search by name"
       search-prompt: "Enter a name to search for"
@@ -318,7 +327,6 @@ moderation:
   mute-kind:
     chat: "chat only"
     voice: "voice chat only"
-    full: "chat and voice chat"
   action:
     offline: "<red>That player is no longer online."
     no-ip-address: "<red>No IP address is available for that player."

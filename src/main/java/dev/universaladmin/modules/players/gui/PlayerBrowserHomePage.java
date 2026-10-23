@@ -4,15 +4,16 @@ import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiFramework;
-import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiView;
+import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.players.PlayerService;
 import dev.universaladmin.modules.players.inventory.LiveInventoryService;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
 import java.util.List;
@@ -39,9 +40,10 @@ public final class PlayerBrowserHomePage extends AbstractGuiPage {
     public PlayerBrowserHomePage(
             GuiFramework framework, MessageService messages, TaskScheduler scheduler,
             PlayerService playerService, ActionExecutor actionExecutor, SettingsService settings, PlayerMenuRegistry playerMenu,
-            LiveInventoryService liveInventory) {
+            LiveInventoryService liveInventory, NetworkService network) {
         super(ID, framework, messages);
-        this.ctx = new PlayerGuiContext(framework, messages, scheduler, playerService, actionExecutor, settings, playerMenu, liveInventory);
+        this.ctx = new PlayerGuiContext(framework, messages, scheduler, playerService, actionExecutor, settings, playerMenu, liveInventory,
+                network);
     }
 
     @Override
