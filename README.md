@@ -3,6 +3,8 @@
 [![Build](https://github.com/nicki41/UniversalAdmin/actions/workflows/build.yml/badge.svg)](https://github.com/nicki41/UniversalAdmin/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Modrinth](https://img.shields.io/badge/Modrinth-universaladmin-00AF5C)](https://modrinth.com/plugin/universaladmin)
+[![Servers](https://telemetry.0nicki.de/v1/badge/servers.svg?plugin=universaladmin)](docs/user/telemetry.md)
+[![Players](https://telemetry.0nicki.de/v1/badge/players.svg?plugin=universaladmin&color=blue)](docs/user/telemetry.md)
 
 **The free, all-in-one admin plugin for Paper.** Moderation, reports, staff
 chat, vanish, staff mode, player tools, inventories, worlds, whitelist,
@@ -162,9 +164,6 @@ UniversalAdminProvider.get().extensions().register(this, new MyModule());
   [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md).
 
 ## Anonymous statistics
-
-[![Servers](https://telemetry.0nicki.de/v1/badge/servers.svg?plugin=universaladmin)](docs/user/telemetry.md)
-[![Players Online](https://telemetry.0nicki.de/v1/badge/players.svg?plugin=universaladmin)](docs/user/telemetry.md)
 
 UniversalAdmin sends a small anonymous heartbeat (random installation id,
 plugin/Minecraft/Java version, player count) so we know how many servers use

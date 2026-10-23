@@ -17,7 +17,7 @@ everything on this page (texts, gallery, links) is maintained by hand.
 | Summary | see below |
 | Categories | Management, Utility (additional: Social) |
 | Environment | Server-side only |
-| Loaders | Paper, Purpur (plugin); Velocity (the `-velocity` versions) |
+| Loaders | Paper, Purpur (plugin); Velocity (the `-velocity` versions); BungeeCord, Waterfall (the `-bungee` versions) |
 | Game versions | everything in [`supported-versions.txt`](../../supported-versions.txt) - set by `release.yml`, extended by `compatibility.yml` |
 | License | Apache-2.0 |
 | Icon | `assets/icon.png` |
@@ -34,9 +34,17 @@ everything on this page (texts, gallery, links) is maintained by hand.
 
 Paste everything between the lines into Modrinth's description editor.
 
+The statistics badges go through `wsrv.nl` with `maxage=1d` on purpose:
+Modrinth sends images from hosts outside its allow-list through `wsrv.nl`
+anyway, but then with a one-year cache, so the numbers would never change.
+A `wsrv.nl` link of our own is left as it is and refreshes daily.
+
 ---
 
 # UniversalAdmin
+
+[![Servers](https://wsrv.nl/?url=https%3A%2F%2Ftelemetry.0nicki.de%2Fv1%2Fbadge%2Fservers.svg%3Fplugin%3Duniversaladmin&maxage=1d)](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/telemetry.md)
+[![Players](https://wsrv.nl/?url=https%3A%2F%2Ftelemetry.0nicki.de%2Fv1%2Fbadge%2Fplayers.svg%3Fplugin%3Duniversaladmin%26color%3Dblue&maxage=1d)](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/telemetry.md)
 
 **The free, all-in-one admin plugin for Paper.** Everything your staff team
 needs - moderation, reports, staff mode, player tools, worlds, maintenance,

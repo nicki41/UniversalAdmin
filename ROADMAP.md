@@ -65,12 +65,29 @@ welcome as [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues).
 - [x] A **BungeeCord** proxy plugin next to the Velocity one, both on shared
       proxy code ([ADR 0021](docs/architecture/decisions/0021-bungeecord-proxy-plugin.md))
 
+## Next - 1.5.0
+
+- [ ] **Forms instead of one prompt after another**: adding to the
+      whitelist, the world border, the server page, punishing, broadcasts
+      and whole settings sections each in one Paper dialog - text fields,
+      sliders, checkboxes and option lists
+- [ ] **Simple Voice Chat** as an official extension: mute in chat, in
+      voice chat or both; vanished staff stay silent; voice status on the
+      profile and a staff voice group
+- [ ] Licensed under **GPL-3.0-or-later** from this version on; the
+      extension API stays Apache-2.0
+
 ## Later - 1.x
 
 Additive, no breaking changes.
 
-- [ ] **Vault** bridge for economy/permission display on profiles (official
-      extension)
+- [ ] **Vault** as an official extension: balance and rank on the player
+      profile
+- [ ] **CoreProtect** as an official extension: block lookups and rollbacks
+      from the player profile, e.g. together with a griefing ban
+- [ ] **Documentation website** on GitHub Pages, built from `docs/` with
+      MkDocs Material - navigation and search instead of browsing Markdown
+      files
 - [ ] Ticket/support system as an official extension built on the API
 - [ ] More languages (community translations - `lang/<locale>.yml` is all it
       takes)
