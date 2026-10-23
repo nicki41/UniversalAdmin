@@ -62,7 +62,7 @@ public final class PunishmentDetailPage extends AbstractGuiPage {
     protected void renderContent(GuiRenderContext context) {
         GuiView view = context.view();
         Player viewer = context.viewer();
-        view.place(INFO_SLOT, GuiItem.of(Material.PAPER, Component.text(punishment.type().name(), NamedTextColor.GOLD), detailLore()));
+        view.place(INFO_SLOT, GuiItem.of(Material.PAPER, Component.text(ModerationFormat.typeName(punishment, messages), NamedTextColor.GOLD), detailLore()));
 
         RevokeAction revoke = revokeActionFor();
         if (revoke != null && viewer.hasPermission(revoke.permission.value())) {

@@ -37,6 +37,9 @@ import org.bukkit.entity.Player;
 public final class GuiTextInput {
 
     private static final int INPUT_WIDTH = 250;
+    // The dialog's own default is 32 characters, which cut longer reasons
+    // short; 255 fits every text column the menus write to.
+    private static final int MAX_LENGTH = 255;
     private static final Duration CALLBACK_LIFETIME = Duration.ofMinutes(2);
 
     private GuiTextInput() {
@@ -77,6 +80,7 @@ public final class GuiTextInput {
                 .inputs(List.of(DialogInput.text(inputKey, Component.empty())
                         .initial(initialValue == null ? "" : initialValue)
                         .width(INPUT_WIDTH)
+                        .maxLength(MAX_LENGTH)
                         .labelVisible(false)
                         .build()))
                 .canCloseWithEscape(true)

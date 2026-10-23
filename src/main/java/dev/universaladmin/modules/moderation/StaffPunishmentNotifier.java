@@ -10,8 +10,10 @@ import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.moderation.action.ModerationActionIds;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
+import dev.universaladmin.status.MuteKind;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -42,6 +44,9 @@ public final class StaffPunishmentNotifier implements ActionEventListener {
             Map.entry(ModerationActionIds.UNMUTE, "moderation.notify.unmute"),
             Map.entry(ModerationActionIds.UNFREEZE, "moderation.notify.unfreeze"),
             Map.entry(ModerationActionIds.REMOVE_WARN, "moderation.notify.removewarn"));
+
+    /** The announcements that name the kind of a chat- or voice-only mute ({@code moderation.notify.mute-voice}, ...). */
+    private static final Set<ActionId> ISSUED_MUTES = Set.of(ModerationActionIds.MUTE, ModerationActionIds.TEMP_MUTE);
 
     private final MessageService messages;
     private final SettingsService settings;
@@ -79,6 +84,9 @@ public final class StaffPunishmentNotifier implements ActionEventListener {
         String key = KEYS.get(id);
         if (key == null || !settings.get(ModerationSettings.NOTIFY_STAFF)) {
             return;
+        }
+        if (punishment.isMute() && punishment.muteKind() != MuteKind.FULL && ISSUED_MUTES.contains(id)) {
+            key = key + (punishment.muteKind() == MuteKind.CHAT ? "-chat" : "-voice");
         }
         String duration = punishment.expiresAt() == null
                 ? messages.get(MessageKey.of("moderation.gui.permanent"))

@@ -14,9 +14,16 @@ public final class TemplateTexts {
         return switch (step.kind()) {
             case WARN -> messages.get(MessageKey.of("moderation.template.step.warn"));
             case KICK -> messages.get(MessageKey.of("moderation.template.step.kick"));
-            case MUTE -> step.permanent()
-                    ? messages.get(MessageKey.of("moderation.template.step.mute-permanent"))
-                    : messages.get(MessageKey.of("moderation.template.step.mute"), DurationParser.format(step.duration()));
+            case MUTE -> {
+                String key = switch (step.muteKind()) {
+                    case CHAT -> "moderation.template.step.chatmute";
+                    case VOICE -> "moderation.template.step.voicemute";
+                    case FULL -> "moderation.template.step.mute";
+                };
+                yield step.permanent()
+                        ? messages.get(MessageKey.of(key + "-permanent"))
+                        : messages.get(MessageKey.of(key), DurationParser.format(step.duration()));
+            }
             case BAN -> step.permanent()
                     ? messages.get(MessageKey.of("moderation.template.step.ban-permanent"))
                     : messages.get(MessageKey.of("moderation.template.step.ban"), DurationParser.format(step.duration()));

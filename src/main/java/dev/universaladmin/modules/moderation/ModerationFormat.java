@@ -3,6 +3,7 @@ package dev.universaladmin.modules.moderation;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.settings.SettingsService;
+import dev.universaladmin.status.MuteKind;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -35,6 +36,21 @@ public final class ModerationFormat {
         DateTimeFormatter formatter = formatterFor(settings, zone);
         String formatted = formatter.format(instant);
         return settings.get(ModerationSettings.EXPIRY_SHOW_TIMEZONE) ? formatted + " (" + zone + ")" : formatted;
+    }
+
+    /** The localized type of a punishment, with the kind of a chat- or voice-only mute: "Mute (voice chat only)". */
+    public static String typeName(Punishment punishment, MessageService messages) {
+        String type = messages.get(MessageKey.of(
+                "moderation.type." + punishment.type().name().toLowerCase(Locale.ROOT).replace('_', '-')));
+        return type + muteKindNote(punishment, messages);
+    }
+
+    /** {@code " (voice chat only)"}/{@code " (chat only)"} for a mute that is not a full one, else empty. */
+    public static String muteKindNote(Punishment punishment, MessageService messages) {
+        if (!punishment.isMute() || punishment.muteKind() == MuteKind.FULL) {
+            return "";
+        }
+        return " (" + messages.get(MessageKey.of("moderation.mute-kind." + punishment.muteKind().name().toLowerCase(Locale.ROOT))) + ")";
     }
 
     /**

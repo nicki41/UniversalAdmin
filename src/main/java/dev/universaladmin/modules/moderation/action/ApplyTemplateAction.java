@@ -85,7 +85,7 @@ public final class ApplyTemplateAction implements Action<TemplateInput, Punishme
             case WARN -> executor.execute(ModerationActionIds.WARN, context, new WarnInput(target, reason, template.id()));
             case KICK -> executor.execute(ModerationActionIds.KICK, context, new KickInput(target, reason, template.id()));
             case MUTE -> executor.execute(step.permanent() ? ModerationActionIds.MUTE : ModerationActionIds.TEMP_MUTE, context,
-                    new MuteInput(target, reason, expiresAt, template.id()));
+                    new MuteInput(target, reason, expiresAt, template.id(), step.muteKind()));
             case BAN -> executor.execute(step.permanent() ? ModerationActionIds.BAN : ModerationActionIds.TEMP_BAN, context,
                     new BanInput(target, reason, expiresAt, template.id()));
         };

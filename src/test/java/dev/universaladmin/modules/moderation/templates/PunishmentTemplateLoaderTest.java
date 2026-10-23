@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.universaladmin.status.MuteKind;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -98,6 +99,20 @@ class PunishmentTemplateLoaderTest {
 
         assertFalse(result.valid());
         assertEquals(1, result.problems().size());
+    }
+
+    @Test
+    void chatAndVoiceMuteStepsKeepTheirKind() {
+        TemplateStep voice = TemplateStep.parse("voicemute 1h");
+        TemplateStep chat = TemplateStep.parse("ChatMute");
+
+        assertEquals(TemplateStep.Kind.MUTE, voice.kind());
+        assertEquals(MuteKind.VOICE, voice.muteKind());
+        assertEquals("voicemute 1h", voice.toString());
+        assertEquals(MuteKind.CHAT, chat.muteKind());
+        assertTrue(chat.permanent());
+        assertEquals(MuteKind.FULL, TemplateStep.parse("mute 1d").muteKind());
+        assertEquals(MuteKind.FULL, TemplateStep.parse("ban 1d").muteKind());
     }
 
     @Test

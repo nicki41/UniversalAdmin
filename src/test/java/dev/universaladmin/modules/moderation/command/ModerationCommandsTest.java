@@ -37,5 +37,7 @@ class ModerationCommandsTest {
 
         assertEquals(unique.size(), shortcuts.size(), "duplicate shortcut in " + shortcuts);
         assertTrue(unique.contains("punish"));
+        assertTrue(unique.contains("chatmute"));
+        assertTrue(unique.contains("voicemute"));
     }
 }

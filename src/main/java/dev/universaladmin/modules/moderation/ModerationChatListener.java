@@ -8,7 +8,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 /**
- * Cancels chat for an actively muted player - pure event-to-service-call
+ * Cancels chat for a player with a mute that covers the chat (a chat-only
+ * or full mute - voice-only mutes are the voice chat extension's, ADR 0022) - pure event-to-service-call
  * translation (see {@link ModerationJoinListener}'s javadoc for the same
  * rule). Uses the modern Paper {@link AsyncChatEvent}, not the deprecated
  * Bukkit {@code AsyncPlayerChatEvent} - it already fires off the main
@@ -32,7 +33,7 @@ public final class ModerationChatListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
         Player player = event.getPlayer();
-        Optional<Punishment> mute = punishmentService.activeMute(player.getUniqueId()).join();
+        Optional<Punishment> mute = punishmentService.activeChatMute(player.getUniqueId()).join();
         mute.ifPresent(punishment -> {
             event.setCancelled(true);
             player.sendMessage(enforcer.muteNotice(punishment));

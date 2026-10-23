@@ -66,11 +66,16 @@ public final class PunishmentEnforcer {
                 : render("moderation.enforcement.banned-temp", reason(punishment), expiry(punishment));
     }
 
-    /** The notice a muted player gets - when muted and on every blocked message. */
+    /** The notice a muted player gets - when muted and on every blocked message; it says where the mute applies. */
     public Component muteNotice(Punishment punishment) {
+        String prefix = switch (punishment.muteKind()) {
+            case CHAT -> "moderation.enforcement.chat-muted";
+            case VOICE -> "moderation.enforcement.voice-muted";
+            case FULL -> "moderation.enforcement.muted";
+        };
         return punishment.permanent()
-                ? render("moderation.enforcement.muted-permanent", reason(punishment))
-                : render("moderation.enforcement.muted-temp", reason(punishment), expiry(punishment));
+                ? render(prefix + "-permanent", reason(punishment))
+                : render(prefix + "-temp", reason(punishment), expiry(punishment));
     }
 
     private Component kickScreen(Punishment punishment) {

@@ -1,11 +1,14 @@
 package dev.universaladmin.modules.moderation;
 
+import dev.universaladmin.status.MuteKind;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 
 /**
  * Application service for the Moderation module - the layer between
@@ -32,8 +35,15 @@ public final class PunishmentService {
     public CompletableFuture<Punishment> issue(
             PunishmentType type, UUID targetId, String targetLastKnownName, String targetIp,
             UUID actorId, String actorName, String reason, Instant expiresAt, String template) {
+        return issue(type, targetId, targetLastKnownName, targetIp, actorId, actorName, reason, expiresAt, template, MuteKind.FULL);
+    }
+
+    /** Like {@link #issue(PunishmentType, UUID, String, String, UUID, String, String, Instant, String)}, a mute of {@code muteKind}. */
+    public CompletableFuture<Punishment> issue(
+            PunishmentType type, UUID targetId, String targetLastKnownName, String targetIp,
+            UUID actorId, String actorName, String reason, Instant expiresAt, String template, MuteKind muteKind) {
         return repository.save(Punishment.issue(type, targetId, targetLastKnownName, targetIp, actorId, actorName, reason, expiresAt,
-                template));
+                template, muteKind));
     }
 
     /** Records a kick for history - see {@link Punishment#kick}. Kicking the live player is the action's own responsibility. */
@@ -67,9 +77,31 @@ public final class PunishmentService {
         return repository.findActiveIpBan(ip, Instant.now());
     }
 
-    /** The currently-in-force mute for {@code targetId}, if any - the chat-check query. */
+    /** The currently-in-force mute for {@code targetId} of any kind, if any. */
     public CompletableFuture<Optional<Punishment>> activeMute(UUID targetId) {
         return repository.findActiveMute(targetId, Instant.now());
+    }
+
+    /** Every mute in force for {@code targetId}, newest first. */
+    public CompletableFuture<List<Punishment>> activeMutes(UUID targetId) {
+        return repository.findActiveMutes(targetId, Instant.now());
+    }
+
+    /** The mute that silences {@code targetId} in the text chat, if any - the chat-check query. */
+    public CompletableFuture<Optional<Punishment>> activeChatMute(UUID targetId) {
+        return activeMutes(targetId).thenApply(mutes -> covering(mutes, MuteKind::coversChat));
+    }
+
+    /** The mute that silences {@code targetId} in a voice chat, if any. */
+    public CompletableFuture<Optional<Punishment>> activeVoiceMute(UUID targetId) {
+        return activeMutes(targetId).thenApply(mutes -> covering(mutes, MuteKind::coversVoice));
+    }
+
+    /** The first of {@code mutes} whose kind passes {@code covers}, a full mute before any other. */
+    public static Optional<Punishment> covering(List<Punishment> mutes, Predicate<MuteKind> covers) {
+        return mutes.stream()
+                .filter(mute -> covers.test(mute.muteKind()))
+                .min(Comparator.comparing((Punishment mute) -> mute.muteKind() != MuteKind.FULL));
     }
 
     /** The currently-in-force freeze for {@code targetId}, if any - the freeze-enforcement listeners' query. */

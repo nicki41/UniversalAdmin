@@ -5,6 +5,7 @@ import dev.universaladmin.modules.moderation.PunishmentQuery;
 import dev.universaladmin.modules.moderation.PunishmentRepository;
 import dev.universaladmin.modules.moderation.PunishmentType;
 import dev.universaladmin.scheduler.TaskScheduler;
+import dev.universaladmin.status.MuteKind;
 import dev.universaladmin.storage.Transactions;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -73,8 +74,8 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
     static final String INSERT_SQL = """
             INSERT INTO punishments
                 (type, target_id, target_last_known_name, target_ip, actor_id, actor_name, reason,
-                 created_at, expires_at, active, revoked_at, revoked_by, metadata, template)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 created_at, expires_at, active, revoked_at, revoked_by, metadata, template, mute_kind)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
     private Punishment insert(Connection connection, Punishment entity) throws SQLException {
@@ -93,11 +94,11 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
                 UPDATE punishments SET
                     type = ?, target_id = ?, target_last_known_name = ?, target_ip = ?, actor_id = ?,
                     actor_name = ?, reason = ?, created_at = ?, expires_at = ?, active = ?, revoked_at = ?,
-                    revoked_by = ?, metadata = ?, template = ?
+                    revoked_by = ?, metadata = ?, template = ?, mute_kind = ?
                 WHERE id = ?
                 """)) {
             bind(statement, entity);
-            statement.setLong(15, entity.id());
+            statement.setLong(16, entity.id());
             statement.executeUpdate();
             return entity;
         }
@@ -126,6 +127,9 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
         statement.setString(12, entity.revokedBy());
         statement.setString(13, MetadataJson.encode(entity.metadata()));
         statement.setString(14, entity.template());
+        // Only mutes have a kind; NULL reads as FULL (ADR 0022), so the
+        // column stays empty for every other row.
+        statement.setString(15, entity.isMute() ? entity.muteKind().name() : null);
     }
 
     @Override
@@ -155,6 +159,26 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
     @Override
     public CompletableFuture<Optional<Punishment>> findActiveMute(UUID targetId, Instant now) {
         return findActiveOne(Set.of(PunishmentType.MUTE, PunishmentType.TEMP_MUTE), "target_id", targetId.toString(), now);
+    }
+
+    @Override
+    public CompletableFuture<List<Punishment>> findActiveMutes(UUID targetId, Instant now) {
+        return scheduler.supplyAsync(() -> {
+            try (Connection connection = dataSource.getConnection();
+                    PreparedStatement statement = connection.prepareStatement(
+                            "SELECT * FROM punishments WHERE target_id = ? AND type IN (?, ?) AND active = TRUE"
+                                    + " AND (expires_at IS NULL OR expires_at > ?) ORDER BY created_at DESC, id DESC")) {
+                statement.setString(1, targetId.toString());
+                statement.setString(2, PunishmentType.MUTE.name());
+                statement.setString(3, PunishmentType.TEMP_MUTE.name());
+                statement.setLong(4, now.toEpochMilli());
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    return mapAll(resultSet);
+                }
+            } catch (SQLException e) {
+                throw new PunishmentStorageException("Failed to look up active mutes of " + targetId, e);
+            }
+        });
     }
 
     private CompletableFuture<Optional<Punishment>> findActiveOne(
@@ -375,6 +399,19 @@ public final class JdbcPunishmentRepository implements PunishmentRepository {
                 hasRevokedAt ? Instant.ofEpochMilli(revokedAt) : null,
                 resultSet.getString("revoked_by"),
                 MetadataJson.decode(resultSet.getString("metadata")),
-                resultSet.getString("template"));
+                resultSet.getString("template"),
+                muteKind(resultSet.getString("mute_kind")));
+    }
+
+    private static MuteKind muteKind(String value) {
+        if (value == null) {
+            return MuteKind.FULL;
+        }
+        try {
+            return MuteKind.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            // A kind a newer version of a network wrote - the safest reading.
+            return MuteKind.FULL;
+        }
     }
 }

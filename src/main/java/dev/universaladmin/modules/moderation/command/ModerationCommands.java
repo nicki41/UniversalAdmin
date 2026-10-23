@@ -6,6 +6,7 @@ import dev.universaladmin.command.Arguments;
 import dev.universaladmin.command.BaseAdminCommand;
 import dev.universaladmin.command.CommandInvocation;
 import dev.universaladmin.core.PlayerRef;
+import dev.universaladmin.core.ServiceRegistry;
 import dev.universaladmin.core.time.DurationParseException;
 import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.localization.MessageKey;
@@ -37,11 +38,12 @@ import dev.universaladmin.modules.moderation.templates.PunishmentTemplateService
 import dev.universaladmin.modules.moderation.templates.TemplateTexts;
 import dev.universaladmin.permission.PermissionNode;
 import dev.universaladmin.settings.SettingsService;
+import dev.universaladmin.status.MuteKind;
+import dev.universaladmin.voice.VoiceChat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -64,10 +66,26 @@ public final class ModerationCommands {
     private ModerationCommands() {
     }
 
-    /** Dependencies the commands read from directly (lookups only; every mutation goes through an action). */
+    /**
+     * Dependencies the commands read from directly (lookups only; every mutation goes through an action).
+     *
+     * @param services where a connected voice chat is found ({@link VoiceChat}); {@code null} = none
+     */
     public record Dependencies(
             PunishmentService punishments, StaffModeService staffMode, ModerationGuiContext gui,
-            SettingsService settings, MessageService messages, PunishmentTemplateService templates) {
+            SettingsService settings, MessageService messages, PunishmentTemplateService templates,
+            ServiceRegistry services) {
+
+        public Dependencies(
+                PunishmentService punishments, StaffModeService staffMode, ModerationGuiContext gui,
+                SettingsService settings, MessageService messages, PunishmentTemplateService templates) {
+            this(punishments, staffMode, gui, settings, messages, templates, null);
+        }
+
+        /** The voice chat an extension connected, if any - voice mutes need one. */
+        Optional<VoiceChat> voiceChat() {
+            return services == null ? Optional.empty() : services.get(VoiceChat.class);
+        }
     }
 
     /** Every Moderation command, ready to register. */
@@ -79,6 +97,8 @@ public final class ModerationCommands {
                 new Punish(Kind.IPBAN, deps),
                 new Punish(Kind.MUTE, deps),
                 new Punish(Kind.TEMPMUTE, deps),
+                new Punish(Kind.CHATMUTE, deps),
+                new Punish(Kind.VOICEMUTE, deps),
                 new Punish(Kind.WARN, deps),
                 new Punish(Kind.FREEZE, deps),
                 new PunishWithTemplate(deps),
@@ -115,6 +135,10 @@ public final class ModerationCommands {
         IPBAN("ipban", ModerationPermissions.IPBAN, true, false),
         MUTE("mute", ModerationPermissions.MUTE, true, false),
         TEMPMUTE("tempmute", ModerationPermissions.TEMPMUTE, true, true),
+        // Gated on the lower of the two mute permissions; the action itself
+        // then requires MUTE or TEMPMUTE, depending on the duration.
+        CHATMUTE("chatmute", ModerationPermissions.TEMPMUTE, true, false),
+        VOICEMUTE("voicemute", ModerationPermissions.TEMPMUTE, true, false),
         WARN("warn", ModerationPermissions.WARN, false, false),
         FREEZE("freeze", ModerationPermissions.FREEZE, false, false);
 
@@ -134,9 +158,11 @@ public final class ModerationCommands {
     }
 
     /**
-     * {@code /admin <kick|ban|tempban|ipban|mute|tempmute|warn|freeze> <player> [duration] [reason]}.
+     * {@code /admin <kick|ban|tempban|ipban|mute|tempmute|chatmute|voicemute|warn|freeze> <player> [duration] [reason]}.
      * For ban/mute/ipban an optional duration right after the name turns the
-     * punishment temporary: {@code /ban Steve 7d griefing}.
+     * punishment temporary: {@code /ban Steve 7d griefing}. {@code chatmute}
+     * and {@code voicemute} are mutes of that kind (ADR 0022); a voice mute
+     * needs a connected voice chat.
      */
     static final class Punish extends BaseAdminCommand {
 
@@ -155,6 +181,10 @@ public final class ModerationCommands {
             int minimumArgs = kind.requiresDuration ? 2 : 1;
             if (invocation.argCount() < minimumArgs) {
                 invocation.usage(this);
+                return;
+            }
+            if (kind == Kind.VOICEMUTE && deps.voiceChat().isEmpty()) {
+                invocation.reply("moderation.action.no-voice-chat");
                 return;
             }
             invocation.withPlayer(0, target -> {
@@ -189,6 +219,8 @@ public final class ModerationCommands {
                     case IPBAN -> invocation.run(ModerationActionIds.IP_BAN, new IpBanInput(id, reason, expiresAt));
                     case MUTE, TEMPMUTE -> invocation.run(expiresAt != null ? ModerationActionIds.TEMP_MUTE : ModerationActionIds.MUTE,
                             new MuteInput(id, reason, expiresAt));
+                    case CHATMUTE, VOICEMUTE -> invocation.run(expiresAt != null ? ModerationActionIds.TEMP_MUTE : ModerationActionIds.MUTE,
+                            new MuteInput(id, reason, expiresAt, null, kind == Kind.CHATMUTE ? MuteKind.CHAT : MuteKind.VOICE));
                     case WARN -> invocation.run(ModerationActionIds.WARN, new WarnInput(id, reason));
                     case FREEZE -> invocation.run(ModerationActionIds.FREEZE, new FreezeInput(id, reason));
                 }
@@ -219,6 +251,8 @@ public final class ModerationCommands {
                 case IPBAN -> MessageKey.of("commands.ipban.usage");
                 case MUTE -> MessageKey.of("commands.mute.usage");
                 case TEMPMUTE -> MessageKey.of("commands.tempmute.usage");
+                case CHATMUTE -> MessageKey.of("commands.chatmute.usage");
+                case VOICEMUTE -> MessageKey.of("commands.voicemute.usage");
                 case WARN -> MessageKey.of("commands.warn.usage");
                 case FREEZE -> MessageKey.of("commands.freeze.usage");
             };
@@ -232,6 +266,8 @@ public final class ModerationCommands {
                 case IPBAN -> MessageKey.of("commands.ipban.description");
                 case MUTE -> MessageKey.of("commands.mute.description");
                 case TEMPMUTE -> MessageKey.of("commands.tempmute.description");
+                case CHATMUTE -> MessageKey.of("commands.chatmute.description");
+                case VOICEMUTE -> MessageKey.of("commands.voicemute.description");
                 case WARN -> MessageKey.of("commands.warn.description");
                 case FREEZE -> MessageKey.of("commands.freeze.description");
             };
@@ -343,7 +379,7 @@ public final class ModerationCommands {
                             .limit(HISTORY_PAGE_SIZE)
                             .forEach(punishment -> invocation.line("commands.history.entry",
                                     punishment.id(),
-                                    typeName(deps.messages(), punishment.type()),
+                                    ModerationFormat.typeName(punishment, deps.messages()),
                                     punishment.reason() == null ? "-" : punishment.reason(),
                                     punishment.actorName() == null ? "CONSOLE" : punishment.actorName(),
                                     ModerationFormat.instant(punishment.createdAt(), deps.settings()),
@@ -394,6 +430,9 @@ public final class ModerationCommands {
                     invocation.line("commands.check.header", player.name());
                     report(invocation, ban.join(), "commands.check.banned", "commands.check.not-banned");
                     report(invocation, mute.join(), "commands.check.muted", "commands.check.not-muted");
+                    mute.join().filter(found -> !ModerationFormat.muteKindNote(found, deps.messages()).isEmpty())
+                            .ifPresent(found -> invocation.line("commands.check.mute-kind",
+                                    ModerationFormat.typeName(found, deps.messages())));
                     report(invocation, freeze.join(), "commands.check.frozen", "commands.check.not-frozen");
                     invocation.line("commands.check.warnings", warnings.join().size());
                 });
@@ -524,10 +563,6 @@ public final class ModerationCommands {
         public List<String> complete(CommandInvocation invocation) {
             return invocation.argCount() <= 1 ? Arguments.visiblePlayerNames(invocation.sender()) : List.of();
         }
-    }
-
-    static String typeName(MessageService messages, PunishmentType type) {
-        return messages.get(MessageKey.of("moderation.type." + type.name().toLowerCase(Locale.ROOT).replace('_', '-')));
     }
 
     private static String status(MessageService messages, Punishment punishment) {
