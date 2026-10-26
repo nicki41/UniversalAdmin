@@ -103,6 +103,13 @@ Additive, no breaking changes.
 - [ ] **Extensions in their own GitHub repositories**, grouped in one
       GitHub organization next to the core - the counterpart of the Modrinth
       collection - each with its own releases, changelog and update check
+- [ ] **New logos**: a completely new logo for UniversalAdmin and one of
+      its own for every official extension and the proxy plugins (Voice
+      Chat still uses the core's); the current icons are removed and
+      replaced everywhere - GitHub, Modrinth, the docs
+- [ ] **Documentation website** on GitHub Pages, built from `docs/` with
+      MkDocs Material - navigation and search instead of browsing Markdown
+      files
 - [ ] **Vault** as an official extension: balance and rank on the player
       profile
 - [ ] **CoreProtect** as an official extension: block lookups and rollbacks
@@ -114,9 +121,6 @@ Additive, no breaking changes.
 - [ ] **MiniMOTD** as an official extension: a maintenance MOTD and a
       player count without vanished players
 - [ ] Forms for whole settings sections (checkboxes, sliders, option lists)
-- [ ] **Documentation website** on GitHub Pages, built from `docs/` with
-      MkDocs Material - navigation and search instead of browsing Markdown
-      files
 - [ ] Ticket/support system as an official extension built on the API
 - [ ] More languages (community translations - `lang/<locale>.yml` is all it
       takes)
