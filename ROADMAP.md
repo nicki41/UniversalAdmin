@@ -93,6 +93,16 @@ welcome as [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues).
 
 Additive, no breaking changes.
 
+- [ ] **Update check, finished**: today UniversalAdmin checks GitHub every
+      6 hours, warns in the console and tells the staff online at that
+      moment, and `/admin update` downloads the new plugin jar. Still
+      missing: a notice for staff who join later, **automatic updates**
+      (downloaded into `plugins/update/` and applied at the next restart,
+      switchable in `config.yml`), and the same check and update for the
+      official extensions and the proxy plugins
+- [ ] **Extensions in their own GitHub repositories**, grouped in one
+      GitHub organization next to the core - the counterpart of the Modrinth
+      collection - each with its own releases, changelog and update check
 - [ ] **Vault** as an official extension: balance and rank on the player
       profile
 - [ ] **CoreProtect** as an official extension: block lookups and rollbacks
