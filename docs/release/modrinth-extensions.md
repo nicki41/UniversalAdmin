@@ -160,7 +160,7 @@ The project id goes into the repository variable `MODRINTH_VOICECHAT_ID`;
 
 The official [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)
 extension for [UniversalAdmin](https://modrinth.com/plugin/universaladmin) -
-mutes that reach the voice chat, without a single extra command to learn.
+mutes that reach the voice chat, and a voice group for your staff.
 
 ## Highlights
 
