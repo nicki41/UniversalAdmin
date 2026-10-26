@@ -7,6 +7,7 @@ and publishes:
 - a GitHub release with `universaladmin-core-<v>.jar` (+ `.sha256`),
   `universaladmin-discord-<v>.jar` (+ `.sha256`),
   `universaladmin-placeholderapi-<v>.jar` (+ `.sha256`),
+  `universaladmin-voicechat-<v>.jar` (+ `.sha256`),
   `universaladmin-velocity-<v>.jar` (+ `.sha256`),
   `universaladmin-bungee-<v>.jar` (+ `.sha256`) and
   `universaladmin-api-<v>.jar` with `-sources.jar` and `-javadoc.jar`,
@@ -17,9 +18,11 @@ and publishes:
   plugin as version `<v>-velocity` (loader `velocity`) and the BungeeCord
   plugin as version `<v>-bungee` (loaders `bungeecord`, `waterfall`);
 - on the extensions' own Modrinth projects, each depending on the plugin:
-  UniversalAdmin Discord (id `Lq5Ihyzr`) and UniversalAdmin Placeholders
-  (id `229V0zwE`, also depending on PlaceholderAPI) - see
-  [Modrinth](#modrinth).
+  UniversalAdmin Discord (id `Lq5Ihyzr`), UniversalAdmin Placeholders
+  (id `229V0zwE`, also depending on PlaceholderAPI) and UniversalAdmin
+  Voice Chat (also depending on Simple Voice Chat; its project id is the
+  repository variable `MODRINTH_VOICECHAT_ID` - while that is not set, its
+  jar only goes to the GitHub release) - see [Modrinth](#modrinth).
 
 Nothing is published if a single test fails.
 

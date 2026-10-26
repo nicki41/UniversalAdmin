@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
-    compileOnly("com.github.nicki41.UniversalAdmin:universaladmin-api:v1.3.0")
+    compileOnly("com.github.nicki41.UniversalAdmin:universaladmin-api:v1.5.0")
 }
 ```
 
@@ -33,10 +33,10 @@ Alternatives if you prefer:
 
 - the plugin jar from Modrinth's Maven:
   `maven("https://api.modrinth.com/maven")` +
-  `compileOnly("maven.modrinth:universaladmin:1.3.0")`,
-- or `universaladmin-api-1.3.0.jar` (with sources and javadoc) from the
+  `compileOnly("maven.modrinth:universaladmin:1.5.0")`,
+- or `universaladmin-api-1.5.0.jar` (with sources and javadoc) from the
   [GitHub release](https://github.com/nicki41/UniversalAdmin/releases),
-  added via `compileOnly(files("libs/universaladmin-api-1.3.0.jar"))`.
+  added via `compileOnly(files("libs/universaladmin-api-1.5.0.jar"))`.
 
 Never shade the API into your jar.
 
@@ -157,11 +157,21 @@ public final class TicketsModule implements Module {
 - Status for displays (1.2): `services().get(PlayerStatus.class)` (vanished,
   staff mode, frozen, muted, warnings, punishment count), `ReportOverview`
   (open reports), `MaintenanceStatus` - all answered from memory, safe on
-  the main thread. The PlaceholderAPI extension is built on them.
+  any thread. The PlaceholderAPI extension is built on them.
+- Mute kinds (1.4): `PlayerStatus#chatMute`/`#voiceMute` and
+  `Mute#kind()` (`MuteKind.CHAT`/`VOICE`/`FULL`). An extension that
+  connects a voice chat registers a `dev.universaladmin.voice.VoiceChat`
+  service - then the core offers chat- and voice-only mutes, and the
+  extension enforces the voice part. UniversalAdmin Voice Chat is built on
+  this ([voicechat.md](voicechat.md)).
+- Forms (1.4): `GuiForm` asks for several values in one Paper dialog -
+  text fields, sliders, checkboxes, option lists; see
+  [gui-framework.md](../development/gui-framework.md#forms).
 - `UniversalAdminProvider.API_VERSION` - check before relying on API added
   in a later minor version (`network()`, `PlayerDirectory` and
   `withPlayer` are 1.1; the status services and
-  `PlayerDirectory#addIfAbsent` are 1.2).
+  `PlayerDirectory#addIfAbsent` are 1.2; `NetworkService#vanished` is 1.3;
+  mute kinds, `VoiceChat` and `GuiForm` are 1.4 - UniversalAdmin 1.5).
 
 ## Reference
 

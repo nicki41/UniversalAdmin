@@ -41,6 +41,8 @@ permission listed is checked by the action itself, not just by the command.
 | `/admin ipban <player> [duration] [reason]` | `/ipban` | `moderation.ipban` | Ban the IP the player last joined from |
 | `/admin mute <player> [duration] [reason]` | `/mute` | `moderation.mute` (`moderation.tempmute` with a duration) | Mute |
 | `/admin tempmute <player> <duration> [reason]` | `/tempmute` | `moderation.tempmute` | Temporary mute |
+| `/admin chatmute <player> [duration] [reason]` | `/chatmute` | `moderation.tempmute`; `moderation.mute` without a duration | Mute in the chat only - the voice chat stays free |
+| `/admin voicemute <player> [duration] [reason]` | `/voicemute` | `moderation.tempmute`; `moderation.mute` without a duration | Mute in the voice chat only - needs [UniversalAdmin Voice Chat](../extensions/voicechat.md) |
 | `/admin warn <player> [reason]` | `/warn` | `moderation.warn` | Warning (shown to the player, kept in history) |
 | `/admin punish <player> [template] [note]` | `/punish` | `moderation.use`; applying a template `moderation.punish` + the step's own node | The next step of a punishment template - see [moderation.md](modules/moderation.md#punishment-templates). Without a template: the punishment wizard (console and Discord: what each template would do) |
 | `/admin unban <player>` | `/unban` | `moderation.unban` | Lift a ban |

@@ -76,7 +76,11 @@ notes on `SetGameRuleAction`/`WorldGameRulesListPage`.)
 
 Everything `org.bukkit.WorldBorder` exposes ("soweit API"): center, size
 (with an optional gradual transition, in seconds), damage amount, damage
-buffer, warning distance, and warning time.
+buffer, warning distance, and warning time. Each button opens a form with one
+field per value ([ADR 0023](../../architecture/decisions/0023-dialog-forms.md)):
+the center as X and Z (or "use my current position"), the size with a
+transition slider (0-600 seconds; longer ones with `/admin world border`),
+damage amount and buffer, warning distance and time.
 
 ## Dangerous Features (out of scope)
 

@@ -44,12 +44,12 @@ to be the one admin plugin your server needs.
 
 | | |
 |---|---|
-| **Moderation** | Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn, freeze - with reason and duration presets, a guided GUI wizard, full history and `/checkban`. **Punishment templates** that escalate on their own (`/punish Steve spam`), opt-in **alt detection**. Team notifications for every punishment. |
+| **Moderation** | Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn, freeze - with reason and duration presets, a punish form, full history and `/checkban`. **Chat, voice or full mutes** with Simple Voice Chat. **Punishment templates** that escalate on their own (`/punish Steve spam`), opt-in **alt detection**. Team notifications for every punishment. |
 | **Reports** | `/report` for players, clickable instant alerts for staff, a reports GUI with claim/resolve/reject and one-click teleports. Spam-protected. |
 | **Staff tools** | Vanish (with fake join/leave), godmode, no-collision, and a crash-safe **staff mode** with a toolbar: player inspector, freeze stick, live inventory/ender chest inspectors, teleport picker. |
 | **Staff notes** | Private notes about players, with a heads-up when such a player joins. |
 | **Chat** | Staff chat (`/sc` or `#message`), chat lock, slow mode, clear chat. |
-| **Players** | Online/offline browser with search, profile pages, heal/feed/fly/gamemode/speed/effects, teleports, and a **live** inventory and ender chest editor. |
+| **Players** | Online/offline browser with search - in a network every player on every server, with server filter, send and bring - profile pages, heal/feed/fly/gamemode/speed/effects with sliders, teleports, and a **live** inventory and ender chest editor. |
 | **Server** | Dashboard, broadcasts (chat, title, action bar), maintenance mode with allow-list, shutdown/restart with countdown. |
 | **Worlds** | Time, weather, difficulty, spawn, world border and a full gamerule editor - per world. |
 | **Whitelist** | With reasons, notes and **temporary** access that expires on its own - per server or for the whole network. |
@@ -129,6 +129,11 @@ targets Paper 1.21.7 and newer.
 the vanilla ban lists and EssentialsX: `/admin import`. See
 [docs/user/import.md](docs/user/import.md).
 
+**Simple Voice Chat?** Yes, with the official UniversalAdmin Voice Chat
+extension: `/voicemute`, `/chatmute`, full mutes that also reach the voice
+chat, silent vanish and a staff voice group -
+[docs/extensions/voicechat.md](docs/extensions/voicechat.md).
+
 **PlaceholderAPI?** Yes, with the official UniversalAdmin Placeholders
 extension: `%universaladmin_online%` (without vanished players),
 `%universaladmin_muted%`, `%universaladmin_open_reports%` and more -
@@ -163,6 +168,9 @@ UniversalAdminProvider.get().extensions().register(this, new MyModule());
 - **UniversalAdmin Placeholders** adds PlaceholderAPI placeholders for
   scoreboards and tab lists:
   [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md).
+- **UniversalAdmin Voice Chat** connects Simple Voice Chat: chat, voice or
+  full mutes, vanished staff stay silent, voice status on the profile and a
+  staff voice group: [docs/extensions/voicechat.md](docs/extensions/voicechat.md).
 
 ## Anonymous statistics
 

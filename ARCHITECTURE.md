@@ -128,6 +128,7 @@ share extensions - [docs/architecture/extension-builder.md](docs/architecture/ex
 | `universaladmin-core` | `/` | The plugin: bootstrap, implementations, built-in modules; shades the API |
 | `universaladmin-discord` | `extensions/discord/` | Official Discord extension (own plugin jar) |
 | `universaladmin-placeholderapi` | `extensions/placeholderapi/` | Official PlaceholderAPI extension (own plugin jar) |
+| `universaladmin-voicechat` | `extensions/voicechat/` | Official Simple Voice Chat extension (own plugin jar) |
 | `example-extension` | `examples/example-extension/` | Template extension, built in CI only |
 | `universaladmin-proxy-common` | `proxy/common/` | The checks both proxy plugins share (bans, network maintenance, network whitelist) |
 | `universaladmin-velocity` | `proxy/velocity/` | Optional Velocity plugin for network mode (own jar) |

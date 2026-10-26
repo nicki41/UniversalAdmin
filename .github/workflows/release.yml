@@ -102,8 +102,8 @@ jobs:
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
           echo "checksum=${JAR}.sha256" >> "$GITHUB_OUTPUT"
 
-      # Attached next to the plugin jar: the official Discord and
-      # PlaceholderAPI extensions (their own plugin jars), the Velocity and
+      # Attached next to the plugin jar: the official Discord, PlaceholderAPI
+      # and Voice Chat extensions (their own plugin jars), the Velocity and
       # BungeeCord plugins for network mode, and the
       # extension API for developers (binary, sources, javadoc). The plugin
       # jar and the proxy jars also go to Modrinth (below).
@@ -114,10 +114,11 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           DISCORD="extensions/discord/build/libs/universaladmin-discord-${VERSION}.jar"
           PLACEHOLDERS="extensions/placeholderapi/build/libs/universaladmin-placeholderapi-${VERSION}.jar"
+          VOICECHAT="extensions/voicechat/build/libs/universaladmin-voicechat-${VERSION}.jar"
           VELOCITY="proxy/velocity/build/libs/universaladmin-velocity-${VERSION}.jar"
           BUNGEE="proxy/bungee/build/libs/universaladmin-bungee-${VERSION}.jar"
           API="api/build/libs/universaladmin-api-${VERSION}.jar"
-          for f in "$DISCORD" "$PLACEHOLDERS" "$VELOCITY" "$BUNGEE" "$API" \
+          for f in "$DISCORD" "$PLACEHOLDERS" "$VOICECHAT" "$VELOCITY" "$BUNGEE" "$API" \
               "api/build/libs/universaladmin-api-${VERSION}-sources.jar" \
               "api/build/libs/universaladmin-api-${VERSION}-javadoc.jar"; do
             if [ ! -f "$f" ]; then
@@ -129,6 +130,8 @@ jobs:
               > "universaladmin-discord-${VERSION}.jar.sha256" )
           ( cd extensions/placeholderapi/build/libs && sha256sum "universaladmin-placeholderapi-${VERSION}.jar" \
               > "universaladmin-placeholderapi-${VERSION}.jar.sha256" )
+          ( cd extensions/voicechat/build/libs && sha256sum "universaladmin-voicechat-${VERSION}.jar" \
+              > "universaladmin-voicechat-${VERSION}.jar.sha256" )
           ( cd proxy/velocity/build/libs && sha256sum "universaladmin-velocity-${VERSION}.jar" \
               > "universaladmin-velocity-${VERSION}.jar.sha256" )
           ( cd proxy/bungee/build/libs && sha256sum "universaladmin-bungee-${VERSION}.jar" \
@@ -139,6 +142,8 @@ jobs:
             echo "${DISCORD}.sha256"
             echo "$PLACEHOLDERS"
             echo "${PLACEHOLDERS}.sha256"
+            echo "$VOICECHAT"
+            echo "${VOICECHAT}.sha256"
             echo "$VELOCITY"
             echo "${VELOCITY}.sha256"
             echo "$BUNGEE"
@@ -152,6 +157,7 @@ jobs:
           echo "bungee=$BUNGEE" >> "$GITHUB_OUTPUT"
           echo "discord=$DISCORD" >> "$GITHUB_OUTPUT"
           echo "placeholders=$PLACEHOLDERS" >> "$GITHUB_OUTPUT"
+          echo "voicechat=$VOICECHAT" >> "$GITHUB_OUTPUT"
 
       # One list for every place that names the supported Minecraft
       # versions: supported-versions.txt (kept current by compatibility.yml).
@@ -322,5 +328,29 @@ jobs:
           dependencies: |
             universaladmin(required){modrinth:wGP5uSse}
             placeholderapi(required){modrinth:lKEzGugV}
+          java: 21
+          fail-mode: warn
+
+      # Its Modrinth project is set as the repository variable
+      # MODRINTH_VOICECHAT_ID; until it exists, the jar only goes to the
+      # GitHub release.
+      - name: Publish UniversalAdmin Voice Chat to Modrinth
+        if: vars.MODRINTH_VOICECHAT_ID != ''
+        uses: Kira-NT/mc-publish@v3
+        with:
+          modrinth-id: ${{ vars.MODRINTH_VOICECHAT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: ${{ steps.extras.outputs.voicechat }}
+          name: UniversalAdmin Voice Chat ${{ steps.version.outputs.version }}
+          version: ${{ steps.version.outputs.version }}
+          changelog: |
+            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/nicki41/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
+          loaders: |
+            paper
+            purpur
+          game-versions: ${{ steps.games.outputs.list }}
+          dependencies: |
+            universaladmin(required){modrinth:wGP5uSse}
+            simple-voice-chat(required){modrinth:9eGKb6K1}
           java: 21
           fail-mode: warn

@@ -108,6 +108,8 @@ template - see
   built-in modules), `universaladmin-discord` (`extensions/discord`, the
   official Discord extension), `universaladmin-placeholderapi`
   (`extensions/placeholderapi`, the official PlaceholderAPI extension),
+  `universaladmin-voicechat` (`extensions/voicechat`, the official Simple
+  Voice Chat extension),
   `universaladmin-proxy-common` (`proxy/common`, the checks both proxy
   plugins share), `universaladmin-velocity` (`proxy/velocity`) and
   `universaladmin-bungee` (`proxy/bungee`) - the optional proxy plugins for
