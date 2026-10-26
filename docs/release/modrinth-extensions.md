@@ -133,8 +133,8 @@ No `/papi ecloud` download needed.
 
 ## UniversalAdmin Voice Chat
 
-The project id goes into the repository variable `MODRINTH_VOICECHAT_ID`;
-`release.yml` and `compatibility.yml` publish to it from then on.
+Project id `HEMFEpG6`, set as the repository variable `MODRINTH_VOICECHAT_ID` -
+`release.yml` and `compatibility.yml` publish to it through that variable.
 
 | Field | Value |
 |---|---|

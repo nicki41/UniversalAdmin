@@ -20,9 +20,9 @@ and publishes:
 - on the extensions' own Modrinth projects, each depending on the plugin:
   UniversalAdmin Discord (id `Lq5Ihyzr`), UniversalAdmin Placeholders
   (id `229V0zwE`, also depending on PlaceholderAPI) and UniversalAdmin
-  Voice Chat (also depending on Simple Voice Chat; its project id is the
-  repository variable `MODRINTH_VOICECHAT_ID` - while that is not set, its
-  jar only goes to the GitHub release) - see [Modrinth](#modrinth).
+  Voice Chat (id `HEMFEpG6`, also depending on Simple Voice Chat; the id is
+  read from the repository variable `MODRINTH_VOICECHAT_ID` - while that is
+  not set, its jar only goes to the GitHub release) - see [Modrinth](#modrinth).
 
 Nothing is published if a single test fails.
 
