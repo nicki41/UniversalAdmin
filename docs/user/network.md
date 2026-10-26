@@ -194,6 +194,17 @@ second row for the network.
   know its own maintenance yet and lets that first player in - once the name
   is known, players its maintenance refuses are removed again.
 
+## In the menus
+
+- **Network** (`/admin` → Network): every server - also those without
+  UniversalAdmin - with its players, TPS and version.
+- **Players → Online Players** lists every player of the network with the
+  server they are on, with a **Server** filter and sorting by name or by
+  server. A profile of a player on another server says where they are and
+  offers **Teleport to player**, **Bring to me** and **Send to server...**
+  (also for players here); what needs the player on this server, like the
+  live inventory, is left out.
+
 ## How it works
 
 - **Heartbeat.** Every 5 seconds each server writes its row (players, TPS,

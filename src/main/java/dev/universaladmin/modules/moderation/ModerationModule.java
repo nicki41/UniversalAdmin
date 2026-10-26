@@ -80,6 +80,7 @@ import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.CoreSettings;
 import dev.universaladmin.settings.ReloadConfigAction;
 import dev.universaladmin.settings.SettingsService;
+import dev.universaladmin.status.MuteKind;
 import dev.universaladmin.status.PlayerStatus;
 import io.papermc.paper.ban.BanListType;
 import java.io.IOException;
@@ -149,6 +150,7 @@ public final class ModerationModule implements Module {
         context.platform().storage().migrations().register(new ModerationPunishmentMigration());
         context.platform().storage().migrations().register(new ModerationPunishmentIndexMigration());
         context.platform().storage().migrations().register(new PunishmentTemplateMigration());
+        context.platform().storage().migrations().register(new MuteKindMigration());
         context.platform().storage().migrations().register(new AltsMigration());
         context.platform().storage().migrations().register(new VanishStateMigration());
         context.platform().storage().migrations().register(new StaffModeSnapshotMigration());
@@ -230,7 +232,7 @@ public final class ModerationModule implements Module {
                 context.platform().settings(), context.platform().services()));
 
         ModerationCommands.all(new ModerationCommands.Dependencies(
-                punishmentService, staffModeService, guiContext, context.platform().settings(), messages, templates))
+                punishmentService, staffModeService, guiContext, context.platform().settings(), messages, templates, services))
                 .forEach(context::registerCommand);
 
         registerNotes(context);
@@ -238,17 +240,20 @@ public final class ModerationModule implements Module {
         registerImport(context);
         StaffPunishmentNotifier notifier = new StaffPunishmentNotifier(messages, context.platform().settings(), scheduler);
         context.subscribe(notifier);
+        // Read-only status for scoreboards, tab lists, placeholders and the
+        // voice chat extension.
+        ModerationPlayerStatus status = new ModerationPlayerStatus(
+                punishmentService, vanishRuntimeState, staffModeState, freezeRuntimeState, godmodeState);
+
         // Network mode: punishments issued on another server take effect
-        // here too (kick, ban screen, mute notice, freeze) and are announced
-        // to the staff on this server.
-        NetworkModerationBridge bridge = new NetworkModerationBridge(network, punishmentService, enforcer, notifier, scheduler);
+        // here too (kick, ban screen, mute notice, freeze, the player's
+        // status) and are announced to the staff on this server.
+        NetworkModerationBridge bridge = new NetworkModerationBridge(
+                network, punishmentService, enforcer, notifier, scheduler, status::refreshIfOnline);
         context.subscribe(bridge);
         network.subscribe(NetworkModerationBridge.TOPIC, bridge);
         context.resources().closeable(() -> network.unsubscribe(NetworkModerationBridge.TOPIC, bridge));
 
-        // Read-only status for scoreboards, tab lists and placeholders.
-        ModerationPlayerStatus status = new ModerationPlayerStatus(
-                punishmentService, vanishRuntimeState, staffModeState, freezeRuntimeState, godmodeState);
         context.resources().listener(status);
         context.subscribeAudit(status);
         plugin.getServer().getOnlinePlayers().forEach(player -> status.track(player.getUniqueId()));
@@ -309,7 +314,8 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::muteTargetOf)
                 .forbidSelfTarget()
                 .validator(reasonRequired(MuteInput::reason))
-                .auditSummary(in -> "Muted " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
+                .auditSummary(in -> "Muted " + PlayerNames.of(in.targetId()) + kindSuffix(in.kind()) + ": " + in.reason()
+                        + templateSuffix(in.template()))
                 .build());
         actions.register(ActionDefinition.builder(new MuteAction(ModerationActionIds.TEMP_MUTE, scheduler, punishmentService, enforcer, policy, names))
                 .permission(ModerationPermissions.TEMPMUTE)
@@ -317,7 +323,8 @@ public final class ModerationModule implements Module {
                 .target(ModerationModule::muteTargetOf)
                 .forbidSelfTarget()
                 .validator(and(reasonRequired(MuteInput::reason), durationRequired(MuteInput::expiresAt)))
-                .auditSummary(in -> "Temp-muted " + PlayerNames.of(in.targetId()) + ": " + in.reason() + templateSuffix(in.template()))
+                .auditSummary(in -> "Temp-muted " + PlayerNames.of(in.targetId()) + kindSuffix(in.kind()) + ": " + in.reason()
+                        + templateSuffix(in.template()))
                 .build());
 
         actions.register(ActionDefinition.builder(new WarnAction(scheduler, punishmentService, enforcer, policy, names))
@@ -420,6 +427,15 @@ public final class ModerationModule implements Module {
     }
 
 
+    /** {@code " (voice chat only)"}/{@code " (chat only)"} for a mute that is not a full one, else empty. */
+    private static String kindSuffix(MuteKind kind) {
+        return switch (kind) {
+            case CHAT -> " (chat only)";
+            case VOICE -> " (voice chat only)";
+            case FULL -> "";
+        };
+    }
+
     /** {@code " (template spam)"} for a punishment issued through a template, else empty. */
     private static String templateSuffix(String template) {
         return template == null ? "" : " (template " + template + ")";
@@ -454,7 +470,7 @@ public final class ModerationModule implements Module {
         ModerationGuiContext guiContext = new ModerationGuiContext(
                 context.platform().guiFramework(), context.platform().messages(), context.platform().scheduler(),
                 punishmentService, context.platform().actionExecutor(), context.platform().settings(),
-                vanishService, godmodeState, collisionState, staffModeState, templates);
+                vanishService, godmodeState, collisionState, staffModeState, templates, context.platform().services());
 
         ModerationHomePage homePage = new ModerationHomePage(guiContext);
         context.platform().guiPages().register(homePage);

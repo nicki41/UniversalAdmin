@@ -6,6 +6,7 @@ import dev.universaladmin.gui.PlayerMenuRegistry;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.players.PlayerService;
 import dev.universaladmin.modules.players.inventory.LiveInventoryService;
+import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.scheduler.TaskScheduler;
 import dev.universaladmin.settings.SettingsService;
 
@@ -27,5 +28,6 @@ record PlayerGuiContext(
         ActionExecutor actionExecutor,
         SettingsService settings,
         PlayerMenuRegistry playerMenu,
-        LiveInventoryService liveInventory) {
+        LiveInventoryService liveInventory,
+        NetworkService network) {
 }

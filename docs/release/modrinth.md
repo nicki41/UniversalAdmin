@@ -50,7 +50,7 @@ A `wsrv.nl` link of our own is left as it is and refreshes daily.
 needs - moderation, reports, staff mode, player tools, worlds, maintenance,
 performance and a complete audit log - in clean in-game menus *and*
 commands, on one server or a whole **Velocity/BungeeCord network**. No
-dependencies, no premium version, open source.
+dependencies, no premium version, open source (GPL).
 
 Runs on **Paper and Purpur 1.21.7 - 1.21.11 and 26.1.1 - 26.3** - one jar for
 all of them, and new Minecraft versions are tested and added automatically.
@@ -59,7 +59,8 @@ all of them, and new Minecraft versions are tested and added automatically.
 
 - **One menu for everything** - type `/admin` and click through players,
   moderation, reports, chat, server, worlds, whitelist, performance, audit
-  log and settings.
+  log and settings. Where you type something, one form asks for everything
+  at once - text fields, sliders, checkboxes.
 - **Commands too** - `/ban Steve 7d griefing`, `/mute`, `/warn`, `/history`,
   `/vanish`, `/invsee`, `/heal`, `/gm` ... with tab completion. Already use
   EssentialsX? Turn off any shortcut you want to keep there.
@@ -82,6 +83,9 @@ and set `network.enabled: true`:
 
 - a **Network** menu with every server - also those without UniversalAdmin -
   their players, TPS and version;
+- the **player menu** lists every player on every server, filtered or
+  sorted by server; a player's profile sends them anywhere or brings them
+  to you;
 - `/admin find Steve` - "Steve is on survival";
 - `/admin tp Steve` takes you to Steve's server, right next to him;
   `/admin tphere`, `/admin send`, `/admin connect`;
@@ -108,10 +112,12 @@ lost. [Import guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/us
 ## 🛡️ Moderation
 
 Kick, ban, temp-ban, IP-ban, mute, temp-mute, warn and freeze - with reason
-and duration presets, a step-by-step GUI wizard, full history (`/history`),
+and duration presets, a punish form, full history (`/history`),
 current status (`/checkban`) and **team notifications** for every
 punishment. **Punishment templates** escalate on their own: `/punish Steve spam`
 warns the first time, mutes for an hour the second time, and so on.
+With Simple Voice Chat, a mute silences a player **in the chat, in the voice
+chat or both** (`/chatmute`, `/voicemute`).
 Optional **alt detection** shows accounts that connect from the same
 address - privacy-friendly: only keyed hashes are stored, and only if you
 switch it on.
@@ -133,8 +139,9 @@ teleport picker - and your own inventory comes back even after a crash.
 
 ## 👤 Players
 
-Browse online and offline players, search, open profiles with play time and
-location, heal, feed, fly, gamemode, speed, effects, teleports - and edit
+Browse online and offline players - in a network every player on every
+server - search, open profiles with play time and location, heal, feed,
+fly, gamemode, speed (with sliders), effects, teleports - and edit
 inventories and ender chests **live**.
 
 ## 🌍 Server & worlds
@@ -175,6 +182,9 @@ like the built-ins. The official extensions - all in the
 - **UniversalAdmin Placeholders** - PlaceholderAPI placeholders such as
   `%universaladmin_online%` (without vanished players),
   `%universaladmin_muted%` and `%universaladmin_open_reports%`.
+- **UniversalAdmin Voice Chat** - Simple Voice Chat: chat, voice or full
+  mutes, vanished staff stay silent, voice status on the profile and a
+  staff voice group.
 
 Developers: see the
 [extension guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/getting-started.md).

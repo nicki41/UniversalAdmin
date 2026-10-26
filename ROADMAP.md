@@ -65,17 +65,29 @@ welcome as [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues).
 - [x] A **BungeeCord** proxy plugin next to the Velocity one, both on shared
       proxy code ([ADR 0021](docs/architecture/decisions/0021-bungeecord-proxy-plugin.md))
 
-## Next - 1.5.0
+## Done - 1.5.0
 
-- [ ] **Forms instead of one prompt after another**: adding to the
-      whitelist, the world border, the server page, punishing, broadcasts
-      and whole settings sections each in one Paper dialog - text fields,
-      sliders, checkboxes and option lists
-- [ ] **Simple Voice Chat** as an official extension: mute in chat, in
-      voice chat or both; vanished staff stay silent; voice status on the
-      profile and a staff voice group
-- [ ] Licensed under **GPL-3.0-or-later** from this version on; the
-      extension API stays Apache-2.0
+- [x] **Forms instead of one prompt after another**: punishing, adding to
+      the whitelist, title broadcasts, enabling maintenance, the world
+      border, player values (sliders) and teleporting to coordinates - each
+      one Paper dialog
+      ([ADR 0023](docs/architecture/decisions/0023-dialog-forms.md))
+- [x] **Chat, voice and full mutes** and **UniversalAdmin Voice Chat** for
+      Simple Voice Chat: voice mutes, silent vanish, voice status on the
+      profile, a staff voice group
+      ([ADR 0022](docs/architecture/decisions/0022-mute-kinds-and-voice-chat.md))
+- [x] **The whole network in the player menu**: every player with their
+      server, a server filter and sorting, send and bring from the profile
+- [x] Licensed under **GPL-3.0-or-later**; the extension API stays
+      Apache-2.0
+
+## Next - 1.6.0
+
+- [ ] **Nick system** (built-in module, for staff): `/nick Notch` - the
+      name and skin of an existing account everywhere (chat, tab list,
+      name tag); or name and skin chosen separately, or both at random.
+      Staff with the permission see the real name in menus, punishments and
+      the audit log; a nick survives rejoining and works across a network
 
 ## Later - 1.x
 
@@ -85,6 +97,13 @@ Additive, no breaking changes.
       profile
 - [ ] **CoreProtect** as an official extension: block lookups and rollbacks
       from the player profile, e.g. together with a griefing ban
+- [ ] **WorldGuard** as an official extension: the regions at a player's
+      position on the profile, regions and their flags in the menu
+- [ ] **TAB** (by NEZNAMY) as an official extension: tab list and name tags
+      follow vanish, staff mode and nicks
+- [ ] **MiniMOTD** as an official extension: a maintenance MOTD and a
+      player count without vanished players
+- [ ] Forms for whole settings sections (checkboxes, sliders, option lists)
 - [ ] **Documentation website** on GitHub Pages, built from `docs/` with
       MkDocs Material - navigation and search instead of browsing Markdown
       files

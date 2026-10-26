@@ -4,6 +4,7 @@ import dev.universaladmin.action.ActionId;
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.ConfirmationDialog;
 import dev.universaladmin.gui.GuiButton;
+import dev.universaladmin.gui.GuiForm;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
@@ -138,30 +139,27 @@ public final class ServerHomePage extends AbstractGuiPage {
                 viewer);
     }
 
+    /** A multi-line message - the dialog keeps line breaks, so a broadcast can span several chat lines. */
     private void promptBroadcastMessage(Player viewer) {
-        GuiTextInput.request(viewer, text("server.gui.home.broadcast-message"), text("server.gui.prompt.message"), "",
-                text("gui.confirm"), text("gui.cancel"),
-                submitted -> submitOrReopen(viewer, submitted,
-                        message -> ServerGuiActions.runAction(ctx, viewer, ServerActionIds.BROADCAST_MESSAGE,
-                                message, () -> this.open(viewer))),
-                () -> this.open(viewer));
+        GuiForm.builder(text("server.gui.home.broadcast-message"))
+                .multilineText("message", text("server.gui.prompt.message"), "", 255, 4)
+                .open(viewer, text("gui.confirm"), text("gui.cancel"),
+                        response -> submitOrReopen(viewer, response.text("message"),
+                                message -> ServerGuiActions.runAction(ctx, viewer, ServerActionIds.BROADCAST_MESSAGE,
+                                        message, () -> this.open(viewer))),
+                        () -> this.open(viewer));
     }
 
+    /** Title and subtitle in one form (ADR 0023). */
     private void promptBroadcastTitle(Player viewer) {
-        GuiTextInput.request(viewer, text("server.gui.home.broadcast-title"), text("server.gui.prompt.title"), "",
-                text("gui.confirm"), text("gui.cancel"),
-                title -> {
-                    if (title == null || title.isBlank()) {
-                        this.open(viewer);
-                        return;
-                    }
-                    GuiTextInput.request(viewer, text("server.gui.home.broadcast-title"), text("server.gui.prompt.subtitle"), "",
-                            text("gui.confirm"), text("gui.cancel"),
-                            subtitle -> ServerGuiActions.runAction(ctx, viewer, ServerActionIds.BROADCAST_TITLE,
-                                    new BroadcastTitleInput(title.trim(), subtitle), () -> this.open(viewer)),
-                            () -> this.open(viewer));
-                },
-                () -> this.open(viewer));
+        GuiForm.builder(text("server.gui.home.broadcast-title"))
+                .text("title", text("server.gui.prompt.title"), "", 128)
+                .text("subtitle", text("server.gui.prompt.subtitle"), "", 128)
+                .open(viewer, text("gui.confirm"), text("gui.cancel"),
+                        response -> submitOrReopen(viewer, response.text("title"),
+                                title -> ServerGuiActions.runAction(ctx, viewer, ServerActionIds.BROADCAST_TITLE,
+                                        new BroadcastTitleInput(title, response.textOrNull("subtitle")), () -> this.open(viewer))),
+                        () -> this.open(viewer));
     }
 
     private void promptBroadcastActionbar(Player viewer) {

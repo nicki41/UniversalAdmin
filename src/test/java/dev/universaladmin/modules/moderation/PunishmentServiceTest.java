@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.universaladmin.status.MuteKind;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -98,6 +99,34 @@ class PunishmentServiceTest {
 
         assertEquals(1, revoked.size());
         assertTrue(service.activeMute(target).join().isEmpty());
+    }
+
+    @Test
+    void aVoiceMuteSilencesOnlyTheVoiceChatAndAFullMuteComesFirst() {
+        UUID target = UUID.randomUUID();
+        Punishment voice = service.issue(PunishmentType.MUTE, target, "Notch", null, UUID.randomUUID(), "Admin", "Shouting", null,
+                null, MuteKind.VOICE).join();
+
+        assertTrue(service.activeChatMute(target).join().isEmpty());
+        assertEquals(voice.id(), service.activeVoiceMute(target).join().orElseThrow().id());
+
+        Punishment full = service.issue(PunishmentType.TEMP_MUTE, target, "Notch", null, UUID.randomUUID(), "Admin", "Spam",
+                Instant.now().plusSeconds(60), null, MuteKind.FULL).join();
+
+        assertEquals(full.id(), service.activeChatMute(target).join().orElseThrow().id());
+        assertEquals(full.id(), service.activeVoiceMute(target).join().orElseThrow().id());
+        assertEquals(2, service.unmute(target, "Moderator").join().size());
+        assertTrue(service.activeVoiceMute(target).join().isEmpty());
+    }
+
+    @Test
+    void aChatMuteLeavesTheVoiceChatAlone() {
+        UUID target = UUID.randomUUID();
+        service.issue(PunishmentType.TEMP_MUTE, target, "Notch", null, UUID.randomUUID(), "Admin", "Spam",
+                Instant.now().plusSeconds(60), null, MuteKind.CHAT).join();
+
+        assertTrue(service.activeChatMute(target).join().isPresent());
+        assertTrue(service.activeVoiceMute(target).join().isEmpty());
     }
 
     @Test
@@ -226,6 +255,14 @@ class PunishmentServiceTest {
         @Override
         public CompletableFuture<Optional<Punishment>> findActiveMute(UUID targetId, Instant now) {
             return findActiveOne(p -> p.targetId().equals(targetId) && (p.type() == PunishmentType.MUTE || p.type() == PunishmentType.TEMP_MUTE), now);
+        }
+
+        @Override
+        public CompletableFuture<List<Punishment>> findActiveMutes(UUID targetId, Instant now) {
+            return CompletableFuture.completedFuture(store.values().stream()
+                    .filter(p -> p.targetId().equals(targetId) && p.isMute() && p.isActiveAt(now))
+                    .sorted(java.util.Comparator.comparing(Punishment::createdAt).reversed())
+                    .toList());
         }
 
         @Override

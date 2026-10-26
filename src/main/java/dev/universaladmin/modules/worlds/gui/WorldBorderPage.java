@@ -2,11 +2,11 @@ package dev.universaladmin.modules.worlds.gui;
 
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.GuiButton;
+import dev.universaladmin.gui.GuiForm;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
-import dev.universaladmin.gui.GuiTextInput;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.modules.worlds.WorldBorderSnapshot;
 import dev.universaladmin.modules.worlds.WorldsPermissions;
@@ -30,6 +30,9 @@ import org.bukkit.entity.Player;
 public final class WorldBorderPage extends AbstractGuiPage {
 
     public static final GuiPageId ID = GuiPageId.core("worlds.border");
+
+    /** The slider's end - longer transitions are a command away ({@code /admin world border}). */
+    private static final float MAX_TRANSITION_SECONDS = 600;
 
     private final WorldsGuiContext ctx;
     private final String worldName;
@@ -75,66 +78,68 @@ public final class WorldBorderPage extends AbstractGuiPage {
                 WorldsPermissions.BORDER, clickCtx -> promptWarning(clickCtx.viewer(), border)), viewer);
     }
 
+    /** Center as two fields, or the viewer's own position (ADR 0023). */
     private void promptCenter(Player viewer, WorldBorderSnapshot border) {
-        String initial = "%.0f %.0f".formatted(border.center().getX(), border.center().getZ());
-        GuiTextInput.request(viewer, text("worlds.gui.border.set-center"), text("worlds.gui.prompt.border-center"), initial,
-                text("gui.confirm"), text("gui.cancel"),
-                submitted -> {
-                    double[] xz = parseDoubles(submitted, 2);
-                    if (xz == null) {
+        GuiForm.builder(text("worlds.gui.border.set-center"))
+                .text("x", text("worlds.gui.prompt.border-x"), "%.0f".formatted(border.center().getX()), 16)
+                .text("z", text("worlds.gui.prompt.border-z"), "%.0f".formatted(border.center().getZ()), 16)
+                .toggle("here", text("worlds.gui.prompt.border-here"), false)
+                .open(viewer, text("gui.confirm"), text("gui.cancel"), response -> {
+                    boolean here = response.toggle("here") && viewer.getWorld().getName().equals(worldName);
+                    Double x = here ? Double.valueOf(viewer.getLocation().getX()) : parseDouble(response.text("x"));
+                    Double z = here ? Double.valueOf(viewer.getLocation().getZ()) : parseDouble(response.text("z"));
+                    if (x == null || z == null) {
                         WorldsGuiActions.notifyError(viewer, messages);
                         this.open(viewer);
                         return;
                     }
                     WorldsGuiActions.runAction(ctx, viewer, WorldActionIds.SET_BORDER_CENTER,
-                            new SetWorldBorderCenterInput(worldName, xz[0], xz[1]), () -> this.open(viewer));
-                },
-                () -> this.open(viewer));
+                            new SetWorldBorderCenterInput(worldName, x, z), () -> this.open(viewer));
+                }, () -> this.open(viewer));
     }
 
+    /** Size as a field (it reaches millions of blocks), the transition time as a slider. */
     private void promptSize(Player viewer, WorldBorderSnapshot border) {
-        GuiTextInput.request(viewer, text("worlds.gui.border.set-size"), text("worlds.gui.prompt.border-size"),
-                "%.0f".formatted(border.size()), text("gui.confirm"), text("gui.cancel"),
-                submitted -> {
-                    String[] parts = submitted == null ? new String[0] : submitted.trim().split("\\s+");
-                    Double size = parts.length >= 1 ? parseDouble(parts[0]) : null;
-                    Long transition = parts.length >= 2 ? parseLong(parts[1]) : null;
+        GuiForm.builder(text("worlds.gui.border.set-size"))
+                .text("size", text("worlds.gui.prompt.border-size-value"), "%.0f".formatted(border.size()), 16)
+                .number("transition", text("worlds.gui.prompt.border-transition"), 0, MAX_TRANSITION_SECONDS, 5, 0)
+                .open(viewer, text("gui.confirm"), text("gui.cancel"), response -> {
+                    Double size = parseDouble(response.text("size"));
+                    long transition = Math.round(response.number("transition"));
                     if (size == null) {
                         WorldsGuiActions.notifyError(viewer, messages);
                         this.open(viewer);
                         return;
                     }
                     WorldsGuiActions.runAction(ctx, viewer, WorldActionIds.SET_BORDER_SIZE,
-                            new SetWorldBorderSizeInput(worldName, size, transition), () -> this.open(viewer));
-                },
-                () -> this.open(viewer));
+                            new SetWorldBorderSizeInput(worldName, size, transition == 0 ? null : transition), () -> this.open(viewer));
+                }, () -> this.open(viewer));
     }
 
     private void promptDamage(Player viewer, WorldBorderSnapshot border) {
-        String initial = "%s %s".formatted(border.damageAmount(), border.damageBuffer());
-        GuiTextInput.request(viewer, text("worlds.gui.border.set-damage"), text("worlds.gui.prompt.border-damage"), initial,
-                text("gui.confirm"), text("gui.cancel"),
-                submitted -> {
-                    double[] values = parseDoubles(submitted, 2);
-                    if (values == null) {
+        GuiForm.builder(text("worlds.gui.border.set-damage"))
+                .text("amount", text("worlds.gui.prompt.border-damage-amount"), String.valueOf(border.damageAmount()), 16)
+                .text("buffer", text("worlds.gui.prompt.border-damage-buffer"), String.valueOf(border.damageBuffer()), 16)
+                .open(viewer, text("gui.confirm"), text("gui.cancel"), response -> {
+                    Double amount = parseDouble(response.text("amount"));
+                    Double buffer = parseDouble(response.text("buffer"));
+                    if (amount == null || buffer == null) {
                         WorldsGuiActions.notifyError(viewer, messages);
                         this.open(viewer);
                         return;
                     }
                     WorldsGuiActions.runAction(ctx, viewer, WorldActionIds.SET_BORDER_DAMAGE,
-                            new SetWorldBorderDamageInput(worldName, values[0], values[1]), () -> this.open(viewer));
-                },
-                () -> this.open(viewer));
+                            new SetWorldBorderDamageInput(worldName, amount, buffer), () -> this.open(viewer));
+                }, () -> this.open(viewer));
     }
 
     private void promptWarning(Player viewer, WorldBorderSnapshot border) {
-        String initial = "%d %d".formatted(border.warningDistance(), border.warningTime());
-        GuiTextInput.request(viewer, text("worlds.gui.border.set-warning"), text("worlds.gui.prompt.border-warning"), initial,
-                text("gui.confirm"), text("gui.cancel"),
-                submitted -> {
-                    String[] parts = submitted == null ? new String[0] : submitted.trim().split("\\s+");
-                    Integer distance = parts.length >= 1 ? parseInt(parts[0]) : null;
-                    Integer time = parts.length >= 2 ? parseInt(parts[1]) : null;
+        GuiForm.builder(text("worlds.gui.border.set-warning"))
+                .text("distance", text("worlds.gui.prompt.border-warning-distance"), String.valueOf(border.warningDistance()), 10)
+                .text("time", text("worlds.gui.prompt.border-warning-time"), String.valueOf(border.warningTime()), 10)
+                .open(viewer, text("gui.confirm"), text("gui.cancel"), response -> {
+                    Integer distance = parseInt(response.text("distance"));
+                    Integer time = parseInt(response.text("time"));
                     if (distance == null || time == null) {
                         WorldsGuiActions.notifyError(viewer, messages);
                         this.open(viewer);
@@ -142,40 +147,12 @@ public final class WorldBorderPage extends AbstractGuiPage {
                     }
                     WorldsGuiActions.runAction(ctx, viewer, WorldActionIds.SET_BORDER_WARNING,
                             new SetWorldBorderWarningInput(worldName, distance, time), () -> this.open(viewer));
-                },
-                () -> this.open(viewer));
-    }
-
-    private double[] parseDoubles(String input, int count) {
-        if (input == null) {
-            return null;
-        }
-        String[] parts = input.trim().split("\\s+");
-        if (parts.length < count) {
-            return null;
-        }
-        double[] values = new double[count];
-        try {
-            for (int i = 0; i < count; i++) {
-                values[i] = Double.parseDouble(parts[i]);
-            }
-            return values;
-        } catch (NumberFormatException e) {
-            return null;
-        }
+                }, () -> this.open(viewer));
     }
 
     private Double parseDouble(String value) {
         try {
             return Double.parseDouble(value);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    private Long parseLong(String value) {
-        try {
-            return Long.parseLong(value);
         } catch (NumberFormatException e) {
             return null;
         }

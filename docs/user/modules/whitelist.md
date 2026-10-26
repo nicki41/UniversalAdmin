@@ -54,9 +54,9 @@ whitelist.
   `whitelist.gui.search-max-results`, default 50 - a plain scan is
   proportionate here since this is an occasional, admin-initiated search
   over a small result set, unlike the Players module's full browser).
-- **Add** - search → select → optional reason → optional notes → optional
-  expiration (needs `universaladmin.whitelist.temporary` to set one) →
-  confirm.
+- **Add** - search → select → one form with an optional reason, optional
+  notes (multi-line) and an optional expiration (only with
+  `universaladmin.whitelist.temporary`) → confirm.
 - **Remove** - from a member's detail page; removes the native entry and any
   UniversalAdmin metadata for them, regardless of who originally added them
   (an explicit, permission-gated removal is an intentional admin action, not

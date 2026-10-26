@@ -73,19 +73,26 @@ Both listeners are pure event-to-service-call translation - the actual
 
 ## GUI flow
 
-Player → **Moderate** → **Type** → **Reason** → **Duration** (only for
-Temp Ban/Temp Mute/IP Ban) → **Confirmation** → the action runs.
+Player → **Moderate** → **Type** → **one form** with reason, duration
+(only for Temp Ban/Temp Mute/IP Ban) and mute kind → **Confirmation** → the
+action runs.
 
 - **Type** - one button per punishment type plus Unban/Unmute/Remove
   Warning, each hidden unless the viewer holds the matching permission.
   Unban/Unmute run immediately (no reason/duration needed to revoke); Remove
   Warning opens the target's warnings list so a specific one can be picked.
-- **Reason** - a preset list (`moderation.reasons.presets`, see "Settings")
-  plus a "Custom..." option that opens a free-text prompt.
-- **Duration** - only for types that need one; a preset list
-  (`moderation.durations.presets`) plus "Custom...", parsed by
-  `DurationParser` (`10m`, `1h`, `3d`, compound forms like `1d12h`, or
-  `permanent`/`perm`).
+- **The form** (a Paper dialog, see [ADR 0023](../../architecture/decisions/0023-dialog-forms.md)):
+  - **Reason** - a choice of the presets (`moderation.reasons.presets`, see
+    "Settings") and a text field below it; a typed reason wins over the
+    chosen preset.
+  - **Duration** - only for types that need one; the presets
+    (`moderation.durations.presets`) and a text field the same way, parsed
+    by `DurationParser` (`10m`, `1h`, `3d`, compound forms like `1d12h`, or
+    `permanent`/`perm`).
+  - **Mute in** - only for mutes, and only while a voice chat is connected
+    ([UniversalAdmin Voice Chat](../../extensions/voicechat.md)): chat and
+    voice chat, chat only, or voice chat only - see
+    [Chat, voice and full mutes](#chat-voice-and-full-mutes).
 - **Confirmation** - a summary of target/reason/expiry, skipped if
   `gui.confirmations` is off (same setting every other confirmation in
   the plugin respects).
@@ -105,8 +112,31 @@ Every punishment is also a command - `/admin ban Steve 7d griefing` or just
 `/ban Steve 7d griefing` (a duration right after the name turns ban/mute/
 ipban temporary). `/history <player>` lists everything with ids,
 `/checkban <player>` shows what is active right now, `/unwarn <id>` removes
-a warning. Without a reason, the localized "No reason given" is used. Full
-list: [commands.md](../commands.md#moderation).
+a warning. Without a reason, the localized "No reason given" is used.
+`/chatmute` and `/voicemute` (each with an optional duration) mute in the
+chat or the voice chat only. Full list: [commands.md](../commands.md#moderation).
+
+## Chat, voice and full mutes
+
+A mute has a kind ([ADR 0022](../../architecture/decisions/0022-mute-kinds-and-voice-chat.md)):
+
+| Kind | Command | Text chat | Voice chat |
+|---|---|---|---|
+| Full | `/mute`, `/tempmute` | blocked | blocked |
+| Chat only | `/chatmute` | blocked | free |
+| Voice chat only | `/voicemute` | free | blocked |
+
+- Without a voice chat nothing changes: a mute blocks the chat, as before.
+  The voice part needs [UniversalAdmin Voice Chat](../../extensions/voicechat.md)
+  on every server where players talk; `/voicemute` and the "Mute in" choice
+  only appear while it runs.
+- Every mute from before 1.5.0 is a full mute.
+- `/unmute` lifts every kind at once. The notice the player gets, the staff
+  notification, the history and `/checkban` say which kind it is.
+- Templates take `chatmute [duration]` and `voicemute [duration]` steps.
+- In a network, a mute reaches the voice chat on every server right away -
+  the network message that announces it also refreshes the player's status
+  there.
 
 ## Punishment templates
 
@@ -138,8 +168,9 @@ templates:
       - ban
 ```
 
-- **A step** is `warn`, `kick`, `mute [duration]` or `ban [duration]`; without
-  a duration mute and ban are permanent.
+- **A step** is `warn`, `kick`, `mute [duration]`, `chatmute [duration]`,
+  `voicemute [duration]` or `ban [duration]`; without a duration mutes and
+  bans are permanent.
 - **Which step**: the number of the player's earlier punishments with the
   same template within the window decides - none: the first step, one: the
   second, and so on; after the last step the last one repeats. `window` per
@@ -289,9 +320,10 @@ listed in [staff-tools.md](staff-tools.md).
 
 `punishments` (id, type, target_id, target_last_known_name, target_ip,
 actor_id, actor_name, reason, created_at, expires_at, active, revoked_at,
-revoked_by, metadata, template) - created by `ModerationPunishmentMigration` (version
+revoked_by, metadata, template, mute_kind) - created by `ModerationPunishmentMigration` (version
 1002), `template` added by `PunishmentTemplateMigration` (version 1013, with an
-index on `(target_id, template)`); `ModerationPunishmentIndexMigration` (version 1003) indexes
+index on `(target_id, template)`), `mute_kind` (`CHAT`/`VOICE`/`FULL`, empty
+reads as `FULL`) by `MuteKindMigration` (version 1016); `ModerationPunishmentIndexMigration` (version 1003) indexes
 `(target_id, type, active)` for the join/chat checks, `(active,
 expires_at)` for the housekeeping sweep, and `target_ip` for the IP-ban
 join check. Staff notes live in `ua_player_notes` (`PlayerNotesMigration`,

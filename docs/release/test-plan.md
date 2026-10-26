@@ -381,3 +381,40 @@ survival.
       and with the network whitelist on, a player without bypass is
       disconnected right after the login, Admin (bypass via LuckPerms on the
       proxy) gets in; the server list shows "Maintenance".
+- [ ] [A] on survival: **Players → Online Players** lists Player on lobby
+      with the server; the **Server** filter cycles through the servers, the
+      sort button switches to "by server". Player's profile shows "Online on
+      lobby" with **Teleport to player**, **Bring to me** and **Send to
+      server...** - each works; no inventory button.
+
+## 25. Forms
+
+- [ ] Punish: **Moderate → Temp Mute** opens one form (reason choice, own
+      reason, duration choice, own duration); a typed reason wins; a bad
+      duration reports an error and reopens the menu.
+- [ ] Whitelist add: reason, notes (multi-line) and expiry in one form;
+      without `whitelist.temporary` no expiry field.
+- [ ] Broadcast title: title and subtitle in one form; chat broadcast keeps
+      line breaks.
+- [ ] Maintenance on: reason, message and kick checkbox in one form; the
+      message is shown to a refused player.
+- [ ] World border: center with "use my position", size with transition
+      slider, damage and warning fields.
+- [ ] Player actions: health, food, XP, fly and walk speed as sliders at the
+      current value; teleport to coordinates with a world list.
+
+## 26. Voice Chat extension
+
+- [ ] With Simple Voice Chat and `universaladmin-voicechat-<v>.jar`:
+      `/admin modules` lists "Voice Chat"; the punish form for a mute asks
+      "Mute in".
+- [ ] `/voicemute Player 5m loud` → Player is not heard and sees the
+      action-bar notice; chat still works. `/chatmute` → the reverse.
+      `/mute` → neither. `/unmute` lifts each.
+- [ ] Without the extension, `/voicemute` says no voice chat is connected.
+- [ ] `/vanish` → Admin is not heard; `/admin voicegroup` → in the staff
+      group, another staff member there hears Admin, Player does not.
+- [ ] Player's profile: **Voice Chat** shows installed/connected and the
+      group; a click takes Player out of the group (audit entry).
+- [ ] Network: `/voicemute` on lobby → Player on survival is silenced at
+      once.

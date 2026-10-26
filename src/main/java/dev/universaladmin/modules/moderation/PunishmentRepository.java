@@ -30,6 +30,9 @@ public interface PunishmentRepository extends Repository<Punishment, Long> {
 
     CompletableFuture<Optional<Punishment>> findActiveMute(UUID targetId, Instant now);
 
+    /** Every mute in force for {@code targetId}, newest first - a player can have a chat-only and a voice-only mute at once. */
+    CompletableFuture<List<Punishment>> findActiveMutes(UUID targetId, Instant now);
+
     CompletableFuture<Optional<Punishment>> findActiveFreeze(UUID targetId, Instant now);
 
     /** Backs every GUI list (Active/Recent/Warnings/Bans/Mutes, one target's history) - see {@link PunishmentQuery}. */

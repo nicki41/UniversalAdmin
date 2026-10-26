@@ -206,7 +206,7 @@ public final class PlayersModule implements Module {
         PlayerBrowserHomePage homePage = new PlayerBrowserHomePage(
                 context.platform().guiFramework(), context.platform().messages(), context.platform().scheduler(),
                 playerService, context.platform().actionExecutor(), context.platform().settings(), context.platform().playerMenu(),
-                liveInventory);
+                liveInventory, context.platform().network());
         context.registerPage(homePage);
         return homePage;
     }

@@ -3,14 +3,17 @@ package dev.universaladmin.modules.moderation;
 import dev.universaladmin.action.ActionTarget;
 import dev.universaladmin.audit.AuditEvent;
 import dev.universaladmin.audit.AuditListener;
+import dev.universaladmin.status.MuteKind;
 import dev.universaladmin.status.PlayerStatus;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -18,12 +21,14 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 /**
- * {@link PlayerStatus} for displays. The toggles (vanish, staff mode, freeze,
- * godmode) come straight from the in-memory runtime states; mute, warnings
- * and the punishment count of every online player are loaded on join and
- * reloaded after every moderation action on them ({@link #onAuditEvent}) and
- * once a minute ({@link #refreshAll}, which also picks up punishments issued
- * on other servers of a network).
+ * {@link PlayerStatus} for displays and for the voice chat extension. The
+ * toggles (vanish, staff mode, freeze, godmode) come straight from the
+ * in-memory runtime states; mutes, warnings and the punishment count of
+ * every online player are loaded on join and reloaded after every
+ * moderation action on them ({@link #onAuditEvent}), when another server of
+ * a network reports one ({@link #refreshIfOnline}) and once a minute
+ * ({@link #refreshAll}). Reads come from immutable snapshots in a concurrent
+ * map, so any thread may ask - the voice chat asks from its own.
  */
 public final class ModerationPlayerStatus implements PlayerStatus, Listener, AuditListener {
 
@@ -66,11 +71,28 @@ public final class ModerationPlayerStatus implements PlayerStatus, Listener, Aud
 
     @Override
     public Optional<Mute> mute(UUID playerId) {
+        return mute(playerId, kind -> true);
+    }
+
+    @Override
+    public Optional<Mute> chatMute(UUID playerId) {
+        return mute(playerId, MuteKind::coversChat);
+    }
+
+    @Override
+    public Optional<Mute> voiceMute(UUID playerId) {
+        return mute(playerId, MuteKind::coversVoice);
+    }
+
+    private Optional<Mute> mute(UUID playerId, Predicate<MuteKind> covers) {
         Entry entry = entries.get(playerId);
-        if (entry == null || entry.mute() == null || !entry.mute().isActiveAt(Instant.now())) {
+        if (entry == null) {
             return Optional.empty();
         }
-        return Optional.of(new Mute(entry.mute().reason(), entry.mute().expiresAt()));
+        Instant now = Instant.now();
+        List<Punishment> inForce = entry.mutes().stream().filter(mute -> mute.isActiveAt(now)).toList();
+        return PunishmentService.covering(inForce, covers)
+                .map(mute -> new Mute(mute.reason(), mute.expiresAt(), mute.muteKind()));
     }
 
     @Override
@@ -101,13 +123,20 @@ public final class ModerationPlayerStatus implements PlayerStatus, Listener, Aud
         online.forEach(this::refresh);
     }
 
+    /** Reloads {@code playerId}'s values if they are online here - for punishments another server of the network reports. */
+    public void refreshIfOnline(UUID playerId) {
+        if (online.contains(playerId)) {
+            refresh(playerId);
+        }
+    }
+
     void refresh(UUID playerId) {
-        CompletableFuture<Optional<Punishment>> mute = punishments.activeMute(playerId);
+        CompletableFuture<List<Punishment>> mutes = punishments.activeMutes(playerId);
         CompletableFuture<Integer> warnings = punishments.count(new PunishmentQuery(playerId, Set.of(PunishmentType.WARN), true, 1));
         CompletableFuture<Integer> total = punishments.count(new PunishmentQuery(playerId, null, null, 1));
-        CompletableFuture.allOf(mute, warnings, total).thenRun(() -> {
+        CompletableFuture.allOf(mutes, warnings, total).thenRun(() -> {
             if (online.contains(playerId)) {
-                entries.put(playerId, new Entry(mute.join().orElse(null), warnings.join(), total.join()));
+                entries.put(playerId, new Entry(mutes.join(), warnings.join(), total.join()));
             }
         });
     }
@@ -141,6 +170,11 @@ public final class ModerationPlayerStatus implements PlayerStatus, Listener, Aud
         }
     }
 
-    private record Entry(Punishment mute, int warnings, int total) {
+    /** @param mutes every mute in force at load time, newest first - read on any thread, never changed */
+    private record Entry(List<Punishment> mutes, int warnings, int total) {
+
+        Entry {
+            mutes = List.copyOf(mutes);
+        }
     }
 }

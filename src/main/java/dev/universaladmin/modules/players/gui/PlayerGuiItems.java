@@ -5,7 +5,9 @@ import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.modules.players.PlayerProfile;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -18,11 +20,27 @@ final class PlayerGuiItems {
     }
 
     static GuiItem onlinePlayerItem(MessageService messages, Player player) {
-        List<Component> lore = List.of(
-                line(messages, "players.gui.row.world", player.getWorld().getName()),
-                line(messages, "players.gui.row.gamemode", player.getGameMode()),
-                line(messages, "players.gui.row.ping", player.getPing()));
+        return onlinePlayerItem(messages, player, null);
+    }
+
+    /** @param server this server's name in network mode, {@code null} otherwise */
+    static GuiItem onlinePlayerItem(MessageService messages, Player player, String server) {
+        List<Component> lore = new ArrayList<>();
+        if (server != null) {
+            lore.add(line(messages, "players.gui.row.server", server));
+        }
+        lore.add(line(messages, "players.gui.row.world", player.getWorld().getName()));
+        lore.add(line(messages, "players.gui.row.gamemode", player.getGameMode()));
+        lore.add(line(messages, "players.gui.row.ping", player.getPing()));
         return GuiItem.playerHead(player, Component.text(player.getName(), NamedTextColor.GREEN), lore);
+    }
+
+    /** A player on another server of the network. */
+    static GuiItem networkPlayerItem(MessageService messages, UUID id, String name, String server) {
+        List<Component> lore = List.of(
+                line(messages, "players.gui.row.server", server),
+                line(messages, "players.gui.row.elsewhere", server));
+        return GuiItem.playerHead(Bukkit.getOfflinePlayer(id), Component.text(name, NamedTextColor.AQUA), lore);
     }
 
     static GuiItem offlineProfileItem(MessageService messages, PlayerProfile profile) {

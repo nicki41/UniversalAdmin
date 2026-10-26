@@ -32,9 +32,10 @@ Three independent actions, all gated on `universaladmin.server.broadcast`,
 all MiniMessage-formatted admin-authored text (rendered via
 `ComponentMessages`, same as every other in-game message):
 
-- **Broadcast Message** - a chat message to every online player.
+- **Broadcast Message** - a chat message to every online player, typed in
+  a multi-line field (line breaks are kept).
 - **Broadcast Title** - a title/subtitle shown to every online player for a
-  fixed 0.5s fade-in / 4s stay / 1s fade-out.
+  fixed 0.5s fade-in / 4s stay / 1s fade-out; both in one form.
 - **Broadcast Actionbar** - an action-bar message to every online player.
 
 Implemented as `NotificationService#broadcast`/`broadcastTitle`/
@@ -56,8 +57,9 @@ log - never sent to a blocked player), message (MiniMessage kick-message
 override; falls back to `core.maintenance.kick-message` if blank), and an
 allow-list of player names (case-insensitive) who may join anyway.
 
-- **Enable** (`universaladmin.server.maintenance`) - prompts for a reason,
-  then whether to kick every currently-online player without bypass. New
+- **Enable** (`universaladmin.server.maintenance`) - one form: a reason,
+  the message players who cannot join see (optional, multi-line), and
+  whether to kick every currently-online player without bypass. New
   joins are denied (`PlayerLoginEvent`) with the effective kick message
   unless the joining player holds `universaladmin.bypass.maintenance` or
   their name is on the allow-list.

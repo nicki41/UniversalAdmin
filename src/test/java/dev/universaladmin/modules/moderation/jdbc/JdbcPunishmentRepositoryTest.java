@@ -2,19 +2,25 @@ package dev.universaladmin.modules.moderation.jdbc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.universaladmin.modules.moderation.ModerationPunishmentIndexMigration;
 import dev.universaladmin.modules.moderation.ModerationPunishmentMigration;
-import dev.universaladmin.modules.moderation.PunishmentTemplateMigration;
+import dev.universaladmin.modules.moderation.MuteKindMigration;
 import dev.universaladmin.modules.moderation.Punishment;
 import dev.universaladmin.modules.moderation.PunishmentQuery;
+import dev.universaladmin.modules.moderation.PunishmentTemplateMigration;
 import dev.universaladmin.modules.moderation.PunishmentType;
 import dev.universaladmin.scheduler.TaskScheduler;
+import dev.universaladmin.status.MuteKind;
 import dev.universaladmin.storage.DatabaseConfig;
 import dev.universaladmin.storage.MigrationRunner;
 import dev.universaladmin.storage.jdbc.DataSourceFactory;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -25,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -282,6 +289,57 @@ class JdbcPunishmentRepositoryTest {
         }
     }
 
+    @Test
+    void storesTheMuteKindAndListsEveryMuteInForce(@TempDir Path dir) throws Exception {
+        DataSource dataSource = openDatabase(dir, "mute-kinds.db");
+        try {
+            JdbcPunishmentRepository repository = new JdbcPunishmentRepository(dataSource, IMMEDIATE);
+            UUID target = UUID.randomUUID();
+            Instant now = Instant.now();
+            repository.save(Punishment.issue(PunishmentType.MUTE, target, "Notch", null, null, "Admin", "Shouting",
+                    null, null, MuteKind.VOICE)).join();
+            repository.save(Punishment.issue(PunishmentType.TEMP_MUTE, target, "Notch", null, null, "Admin", "Spam",
+                    now.plusSeconds(600), null, MuteKind.CHAT)).join();
+            repository.save(Punishment.issue(PunishmentType.TEMP_MUTE, target, "Notch", null, null, "Admin", "Old",
+                    now.minusSeconds(60), null, MuteKind.FULL)).join();
+            Punishment ban = repository.save(Punishment.issue(PunishmentType.BAN, target, "Notch", null, null, "Admin", "Grief",
+                    null, null, MuteKind.VOICE)).join();
+
+            List<Punishment> mutes = repository.findActiveMutes(target, now).join();
+
+            assertEquals(Set.of(MuteKind.VOICE, MuteKind.CHAT), mutes.stream().map(Punishment::muteKind).collect(Collectors.toSet()));
+            // Only mutes have a kind - the column stays empty for every other row.
+            try (Connection connection = dataSource.getConnection();
+                    Statement statement = connection.createStatement();
+                    ResultSet row = statement.executeQuery("SELECT mute_kind FROM punishments WHERE id = " + ban.id())) {
+                assertTrue(row.next());
+                assertNull(row.getString(1));
+            }
+        } finally {
+            ((AutoCloseable) dataSource).close();
+        }
+    }
+
+    @Test
+    void aMuteWithoutAKindIsAFullMute(@TempDir Path dir) throws Exception {
+        DataSource dataSource = openDatabase(dir, "old-mutes.db");
+        try {
+            JdbcPunishmentRepository repository = new JdbcPunishmentRepository(dataSource, IMMEDIATE);
+            UUID target = UUID.randomUUID();
+            Punishment mute = repository.save(Punishment.issue(PunishmentType.MUTE, target, "Notch", null, null, "Admin", "Spam",
+                    null, null, MuteKind.CHAT)).join();
+            // What a row from before 1.5.0, or from an older server of a network, looks like.
+            try (Connection connection = dataSource.getConnection();
+                    Statement statement = connection.createStatement()) {
+                statement.executeUpdate("UPDATE punishments SET mute_kind = NULL WHERE id = " + mute.id());
+            }
+
+            assertEquals(MuteKind.FULL, repository.findById(mute.id()).join().orElseThrow().muteKind());
+        } finally {
+            ((AutoCloseable) dataSource).close();
+        }
+    }
+
     private static void await(CountDownLatch latch) {
         try {
             latch.await();
@@ -297,6 +355,7 @@ class JdbcPunishmentRepositoryTest {
         migrations.register(new ModerationPunishmentMigration());
         migrations.register(new ModerationPunishmentIndexMigration());
         migrations.register(new PunishmentTemplateMigration());
+        migrations.register(new MuteKindMigration());
         migrations.runPending();
         return dataSource;
     }

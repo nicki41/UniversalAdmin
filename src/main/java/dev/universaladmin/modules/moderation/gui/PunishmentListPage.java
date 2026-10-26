@@ -103,7 +103,7 @@ public final class PunishmentListPage extends AbstractListGuiPage<Punishment> {
     protected GuiItem render(Punishment punishment) {
         Material material = materialFor(punishment.type());
         Component name = Component.text(
-                punishment.type().name() + " - " + punishment.targetLastKnownName(),
+                ModerationFormat.typeName(punishment, messages) + " - " + punishment.targetLastKnownName(),
                 punishment.active() ? NamedTextColor.RED : NamedTextColor.GRAY);
         String reason = punishment.reason() == null || punishment.reason().isBlank()
                 ? messages.get(MessageKey.of("common.none"))

@@ -1,10 +1,10 @@
 # Modrinth Pages of the Official Extensions
 
-Source of truth for the Modrinth projects of the two official extensions.
+Source of truth for the Modrinth projects of the official extensions.
 Edit here first, then copy into Modrinth. Versions are uploaded by
 `release.yml` like the plugin's (see [releasing.md](releasing.md#modrinth));
-texts, icons and gallery are maintained by hand. All three projects are in
-the Modrinth collection "UniversalAdmin".
+texts, icons and gallery are maintained by hand. All projects are in the
+Modrinth collection "UniversalAdmin".
 
 ## UniversalAdmin Discord
 
@@ -126,6 +126,64 @@ No `/papi ecloud` download needed.
 - [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi).
 
 [Every placeholder](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/placeholderapi.md) ·
+[Source](https://github.com/nicki41/UniversalAdmin) ·
+[Issues](https://github.com/nicki41/UniversalAdmin/issues)
+
+---
+
+## UniversalAdmin Voice Chat
+
+Project id `HEMFEpG6`, set as the repository variable `MODRINTH_VOICECHAT_ID` -
+`release.yml` and `compatibility.yml` publish to it through that variable.
+
+| Field | Value |
+|---|---|
+| Name | UniversalAdmin Voice Chat |
+| Slug | `universaladmin-voicechat` |
+| Categories | Management, Social, Utility |
+| Environment | Server-side only |
+| Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
+| License | GPL-3.0-or-later |
+| Icon | `assets/icon.png` until it has its own |
+| Links | Source and issues: the UniversalAdmin repository; wiki: `docs/extensions/voicechat.md` |
+| Dependencies | UniversalAdmin (required), Simple Voice Chat (required) - set by `release.yml` |
+
+### Summary
+
+> Simple Voice Chat for UniversalAdmin: mute in the chat, in the voice chat or both, silent vanish, voice status on the profile and a staff voice group.
+
+### Description
+
+---
+
+# UniversalAdmin Voice Chat
+
+The official [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)
+extension for [UniversalAdmin](https://modrinth.com/plugin/universaladmin) -
+mutes that reach the voice chat, and a voice group for your staff.
+
+## Highlights
+
+- **Chat, voice or full mutes.** `/mute` silences a player everywhere,
+  `/chatmute` only in the chat, `/voicemute` only in the voice chat - also
+  in the punish menu and in punishment templates. The player sees why
+  nobody hears them.
+- **Silent vanish.** Vanished staff cannot be heard - proximity voice
+  would give them away.
+- **Staff voice group.** `/admin voicegroup` - hidden and isolated: only
+  staff hear each other.
+- **Voice status on the profile** - installed, connected, which group - and
+  one click takes a player out of a group.
+- **Networks.** Mutes apply on every server at once.
+- Every action in UniversalAdmin's audit log.
+
+## Requirements
+
+- [UniversalAdmin](https://modrinth.com/plugin/universaladmin) 1.5 or newer.
+- [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) on the
+  server.
+
+[Documentation](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/voicechat.md) ·
 [Source](https://github.com/nicki41/UniversalAdmin) ·
 [Issues](https://github.com/nicki41/UniversalAdmin/issues)
 

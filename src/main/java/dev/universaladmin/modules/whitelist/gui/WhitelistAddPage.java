@@ -3,6 +3,7 @@ package dev.universaladmin.modules.whitelist.gui;
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.ConfirmationDialog;
 import dev.universaladmin.gui.GuiButton;
+import dev.universaladmin.gui.GuiForm;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
 import dev.universaladmin.gui.GuiPageId;
@@ -20,7 +21,6 @@ import dev.universaladmin.modules.whitelist.action.WhitelistActionIds;
 import dev.universaladmin.settings.CoreSettings;
 import dev.universaladmin.settings.SettingParseException;
 import dev.universaladmin.settings.SettingTypes;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -34,8 +34,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 /**
- * Add wizard: search offline player -&gt; select -&gt; reason (optional) -&gt;
- * notes (optional) -&gt; expiration (optional) -&gt; confirm -&gt; action. One
+ * Add wizard: search offline player -&gt; select -&gt; one form with reason,
+ * notes and expiration (all optional) -&gt; confirm -&gt; action. One
  * page with chained private methods, the same "wizard" shape {@code
  * ModeratePlayerPage} establishes - the accumulated data ({@code target},
  * {@code reason}, {@code notes}) is carried purely as method parameters.
@@ -113,45 +113,33 @@ public final class WhitelistAddPage extends AbstractGuiPage {
             }
             SelectionDialog.open(viewer, framework, messages, ctx.scheduler(), text("whitelist.gui.add.select-player"), matches,
                     op -> GuiItem.playerHead(op, Component.text(op.getName()), List.of()),
-                    (selectCtx, op) -> promptReason(viewer, op.getUniqueId(), op.getName()));
+                    (selectCtx, op) -> promptDetails(viewer, op.getUniqueId(), op.getName()));
         }));
     }
 
-    private void promptReason(Player viewer, UUID targetId, String targetName) {
-        GuiTextInput.request(viewer, text("whitelist.gui.add.title", targetName), text("whitelist.gui.add.prompt-reason"), "",
-                text("gui.confirm"), text("gui.cancel"),
-                reason -> promptNotes(viewer, targetId, targetName, blank(reason) ? null : reason.trim()),
-                () -> this.open(viewer));
-    }
-
-    private void promptNotes(Player viewer, UUID targetId, String targetName, String reason) {
-        GuiTextInput.request(viewer, text("whitelist.gui.add.title", targetName), text("whitelist.gui.add.prompt-notes"), "",
-                text("gui.confirm"), text("gui.cancel"),
-                notes -> promptExpiration(viewer, targetId, targetName, reason, blank(notes) ? null : notes.trim()),
-                () -> this.open(viewer));
-    }
-
-    private void promptExpiration(Player viewer, UUID targetId, String targetName, String reason, String notes) {
-        if (!viewer.hasPermission(WhitelistPermissions.TEMPORARY.value())) {
-            confirmAdd(viewer, targetId, targetName, reason, notes, null);
-            return;
+    /** Reason, notes and - with the permission for it - an expiry in one form (ADR 0023). */
+    private void promptDetails(Player viewer, UUID targetId, String targetName) {
+        boolean temporary = viewer.hasPermission(WhitelistPermissions.TEMPORARY.value());
+        GuiForm.Builder form = GuiForm.builder(text("whitelist.gui.add.title", targetName))
+                .text("reason", text("whitelist.gui.add.prompt-reason"), "", 255)
+                .multilineText("notes", text("whitelist.gui.add.prompt-notes"), "", 255, 3);
+        if (temporary) {
+            form.text("expiration", text("whitelist.gui.add.prompt-expiration"), "", 32);
         }
-        GuiTextInput.request(viewer, text("whitelist.gui.add.title", targetName), text("whitelist.gui.add.prompt-expiration"), "",
-                text("gui.confirm"), text("gui.cancel"),
-                expiration -> {
-                    if (blank(expiration)) {
-                        confirmAdd(viewer, targetId, targetName, reason, notes, null);
-                        return;
-                    }
-                    try {
-                        Duration duration = SettingTypes.DURATION.parse(expiration.trim());
-                        confirmAdd(viewer, targetId, targetName, reason, notes, Instant.now().plus(duration));
-                    } catch (SettingParseException e) {
-                        WhitelistGuiActions.notifyError(viewer, messages);
-                        this.open(viewer);
-                    }
-                },
-                () -> this.open(viewer));
+        form.open(viewer, text("gui.confirm"), text("gui.cancel"), response -> {
+            String expiration = temporary ? response.textOrNull("expiration") : null;
+            Instant expiresAt = null;
+            if (expiration != null) {
+                try {
+                    expiresAt = Instant.now().plus(SettingTypes.DURATION.parse(expiration));
+                } catch (SettingParseException e) {
+                    WhitelistGuiActions.notifyError(viewer, messages);
+                    this.open(viewer);
+                    return;
+                }
+            }
+            confirmAdd(viewer, targetId, targetName, response.textOrNull("reason"), response.textOrNull("notes"), expiresAt);
+        }, () -> this.open(viewer));
     }
 
     private void confirmAdd(Player viewer, UUID targetId, String targetName, String reason, String notes, Instant expiresAt) {
@@ -166,9 +154,5 @@ public final class WhitelistAddPage extends AbstractGuiPage {
         ConfirmationDialog.open(viewer, framework, messages, text("whitelist.gui.add.title", targetName),
                 List.of(text("whitelist.gui.add.confirm", targetName)), ConfirmationDialog.DangerLevel.NORMAL,
                 confirmCtx -> apply.run(), confirmCtx -> confirmCtx.back());
-    }
-
-    private boolean blank(String value) {
-        return value == null || value.isBlank();
     }
 }

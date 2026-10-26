@@ -43,6 +43,7 @@ every page bringing its own `InventoryClickListener`. See
 | Confirmation | [`ConfirmationDialog`](../../src/main/java/dev/universaladmin/gui/ConfirmationDialog.java) | Yes/no with a danger level. |
 | Selection | [`SelectionDialog`](../../src/main/java/dev/universaladmin/gui/SelectionDialog.java) | Pick one from a list, built on `AbstractListGuiPage`. |
 | Text input | [`GuiTextInput`](../../src/main/java/dev/universaladmin/gui/GuiTextInput.java) | Free text via the Paper dialog API - see "Search". |
+| Form | [`GuiForm`](../../api/src/main/java/dev/universaladmin/gui/GuiForm.java) | Several inputs in one Paper dialog - text, sliders, checkboxes, option lists - see "Forms". |
 | Bundle | [`GuiFramework`](../../src/main/java/dev/universaladmin/gui/GuiFramework.java) | `GuiSessionManager` + `IconProvider`, passed to every page via the constructor (`UniversalAdmin#guiFramework()`). |
 
 ## Slots
@@ -271,6 +272,38 @@ GuiTextInput.request(
         () -> { /* do nothing, or go back to the list */ });
 ```
 
+## Forms
+
+Where a step needs more than one value, one form asks for all of them
+instead of a chain of prompts ([ADR 0023](../architecture/decisions/0023-dialog-forms.md)).
+[`GuiForm`](../../api/src/main/java/dev/universaladmin/gui/GuiForm.java)
+builds one Paper dialog:
+
+```java
+GuiForm.builder(title)
+        .message(intro)                                  // a line of text above the inputs
+        .text("reason", reasonLabel, "", 255)            // single line, explicit maximum length
+        .multilineText("notes", notesLabel, "", 255, 4)  // up to 4 visible lines
+        .number("speed", speedLabel, -1, 1, 0.05f, 0.2f) // a slider: min, max, step, initial
+        .toggle("kick", kickLabel, false)                // a checkbox
+        .choice("kind", kindLabel, options, "FULL")      // cycles through GuiForm.Option(id, label)
+        .open(viewer, submitLabel, cancelLabel,
+                response -> apply(response.textOrNull("reason"), response.toggle("kick")),
+                () -> page.open(viewer));
+```
+
+- Keys are lower-case letters, digits and `_`, unique per form.
+- A form only collects: the submit callback hands the values to the same
+  action as before, which validates, checks permissions and audits. A value
+  that cannot be parsed reports the error and reopens the page.
+- Sliders only for small, bounded ranges (health, food, XP percent,
+  speeds); coordinates, border sizes and levels stay text fields.
+- Text fields need an explicit maximum length - the dialog default is 32
+  characters. `GuiTextInput` uses 255.
+- Like `GuiTextInput`: single-use callbacks with a lifetime of a few
+  minutes, run by Paper on the main thread.
+- Tests hand code that handles a form a `GuiForm.Response.of(Map)`.
+
 ## Main Menu Skeleton
 
 `MainMenuPage` (`/admin` with no arguments, see below) shows one button per
@@ -376,6 +409,12 @@ hopping - `AbstractListGuiPage` provides all of that. The click handler
 (`onSelect`) only calls navigation and (indirectly, through the service)
 domain logic, never SQL or computation directly - see "The One
 Architecture Rule Still Holds" above.
+
+## Added in 1.5
+
+- **`GuiForm`** (API 1.4) - see "Forms". The punish wizard, adding to the
+  whitelist, title broadcasts, enabling maintenance, the world border and
+  the player values use it.
 
 ## Added in 1.0
 

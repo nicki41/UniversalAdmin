@@ -23,8 +23,8 @@ final class ModerationResults {
             case BAN -> "ban";
             case TEMP_BAN -> "tempban";
             case IP_BAN -> punishment.expiresAt() == null ? "ipban" : "ipban-temp";
-            case MUTE -> "mute";
-            case TEMP_MUTE -> "tempmute";
+            case MUTE -> "mute" + kindSuffix(punishment);
+            case TEMP_MUTE -> "tempmute" + kindSuffix(punishment);
             case WARN -> "warn";
             case FREEZE -> "freeze";
         };
@@ -33,6 +33,15 @@ final class ModerationResults {
         String remaining = punishment.expiresAt() == null ? "" : DurationParser.formatRemaining(punishment.expiresAt());
         return ActionResult.success(punishment, MessageKey.of("moderation.result." + key),
                 punishment.targetLastKnownName(), reason, remaining, Long.toString(punishment.id()));
+    }
+
+    /** {@code "-chat"}/{@code "-voice"} for a chat- or voice-only mute, empty for a full one - the key suffix of results and announcements. */
+    static String kindSuffix(Punishment punishment) {
+        return switch (punishment.muteKind()) {
+            case CHAT -> "-chat";
+            case VOICE -> "-voice";
+            case FULL -> "";
+        };
     }
 
     /** {@code key} with (name, number of lifted punishments). */

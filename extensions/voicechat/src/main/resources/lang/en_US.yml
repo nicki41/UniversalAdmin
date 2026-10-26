@@ -1,0 +1,27 @@
+voicechat:
+  notice:
+    muted-permanent: "<red>You are muted in the voice chat - nobody hears you. <gray>Reason: {0}"
+    muted-temp: "<red>You are muted in the voice chat for {1} - nobody hears you. <gray>Reason: {0}"
+    vanished: "<gray>You are vanished - nobody hears you in the voice chat."
+  result:
+    joined-staff-group: "<green>You are in the staff voice group <white>{0}</white> - only staff hear you there."
+    left-staff-group: "<gray>You left the staff voice group."
+    removed: "<gray>Took <white>{0}</white> out of the voice group <white>{1}</white>."
+  error:
+    not-connected: "<red>{0} is not connected to the voice chat."
+    no-group: "<red>{0} is not in a voice group."
+    not-running: "<red>The voice chat is not running."
+  command:
+    voicegroup:
+      usage: ""
+      description: "Joins or leaves the staff voice group - only staff hear each other there."
+  gui:
+    profile:
+      title: "<aqua>Voice Chat"
+      not-installed: "<gray>Mod not installed"
+      disabled: "<yellow>Voice chat switched off by the player"
+      connected: "<green>Connected"
+      disconnected: "<gray>Not connected"
+      group: "<gray>Group: <white>{0}"
+      no-group: "<gray>No group"
+      click-remove: "<yellow>Click: take them out of the group"

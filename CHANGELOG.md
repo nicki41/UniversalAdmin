@@ -7,14 +7,63 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-24
+
+Mute in the chat, in the voice chat or both, forms instead of one prompt
+after another, the whole network in the player menu - and a new license.
+
+### Added
+
+- **Chat, voice and full mutes**: `/chatmute` and `/voicemute` (each with an
+  optional duration) next to `/mute`, which stays a full mute. With a voice
+  chat connected the punish form asks where to mute, and templates take
+  `chatmute [duration]` and `voicemute [duration]` steps. The player's
+  notice, the staff notification, the history and `/checkban` name the
+  kind; `/unmute` lifts every kind. In a network a mute takes effect on
+  every server at once. See
+  [docs/user/modules/moderation.md](docs/user/modules/moderation.md#chat-voice-and-full-mutes)
+  and [ADR 0022](docs/architecture/decisions/0022-mute-kinds-and-voice-chat.md).
+- **UniversalAdmin Voice Chat**, an official extension for Simple Voice
+  Chat: voice and full mutes silence the microphone, vanished staff cannot
+  be heard (`voicechat.silence-vanished`), a hidden, isolated **staff voice
+  group** (`/admin voicegroup`), the voice status on the profile with a
+  click to take a player out of a group. New permissions
+  `universaladmin.voicechat.staffgroup` and `.manage`. See
+  [docs/extensions/voicechat.md](docs/extensions/voicechat.md).
+- **The whole network in the player menu**: in network mode **Online
+  Players** lists every player of the network with the server they are on,
+  with a **Server** filter and sorting by name or by server. A profile says
+  where the player is and offers **Teleport to player**, **Bring to me** and
+  **Send to server...** - also for players on this server.
+- API 1.4: `MuteKind`, `PlayerStatus#chatMute`/`#voiceMute`, the
+  `VoiceChat` service and `GuiForm`.
+
 ### Changed
 
+- **Forms instead of one prompt after another**
+  ([ADR 0023](docs/architecture/decisions/0023-dialog-forms.md)): punishing
+  (reason, duration and mute kind in one form), adding to the whitelist
+  (reason, notes, expiry), title broadcasts (title and subtitle), chat
+  broadcasts (multi-line), enabling maintenance (reason, the message for
+  players, whether to kick), the world border (one field per value, a
+  transition slider, "use my position"), health, food, XP and speeds as
+  sliders, and teleporting to coordinates (X, Y, Z and a world list).
+- Text prompts accept up to 255 characters - the dialog's own limit of 32
+  cut longer reasons short.
+- The punishment list and detail pages show the localized type.
 - **License: GPL-3.0-or-later** from this version on, for the plugin, the
   proxy plugins and the official extensions. The extension API
   (`universaladmin-api`) and the example extension stay under Apache-2.0, so
   extensions can still use any license. Versions up to 1.4.0 remain
   available under Apache-2.0. Every jar now carries its license text under
   `META-INF/` - see [docs/release/licensing.md](docs/release/licensing.md).
+
+### Upgrading
+
+- Replace the jars and restart; a database column is added automatically.
+  Every existing mute is a full mute. For voice mutes, add
+  `universaladmin-voicechat-<version>.jar` next to Simple Voice Chat on every
+  server where players talk.
 
 ## [1.4.0] - 2026-10-22
 

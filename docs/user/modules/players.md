@@ -17,7 +17,16 @@ Four entry points from the Players home page:
 - **Online Players** - currently connected players, with cycling **World**
   and **Gamemode** filter buttons (only meaningful for online players - an
   offline player's world/gamemode isn't available without loading their
-  data, see "Offline limitations" below) and a name sort.
+  data, see "Offline limitations" below) and a name sort. In
+  [network mode](../network.md) the list holds **every player of the
+  network** with the server they are on, plus a **Server** filter and
+  sorting by name or by server. Players on another server open the same
+  profile: it says where they are and offers **Teleport to player**,
+  **Bring to me** and **Send to server...**; what needs them on this server
+  (live inventory, ender chest, effects) is left out. Vanished players stay
+  hidden from staff without `universaladmin.bypass.vanish`; players on
+  servers without UniversalAdmin have no profile and are only in the
+  Network menu.
 - **Offline Players** - every player who has ever joined, backed by a small
   indexed table (`player_profiles`) rather than Bukkit's own (documented
   slow) `getOfflinePlayers()` scan. Has a name-search box and a sort toggle
@@ -75,6 +84,10 @@ the click landing (a real race, not a hypothetical one).
 | Toggle Gravity | `players.gravity` |
 | Toggle Collision | `players.collision` |
 | Gamemode (Survival/Creative/Adventure/Spectator) | `players.gamemode` |
+
+Health, food, XP and the two speeds are set with a slider that starts at the
+player's current value; the level stays a number field, and **Teleport to
+Coordinates** is a form with X, Y, Z and the world as a list.
 
 All six teleport variants share one action/permission (`players.teleport`)
 - they're the same risk tier and the same GUI section; the audit summary

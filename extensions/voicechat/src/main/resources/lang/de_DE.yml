@@ -1,0 +1,27 @@
+voicechat:
+  notice:
+    muted-permanent: "<red>Du bist im Voice-Chat stummgeschaltet - niemand hört dich. <gray>Grund: {0}"
+    muted-temp: "<red>Du bist im Voice-Chat noch {1} stummgeschaltet - niemand hört dich. <gray>Grund: {0}"
+    vanished: "<gray>Du bist im Vanish - im Voice-Chat hört dich niemand."
+  result:
+    joined-staff-group: "<green>Du bist in der Team-Sprachgruppe <white>{0}</white> - dort hört dich nur das Team."
+    left-staff-group: "<gray>Du hast die Team-Sprachgruppe verlassen."
+    removed: "<gray><white>{0}</white> aus der Sprachgruppe <white>{1}</white> genommen."
+  error:
+    not-connected: "<red>{0} ist nicht mit dem Voice-Chat verbunden."
+    no-group: "<red>{0} ist in keiner Sprachgruppe."
+    not-running: "<red>Der Voice-Chat läuft nicht."
+  command:
+    voicegroup:
+      usage: ""
+      description: "Betritt oder verlässt die Team-Sprachgruppe - dort hört sich nur das Team."
+  gui:
+    profile:
+      title: "<aqua>Voice-Chat"
+      not-installed: "<gray>Mod nicht installiert"
+      disabled: "<yellow>Voice-Chat vom Spieler ausgeschaltet"
+      connected: "<green>Verbunden"
+      disconnected: "<gray>Nicht verbunden"
+      group: "<gray>Gruppe: <white>{0}"
+      no-group: "<gray>Keine Gruppe"
+      click-remove: "<yellow>Klick: aus der Gruppe nehmen"

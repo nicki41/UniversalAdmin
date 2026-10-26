@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -46,15 +47,24 @@ final class NetworkModerationBridge implements ActionEventListener, NetworkListe
     private final PunishmentEnforcer enforcer;
     private final StaffPunishmentNotifier notifier;
     private final TaskScheduler scheduler;
+    private final Consumer<UUID> changed;
 
     NetworkModerationBridge(
             NetworkService network, PunishmentService punishments, PunishmentEnforcer enforcer,
             StaffPunishmentNotifier notifier, TaskScheduler scheduler) {
+        this(network, punishments, enforcer, notifier, scheduler, playerId -> { });
+    }
+
+    /** @param changed told about every player another server punished or pardoned - {@link ModerationPlayerStatus#refreshIfOnline} */
+    NetworkModerationBridge(
+            NetworkService network, PunishmentService punishments, PunishmentEnforcer enforcer,
+            StaffPunishmentNotifier notifier, TaskScheduler scheduler, Consumer<UUID> changed) {
         this.network = network;
         this.punishments = punishments;
         this.enforcer = enforcer;
         this.notifier = notifier;
         this.scheduler = scheduler;
+        this.changed = changed;
     }
 
     @Override
@@ -110,6 +120,7 @@ final class NetworkModerationBridge implements ActionEventListener, NetworkListe
                     continue;
                 }
                 Punishment punishment = found.get();
+                changed.accept(punishment.targetId());
                 if (issuing) {
                     enforcer.enforce(punishment);
                 } else {

@@ -61,7 +61,8 @@ public final class MuteAction implements Action<MuteInput, Punishment> {
         CompletableFuture<ActionResult<Punishment>> future = new CompletableFuture<>();
         scheduler.runOnMainThread(() -> {
             names.nameOf(input.targetId()).thenCompose(targetName -> punishmentService.issue(type, input.targetId(), targetName, null,
-                            context.actor().playerId(), context.actor().displayName(), input.reason(), expiresAt, input.template()))
+                            context.actor().playerId(), context.actor().displayName(), input.reason(), expiresAt, input.template(),
+                            input.kind()))
                     .whenComplete((punishment, error) -> {
                         if (error != null) {
                             future.complete(ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, error.getMessage()));
