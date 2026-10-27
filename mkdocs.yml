@@ -1,0 +1,136 @@
+# The documentation website: https://universaladmin-mc.github.io/UniversalAdmin/
+# Built from docs/ by .github/workflows/docs.yml (mkdocs-material). Links to
+# files outside docs/ are pointed at GitHub by scripts/mkdocs_hooks.py.
+
+site_name: UniversalAdmin
+site_description: The free, all-in-one admin plugin for Paper - moderation, reports, staff tools, worlds, networks and a full audit log.
+site_url: https://universaladmin-mc.github.io/UniversalAdmin/
+repo_url: https://github.com/universaladmin-mc/UniversalAdmin
+repo_name: universaladmin-mc/UniversalAdmin
+edit_uri: edit/main/docs/
+copyright: UniversalAdmin is licensed under the GPL-3.0-or-later; the extension API under Apache-2.0.
+
+docs_dir: docs
+hooks:
+  - scripts/mkdocs_hooks.py
+
+theme:
+  name: material
+  logo: assets/logo.svg
+  favicon: assets/favicon.png
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.details
+
+nav:
+  - Home: index.md
+  - Server owners:
+      - user/installation.md
+      - user/configuration.md
+      - user/commands.md
+      - user/permissions.md
+      - Modules:
+          - user/modules/moderation.md
+          - user/modules/staff-tools.md
+          - user/modules/players.md
+          - user/modules/reports.md
+          - user/modules/chat.md
+          - user/modules/server.md
+          - user/modules/worlds.md
+          - user/modules/whitelist.md
+          - user/modules/performance.md
+          - user/modules/settings.md
+      - user/network.md
+      - user/import.md
+      - user/database.md
+      - user/audit-log.md
+      - user/telemetry.md
+  - Extensions:
+      - extensions/discord.md
+      - extensions/placeholderapi.md
+      - extensions/voicechat.md
+      - extensions/getting-started.md
+  - Development:
+      - development/setup.md
+      - development/architecture-rules.md
+      - development/conventions.md
+      - development/adding-module.md
+      - development/gui-framework.md
+      - development/settings.md
+      - development/testing.md
+  - Architecture:
+      - architecture/overview.md
+      - architecture/modules.md
+      - architecture/actions.md
+      - architecture/storage.md
+      - architecture/threading.md
+      - architecture/gui.md
+      - architecture/extensions.md
+      - architecture/extension-builder.md
+      - architecture/web-future.md
+      - Decisions:
+          - architecture/decisions/0001-modular-core.md
+          - architecture/decisions/0002-action-system.md
+          - architecture/decisions/0003-repository-storage.md
+          - architecture/decisions/0004-gui-service-separation.md
+          - architecture/decisions/0005-extension-ready-design.md
+          - architecture/decisions/0006-optional-web-architecture.md
+          - architecture/decisions/0007-typed-settings-system.md
+          - architecture/decisions/0008-action-authorization-pipeline.md
+          - architecture/decisions/0009-audit-system.md
+          - architecture/decisions/0010-extension-api.md
+          - architecture/decisions/0011-command-framework.md
+          - architecture/decisions/0012-safe-messages.md
+          - architecture/decisions/0013-network-mode.md
+          - architecture/decisions/0014-version-compatibility.md
+          - architecture/decisions/0015-punishment-import.md
+          - architecture/decisions/0016-remote-actors.md
+          - architecture/decisions/0017-maintenance-scopes.md
+          - architecture/decisions/0018-punishment-templates.md
+          - architecture/decisions/0019-network-whitelist-and-vanish.md
+          - architecture/decisions/0020-alt-detection.md
+          - architecture/decisions/0021-bungeecord-proxy-plugin.md
+          - architecture/decisions/0022-mute-kinds-and-voice-chat.md
+          - architecture/decisions/0023-dialog-forms.md
+          - architecture/decisions/0024-updates-and-repositories.md
+  - Releases:
+      - release/releasing.md
+      - release/licensing.md
+      - release/modrinth.md
+      - release/modrinth-extensions.md
+      - release/test-plan.md
+  - Changelog: changelog.md
+  - Roadmap: roadmap.md
