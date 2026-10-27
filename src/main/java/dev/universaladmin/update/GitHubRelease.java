@@ -16,13 +16,19 @@ public record GitHubRelease(String tagName, String htmlUrl, boolean prerelease, 
         return tagName.startsWith("v") ? tagName.substring(1) : tagName;
     }
 
-    /** The shaded plugin jar - the only asset a release actually needs for {@code /admin update}, never the {@code .sha256} file itself. */
-    public Optional<ReleaseAsset> jarAsset() {
-        return assets.stream().filter(asset -> asset.name().endsWith(".jar")).findFirst();
+    /**
+     * The plugin jar named {@code prefix + version + ".jar"}. Matched by name,
+     * never "the first jar": a UniversalAdmin release also carries the API,
+     * its sources and javadoc, and the extensions.
+     */
+    public Optional<ReleaseAsset> jarAsset(String prefix) {
+        String name = prefix + version() + ".jar";
+        return assets.stream().filter(asset -> asset.name().equals(name)).findFirst();
     }
 
-    /** The matching SHA-256 checksum file, if the release published one - see {@code UpdateDownloader}. */
-    public Optional<ReleaseAsset> sha256Asset() {
-        return assets.stream().filter(asset -> asset.name().endsWith(".jar.sha256")).findFirst();
+    /** The checksum file published next to {@code jar} ({@code <jar>.sha256}), if any - see {@code release.yml}. */
+    public Optional<ReleaseAsset> sha256Of(ReleaseAsset jar) {
+        String name = jar.name() + ".sha256";
+        return assets.stream().filter(asset -> asset.name().equals(name)).findFirst();
     }
 }

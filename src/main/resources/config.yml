@@ -218,11 +218,16 @@ telemetry:
   interval: 30m
 
 update:
-  # Check GitHub for new releases and tell staff (universaladmin.update.notify).
-  # /admin update downloads it; the server applies it on the next restart.
+  # Check GitHub for new releases of UniversalAdmin and its extensions and
+  # tell staff (universaladmin.update.notify) and the console.
+  # /admin update downloads them; the server applies them on the next restart.
   check-for-updates: true
   # Requires a restart.
   check-interval: 6h
+  # Download a new release on its own into plugins/update/ - applied at the
+  # next restart. Only within the same major version; a new major version
+  # waits for /admin update.
+  auto-download: true
 
 web:
   # Reserved for a future web panel. Has no effect yet.

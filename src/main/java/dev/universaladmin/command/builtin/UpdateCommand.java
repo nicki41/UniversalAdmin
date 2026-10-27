@@ -6,11 +6,13 @@ import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.permission.PermissionNode;
 import dev.universaladmin.update.ApplyUpdateAction;
 import dev.universaladmin.update.UpdateApplyResult;
+import java.util.List;
 
 /**
- * {@code /admin update} - downloads the latest GitHub release's jar into
- * Bukkit's {@code plugins/update/} folder (see {@link ApplyUpdateAction}),
- * applied by the server itself on the next restart. Never hot-swaps.
+ * {@code /admin update} - downloads the latest GitHub release of UniversalAdmin
+ * and of every extension with an update source into Bukkit's
+ * {@code plugins/update/} folder (see {@link ApplyUpdateAction}), applied by
+ * the server itself on the next restart. Never hot-swaps.
  */
 public final class UpdateCommand implements AdminCommand {
 
@@ -37,7 +39,7 @@ public final class UpdateCommand implements AdminCommand {
     @Override
     public void execute(CommandInvocation invocation) {
         invocation.reply("command.update.checking");
-        invocation.<Void, UpdateApplyResult>run(ApplyUpdateAction.ID, null, update -> invocation.reply(
-                update.updateApplied() ? "command.update.applied" : "command.update.up-to-date", update.version()));
+        invocation.<Void, List<UpdateApplyResult>>run(ApplyUpdateAction.ID, null, results -> results.forEach(update -> invocation.reply(
+                update.updateApplied() ? "command.update.applied" : "command.update.up-to-date", update.version(), update.name())));
     }
 }

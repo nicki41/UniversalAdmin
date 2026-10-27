@@ -16,8 +16,10 @@ import java.util.Objects;
  * GitHub REST API - unauthenticated (this plugin has no GitHub token to use,
  * and doesn't need one for a public repository's own release list), over
  * the JDK's built-in {@link HttpClient}, same reasoning as {@code
- * telemetry.HttpTelemetryClient}: no new dependency, short timeouts, no
- * redirects followed.
+ * telemetry.HttpTelemetryClient}: no new dependency, short timeouts.
+ * Redirects are followed: GitHub answers with one when a repository moved
+ * (as UniversalAdmin's did to the {@code universaladmin-mc} organization),
+ * and the update check should keep working after such a move.
  *
  * <p>GitHub's unauthenticated rate limit (60 requests/hour per IP) is far
  * above anything a periodic check every few hours could ever hit - see
@@ -32,13 +34,13 @@ public final class HttpGitHubReleaseClient implements GitHubReleaseClient {
     private final String userAgent;
     private final HttpClient httpClient;
 
-    public HttpGitHubReleaseClient(String repositoryOwner, String repositoryName, String universalAdminVersion) {
-        this.endpoint = URI.create(
-                "https://api.github.com/repos/" + repositoryOwner + "/" + repositoryName + "/releases/latest");
+    /** @param repository {@code "owner/name"} on GitHub */
+    public HttpGitHubReleaseClient(String repository, String universalAdminVersion) {
+        this.endpoint = URI.create("https://api.github.com/repos/" + repository + "/releases/latest");
         this.userAgent = "UniversalAdmin/" + Objects.requireNonNull(universalAdminVersion, "universalAdminVersion");
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(CONNECT_TIMEOUT)
-                .followRedirects(HttpClient.Redirect.NEVER)
+                .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
     }
 

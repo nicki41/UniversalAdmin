@@ -6,7 +6,7 @@
 # the network whitelist while that is on. It reads the same
 # MySQL/MariaDB database as your servers (their config.yml -> database) and
 # never writes to it. Setup guide:
-# https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
+# https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/user/network.md
 #
 # /uavelocity (Velocity) or /uabungee (BungeeCord) shows whether the checks
 # run (permission universaladmin.velocity.status or
@@ -45,6 +45,12 @@ whitelist-check:
   # on) for players who are not on it. Players with
   # universaladmin.bypass.network-whitelist on the proxy still get in. Needs
   # UniversalAdmin 1.3.0 or newer on the servers.
+  enabled: true
+
+update-check:
+  # Tell the proxy console when a newer UniversalAdmin release is out (at
+  # startup and every 6 hours). Only a notice - replace the jar yourself and
+  # restart the proxy.
   enabled: true
 
 messages:

@@ -928,10 +928,10 @@ command:
       error: "<red>Staff-Modus-Snapshot konnte nicht wiederhergestellt werden: {0}"
   update:
     usage: ""
-    description: "Lädt die neueste Version herunter (wird beim nächsten Neustart aktiv)."
+    description: "Lädt die neueste Version von UniversalAdmin und seinen Extensions herunter (wird beim nächsten Neustart aktiv)."
     checking: "<gray>Prüfe GitHub auf eine neuere Version..."
-    applied: "<green>UniversalAdmin {0} heruntergeladen. Starte den Server neu, um es zu aktivieren."
-    up-to-date: "<green>Du nutzt bereits die neueste Version ({0})."
+    applied: "<green>{1} {0} heruntergeladen. Starte den Server neu, um es zu aktivieren."
+    up-to-date: "<green>{1} ist bereits die neueste Version ({0})."
     error: "<red>Update konnte nicht geprüft oder heruntergeladen werden: {0}"
 
 # Ein Block pro Befehl: "usage" ist die Argument-Übersicht als reiner Text
@@ -1367,7 +1367,8 @@ chat:
     staffchat-off: "<gray>Aus - schreibe # davor oder nutze /sc [nachricht]"
 
 update:
-  available: "<yellow>Eine neue UniversalAdmin-Version ist verfügbar: {0} (aktuell läuft {1}). Führe /admin update aus, um sie herunterzuladen, und starte den Server neu, um sie anzuwenden."
+  available: "<yellow>Eine neue Version von {2} ist verfügbar: {0} (aktuell läuft {1}). Führe /admin update aus, um sie herunterzuladen, und starte den Server neu, um sie anzuwenden."
+  downloaded: "<yellow>{2} {0} ist heruntergeladen (aktuell läuft {1}) - starte den Server neu, um es zu aktivieren."
 network:
   list:
     header: "<gradient:#55ddff:#3399ff><bold>Netzwerk</bold></gradient> <gray>{0} Server, {1} Spieler online"

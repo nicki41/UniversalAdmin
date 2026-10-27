@@ -1,8 +1,11 @@
 package dev.universaladmin.update;
 
 /**
- * @param updateApplied {@code false} means the running version already matched the latest release - nothing was downloaded
+ * What {@code /admin update} did for one plugin.
+ *
+ * @param name          the plugin - UniversalAdmin or an extension
+ * @param updateApplied {@code false} means it already runs the latest release - nothing was downloaded
  * @param version       the latest release's version, whether or not it was actually applied
  */
-public record UpdateApplyResult(boolean updateApplied, String version) {
+public record UpdateApplyResult(String name, boolean updateApplied, String version) {
 }

@@ -75,8 +75,11 @@ import dev.universaladmin.telemetry.PlayerCounts;
 import dev.universaladmin.telemetry.TelemetryBootstrap;
 import dev.universaladmin.telemetry.TelemetryEnvironment;
 import dev.universaladmin.update.ApplyUpdateAction;
-import dev.universaladmin.update.HttpGitHubReleaseClient;
 import dev.universaladmin.update.UpdateCheckBootstrap;
+import dev.universaladmin.update.UpdateDownloader;
+import dev.universaladmin.update.UpdateJoinListener;
+import dev.universaladmin.update.UpdateTarget;
+import dev.universaladmin.update.UpdateTargets;
 import java.time.Instant;
 import java.util.List;
 import java.util.function.Supplier;
@@ -143,6 +146,10 @@ public final class UniversalAdminPlugin extends JavaPlugin {
     private BukkitPermissionSync permissionSync;
     private TelemetryBootstrap telemetry;
     private UpdateCheckBootstrap updateChecks;
+    /** What the update check and /admin update cover - UniversalAdmin, then extensions as they register. */
+    private UpdateTargets updateTargets;
+    private UpdateCheckBootstrap.ReleaseClients releaseClients;
+    private UpdateDownloader updateDownloader;
     private DefaultNetworkService network;
 
     @Override
@@ -218,6 +225,8 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         }
         if (updateChecks != null) {
             updateChecks.close();
+        } else if (releaseClients != null) {
+            releaseClients.close();
         }
         if (telemetry != null) {
             telemetry.close();
@@ -285,7 +294,12 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         PermissionRegistry permissions = new PermissionRegistry();
         ModuleRegistry moduleRegistry = new ModuleRegistry();
         permissionSync = new BukkitPermissionSync(getServer().getPluginManager(), permissions);
-        extensions = new DefaultExtensionManager(moduleRegistry, storage.migrations(), permissionSync, getLogger());
+        updateTargets = new UpdateTargets();
+        updateTargets.add(new UpdateTarget("UniversalAdmin", UpdateTargets.CORE_REPOSITORY, UpdateTargets.CORE_ASSET_PREFIX,
+                getPluginMeta().getVersion(), getFile().toPath()));
+        releaseClients = new UpdateCheckBootstrap.ReleaseClients(getPluginMeta().getVersion());
+        updateDownloader = new UpdateDownloader(() -> getServer().getUpdateFolderFile().toPath());
+        extensions = new DefaultExtensionManager(moduleRegistry, storage.migrations(), permissionSync, updateTargets, getLogger());
         network = createNetwork(settingsService, services);
         DefaultNetworkService networkService = network;
         AuditService auditService = new DefaultAuditService(new JdbcAuditEventRepository(storage.dataSource(), scheduler),
@@ -337,11 +351,14 @@ public final class UniversalAdminPlugin extends JavaPlugin {
                 UPDATE_NOTIFY_PERMISSION, "Receive a notice when a new UniversalAdmin version is available",
                 dev.universaladmin.permission.PermissionDefault.OP));
         platform.permissions().register(new PermissionDefinition(
-                PermissionNode.core("update.apply"), "Download the latest UniversalAdmin release via /admin update",
+                PermissionNode.core("update.apply"), "Download the latest UniversalAdmin and extension releases via /admin update",
                 dev.universaladmin.permission.PermissionDefault.OP));
-        actions.register(ActionDefinition.builder(new ApplyUpdateAction(
-                        scheduler, new HttpGitHubReleaseClient("nicki41", "UniversalAdmin", getPluginMeta().getVersion()),
-                        () -> getFile().toPath(), getPluginMeta().getVersion()))
+        actions.register(ActionDefinition.builder(new ApplyUpdateAction(scheduler, updateTargets, releaseClients, updateDownloader,
+                        (name, version) -> {
+                            if (updateChecks != null) {
+                                updateChecks.service().markStaged(name, version);
+                            }
+                        }))
                 .permission(PermissionNode.core("update.apply"))
                 .build());
         guiPages.register(new MainMenuPage(guiFramework, messages, moduleRegistry, guiPages));
@@ -473,8 +490,11 @@ public final class UniversalAdminPlugin extends JavaPlugin {
     private void startUpdateChecks(UniversalAdmin platform) {
         try {
             updateChecks = UpdateCheckBootstrap.start(
-                    platform.settings(), platform.scheduler(), platform.notifications(), platform.messages(),
-                    UPDATE_NOTIFY_PERMISSION, getPluginMeta().getVersion(), RandomGenerator.getDefault(), getLogger());
+                    platform.settings(), platform.scheduler(), updateTargets, releaseClients, updateDownloader,
+                    platform.notifications(), platform.messages(), UPDATE_NOTIFY_PERMISSION, RandomGenerator.getDefault(),
+                    getLogger());
+            getServer().getPluginManager().registerEvents(new UpdateJoinListener(this,
+                    () -> updateChecks == null ? null : updateChecks.service(), UPDATE_NOTIFY_PERMISSION), this);
         } catch (RuntimeException e) {
             getLogger().log(Level.WARNING,
                     "Update checks could not be started. The server is unaffected; "

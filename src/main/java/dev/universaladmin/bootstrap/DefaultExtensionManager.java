@@ -8,6 +8,10 @@ import dev.universaladmin.module.ModuleManager;
 import dev.universaladmin.module.ModuleRegistry;
 import dev.universaladmin.module.ModuleState;
 import dev.universaladmin.storage.MigrationRunner;
+import dev.universaladmin.update.UpdateTarget;
+import dev.universaladmin.update.UpdateTargets;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,14 +39,17 @@ final class DefaultExtensionManager implements ExtensionManager, Listener {
     private final ModuleRegistry registry;
     private final MigrationRunner migrations;
     private final BukkitPermissionSync permissions;
+    private final UpdateTargets updateTargets;
     private final Logger logger;
     private final Map<ModuleId, Plugin> owners = new ConcurrentHashMap<>();
     private volatile ModuleManager modules;
 
-    DefaultExtensionManager(ModuleRegistry registry, MigrationRunner migrations, BukkitPermissionSync permissions, Logger logger) {
+    DefaultExtensionManager(ModuleRegistry registry, MigrationRunner migrations, BukkitPermissionSync permissions,
+            UpdateTargets updateTargets, Logger logger) {
         this.registry = registry;
         this.migrations = migrations;
         this.permissions = permissions;
+        this.updateTargets = updateTargets;
         this.logger = logger;
     }
 
@@ -79,6 +86,20 @@ final class DefaultExtensionManager implements ExtensionManager, Listener {
     }
 
     @Override
+    public void updatesFrom(Plugin owner, String repository, String assetPrefix) {
+        Objects.requireNonNull(owner, "owner");
+        Path jar;
+        try {
+            jar = Path.of(owner.getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
+        } catch (URISyntaxException | RuntimeException e) {
+            logger.warning(() -> owner.getName() + " gave an update source, but its jar could not be found - it is not updated.");
+            return;
+        }
+        updateTargets.add(new UpdateTarget(owner.getName(), repository, assetPrefix, owner.getPluginMeta().getVersion(), jar));
+        logger.fine(() -> "Update checks cover " + owner.getName() + " from https://github.com/" + repository);
+    }
+
+    @Override
     public List<ExtensionInfo> extensions() {
         List<ExtensionInfo> list = new ArrayList<>();
         owners.forEach((id, owner) -> list.add(new ExtensionInfo(owner.getName(), owner.getPluginMeta().getVersion(), id,
@@ -89,6 +110,7 @@ final class DefaultExtensionManager implements ExtensionManager, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPluginDisable(PluginDisableEvent event) {
+        updateTargets.remove(event.getPlugin().getName());
         ModuleManager manager = modules;
         if (manager == null) {
             return;
