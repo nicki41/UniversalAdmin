@@ -29,7 +29,7 @@ see [network.md](network.md).
 
 1. Download `universaladmin-core-<version>.jar` from
    [Modrinth](https://modrinth.com/plugin/universaladmin) or the
-   [GitHub releases](https://github.com/nicki41/UniversalAdmin/releases)
+   [GitHub releases](https://github.com/universaladmin-mc/UniversalAdmin/releases)
    (each release lists a SHA-256 checksum).
 2. Put it into the server's `plugins/` folder and start (or restart) the
    server - never use `/reload`.

@@ -65,13 +65,13 @@ embeds.
 - [UniversalAdmin](https://modrinth.com/plugin/universaladmin) of the same
   version.
 - Bot mode: a Discord application with a bot token
-  ([setup guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/discord.md#bot-mode)).
+  ([setup guide](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/discord.md#bot-mode)).
   On the first start the server downloads the Discord library (about
   20 MB) once.
 
-[Setup guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/discord.md) ·
-[Source](https://github.com/nicki41/UniversalAdmin) ·
-[Issues](https://github.com/nicki41/UniversalAdmin/issues)
+[Setup guide](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/discord.md) ·
+[Source](https://github.com/universaladmin-mc/UniversalAdmin) ·
+[Issues](https://github.com/universaladmin-mc/UniversalAdmin/issues)
 
 ---
 
@@ -125,9 +125,9 @@ No `/papi ecloud` download needed.
   (Placeholders 1.2 works with UniversalAdmin 1.2).
 - [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi).
 
-[Every placeholder](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/placeholderapi.md) ·
-[Source](https://github.com/nicki41/UniversalAdmin) ·
-[Issues](https://github.com/nicki41/UniversalAdmin/issues)
+[Every placeholder](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/placeholderapi.md) ·
+[Source](https://github.com/universaladmin-mc/UniversalAdmin) ·
+[Issues](https://github.com/universaladmin-mc/UniversalAdmin/issues)
 
 ---
 
@@ -183,8 +183,8 @@ mutes that reach the voice chat, and a voice group for your staff.
 - [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) on the
   server.
 
-[Documentation](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/voicechat.md) ·
-[Source](https://github.com/nicki41/UniversalAdmin) ·
-[Issues](https://github.com/nicki41/UniversalAdmin/issues)
+[Documentation](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/voicechat.md) ·
+[Source](https://github.com/universaladmin-mc/UniversalAdmin) ·
+[Issues](https://github.com/universaladmin-mc/UniversalAdmin/issues)
 
 ---

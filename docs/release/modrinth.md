@@ -21,9 +21,9 @@ everything on this page (texts, gallery, links) is maintained by hand.
 | Game versions | everything in [`supported-versions.txt`](../../supported-versions.txt) - set by `release.yml`, extended by `compatibility.yml` |
 | License | GPL-3.0-or-later (from 1.5.0; up to 1.4.0 Apache-2.0) |
 | Icon | `assets/icon.png` |
-| Source | https://github.com/nicki41/UniversalAdmin |
-| Issues | https://github.com/nicki41/UniversalAdmin/issues |
-| Wiki | https://github.com/nicki41/UniversalAdmin/tree/main/docs |
+| Source | https://github.com/universaladmin-mc/UniversalAdmin |
+| Issues | https://github.com/universaladmin-mc/UniversalAdmin/issues |
+| Wiki | https://github.com/universaladmin-mc/UniversalAdmin/tree/main/docs |
 | Discord | none - only list one once it exists |
 
 ## Summary
@@ -43,8 +43,8 @@ A `wsrv.nl` link of our own is left as it is and refreshes daily.
 
 # UniversalAdmin
 
-[![Servers](https://wsrv.nl/?url=https%3A%2F%2Ftelemetry.0nicki.de%2Fv1%2Fbadge%2Fservers.svg%3Fplugin%3Duniversaladmin&maxage=1d)](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/telemetry.md)
-[![Players](https://wsrv.nl/?url=https%3A%2F%2Ftelemetry.0nicki.de%2Fv1%2Fbadge%2Fplayers.svg%3Fplugin%3Duniversaladmin%26color%3Dblue&maxage=1d)](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/telemetry.md)
+[![Servers](https://wsrv.nl/?url=https%3A%2F%2Ftelemetry.0nicki.de%2Fv1%2Fbadge%2Fservers.svg%3Fplugin%3Duniversaladmin&maxage=1d)](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/user/telemetry.md)
+[![Players](https://wsrv.nl/?url=https%3A%2F%2Ftelemetry.0nicki.de%2Fv1%2Fbadge%2Fplayers.svg%3Fplugin%3Duniversaladmin%26color%3Dblue&maxage=1d)](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/user/telemetry.md)
 
 **The free, all-in-one admin plugin for Paper.** Everything your staff team
 needs - moderation, reports, staff mode, player tools, worlds, maintenance,
@@ -100,14 +100,14 @@ and set `network.enabled: true`:
 Optional: the **UniversalAdmin Velocity** or **BungeeCord** plugin (the
 `-velocity` and `-bungee` versions on this page) keeps banned players out at
 the proxy, before they reach any server - and closes the proxy during
-network maintenance or to players not on the network whitelist. [Network guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md).
+network maintenance or to players not on the network whitelist. [Network guide](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/user/network.md).
 
 ## 🔁 Switching from another plugin?
 
 `/admin import` brings your bans, mutes, warnings and kicks over from
 **LiteBans**, **AdvancedBan**, the **vanilla ban lists** and **EssentialsX** -
 with reasons, dates and what is still in force. Preview first, nothing is
-lost. [Import guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/import.md).
+lost. [Import guide](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/user/import.md).
 
 ## 🛡️ Moderation
 
@@ -187,7 +187,7 @@ like the built-ins. The official extensions - all in the
   staff voice group.
 
 Developers: see the
-[extension guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/getting-started.md).
+[extension guide](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/getting-started.md).
 
 ## 📦 Requirements
 
@@ -203,10 +203,10 @@ Developers: see the
 1. Put the jar into `plugins/`, restart.
 2. Type `/admin`.
 3. Give your team permissions:
-   [permissions & role templates](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/permissions.md).
+   [permissions & role templates](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/user/permissions.md).
 
-All commands: [command reference](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/commands.md) ·
-Full docs: [GitHub](https://github.com/nicki41/UniversalAdmin/tree/main/docs)
+All commands: [command reference](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/user/commands.md) ·
+Full docs: [GitHub](https://github.com/universaladmin-mc/UniversalAdmin/tree/main/docs)
 
 ## 📊 Anonymous statistics
 
@@ -217,11 +217,11 @@ sent: IPs, server names, player names or UUIDs, chat, commands, world data,
 other plugins or hardware identifiers. The id is random and derived from
 nothing. Turn it off with `telemetry.enabled: false` in `config.yml` - then
 no request is made at all.
-[Exactly what is sent](https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/telemetry.md).
+[Exactly what is sent](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/user/telemetry.md).
 
 ## 💬 Support
 
-Bugs and ideas: [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues) -
+Bugs and ideas: [GitHub issues](https://github.com/universaladmin-mc/UniversalAdmin/issues) -
 please include `/admin status`.
 
 ---

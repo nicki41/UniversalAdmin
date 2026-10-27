@@ -15,16 +15,16 @@ class HttpGitHubReleaseClientTest {
     private static final String SAMPLE_RESPONSE = """
             {
               "tag_name": "v0.1.0-alpha.2",
-              "html_url": "https://github.com/nicki41/UniversalAdmin/releases/tag/v0.1.0-alpha.2",
+              "html_url": "https://github.com/universaladmin-mc/UniversalAdmin/releases/tag/v0.1.0-alpha.2",
               "prerelease": true,
               "assets": [
                 {
                   "name": "universaladmin-core-0.1.0-alpha.2.jar",
-                  "browser_download_url": "https://github.com/nicki41/UniversalAdmin/releases/download/v0.1.0-alpha.2/universaladmin-core-0.1.0-alpha.2.jar"
+                  "browser_download_url": "https://github.com/universaladmin-mc/UniversalAdmin/releases/download/v0.1.0-alpha.2/universaladmin-core-0.1.0-alpha.2.jar"
                 },
                 {
                   "name": "universaladmin-core-0.1.0-alpha.2.jar.sha256",
-                  "browser_download_url": "https://github.com/nicki41/UniversalAdmin/releases/download/v0.1.0-alpha.2/universaladmin-core-0.1.0-alpha.2.jar.sha256"
+                  "browser_download_url": "https://github.com/universaladmin-mc/UniversalAdmin/releases/download/v0.1.0-alpha.2/universaladmin-core-0.1.0-alpha.2.jar.sha256"
                 }
               ]
             }
@@ -36,7 +36,7 @@ class HttpGitHubReleaseClientTest {
 
         assertEquals("v0.1.0-alpha.2", release.tagName());
         assertEquals("0.1.0-alpha.2", release.version());
-        assertEquals("https://github.com/nicki41/UniversalAdmin/releases/tag/v0.1.0-alpha.2", release.htmlUrl());
+        assertEquals("https://github.com/universaladmin-mc/UniversalAdmin/releases/tag/v0.1.0-alpha.2", release.htmlUrl());
         assertTrue(release.prerelease());
     }
 

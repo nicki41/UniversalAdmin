@@ -4,7 +4,7 @@
 //
 // In your own project, depend on the published API instead of the project:
 //   repositories { maven("https://jitpack.io") }
-//   compileOnly("com.github.nicki41.UniversalAdmin:universaladmin-api:1.0.0")
+//   compileOnly("com.github.universaladmin-mc.UniversalAdmin:universaladmin-api:1.0.0")
 // or on the plugin jar itself from Modrinth's Maven:
 //   repositories { maven("https://api.modrinth.com/maven") }
 //   compileOnly("maven.modrinth:universaladmin:1.0.0")

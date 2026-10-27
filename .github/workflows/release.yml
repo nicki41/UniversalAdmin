@@ -264,7 +264,7 @@ jobs:
           name: UniversalAdmin Velocity ${{ steps.version.outputs.version }}
           version: ${{ steps.version.outputs.version }}-velocity
           changelog: |
-            The optional Velocity plugin for UniversalAdmin's network mode: refuses players banned with UniversalAdmin at the proxy, and keeps it closed during network maintenance and to players not on the network whitelist. Install UniversalAdmin ${{ steps.version.outputs.version }} on your servers as well - see https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
+            The optional Velocity plugin for UniversalAdmin's network mode: refuses players banned with UniversalAdmin at the proxy, and keeps it closed during network maintenance and to players not on the network whitelist. Install UniversalAdmin ${{ steps.version.outputs.version }} on your servers as well - see https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/user/network.md
           loaders: velocity
           game-versions: ${{ steps.games.outputs.list }}
           java: 21
@@ -281,7 +281,7 @@ jobs:
           name: UniversalAdmin BungeeCord ${{ steps.version.outputs.version }}
           version: ${{ steps.version.outputs.version }}-bungee
           changelog: |
-            The optional BungeeCord plugin for UniversalAdmin's network mode: refuses players banned with UniversalAdmin at the proxy, and keeps it closed during network maintenance and to players not on the network whitelist. Install UniversalAdmin ${{ steps.version.outputs.version }} on your servers as well - see https://github.com/nicki41/UniversalAdmin/blob/main/docs/user/network.md
+            The optional BungeeCord plugin for UniversalAdmin's network mode: refuses players banned with UniversalAdmin at the proxy, and keeps it closed during network maintenance and to players not on the network whitelist. Install UniversalAdmin ${{ steps.version.outputs.version }} on your servers as well - see https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/user/network.md
           loaders: |
             bungeecord
             waterfall
@@ -301,7 +301,7 @@ jobs:
           name: UniversalAdmin Discord ${{ steps.version.outputs.version }}
           version: ${{ steps.version.outputs.version }}
           changelog: |
-            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/nicki41/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
+            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/universaladmin-mc/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
           loaders: |
             paper
             purpur
@@ -320,7 +320,7 @@ jobs:
           name: UniversalAdmin Placeholders ${{ steps.version.outputs.version }}
           version: ${{ steps.version.outputs.version }}
           changelog: |
-            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/nicki41/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
+            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/universaladmin-mc/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
           loaders: |
             paper
             purpur
@@ -344,7 +344,7 @@ jobs:
           name: UniversalAdmin Voice Chat ${{ steps.version.outputs.version }}
           version: ${{ steps.version.outputs.version }}
           changelog: |
-            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/nicki41/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
+            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/universaladmin-mc/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
           loaders: |
             paper
             purpur

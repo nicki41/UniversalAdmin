@@ -15,7 +15,7 @@ VERSION="$1"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="${SMOKE_TEST_DIR:-$ROOT/build/smoke-test/$VERSION}"
 API="https://fill.papermc.io/v3/projects/paper"
-UA="nicki41/UniversalAdmin smoke test"
+UA="universaladmin-mc/UniversalAdmin smoke test"
 
 rm -rf "$WORK"
 mkdir -p "$WORK/plugins/UniversalAdmin"

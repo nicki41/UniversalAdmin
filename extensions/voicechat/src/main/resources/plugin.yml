@@ -3,5 +3,5 @@ version: '${version}'
 main: dev.universaladmin.voicechat.VoiceChatPlugin
 api-version: '1.21.7'
 description: Simple Voice Chat for UniversalAdmin - voice and full mutes, silent vanish, voice status on the profile, a staff voice group.
-website: https://github.com/nicki41/UniversalAdmin
+website: https://github.com/universaladmin-mc/UniversalAdmin
 depend: [UniversalAdmin, voicechat]

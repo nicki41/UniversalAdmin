@@ -9,9 +9,9 @@ body:
         New features build on the existing layered architecture
         (Frontend → Service → Action → Repository) rather than working around
         it - see
-        [ARCHITECTURE.md](https://github.com/nicki41/UniversalAdmin/blob/main/ARCHITECTURE.md)
+        [ARCHITECTURE.md](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/ARCHITECTURE.md)
         and the
-        [development rules](https://github.com/nicki41/UniversalAdmin/blob/main/docs/development/architecture-rules.md)
+        [development rules](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/development/architecture-rules.md)
         before proposing something that would require an architectural change.
 
   - type: textarea

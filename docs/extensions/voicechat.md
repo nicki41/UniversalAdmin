@@ -9,7 +9,7 @@ works the way it does: [ADR 0022](../architecture/decisions/0022-mute-kinds-and-
 
 1. Install Simple Voice Chat (the Paper/Bukkit plugin) on the server.
 2. Put `universaladmin-voicechat-<version>.jar` from the
-   [GitHub release](https://github.com/nicki41/UniversalAdmin/releases) into
+   [GitHub release](https://github.com/universaladmin-mc/UniversalAdmin/releases) into
    `plugins/` (it needs UniversalAdmin 1.5 or newer).
 3. Restart. `/admin modules` lists **Voice Chat**.
 

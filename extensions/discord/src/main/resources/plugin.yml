@@ -3,7 +3,7 @@ version: '${version}'
 main: dev.universaladmin.discord.DiscordPlugin
 api-version: '1.21.7'
 description: Posts UniversalAdmin punishments, reports and other admin actions to a Discord channel.
-website: https://github.com/nicki41/UniversalAdmin
+website: https://github.com/universaladmin-mc/UniversalAdmin
 depend: [UniversalAdmin]
 # Bot mode only uses it, but Paper loads it for every start - from Maven
 # Central, once, into the server's libraries folder.

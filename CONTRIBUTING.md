@@ -23,7 +23,7 @@ You need:
 - An IDE with Gradle import (IntelliJ IDEA, Eclipse, VS Code) - optional.
 
 ```bash
-git clone https://github.com/nicki41/UniversalAdmin.git
+git clone https://github.com/universaladmin-mc/UniversalAdmin.git
 cd UniversalAdmin
 ./gradlew build
 ```

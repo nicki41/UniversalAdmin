@@ -69,6 +69,6 @@ run in the background in batches of 500; the server keeps running normally.
 | "No LiteBans data found on this server." | The plugin's folder or config is missing - copy `plugins/LiteBans/` (or `AdvancedBan/`, `Essentials/userdata/`) from the old server. |
 | "... needs the H2 driver that comes with LiteBans." | Put the LiteBans jar back into `plugins/` until the import is done, restart, and run the import again. Same for AdvancedBan and HSQLDB. |
 | "Could not open the database of LiteBans: ..." | Check the MySQL details in the old plugin's config - the import uses exactly those. |
-| "... uses PostgreSQL, which UniversalAdmin cannot read." | Not supported yet - please [open an issue](https://github.com/nicki41/UniversalAdmin/issues) if you need it. |
+| "... uses PostgreSQL, which UniversalAdmin cannot read." | Not supported yet - please [open an issue](https://github.com/universaladmin-mc/UniversalAdmin/issues) if you need it. |
 
 How it works inside: [ADR 0015](../architecture/decisions/0015-punishment-import.md).

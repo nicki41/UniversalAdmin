@@ -3,7 +3,7 @@
 What exists, and what comes next. Not a dated plan - order within a block is
 a recommendation. Every item builds on the structure in
 [ARCHITECTURE.md](ARCHITECTURE.md), not around it. Ideas and votes are
-welcome as [GitHub issues](https://github.com/nicki41/UniversalAdmin/issues).
+welcome as [GitHub issues](https://github.com/universaladmin-mc/UniversalAdmin/issues).
 
 ## Done - 1.1.0
 

@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
-    compileOnly("com.github.nicki41.UniversalAdmin:universaladmin-api:v1.5.0")
+    compileOnly("com.github.universaladmin-mc.UniversalAdmin:universaladmin-api:v1.5.0")
 }
 ```
 
@@ -35,7 +35,7 @@ Alternatives if you prefer:
   `maven("https://api.modrinth.com/maven")` +
   `compileOnly("maven.modrinth:universaladmin:1.5.0")`,
 - or `universaladmin-api-1.5.0.jar` (with sources and javadoc) from the
-  [GitHub release](https://github.com/nicki41/UniversalAdmin/releases),
+  [GitHub release](https://github.com/universaladmin-mc/UniversalAdmin/releases),
   added via `compileOnly(files("libs/universaladmin-api-1.5.0.jar"))`.
 
 Never shade the API into your jar.
