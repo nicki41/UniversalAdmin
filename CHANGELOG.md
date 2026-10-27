@@ -7,7 +7,7 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
-## [1.6.0] - 2026-10-27
+## [1.6.0] - 2026-10-28
 
 Updates install themselves, the project has a home of its own - and a new
 look.
