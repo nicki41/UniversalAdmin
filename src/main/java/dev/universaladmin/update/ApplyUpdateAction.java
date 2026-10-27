@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 /**
  * Backs {@code /admin update} - fetches the latest release of UniversalAdmin
@@ -18,7 +19,8 @@ import java.util.function.Function;
  * stages each newer one in {@code plugins/update/} (see
  * {@link UpdateDownloader}), applied by the server at the next restart. Unlike
  * the automatic download it also takes a new major version: a staff member
- * asked for it.
+ * asked for it. A plugin whose release cannot be fetched or downloaded is
+ * reported as failed; the others are still updated.
  */
 public final class ApplyUpdateAction implements Action<Void, List<UpdateApplyResult>> {
 
@@ -29,18 +31,20 @@ public final class ApplyUpdateAction implements Action<Void, List<UpdateApplyRes
     private final Function<String, GitHubReleaseClient> clients;
     private final UpdateStager stager;
     private final BiConsumer<String, String> onStaged;
+    private final Logger logger;
 
     /**
      * @param clients  one release client per repository ({@code "owner/name"})
      * @param onStaged told (target name, version) about every staged update - the update check's notices then say "restart"
      */
     public ApplyUpdateAction(TaskScheduler scheduler, UpdateTargets targets, Function<String, GitHubReleaseClient> clients,
-            UpdateStager stager, BiConsumer<String, String> onStaged) {
+            UpdateStager stager, BiConsumer<String, String> onStaged, Logger logger) {
         this.scheduler = scheduler;
         this.targets = targets;
         this.clients = clients;
         this.stager = stager;
         this.onStaged = onStaged;
+        this.logger = logger;
     }
 
     @Override
@@ -67,8 +71,9 @@ public final class ApplyUpdateAction implements Action<Void, List<UpdateApplyRes
                     return ActionResult.<List<UpdateApplyResult>>failure(ActionResult.FailureReason.INTERNAL_ERROR,
                             "Interrupted while updating " + target.name() + ".");
                 } catch (IOException e) {
-                    return ActionResult.<List<UpdateApplyResult>>failure(ActionResult.FailureReason.INTERNAL_ERROR,
-                            "Could not update " + target.name() + ": " + e.getMessage());
+                    // One plugin without a reachable release must not hold back the others.
+                    logger.warning(() -> "Could not update " + target.name() + ": " + e.getMessage());
+                    results.add(UpdateApplyResult.failed(target.name(), target.currentVersion(), e.getMessage()));
                 }
             }
             return ActionResult.success(List.copyOf(results));

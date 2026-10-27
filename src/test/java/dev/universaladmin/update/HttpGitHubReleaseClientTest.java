@@ -91,4 +91,12 @@ class HttpGitHubReleaseClientTest {
     void rejectsCompletelyMalformedJson() {
         assertThrows(IOException.class, () -> HttpGitHubReleaseClient.toRelease("not json at all"));
     }
+
+    @Test
+    void explainsTheFailuresAServerOwnerCanActOn() {
+        assertEquals("no release published yet (HTTP 404)", HttpGitHubReleaseClient.failureFor(404));
+        assertTrue(HttpGitHubReleaseClient.failureFor(403).contains("request limit"));
+        assertTrue(HttpGitHubReleaseClient.failureFor(429).contains("request limit"));
+        assertEquals("GitHub releases endpoint returned HTTP 500", HttpGitHubReleaseClient.failureFor(500));
+    }
 }

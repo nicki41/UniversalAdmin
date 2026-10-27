@@ -56,9 +56,20 @@ public final class HttpGitHubReleaseClient implements GitHubReleaseClient {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         int status = response.statusCode();
         if (status < 200 || status >= 300) {
-            throw new IOException("GitHub releases endpoint returned HTTP " + status);
+            throw new IOException(failureFor(status));
         }
         return toRelease(response.body());
+    }
+
+    /** What a non-2xx answer of the releases endpoint means, in words a server owner can act on. */
+    static String failureFor(int status) {
+        return switch (status) {
+            // A repository without a published release (or one that does not exist).
+            case 404 -> "no release published yet (HTTP 404)";
+            // Unauthenticated requests share 60 per hour per IP address.
+            case 403, 429 -> "GitHub's request limit for this address is used up - try again within the hour (HTTP " + status + ")";
+            default -> "GitHub releases endpoint returned HTTP " + status;
+        };
     }
 
     /** Package-visible for {@code HttpGitHubReleaseClientTest} - avoids a real HTTP call to exercise the parsing itself. */

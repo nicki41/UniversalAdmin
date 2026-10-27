@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 
@@ -273,6 +276,48 @@ class ActionExecutorTest {
         ActionResult<Void> undone = executor.undo(EchoAction.ID, context, "hi", "hi").join();
 
         assertFailure(undone, ActionResult.FailureReason.VALIDATION);
+    }
+
+    @Test
+    void internalErrorReportedByTheActionGoesToTheLog() {
+        Logger logger = Logger.getLogger("ActionExecutorTest.internalError");
+        logger.setUseParentHandlers(false);
+        List<LogRecord> logged = new ArrayList<>();
+        logger.addHandler(new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                logged.add(record);
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        });
+        ActionId id = ActionId.core("test.broken");
+        registry.register(ActionDefinition.builder(new Action<String, String>() {
+            @Override
+            public ActionId id() {
+                return id;
+            }
+
+            @Override
+            public CompletableFuture<ActionResult<String>> execute(ActionContext context, String input) {
+                return CompletableFuture.completedFuture(
+                        ActionResult.failure(ActionResult.FailureReason.INTERNAL_ERROR, "disk full"));
+            }
+        }).build());
+
+        ActionResult<String> result = new ActionExecutor(registry, audit, logger)
+                .<String, String>execute(id, new ActionContext(trustedPlayer(), Source.COMMAND), "x").join();
+
+        assertFailure(result, ActionResult.FailureReason.INTERNAL_ERROR);
+        assertEquals(1, logged.size());
+        assertEquals(Level.WARNING, logged.get(0).getLevel());
+        assertTrue(logged.get(0).getMessage().contains("disk full"), logged.get(0).getMessage());
     }
 
     private Actor trustedPlayer() {

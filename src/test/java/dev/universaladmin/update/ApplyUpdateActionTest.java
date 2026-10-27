@@ -1,15 +1,18 @@
 package dev.universaladmin.update;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.Actor;
 import dev.universaladmin.action.Source;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 /** {@code /admin update} stages every plugin with a newer release - a new major version too, since a staff member asked. */
@@ -29,7 +32,7 @@ class ApplyUpdateActionTest {
         ApplyUpdateAction action = new ApplyUpdateAction(new InlineTaskScheduler(), targets,
                 repository -> () -> new GitHubRelease(latest.get(repository), "https://example.com", false, List.of()),
                 (target, release) -> staged.add(target.name() + " " + release.version()),
-                (name, version) -> told.add(name + " " + version));
+                (name, version) -> told.add(name + " " + version), Logger.getLogger("ApplyUpdateActionTest"));
 
         ActionResult<List<UpdateApplyResult>> result = action.execute(new ActionContext(Actor.console(), Source.COMMAND), null).join();
 
@@ -38,5 +41,32 @@ class ApplyUpdateActionTest {
                 new UpdateApplyResult("UniversalAdminDiscord", false, "1.6.0")), results);
         assertEquals(List.of("UniversalAdmin 2.0.0"), staged);
         assertEquals(List.of("UniversalAdmin 2.0.0"), told);
+    }
+
+    @Test
+    void aPluginWithoutAReleaseDoesNotHoldBackTheOthers() {
+        UpdateTargets targets = new UpdateTargets();
+        targets.add(new UpdateTarget("UniversalAdmin", UpdateTargets.CORE_REPOSITORY, UpdateTargets.CORE_ASSET_PREFIX, "1.6.0",
+                Path.of("UniversalAdmin.jar")));
+        targets.add(new UpdateTarget("UniversalAdminDiscord", "universaladmin-mc/universaladmin-discord", "universaladmin-discord-",
+                "1.6.0", Path.of("discord.jar")));
+        List<String> staged = new ArrayList<>();
+        ApplyUpdateAction action = new ApplyUpdateAction(new InlineTaskScheduler(), targets,
+                repository -> () -> {
+                    if (!repository.equals(UpdateTargets.CORE_REPOSITORY)) {
+                        throw new IOException("no release published yet (HTTP 404)");
+                    }
+                    return new GitHubRelease("v1.6.1", "https://example.com", false, List.of());
+                },
+                (target, release) -> staged.add(target.name() + " " + release.version()),
+                (name, version) -> { }, Logger.getLogger("ApplyUpdateActionTest"));
+
+        ActionResult<List<UpdateApplyResult>> result = action.execute(new ActionContext(Actor.console(), Source.COMMAND), null).join();
+
+        List<UpdateApplyResult> results = ((ActionResult.Success<List<UpdateApplyResult>>) result).value();
+        assertEquals(new UpdateApplyResult("UniversalAdmin", true, "1.6.1"), results.get(0));
+        assertTrue(results.get(1).failed());
+        assertEquals("no release published yet (HTTP 404)", results.get(1).failure());
+        assertEquals(List.of("UniversalAdmin 1.6.1"), staged);
     }
 }

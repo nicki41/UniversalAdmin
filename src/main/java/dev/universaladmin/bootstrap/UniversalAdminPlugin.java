@@ -358,7 +358,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
                             if (updateChecks != null) {
                                 updateChecks.service().markStaged(name, version);
                             }
-                        }))
+                        }, getLogger()))
                 .permission(PermissionNode.core("update.apply"))
                 .build());
         guiPages.register(new MainMenuPage(guiFramework, messages, moduleRegistry, guiPages));

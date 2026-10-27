@@ -52,6 +52,12 @@ look.
 
 - `/admin update` picked the first jar of a release - the API javadoc - and
   refused it over the checksum. It now takes the plugin jar by name.
+- `/admin update` reports every plugin on its own line: one whose release
+  cannot be fetched (for example an extension without a published release)
+  no longer stops the others. A missing release and a used-up GitHub request
+  limit are named as such.
+- "The details are in the server log" now holds for every internal error an
+  action reports - its reason is logged.
 
 ## [1.5.0] - 2026-10-24
 

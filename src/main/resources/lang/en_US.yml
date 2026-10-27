@@ -935,7 +935,7 @@ command:
     checking: "<gray>Checking GitHub for a newer release..."
     applied: "<green>Downloaded {1} {0}. Restart the server to apply it."
     up-to-date: "<green>{1} is already the latest version ({0})."
-    error: "<red>Failed to check or download the update: {0}"
+    error: "<red>Could not update {1}: {0}"
 
 # One block per command: "usage" is the plain-text argument synopsis shown
 # after the command label (not MiniMessage), "description" the line in
