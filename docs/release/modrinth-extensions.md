@@ -144,7 +144,7 @@ Project id `HEMFEpG6`, set as the repository variable `MODRINTH_VOICECHAT_ID` -
 | Environment | Server-side only |
 | Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
 | License | GPL-3.0-or-later |
-| Icon | `assets/icon.png` until it has its own |
+| Icon | `assets/icon-voicechat.png` |
 | Links | Source and issues: the UniversalAdmin repository; wiki: `docs/extensions/voicechat.md` |
 | Dependencies | UniversalAdmin (required), Simple Voice Chat (required) - set by `release.yml` |
 

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06B6D4"/>
+      <stop offset="1" stop-color="#075985"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.3" cy="0.2" r="0.8">
+      <stop offset="0" stop-color="#fff" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="112" fill="url(#shine)"/>
+        <path d="M256 168 L160 330 M256 168 L352 330 M160 330 L352 330 M256 168 L256 268 M160 330 L256 268 M352 330 L256 268" stroke="#fff" stroke-width="16" stroke-linecap="round" stroke-opacity=".8"/>
+        <circle cx="256" cy="168" r="42" fill="#fff"/><circle cx="160" cy="330" r="42" fill="#fff"/>
+        <circle cx="352" cy="330" r="42" fill="#fff"/><circle cx="256" cy="268" r="26" fill="#fff"/>
+        <g transform="translate(362 362) scale(0.25)">
+          <circle cx="256" cy="264" r="230" fill="#075985"/>
+          <path d="M256 84 L396 134 L396 258 C396 350 336 414 256 446 C176 414 116 350 116 258 L116 134 Z" fill="#fff"/>
+          <path d="M198 166 V266 A58 58 0 0 0 314 266 V166" fill="none" stroke="#075985" stroke-width="46" stroke-linecap="round"/>
+        </g>
+</svg>
