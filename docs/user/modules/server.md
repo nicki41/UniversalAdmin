@@ -136,7 +136,7 @@ actually active.
 | `universaladmin.bypass.maintenance` | op | Join while this server's or the network's maintenance mode is enabled |
 
 See [docs/user/permissions.md](../permissions.md) for how these fit into
-the platform-wide list, and [docs/architecture/actions.md](../architecture/actions.md)
+the platform-wide list, and [docs/architecture/actions.md](../../architecture/actions.md)
 for how a node on `ActionDefinition.Builder#permission(...)` gets enforced.
 
 ## Settings
@@ -147,7 +147,7 @@ for how a node on `ActionDefinition.Builder#permission(...)` gets enforced.
 | `server.countdown.broadcast-steps` | `60, 30, 10, 5, 4, 3, 2, 1` | Remaining-seconds marks the countdown broadcasts a warning at |
 
 Registered under the module's own `server` settings namespace (see
-[docs/development/settings.md](../development/settings.md)). Neither
+[docs/development/settings.md](../../development/settings.md)). Neither
 requires a restart to take effect.
 
 ## Database

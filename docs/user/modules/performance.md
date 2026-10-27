@@ -162,7 +162,7 @@ the platform-wide list.
 `core.performance.refresh-interval` predates this module's real
 implementation and stays a `core`-namespaced setting; everything else above
 is registered under the module's own `performance` settings namespace (see
-[docs/development/settings.md](../development/settings.md)). None of the
+[docs/development/settings.md](../../development/settings.md)). None of the
 new settings require a restart.
 
 ## Limitations

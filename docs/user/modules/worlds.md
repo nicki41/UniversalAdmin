@@ -104,7 +104,7 @@ They belong in a future "Advanced World Manager" extension, not the core.
 | `universaladmin.worlds.gamerule.manage` | op | Change a world's gamerules |
 
 See [docs/user/permissions.md](../permissions.md) for how these fit into
-the platform-wide list, and [docs/architecture/actions.md](../architecture/actions.md)
+the platform-wide list, and [docs/architecture/actions.md](../../architecture/actions.md)
 for how a node on `ActionDefinition.Builder#permission(...)` gets enforced.
 
 ## Database
