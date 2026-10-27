@@ -71,7 +71,7 @@ embeds.
   20 MB) once.
 
 [Setup guide](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/discord.md) ·
-[Source](https://github.com/universaladmin-mc/UniversalAdmin) ·
+[Source](https://github.com/universaladmin-mc/universaladmin-discord) ·
 [Issues](https://github.com/universaladmin-mc/universaladmin-discord/issues)
 
 ---
@@ -127,7 +127,7 @@ No `/papi ecloud` download needed.
 - [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi).
 
 [Every placeholder](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/placeholderapi.md) ·
-[Source](https://github.com/universaladmin-mc/UniversalAdmin) ·
+[Source](https://github.com/universaladmin-mc/universaladmin-placeholders) ·
 [Issues](https://github.com/universaladmin-mc/universaladmin-placeholders/issues)
 
 ---
@@ -185,7 +185,7 @@ mutes that reach the voice chat, and a voice group for your staff.
   server.
 
 [Documentation](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/voicechat.md) ·
-[Source](https://github.com/universaladmin-mc/UniversalAdmin) ·
+[Source](https://github.com/universaladmin-mc/universaladmin-voicechat) ·
 [Issues](https://github.com/universaladmin-mc/universaladmin-voicechat/issues)
 
 ---
