@@ -18,6 +18,7 @@ import com.velocitypowered.api.proxy.server.ServerPing;
 import dev.universaladmin.proxy.ProxyChecks;
 import dev.universaladmin.proxy.ProxyLog;
 import dev.universaladmin.proxy.ProxySettings;
+import dev.universaladmin.proxy.ProxyUpdateCheck;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import org.slf4j.Logger;
@@ -32,7 +33,7 @@ import org.slf4j.Logger;
  */
 @Plugin(id = "universaladmin-velocity", name = "UniversalAdmin Velocity", version = BuildConstants.VERSION,
         description = "Checks UniversalAdmin bans, network maintenance and the network whitelist at the proxy.",
-        url = "https://github.com/nicki41/UniversalAdmin", authors = {"UniversalAdmin"})
+        url = "https://github.com/universaladmin-mc/UniversalAdmin", authors = {"UniversalAdmin"})
 public final class UniversalAdminVelocity {
 
     private final ProxyServer proxy;
@@ -57,7 +58,7 @@ public final class UniversalAdminVelocity {
             logger.error("Could not read config.yml - the ban, maintenance and whitelist checks stay off.", e);
             return;
         }
-        checks = new ProxyChecks(settings, new ProxyLog() {
+        ProxyLog log = new ProxyLog() {
             @Override
             public void info(String message) {
                 logger.info(message);
@@ -67,8 +68,14 @@ public final class UniversalAdminVelocity {
             public void warn(String message) {
                 logger.warn(message);
             }
-        });
+        };
+        checks = new ProxyChecks(settings, log);
         checks.start("universaladmin-velocity");
+        if (settings.updateCheck()) {
+            ProxyUpdateCheck updates = new ProxyUpdateCheck(BuildConstants.VERSION, "universaladmin-velocity-", log);
+            proxy.getScheduler().buildTask(this, updates::check)
+                    .delay(ProxyUpdateCheck.INITIAL_DELAY).repeat(ProxyUpdateCheck.INTERVAL).schedule();
+        }
         CommandMeta meta = proxy.getCommandManager().metaBuilder("uavelocity").plugin(this).build();
         proxy.getCommandManager().register(meta, new StatusCommand());
     }

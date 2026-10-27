@@ -1,5 +1,7 @@
 # UniversalAdmin Placeholders (PlaceholderAPI)
 
+Source and releases: [universaladmin-mc/universaladmin-placeholders](https://github.com/universaladmin-mc/universaladmin-placeholders).
+
 The official extension that makes UniversalAdmin's state available to every
 plugin using [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi):
 scoreboards, tab lists, chat formats, holograms.
@@ -8,7 +10,7 @@ scoreboards, tab lists, chat formats, holograms.
 
 1. Install PlaceholderAPI.
 2. Put `universaladmin-placeholderapi-<version>.jar` from the
-   [GitHub release](https://github.com/nicki41/UniversalAdmin/releases) into
+   [GitHub releases](https://github.com/universaladmin-mc/universaladmin-placeholders/releases) into
    `plugins/` (version 1.3 needs UniversalAdmin 1.3 or newer).
 3. Restart. `/papi parse me %universaladmin_online%` shows the number of
    visible players. No `/papi ecloud download` needed.

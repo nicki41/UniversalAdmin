@@ -76,7 +76,7 @@ public final class ActionExecutor {
 
         CompletableFuture<ActionResult<R>> actionResult;
         try {
-            actionResult = definition.action().execute(context, input);
+            actionResult = definition.action().execute(context, input).thenApply(result -> logInternalError(definition, result));
         } catch (RuntimeException e) {
             actionResult = CompletableFuture.completedFuture(handleException(definition, e));
         }
@@ -193,6 +193,19 @@ public final class ActionExecutor {
             return failure.message();
         }
         return failure.messageKey() != null ? failure.messageKey().value() : failure.reason().name();
+    }
+
+    /**
+     * An internal error the action reported itself (rather than threw) goes to
+     * the server log: players and the console are only told "the details are in
+     * the server log". Thrown exceptions are logged by {@link #handleException}.
+     */
+    private <I, R> ActionResult<R> logInternalError(ActionDefinition<I, R> definition, ActionResult<R> result) {
+        if (result instanceof ActionResult.Failure<R> failure && failure.reason() == ActionResult.FailureReason.INTERNAL_ERROR) {
+            logger.warning(() -> "Action " + definition.id() + " failed: "
+                    + (failure.message() == null ? "no details given" : failure.message()));
+        }
+        return result;
     }
 
     private <I, R> ActionResult.Failure<R> handleException(ActionDefinition<I, R> definition, Throwable throwable) {

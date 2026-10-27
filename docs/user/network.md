@@ -194,6 +194,13 @@ second row for the network.
   know its own maintenance yet and lets that first player in - once the name
   is known, players its maintenance refuses are removed again.
 
+## Updates of the proxy plugins
+
+At startup and every 6 hours the Velocity and BungeeCord plugins tell the
+proxy console when a newer UniversalAdmin release is out. They do not update
+themselves: replace the jar and restart the proxy. Switch the notice off with
+`update-check.enabled: false` in their `config.yml`.
+
 ## In the menus
 
 - **Network** (`/admin` → Network): every server - also those without

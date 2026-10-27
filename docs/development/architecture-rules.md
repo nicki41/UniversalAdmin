@@ -105,17 +105,16 @@ template - see
   (Hikari/JDBC).
 - Gradle projects: `universaladmin-api` (`api/`, the public extension API),
   `universaladmin-core` (the repository root: bootstrap, implementations,
-  built-in modules), `universaladmin-discord` (`extensions/discord`, the
-  official Discord extension), `universaladmin-placeholderapi`
-  (`extensions/placeholderapi`, the official PlaceholderAPI extension),
-  `universaladmin-voicechat` (`extensions/voicechat`, the official Simple
-  Voice Chat extension),
+  built-in modules),
   `universaladmin-proxy-common` (`proxy/common`, the checks both proxy
   plugins share), `universaladmin-velocity` (`proxy/velocity`) and
   `universaladmin-bungee` (`proxy/bungee`) - the optional proxy plugins for
   network mode, which depend on neither the API nor the core - and
   `example-extension`
-  (`examples/example-extension`). The API and the core share package names;
+  (`examples/example-extension`). The official extensions live in
+  repositories of their own in the `universaladmin-mc` organization and
+  build against the published API ([ADR 0024](../architecture/decisions/0024-updates-and-repositories.md)).
+  The API and the core share package names;
   an API class must never import a core class (the build enforces it - the
   API project does not see the core). See
   [ADR 0010](../architecture/decisions/0010-extension-api.md). A `-web`

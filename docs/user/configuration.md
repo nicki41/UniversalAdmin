@@ -140,8 +140,9 @@ Duration values accept a bare number of seconds, or a suffix: `30s`, `5m`,
 
 | Key | Type | Default | Notes |
 |---|---|---|---|
-| `update.check-for-updates` | boolean | `true` | Check GitHub for a newer stable release and tell staff. `/admin update` works either way. |
+| `update.check-for-updates` | boolean | `true` | Check GitHub for newer stable releases of UniversalAdmin and its extensions and tell staff and the console. `/admin update` works either way. |
 | `update.check-interval` | duration, 1h-7d | `6h` | Restart required. |
+| `update.auto-download` | boolean | `true` | Download a newer release into `plugins/update/` on its own - applied at the next restart. Only within the same major version; a new major version waits for `/admin update`. |
 
 ## `telemetry`
 

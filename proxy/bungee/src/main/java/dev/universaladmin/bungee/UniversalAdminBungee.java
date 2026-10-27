@@ -3,11 +3,13 @@ package dev.universaladmin.bungee;
 import dev.universaladmin.proxy.ProxyChecks;
 import dev.universaladmin.proxy.ProxyLog;
 import dev.universaladmin.proxy.ProxySettings;
+import dev.universaladmin.proxy.ProxyUpdateCheck;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -56,7 +58,7 @@ public final class UniversalAdminBungee extends Plugin implements Listener {
             getLogger().log(Level.SEVERE, "Could not read config.yml - the ban, maintenance and whitelist checks stay off.", e);
             return;
         }
-        checks = new ProxyChecks(settings, new ProxyLog() {
+        ProxyLog log = new ProxyLog() {
             @Override
             public void info(String message) {
                 getLogger().info(message);
@@ -66,8 +68,14 @@ public final class UniversalAdminBungee extends Plugin implements Listener {
             public void warn(String message) {
                 getLogger().warning(message);
             }
-        });
+        };
+        checks = new ProxyChecks(settings, log);
         checks.start("universaladmin-bungee");
+        if (settings.updateCheck()) {
+            ProxyUpdateCheck updates = new ProxyUpdateCheck(getDescription().getVersion(), "universaladmin-bungee-", log);
+            getProxy().getScheduler().schedule(this, updates::check, ProxyUpdateCheck.INITIAL_DELAY.toMinutes(),
+                    ProxyUpdateCheck.INTERVAL.toMinutes(), TimeUnit.MINUTES);
+        }
         getProxy().getPluginManager().registerListener(this, this);
         getProxy().getPluginManager().registerCommand(this, new StatusCommand());
     }

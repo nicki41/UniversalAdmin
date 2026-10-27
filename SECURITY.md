@@ -20,7 +20,7 @@ follow the same versions.
 Please do **not** report it as a public issue.
 
 Preferred path: **GitHub Private Vulnerability Reporting** via the
-["Security" → "Report a vulnerability"](https://github.com/nicki41/UniversalAdmin/security/advisories/new)
+["Security" → "Report a vulnerability"](https://github.com/universaladmin-mc/UniversalAdmin/security/advisories/new)
 tab on this repository. The report is then visible only to the maintainers.
 
 If that isn't available to you, reach out to the maintainers through one of

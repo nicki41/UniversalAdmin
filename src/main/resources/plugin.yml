@@ -3,7 +3,7 @@ version: '${version}'
 main: dev.universaladmin.bootstrap.UniversalAdminPlugin
 api-version: '1.21.7'
 description: The free all-in-one admin plugin for Paper - moderation, reports, staff tools, players, worlds and a full audit log, in menus and commands.
-website: https://github.com/nicki41/UniversalAdmin
+website: https://github.com/universaladmin-mc/UniversalAdmin
 author: UniversalAdmin
 
 commands:

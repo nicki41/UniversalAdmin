@@ -14,11 +14,14 @@ import dev.universaladmin.settings.SettingRegistry;
 import dev.universaladmin.settings.SettingsService;
 import dev.universaladmin.settings.YamlSettingsService;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import net.kyori.adventure.text.Component;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -27,18 +30,23 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The behavioural guarantees an update check makes: off means no request at
- * all, a GitHub outage is a non-event, a matching version stays quiet, and a
- * different one notifies staff exactly once per check.
+ * all, a GitHub outage is a non-event, a matching version stays quiet, a
+ * newer one notifies staff - and is downloaded on its own within the same
+ * major version - for UniversalAdmin and every extension with an update
+ * source.
  */
 class UpdateCheckServiceTest {
 
     private static final Logger LOGGER = Logger.getLogger("update-check-test");
     private static final PermissionNode NOTIFY_PERMISSION = PermissionNode.core("update.notify");
-    private static final MessageService MESSAGES = (key, args) -> key.value();
+    private static final MessageService MESSAGES = (key, args) -> key.value() + ":" + args[2] + ":" + args[0];
 
     private final AtomicReference<YamlConfiguration> config = new AtomicReference<>(configOf(""));
     private final InlineTaskScheduler scheduler = new InlineTaskScheduler();
     private final RecordingNotificationService notifications = new RecordingNotificationService();
+    private final List<String> staged = new ArrayList<>();
+    private final UpdateStager stager = (target, release) -> staged.add(target.name() + " " + release.version());
+    private final UpdateTargets targets = new UpdateTargets();
 
     private SettingsService settings() {
         SettingRegistry registry = new SettingRegistry();
@@ -46,8 +54,14 @@ class UpdateCheckServiceTest {
         return new YamlSettingsService(registry, config::get, LOGGER);
     }
 
-    private UpdateCheckService serviceWith(GitHubReleaseClient client, SettingsService settings, String currentVersion) {
-        return new UpdateCheckService(settings, scheduler, client, notifications, MESSAGES, NOTIFY_PERMISSION, currentVersion, LOGGER);
+    private UpdateCheckService serviceWith(Function<String, GitHubReleaseClient> clients, SettingsService settings) {
+        return new UpdateCheckService(settings, scheduler, targets, clients, stager, notifications, MESSAGES, NOTIFY_PERMISSION,
+                LOGGER);
+    }
+
+    private void core(String version) {
+        targets.add(new UpdateTarget("UniversalAdmin", UpdateTargets.CORE_REPOSITORY, UpdateTargets.CORE_ASSET_PREFIX, version,
+                Path.of("UniversalAdmin.jar")));
     }
 
     private static YamlConfiguration configOf(String yaml) {
@@ -60,35 +74,81 @@ class UpdateCheckServiceTest {
         return configuration;
     }
 
-    private static GitHubReleaseClient fixedRelease(String tagName) {
-        return () -> new GitHubRelease(tagName, "https://example.com/" + tagName, false, List.of());
+    private static Function<String, GitHubReleaseClient> fixedRelease(String tagName) {
+        return repository -> () -> new GitHubRelease(tagName, "https://example.com/" + tagName, false, List.of());
     }
 
     @Test
-    void notifiesStaffWhenALaterVersionExists() {
-        UpdateCheckService service = serviceWith(fixedRelease("v0.2.0"), settings(), "0.1.0-alpha");
+    void downloadsANewerVersionOfTheSameMajorOnceAndSaysRestart() {
+        core("1.5.0");
+        UpdateCheckService service = serviceWith(fixedRelease("v1.6.0"), settings());
+
+        service.checkNow();
+        service.checkNow();
+
+        assertEquals(List.of("UniversalAdmin 1.6.0"), staged, "downloaded once, not on every check");
+        assertEquals(2, notifications.notified().size(), "every check repeats the notice");
+        assertEquals(List.of("update.downloaded:UniversalAdmin:1.6.0"), service.pendingNotices());
+    }
+
+    @Test
+    void aNewMajorVersionWaitsForAStaffMember() {
+        core("1.5.0");
+        UpdateCheckService service = serviceWith(fixedRelease("v2.0.0"), settings());
 
         service.checkNow();
 
+        assertTrue(staged.isEmpty());
+        assertEquals(List.of("update.available:UniversalAdmin:2.0.0"), service.pendingNotices());
+    }
+
+    @Test
+    void withoutAutoDownloadOnlyNotifies() {
+        config.set(configOf("update:\n  auto-download: false\n"));
+        core("1.5.0");
+        UpdateCheckService service = serviceWith(fixedRelease("v1.6.0"), settings());
+
+        service.checkNow();
+
+        assertTrue(staged.isEmpty());
         assertEquals(1, notifications.notified().size());
-        assertEquals("0.2.0", service.latestKnown().orElseThrow().version());
+        assertEquals("1.6.0", service.latestKnown("UniversalAdmin").orElseThrow().version());
+    }
+
+    @Test
+    void extensionsWithAnUpdateSourceAreCheckedFromTheirOwnRepository() {
+        core("1.6.0");
+        targets.add(new UpdateTarget("UniversalAdminDiscord", "universaladmin-mc/universaladmin-discord", "universaladmin-discord-",
+                "1.5.0", Path.of("universaladmin-discord-1.5.0.jar")));
+        Map<String, String> latest = Map.of(UpdateTargets.CORE_REPOSITORY, "v1.6.0",
+                "universaladmin-mc/universaladmin-discord", "v1.6.1");
+        UpdateCheckService service = serviceWith(repository -> () -> new GitHubRelease(latest.get(repository),
+                "https://example.com", false, List.of()), settings());
+
+        service.checkNow();
+
+        assertEquals(List.of("UniversalAdminDiscord 1.6.1"), staged);
+        assertEquals(List.of("update.downloaded:UniversalAdminDiscord:1.6.1"), service.pendingNotices());
     }
 
     @Test
     void staysQuietWhenAlreadyOnTheLatestVersion() {
-        UpdateCheckService service = serviceWith(fixedRelease("v0.1.0-alpha"), settings(), "0.1.0-alpha");
+        core("0.1.0-alpha");
+        UpdateCheckService service = serviceWith(fixedRelease("v0.1.0-alpha"), settings());
 
         service.checkNow();
 
         assertTrue(notifications.notified().isEmpty());
-        assertEquals("0.1.0-alpha", service.latestKnown().orElseThrow().version());
+        assertTrue(service.pendingNotices().isEmpty());
+        assertEquals("0.1.0-alpha", service.latestKnown("UniversalAdmin").orElseThrow().version());
     }
 
     @Test
     void disabledMeansZeroRequestsAndZeroWork() {
         config.set(configOf("update:\n  check-for-updates: false\n"));
+        core("0.1.0-alpha");
         AtomicRequestCounter counter = new AtomicRequestCounter();
-        UpdateCheckService service = serviceWith(counter, settings(), "0.1.0-alpha");
+        UpdateCheckService service = serviceWith(repository -> counter, settings());
 
         service.checkNow();
         service.checkNow();
@@ -102,21 +162,23 @@ class UpdateCheckServiceTest {
 
     @Test
     void aFailingRequestNeverPropagatesAndLeavesNoLatestKnownRelease() {
-        UpdateCheckService service = serviceWith(() -> {
+        core("0.1.0-alpha");
+        UpdateCheckService service = serviceWith(repository -> () -> {
             throw new IOException("connection refused");
-        }, settings(), "0.1.0-alpha");
+        }, settings());
 
         assertDoesNotThrow(service::checkNow);
         assertDoesNotThrow(service::checkNow);
 
-        assertTrue(service.latestKnown().isEmpty());
+        assertTrue(service.latestKnown("UniversalAdmin").isEmpty());
         assertTrue(notifications.notified().isEmpty());
     }
 
     @Test
     void turningItOffAtRuntimeStopsTheNextCheck() {
+        core("0.1.0-alpha");
         SettingsService settings = settings();
-        UpdateCheckService service = serviceWith(fixedRelease("v0.2.0"), settings, "0.1.0-alpha");
+        UpdateCheckService service = serviceWith(fixedRelease("v0.2.0"), settings);
 
         service.checkNow();
         assertEquals(1, notifications.notified().size());

@@ -129,7 +129,7 @@ ownership history for what it deletes.
 | `universaladmin.bypass.network-whitelist` | op | Join while the network whitelist is on without being on it |
 
 See [docs/user/permissions.md](../permissions.md) for how these fit into
-the platform-wide list, and [docs/architecture/actions.md](../architecture/actions.md)
+the platform-wide list, and [docs/architecture/actions.md](../../architecture/actions.md)
 for how a node on `ActionDefinition.Builder#permission(...)` gets enforced.
 
 ## Settings
@@ -139,7 +139,7 @@ for how a node on `ActionDefinition.Builder#permission(...)` gets enforced.
 | `whitelist.gui.search-max-results` | 50 | Maximum offline players returned by one "Search Offline Player" query |
 
 Registered under the module's own `whitelist` settings namespace (see
-[docs/development/settings.md](../development/settings.md)).
+[docs/development/settings.md](../../development/settings.md)).
 
 ## Database
 

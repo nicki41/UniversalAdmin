@@ -194,7 +194,7 @@ nothing.
 | `universaladmin.players.enderchest.edit` | op | Edit ender chest |
 
 See [docs/user/permissions.md](../permissions.md) for how these fit into
-the platform-wide list, and [docs/architecture/actions.md](../architecture/actions.md)
+the platform-wide list, and [docs/architecture/actions.md](../../architecture/actions.md)
 for how a node on `ActionDefinition.Builder#permission(...)` gets enforced.
 
 ## Settings
@@ -204,7 +204,7 @@ for how a node on `ActionDefinition.Builder#permission(...)` gets enforced.
 | `players.gui.max-results` | 200 | Upper bound on one Offline Players/Search/Recently Seen query |
 
 Registered under the module's own `players` settings namespace (see
-[docs/development/settings.md](../development/settings.md)) - the first
+[docs/development/settings.md](../../development/settings.md)) - the first
 built-in module to actually do so.
 
 ## Database

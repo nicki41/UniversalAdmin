@@ -18,7 +18,7 @@ public record ProxySettings(
         String host, int port, String database, String username, String password, boolean ssl, int poolSize,
         boolean banCheck, boolean allowOnError, String bannedPermanent, String bannedTemporary, String noReason,
         String datePattern, boolean maintenanceCheck, String maintenanceMotd, String maintenanceVersionText,
-        String maintenanceMessage, boolean whitelistCheck, String notWhitelisted) {
+        String maintenanceMessage, boolean whitelistCheck, String notWhitelisted, boolean updateCheck) {
 
     public static ProxySettings load(Path dataDirectory) throws IOException {
         Path file = dataDirectory.resolve("config.yml");
@@ -47,7 +47,8 @@ public record ProxySettings(
                 config.string("messages.no-reason"), config.string("messages.date-pattern"),
                 config.bool("maintenance-check.enabled"), config.string("maintenance-check.motd"),
                 config.string("maintenance-check.version-text"), config.string("messages.maintenance"),
-                config.bool("whitelist-check.enabled"), config.string("messages.not-whitelisted"));
+                config.bool("whitelist-check.enabled"), config.string("messages.not-whitelisted"),
+                config.bool("update-check.enabled"));
     }
 
     /** Whether the database connection was filled in - the shipped file has no password and the default host and user. */

@@ -60,9 +60,12 @@ class UpdateCheckSchedulerTest {
             counter.incrementAndGet();
             return new GitHubRelease("v0.1.0-alpha", "https://example.com", false, List.of());
         };
+        UpdateTargets targets = new UpdateTargets();
+        targets.add(new UpdateTarget("UniversalAdmin", UpdateTargets.CORE_REPOSITORY, UpdateTargets.CORE_ASSET_PREFIX,
+                "0.1.0-alpha", java.nio.file.Path.of("UniversalAdmin.jar")));
         return new UpdateCheckService(
-                settings, new InlineTaskScheduler(), counting, NO_OP_NOTIFICATIONS,
-                (key, args) -> key.value(), PermissionNode.core("update.notify"), "0.1.0-alpha", LOGGER);
+                settings, new InlineTaskScheduler(), targets, repository -> counting, (target, release) -> { },
+                NO_OP_NOTIFICATIONS, (key, args) -> key.value(), PermissionNode.core("update.notify"), LOGGER);
     }
 
     @Test

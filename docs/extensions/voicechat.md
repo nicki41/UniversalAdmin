@@ -1,5 +1,7 @@
 # UniversalAdmin Voice Chat (Simple Voice Chat)
 
+Source and releases: [universaladmin-mc/universaladmin-voicechat](https://github.com/universaladmin-mc/universaladmin-voicechat).
+
 The official extension for [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat):
 mutes reach the voice chat, vanished staff stay silent, the profile shows a
 player's voice status, and staff get a voice group of their own. Why it
@@ -9,7 +11,7 @@ works the way it does: [ADR 0022](../architecture/decisions/0022-mute-kinds-and-
 
 1. Install Simple Voice Chat (the Paper/Bukkit plugin) on the server.
 2. Put `universaladmin-voicechat-<version>.jar` from the
-   [GitHub release](https://github.com/nicki41/UniversalAdmin/releases) into
+   [GitHub releases](https://github.com/universaladmin-mc/universaladmin-voicechat/releases) into
    `plugins/` (it needs UniversalAdmin 1.5 or newer).
 3. Restart. `/admin modules` lists **Voice Chat**.
 

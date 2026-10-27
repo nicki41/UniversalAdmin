@@ -21,7 +21,7 @@ business logic (0002) and authorization (0008), just one level further down.
 `AuditEvent` is expanded to the full "audit entry" shape (actor, action
 type, module, target, source, success, reason, old/new value, world/
 position, summary, metadata, correlation id - see
-[docs/user/audit-log.md](../user/audit-log.md)), and `ActionExecutor`
+[docs/user/audit-log.md](../../user/audit-log.md)), and `ActionExecutor`
 builds this entry **automatically** from
 `ActionDefinition`/`ActionContext`/`ActionResult`, complemented by optional,
 action-specific `AuditDetails`. A feature developer never has to fill in

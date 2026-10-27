@@ -52,7 +52,7 @@ class ProxyChecksTest {
                     updated_at BIGINT NOT NULL, updated_by VARCHAR(64))""");
         ProxySettings settings = new ProxySettings("localhost", 3306, "universaladmin", "universaladmin", "", false, 1,
                 true, true, "Banned: <reason>", "Banned: <reason> until <expires>", "no reason", "yyyy-MM-dd HH:mm",
-                true, "<red>Maintenance", "Maintenance", "Network maintenance", true, "Not whitelisted");
+                true, "<red>Maintenance", "Maintenance", "Network maintenance", true, "Not whitelisted", true);
         checks = new ProxyChecks(settings, new ProxyLog() {
             @Override
             public void info(String message) {

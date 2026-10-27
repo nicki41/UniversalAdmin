@@ -71,7 +71,7 @@ publishing {
             pom {
                 name.set("UniversalAdmin API")
                 description.set("Extension API for UniversalAdmin, the admin platform for Paper servers.")
-                url.set("https://github.com/nicki41/UniversalAdmin")
+                url.set("https://github.com/universaladmin-mc/UniversalAdmin")
                 licenses {
                     license {
                         name.set("Apache License 2.0")

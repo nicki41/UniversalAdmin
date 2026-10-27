@@ -27,12 +27,6 @@ project(":universaladmin-api").projectDir = file("api")
 include("example-extension")
 project(":example-extension").projectDir = file("examples/example-extension")
 
-include("universaladmin-discord")
-project(":universaladmin-discord").projectDir = file("extensions/discord")
-include("universaladmin-placeholderapi")
-project(":universaladmin-placeholderapi").projectDir = file("extensions/placeholderapi")
-include("universaladmin-voicechat")
-project(":universaladmin-voicechat").projectDir = file("extensions/voicechat")
 
 // UniversalAdmin for Velocity - an optional proxy plugin for network mode
 // (ban check at the proxy). Not a Paper plugin; Java 21 bytecode so it runs

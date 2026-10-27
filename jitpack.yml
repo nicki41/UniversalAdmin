@@ -1,5 +1,5 @@
 # JitPack builds the extension API from a release tag, so extension authors
-# can depend on com.github.nicki41.UniversalAdmin:universaladmin-api:<tag>.
+# can depend on com.github.universaladmin-mc.UniversalAdmin:universaladmin-api:<tag>.
 # Gradle runs on 21; the Java 25 toolchain is provisioned automatically.
 jdk:
   - openjdk21

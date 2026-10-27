@@ -16,8 +16,10 @@ import java.util.Objects;
  * GitHub REST API - unauthenticated (this plugin has no GitHub token to use,
  * and doesn't need one for a public repository's own release list), over
  * the JDK's built-in {@link HttpClient}, same reasoning as {@code
- * telemetry.HttpTelemetryClient}: no new dependency, short timeouts, no
- * redirects followed.
+ * telemetry.HttpTelemetryClient}: no new dependency, short timeouts.
+ * Redirects are followed: GitHub answers with one when a repository moved
+ * (as UniversalAdmin's did to the {@code universaladmin-mc} organization),
+ * and the update check should keep working after such a move.
  *
  * <p>GitHub's unauthenticated rate limit (60 requests/hour per IP) is far
  * above anything a periodic check every few hours could ever hit - see
@@ -32,13 +34,13 @@ public final class HttpGitHubReleaseClient implements GitHubReleaseClient {
     private final String userAgent;
     private final HttpClient httpClient;
 
-    public HttpGitHubReleaseClient(String repositoryOwner, String repositoryName, String universalAdminVersion) {
-        this.endpoint = URI.create(
-                "https://api.github.com/repos/" + repositoryOwner + "/" + repositoryName + "/releases/latest");
+    /** @param repository {@code "owner/name"} on GitHub */
+    public HttpGitHubReleaseClient(String repository, String universalAdminVersion) {
+        this.endpoint = URI.create("https://api.github.com/repos/" + repository + "/releases/latest");
         this.userAgent = "UniversalAdmin/" + Objects.requireNonNull(universalAdminVersion, "universalAdminVersion");
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(CONNECT_TIMEOUT)
-                .followRedirects(HttpClient.Redirect.NEVER)
+                .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
     }
 
@@ -54,9 +56,20 @@ public final class HttpGitHubReleaseClient implements GitHubReleaseClient {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         int status = response.statusCode();
         if (status < 200 || status >= 300) {
-            throw new IOException("GitHub releases endpoint returned HTTP " + status);
+            throw new IOException(failureFor(status));
         }
         return toRelease(response.body());
+    }
+
+    /** What a non-2xx answer of the releases endpoint means, in words a server owner can act on. */
+    static String failureFor(int status) {
+        return switch (status) {
+            // A repository without a published release (or one that does not exist).
+            case 404 -> "no release published yet (HTTP 404)";
+            // Unauthenticated requests share 60 per hour per IP address.
+            case 403, 429 -> "GitHub's request limit for this address is used up - try again within the hour (HTTP " + status + ")";
+            default -> "GitHub releases endpoint returned HTTP " + status;
+        };
     }
 
     /** Package-visible for {@code HttpGitHubReleaseClientTest} - avoids a real HTTP call to exercise the parsing itself. */

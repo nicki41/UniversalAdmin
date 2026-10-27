@@ -67,7 +67,7 @@ jobs:
             # from the oldest supported one on, minus the ones already listed.
             KNOWN="$(grep -vE '^\s*(#|$)' supported-versions.txt)"
             OLDEST="$(head -1 <<< "$KNOWN")"
-            NEW="$(curl -fsS -A 'nicki41/UniversalAdmin compatibility' https://fill.papermc.io/v3/projects/paper \
+            NEW="$(curl -fsS -A 'universaladmin-mc/UniversalAdmin compatibility' https://fill.papermc.io/v3/projects/paper \
               | jq -r '.versions[][]' | grep -E '^[0-9]+(\.[0-9]+)+$' \
               | { cat; echo "$OLDEST"; } | sort -uV | sed -n "/^${OLDEST//./\\.}\$/,\$p" \
               | grep -vxF -f <(echo "$KNOWN") || true)"
@@ -113,7 +113,7 @@ jobs:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
         run: |
           set -euo pipefail
-          UA='nicki41/UniversalAdmin compatibility'
+          UA='universaladmin-mc/UniversalAdmin compatibility'
           VERSIONS="$(curl -fsS -A "$UA" "https://api.modrinth.com/v2/project/wGP5uSse/version")"
           # The newest release-type version per loader family (Paper, Velocity and BungeeCord plugin),
           # and of each official extension's own project.

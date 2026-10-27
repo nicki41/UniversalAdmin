@@ -59,6 +59,8 @@ public final class CoreSettings {
     /** The one switch {@code /admin update} and the background checker both respect - see {@code update.UpdateCheckService}. */
     public static final SettingKey<Boolean> UPDATE_CHECK_ENABLED = SettingKey.of("core", "update.check-for-updates");
     public static final SettingKey<Duration> UPDATE_CHECK_INTERVAL = SettingKey.of("core", "update.check-interval");
+    /** Download newer releases on their own (same major version only) - see {@code update.UpdateCheckService}. */
+    public static final SettingKey<Boolean> UPDATE_AUTO_DOWNLOAD = SettingKey.of("core", "update.auto-download");
 
     public static final SettingKey<Boolean> WEB_ENABLED = SettingKey.of("core", "web.enabled");
 
@@ -200,6 +202,11 @@ public final class CoreSettings {
                 .description("Time between automatic update checks; a random extra of up to half this value is added to each one.")
                 .validator(SettingValidators.durationRange(Duration.ofHours(1), Duration.ofDays(7)))
                 .requiresRestart(true)
+                .build());
+        registry.register(SettingDefinition.builder(UPDATE_AUTO_DOWNLOAD, SettingTypes.BOOLEAN, true)
+                .description("Download a newer release of UniversalAdmin and its extensions into plugins/update/ on its own; "
+                        + "it is applied at the next restart. Only within the same major version - a new major version "
+                        + "waits for /admin update.")
                 .build());
     }
 

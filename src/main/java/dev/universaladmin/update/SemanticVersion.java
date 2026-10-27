@@ -49,6 +49,16 @@ record SemanticVersion(int major, int minor, int patch, List<String> preRelease)
         return a.get().compareTo(b.get()) > 0;
     }
 
+    /**
+     * Whether both versions share their major version - what an automatic
+     * update stays within. {@code false} if either cannot be parsed.
+     */
+    static boolean sameMajor(String a, String b) {
+        Optional<SemanticVersion> first = parse(a);
+        Optional<SemanticVersion> second = parse(b);
+        return first.isPresent() && second.isPresent() && first.get().major() == second.get().major();
+    }
+
     @Override
     public int compareTo(SemanticVersion other) {
         int result = Integer.compare(major, other.major);

@@ -1,10 +1,14 @@
+<img src="assets/icon.png" alt="UniversalAdmin" width="96" align="right">
+
 # UniversalAdmin
 
-[![Build](https://github.com/nicki41/UniversalAdmin/actions/workflows/build.yml/badge.svg)](https://github.com/nicki41/UniversalAdmin/actions/workflows/build.yml)
+[![Build](https://github.com/universaladmin-mc/UniversalAdmin/actions/workflows/build.yml/badge.svg)](https://github.com/universaladmin-mc/UniversalAdmin/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 [![Modrinth](https://img.shields.io/badge/Modrinth-universaladmin-00AF5C)](https://modrinth.com/plugin/universaladmin)
 [![Servers](https://telemetry.0nicki.de/v1/badge/servers.svg?plugin=universaladmin)](docs/user/telemetry.md)
 [![Players](https://telemetry.0nicki.de/v1/badge/players.svg?plugin=universaladmin&color=blue)](docs/user/telemetry.md)
+
+**Documentation:** [universaladmin-mc.github.io/UniversalAdmin](https://universaladmin-mc.github.io/UniversalAdmin/)
 
 **The free, all-in-one admin plugin for Paper.** Moderation, reports, staff
 chat, vanish, staff mode, player tools, inventories, worlds, whitelist,
@@ -72,7 +76,7 @@ to be the one admin plugin your server needs.
 ## Quick start
 
 1. Download the jar from [Modrinth](https://modrinth.com/plugin/universaladmin)
-   or [GitHub](https://github.com/nicki41/UniversalAdmin/releases), put it in
+   or [GitHub](https://github.com/universaladmin-mc/UniversalAdmin/releases), put it in
    `plugins/`, restart.
 2. Join as an operator and type **`/admin`**.
 3. Give your team permissions - copy a role template from
@@ -156,21 +160,25 @@ UniversalAdminProvider.get().extensions().register(this, new MyModule());
 - Developer guide: [docs/extensions/getting-started.md](docs/extensions/getting-started.md)
 - Template: [examples/example-extension](examples/example-extension)
 - API jars (binary, sources, javadoc) are attached to every
-  [release](https://github.com/nicki41/UniversalAdmin/releases).
+  [release](https://github.com/universaladmin-mc/UniversalAdmin/releases).
 
-**Official extensions** (all in the Modrinth collection
+**Official extensions** (each in its own repository in the
+[universaladmin-mc](https://github.com/universaladmin-mc) organization, all in the Modrinth collection
 [UniversalAdmin](https://modrinth.com/collection/DrMT8zro)):
 
 - **UniversalAdmin Discord** posts bans, mutes, reports, restarts and more to
   a Discord channel - with a webhook in two minutes, or as a bot with
   two-way staff chat, `/ban`, `/mute`, `/history` from Discord and report
-  buttons: [docs/extensions/discord.md](docs/extensions/discord.md).
+  buttons: [docs/extensions/discord.md](docs/extensions/discord.md) ·
+  [source](https://github.com/universaladmin-mc/universaladmin-discord).
 - **UniversalAdmin Placeholders** adds PlaceholderAPI placeholders for
   scoreboards and tab lists:
-  [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md).
+  [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md) ·
+  [source](https://github.com/universaladmin-mc/universaladmin-placeholders).
 - **UniversalAdmin Voice Chat** connects Simple Voice Chat: chat, voice or
   full mutes, vanished staff stay silent, voice status on the profile and a
-  staff voice group: [docs/extensions/voicechat.md](docs/extensions/voicechat.md).
+  staff voice group: [docs/extensions/voicechat.md](docs/extensions/voicechat.md) ·
+  [source](https://github.com/universaladmin-mc/universaladmin-voicechat).
 
 ## Anonymous statistics
 
@@ -204,7 +212,7 @@ all. Exactly what is sent: [docs/user/telemetry.md](docs/user/telemetry.md).
 ## Support and contributing
 
 Found a bug or have an idea? Open an
-[issue](https://github.com/nicki41/UniversalAdmin/issues) - please include
+[issue](https://github.com/universaladmin-mc/UniversalAdmin/issues) - please include
 your Paper and UniversalAdmin version (`/admin status`). Pull requests are
 welcome: [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: please report
 privately, see [SECURITY.md](SECURITY.md).

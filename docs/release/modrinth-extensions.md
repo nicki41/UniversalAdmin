@@ -1,8 +1,9 @@
 # Modrinth Pages of the Official Extensions
 
 Source of truth for the Modrinth projects of the official extensions.
-Edit here first, then copy into Modrinth. Versions are uploaded by
-`release.yml` like the plugin's (see [releasing.md](releasing.md#modrinth));
+Edit here first, then copy into Modrinth. Versions are uploaded by each
+extension repository's own `release.yml` on a `v*` tag (see
+[releasing.md](releasing.md#modrinth));
 texts, icons and gallery are maintained by hand. All projects are in the
 Modrinth collection "UniversalAdmin".
 
@@ -17,7 +18,7 @@ Modrinth collection "UniversalAdmin".
 | Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
 | License | GPL-3.0-or-later (from 1.5.0; up to 1.4.0 Apache-2.0) |
 | Icon | `assets/icon-discord.png` |
-| Links | Source and issues: the UniversalAdmin repository; wiki: `docs/extensions/discord.md` |
+| Links | Source and issues: `universaladmin-mc/universaladmin-discord`; wiki: `docs/extensions/discord.md` |
 
 ### Summary
 
@@ -65,13 +66,13 @@ embeds.
 - [UniversalAdmin](https://modrinth.com/plugin/universaladmin) of the same
   version.
 - Bot mode: a Discord application with a bot token
-  ([setup guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/discord.md#bot-mode)).
+  ([setup guide](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/discord.md#bot-mode)).
   On the first start the server downloads the Discord library (about
   20 MB) once.
 
-[Setup guide](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/discord.md) ·
-[Source](https://github.com/nicki41/UniversalAdmin) ·
-[Issues](https://github.com/nicki41/UniversalAdmin/issues)
+[Setup guide](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/discord.md) ·
+[Source](https://github.com/universaladmin-mc/universaladmin-discord) ·
+[Issues](https://github.com/universaladmin-mc/universaladmin-discord/issues)
 
 ---
 
@@ -86,7 +87,7 @@ embeds.
 | Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
 | License | GPL-3.0-or-later (from 1.5.0; up to 1.4.0 Apache-2.0) |
 | Icon | `assets/icon-placeholders.png` |
-| Links | Source and issues: the UniversalAdmin repository; wiki: `docs/extensions/placeholderapi.md` |
+| Links | Source and issues: `universaladmin-mc/universaladmin-placeholders`; wiki: `docs/extensions/placeholderapi.md` |
 
 ### Summary
 
@@ -125,16 +126,16 @@ No `/papi ecloud` download needed.
   (Placeholders 1.2 works with UniversalAdmin 1.2).
 - [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi).
 
-[Every placeholder](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/placeholderapi.md) ·
-[Source](https://github.com/nicki41/UniversalAdmin) ·
-[Issues](https://github.com/nicki41/UniversalAdmin/issues)
+[Every placeholder](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/placeholderapi.md) ·
+[Source](https://github.com/universaladmin-mc/universaladmin-placeholders) ·
+[Issues](https://github.com/universaladmin-mc/universaladmin-placeholders/issues)
 
 ---
 
 ## UniversalAdmin Voice Chat
 
 Project id `HEMFEpG6`, set as the repository variable `MODRINTH_VOICECHAT_ID` -
-`release.yml` and `compatibility.yml` publish to it through that variable.
+the core's `compatibility.yml` adds new game versions through that variable.
 
 | Field | Value |
 |---|---|
@@ -144,8 +145,8 @@ Project id `HEMFEpG6`, set as the repository variable `MODRINTH_VOICECHAT_ID` -
 | Environment | Server-side only |
 | Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
 | License | GPL-3.0-or-later |
-| Icon | `assets/icon.png` until it has its own |
-| Links | Source and issues: the UniversalAdmin repository; wiki: `docs/extensions/voicechat.md` |
+| Icon | `assets/icon-voicechat.png` |
+| Links | Source and issues: `universaladmin-mc/universaladmin-voicechat`; wiki: `docs/extensions/voicechat.md` |
 | Dependencies | UniversalAdmin (required), Simple Voice Chat (required) - set by `release.yml` |
 
 ### Summary
@@ -183,8 +184,8 @@ mutes that reach the voice chat, and a voice group for your staff.
 - [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) on the
   server.
 
-[Documentation](https://github.com/nicki41/UniversalAdmin/blob/main/docs/extensions/voicechat.md) ·
-[Source](https://github.com/nicki41/UniversalAdmin) ·
-[Issues](https://github.com/nicki41/UniversalAdmin/issues)
+[Documentation](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/voicechat.md) ·
+[Source](https://github.com/universaladmin-mc/universaladmin-voicechat) ·
+[Issues](https://github.com/universaladmin-mc/universaladmin-voicechat/issues)
 
 ---

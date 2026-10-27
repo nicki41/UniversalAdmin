@@ -15,7 +15,7 @@ VERSION="$1"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="${SMOKE_TEST_DIR:-$ROOT/build/smoke-test/$VERSION}"
 API="https://fill.papermc.io/v3/projects/paper"
-UA="nicki41/UniversalAdmin smoke test"
+UA="universaladmin-mc/UniversalAdmin smoke test"
 
 rm -rf "$WORK"
 mkdir -p "$WORK/plugins/UniversalAdmin"
@@ -27,7 +27,6 @@ curl -fsS -A "$UA" -o "$WORK/$JAR_NAME" "$(jq -r '.url' <<< "$DOWNLOAD")"
 echo "$(jq -r '.checksums.sha256' <<< "$DOWNLOAD")  $WORK/$JAR_NAME" | sha256sum -c -
 
 cp "$ROOT"/build/libs/universaladmin-core-*.jar "$WORK/plugins/"
-cp "$ROOT"/extensions/discord/build/libs/universaladmin-discord-*.jar "$WORK/plugins/"
 echo "eula=true" > "$WORK/eula.txt"
 printf 'server-port=25599\nonline-mode=false\nview-distance=4\nsimulation-distance=4\n' > "$WORK/server.properties"
 printf 'telemetry:\n  enabled: false\nupdate:\n  check-for-updates: false\n' > "$WORK/plugins/UniversalAdmin/config.yml"
@@ -36,7 +35,6 @@ COMMANDS=(
   "admin modules" "admin status" "admin help" "admin worlds" "admin world info world" "admin settings list"
   "admin perf" "admin audit" "admin reports" "admin chat status" "admin wl list" "admin maintenance status"
   "admin server status" "admin world world time day" "admin world world border 5000" "admin entities"
-  "admin discord status"
 )
 
 LOG="$WORK/server.log"

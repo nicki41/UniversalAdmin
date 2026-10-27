@@ -42,6 +42,26 @@ public interface ExtensionManager {
      */
     boolean register(Plugin owner, Module module);
 
+    /**
+     * Lets UniversalAdmin's update check cover {@code owner} too: the newest
+     * GitHub release of {@code repository} is compared with the plugin's
+     * version; staff and the console hear about a newer one, and - with
+     * {@code update.auto-download} - it is downloaded into
+     * {@code plugins/update/} like UniversalAdmin itself and applied at the
+     * next restart. {@code /admin update} includes it.
+     *
+     * <p>The release's plugin jar is the asset named
+     * {@code assetPrefix + <version> + ".jar"} (a tag {@code v1.2.0} and
+     * {@code assetPrefix} {@code "myextension-"} mean {@code myextension-1.2.0.jar});
+     * a {@code <jar>.sha256} asset next to it is checked when present. The
+     * source is dropped again when {@code owner} is disabled.
+     *
+     * @param repository {@code "owner/name"} on GitHub, e.g. {@code "universaladmin-mc/universaladmin-discord"}
+     * @since 1.5
+     */
+    default void updatesFrom(Plugin owner, String repository, String assetPrefix) {
+    }
+
     /** Every module registered by an extension so far, with its owner and current state. */
     List<ExtensionInfo> extensions();
 }
