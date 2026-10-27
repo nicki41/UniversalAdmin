@@ -39,7 +39,6 @@ database drivers actually work in the final jar. More detail:
 |---|---|---|
 | `api/` | `universaladmin-api` | Public extension API - semantically versioned, see [ADR 0010](docs/architecture/decisions/0010-extension-api.md) |
 | `/` (root) | `universaladmin-core` | The plugin: bootstrap, implementations, built-in modules |
-| `extensions/discord/` | `universaladmin-discord` | Official Discord extension |
 | `examples/example-extension/` | `example-extension` | Extension template |
 
 A change to anything in `api/` is an API change: keep it backwards

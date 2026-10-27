@@ -126,13 +126,18 @@ share extensions - [docs/architecture/extension-builder.md](docs/architecture/ex
 |---|---|---|
 | `universaladmin-api` | `api/` | Public, semantically versioned extension API |
 | `universaladmin-core` | `/` | The plugin: bootstrap, implementations, built-in modules; shades the API |
-| `universaladmin-discord` | `extensions/discord/` | Official Discord extension (own plugin jar) |
-| `universaladmin-placeholderapi` | `extensions/placeholderapi/` | Official PlaceholderAPI extension (own plugin jar) |
-| `universaladmin-voicechat` | `extensions/voicechat/` | Official Simple Voice Chat extension (own plugin jar) |
 | `example-extension` | `examples/example-extension/` | Template extension, built in CI only |
 | `universaladmin-proxy-common` | `proxy/common/` | The checks both proxy plugins share (bans, network maintenance, network whitelist) |
 | `universaladmin-velocity` | `proxy/velocity/` | Optional Velocity plugin for network mode (own jar) |
 | `universaladmin-bungee` | `proxy/bungee/` | Optional BungeeCord plugin for network mode (own jar) |
+
+The official extensions have repositories of their own in the
+[universaladmin-mc](https://github.com/universaladmin-mc) organization -
+[Discord](https://github.com/universaladmin-mc/universaladmin-discord),
+[Placeholders](https://github.com/universaladmin-mc/universaladmin-placeholders) and
+[Voice Chat](https://github.com/universaladmin-mc/universaladmin-voicechat) - built against the published
+API like any third-party extension
+([ADR 0024](docs/architecture/decisions/0024-updates-and-repositories.md)).
 
 Every jar is Java 21 bytecode with `api-version: '1.21.7'` and runs on
 every version in [supported-versions.txt](supported-versions.txt) - see

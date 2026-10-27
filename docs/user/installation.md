@@ -73,7 +73,8 @@ nothing you configured is overwritten. Read the "Upgrading" notes in the
 ```
 
 The plugin is `build/libs/universaladmin-core-<version>.jar` (database
-drivers included); the Discord extension is in `extensions/discord/build/libs/`.
+drivers included). The official extensions build the same way in their own
+repositories (see their READMEs).
 See [docs/development/setup.md](../development/setup.md).
 
 ## Uninstalling

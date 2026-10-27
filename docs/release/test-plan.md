@@ -15,8 +15,8 @@ touches plus "Smoke test".
 - LuckPerms installed for the permission tests; EssentialsX for the
   shortcut-clash test (separate run).
 - Build: `./gradlew clean build`, then copy
-  `build/libs/universaladmin-core-1.1.0.jar` and
-  `extensions/discord/build/libs/universaladmin-discord-1.1.0.jar`.
+  `build/libs/universaladmin-core-<v>.jar`; the extensions' jars come from
+  their own repositories (`./gradlew build` there, or their releases).
 
 Legend: **[A]** as Admin, **[P]** as Player, **[H]** as Helper, **[C]** in
 the console.

@@ -7,6 +7,52 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-27
+
+Updates install themselves, the project has a home of its own - and a new
+look.
+
+### Added
+
+- **Automatic updates**: a new release (of UniversalAdmin or of an
+  installed official extension) is downloaded, checked against its SHA-256
+  checksum and installed on the next restart. Only within the same major
+  version - a major update waits for `/admin update`. Switch it off with
+  `update.auto-download: false`. Staff with `universaladmin.update.notify`
+  get a notice on join; the console logs it on every check. See
+  [docs/user/configuration.md](docs/user/configuration.md) and
+  [ADR 0024](docs/architecture/decisions/0024-updates-and-repositories.md).
+- `/admin update` installs every available update at once - the plugin and
+  the extensions, a major update too.
+- **The proxy plugins** (Velocity, BungeeCord) check for updates as well and
+  log a notice (`update-check.enabled` in their `config.yml`). They never
+  download anything.
+- **Documentation website**:
+  [universaladmin-mc.github.io/UniversalAdmin](https://universaladmin-mc.github.io/UniversalAdmin/),
+  built from `docs/` whenever it changes on `main`.
+- **New logos** for UniversalAdmin, its extensions and the proxy plugins.
+- API 1.5: `ExtensionManager#updatesFrom(Plugin, String, String)` - an
+  extension names the GitHub repository it is released from, and
+  UniversalAdmin keeps it up to date too.
+
+### Changed
+
+- **The project moved** to the GitHub organization
+  [universaladmin-mc](https://github.com/universaladmin-mc). Old links to
+  `nicki41/UniversalAdmin` redirect. JitPack coordinates are now
+  `com.github.universaladmin-mc.UniversalAdmin`.
+- **The official extensions have repositories of their own**
+  ([Discord](https://github.com/universaladmin-mc/universaladmin-discord),
+  [Placeholders](https://github.com/universaladmin-mc/universaladmin-placeholders),
+  [Voice Chat](https://github.com/universaladmin-mc/universaladmin-voicechat)),
+  with their own releases. Their jars are no longer attached to the
+  UniversalAdmin release; Modrinth is unchanged.
+
+### Fixed
+
+- `/admin update` picked the first jar of a release - the API javadoc - and
+  refused it over the checksum. It now takes the plugin jar by name.
+
 ## [1.5.0] - 2026-10-24
 
 Mute in the chat, in the voice chat or both, forms instead of one prompt

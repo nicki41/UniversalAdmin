@@ -75,8 +75,19 @@ of extensions is planned - see [ROADMAP.md](../../ROADMAP.md).
 
 ## Official extensions
 
-- **UniversalAdmin Discord** (`extensions/discord`) - posts selected audit
-  events to a Discord channel via a webhook. User docs:
+Each has a repository of its own in the
+[universaladmin-mc](https://github.com/universaladmin-mc) organization and builds against the published
+API like any third-party extension
+([ADR 0024](decisions/0024-updates-and-repositories.md)):
+
+- **UniversalAdmin Discord** ([repository](https://github.com/universaladmin-mc/universaladmin-discord)) -
+  admin actions in a Discord channel, as a webhook or a bot. User docs:
   [docs/extensions/discord.md](../extensions/discord.md).
+- **UniversalAdmin Placeholders** ([repository](https://github.com/universaladmin-mc/universaladmin-placeholders)) -
+  PlaceholderAPI placeholders. User docs:
+  [docs/extensions/placeholderapi.md](../extensions/placeholderapi.md).
+- **UniversalAdmin Voice Chat** ([repository](https://github.com/universaladmin-mc/universaladmin-voicechat)) -
+  Simple Voice Chat. User docs:
+  [docs/extensions/voicechat.md](../extensions/voicechat.md).
 - **Example extension** (`examples/example-extension`) - not for production;
   a complete, commented template that uses every extension point above.

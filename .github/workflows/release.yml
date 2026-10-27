@@ -102,23 +102,20 @@ jobs:
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
           echo "checksum=${JAR}.sha256" >> "$GITHUB_OUTPUT"
 
-      # Attached next to the plugin jar: the official Discord, PlaceholderAPI
-      # and Voice Chat extensions (their own plugin jars), the Velocity and
-      # BungeeCord plugins for network mode, and the
-      # extension API for developers (binary, sources, javadoc). The plugin
-      # jar and the proxy jars also go to Modrinth (below).
-      - name: Collect extension, proxy and API artifacts
+      # Attached next to the plugin jar: the Velocity and BungeeCord plugins
+      # for network mode, and the extension API for developers (binary,
+      # sources, javadoc). The plugin jar and the proxy jars also go to
+      # Modrinth (below). The official extensions are released from their own
+      # repositories (github.com/universaladmin-mc).
+      - name: Collect proxy and API artifacts
         id: extras
         run: |
           set -euo pipefail
           VERSION="${{ steps.version.outputs.version }}"
-          DISCORD="extensions/discord/build/libs/universaladmin-discord-${VERSION}.jar"
-          PLACEHOLDERS="extensions/placeholderapi/build/libs/universaladmin-placeholderapi-${VERSION}.jar"
-          VOICECHAT="extensions/voicechat/build/libs/universaladmin-voicechat-${VERSION}.jar"
           VELOCITY="proxy/velocity/build/libs/universaladmin-velocity-${VERSION}.jar"
           BUNGEE="proxy/bungee/build/libs/universaladmin-bungee-${VERSION}.jar"
           API="api/build/libs/universaladmin-api-${VERSION}.jar"
-          for f in "$DISCORD" "$PLACEHOLDERS" "$VOICECHAT" "$VELOCITY" "$BUNGEE" "$API" \
+          for f in "$VELOCITY" "$BUNGEE" "$API" \
               "api/build/libs/universaladmin-api-${VERSION}-sources.jar" \
               "api/build/libs/universaladmin-api-${VERSION}-javadoc.jar"; do
             if [ ! -f "$f" ]; then
@@ -126,24 +123,12 @@ jobs:
               exit 1
             fi
           done
-          ( cd extensions/discord/build/libs && sha256sum "universaladmin-discord-${VERSION}.jar" \
-              > "universaladmin-discord-${VERSION}.jar.sha256" )
-          ( cd extensions/placeholderapi/build/libs && sha256sum "universaladmin-placeholderapi-${VERSION}.jar" \
-              > "universaladmin-placeholderapi-${VERSION}.jar.sha256" )
-          ( cd extensions/voicechat/build/libs && sha256sum "universaladmin-voicechat-${VERSION}.jar" \
-              > "universaladmin-voicechat-${VERSION}.jar.sha256" )
           ( cd proxy/velocity/build/libs && sha256sum "universaladmin-velocity-${VERSION}.jar" \
               > "universaladmin-velocity-${VERSION}.jar.sha256" )
           ( cd proxy/bungee/build/libs && sha256sum "universaladmin-bungee-${VERSION}.jar" \
               > "universaladmin-bungee-${VERSION}.jar.sha256" )
           {
             echo "files<<FILES_EOF"
-            echo "$DISCORD"
-            echo "${DISCORD}.sha256"
-            echo "$PLACEHOLDERS"
-            echo "${PLACEHOLDERS}.sha256"
-            echo "$VOICECHAT"
-            echo "${VOICECHAT}.sha256"
             echo "$VELOCITY"
             echo "${VELOCITY}.sha256"
             echo "$BUNGEE"
@@ -155,9 +140,6 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "velocity=$VELOCITY" >> "$GITHUB_OUTPUT"
           echo "bungee=$BUNGEE" >> "$GITHUB_OUTPUT"
-          echo "discord=$DISCORD" >> "$GITHUB_OUTPUT"
-          echo "placeholders=$PLACEHOLDERS" >> "$GITHUB_OUTPUT"
-          echo "voicechat=$VOICECHAT" >> "$GITHUB_OUTPUT"
 
       # One list for every place that names the supported Minecraft
       # versions: supported-versions.txt (kept current by compatibility.yml).
@@ -292,65 +274,3 @@ jobs:
       # The official extensions have their own Modrinth projects (all three
       # are in the collection "UniversalAdmin"), released together with the
       # plugin and depending on it.
-      - name: Publish UniversalAdmin Discord to Modrinth
-        uses: Kira-NT/mc-publish@v3
-        with:
-          modrinth-id: Lq5Ihyzr
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: ${{ steps.extras.outputs.discord }}
-          name: UniversalAdmin Discord ${{ steps.version.outputs.version }}
-          version: ${{ steps.version.outputs.version }}
-          changelog: |
-            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/universaladmin-mc/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
-          loaders: |
-            paper
-            purpur
-          game-versions: ${{ steps.games.outputs.list }}
-          dependencies: |
-            universaladmin(required){modrinth:wGP5uSse}
-          java: 21
-          fail-mode: warn
-
-      - name: Publish UniversalAdmin Placeholders to Modrinth
-        uses: Kira-NT/mc-publish@v3
-        with:
-          modrinth-id: 229V0zwE
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: ${{ steps.extras.outputs.placeholders }}
-          name: UniversalAdmin Placeholders ${{ steps.version.outputs.version }}
-          version: ${{ steps.version.outputs.version }}
-          changelog: |
-            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/universaladmin-mc/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
-          loaders: |
-            paper
-            purpur
-          game-versions: ${{ steps.games.outputs.list }}
-          dependencies: |
-            universaladmin(required){modrinth:wGP5uSse}
-            placeholderapi(required){modrinth:lKEzGugV}
-          java: 21
-          fail-mode: warn
-
-      # Its Modrinth project is set as the repository variable
-      # MODRINTH_VOICECHAT_ID; until it exists, the jar only goes to the
-      # GitHub release.
-      - name: Publish UniversalAdmin Voice Chat to Modrinth
-        if: vars.MODRINTH_VOICECHAT_ID != ''
-        uses: Kira-NT/mc-publish@v3
-        with:
-          modrinth-id: ${{ vars.MODRINTH_VOICECHAT_ID }}
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: ${{ steps.extras.outputs.voicechat }}
-          name: UniversalAdmin Voice Chat ${{ steps.version.outputs.version }}
-          version: ${{ steps.version.outputs.version }}
-          changelog: |
-            Released with UniversalAdmin ${{ steps.version.outputs.version }} - see its changelog: https://github.com/universaladmin-mc/UniversalAdmin/releases/tag/v${{ steps.version.outputs.version }}
-          loaders: |
-            paper
-            purpur
-          game-versions: ${{ steps.games.outputs.list }}
-          dependencies: |
-            universaladmin(required){modrinth:wGP5uSse}
-            simple-voice-chat(required){modrinth:9eGKb6K1}
-          java: 21
-          fail-mode: warn

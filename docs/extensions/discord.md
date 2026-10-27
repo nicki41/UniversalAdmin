@@ -1,5 +1,7 @@
 # UniversalAdmin Discord
 
+Source and releases: [universaladmin-mc/universaladmin-discord](https://github.com/universaladmin-mc/universaladmin-discord).
+
 The official Discord extension, in two modes:
 
 | | Webhook mode (default) | Bot mode |
@@ -11,7 +13,7 @@ The official Discord extension, in two modes:
 | Setup | a webhook URL | a bot token, a few ids |
 
 Download `universaladmin-discord-<version>.jar` from the
-[GitHub release](https://github.com/universaladmin-mc/UniversalAdmin/releases) (same
+[GitHub releases](https://github.com/universaladmin-mc/universaladmin-discord/releases) (same
 version as UniversalAdmin) into `plugins/` and restart. On the first start
 Paper downloads the Discord library (JDA, about 20 MB) once into the
 server's `libraries` folder - the server needs internet access for that.

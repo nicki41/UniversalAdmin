@@ -162,19 +162,23 @@ UniversalAdminProvider.get().extensions().register(this, new MyModule());
 - API jars (binary, sources, javadoc) are attached to every
   [release](https://github.com/universaladmin-mc/UniversalAdmin/releases).
 
-**Official extensions** (all in the Modrinth collection
+**Official extensions** (each in its own repository in the
+[universaladmin-mc](https://github.com/universaladmin-mc) organization, all in the Modrinth collection
 [UniversalAdmin](https://modrinth.com/collection/DrMT8zro)):
 
 - **UniversalAdmin Discord** posts bans, mutes, reports, restarts and more to
   a Discord channel - with a webhook in two minutes, or as a bot with
   two-way staff chat, `/ban`, `/mute`, `/history` from Discord and report
-  buttons: [docs/extensions/discord.md](docs/extensions/discord.md).
+  buttons: [docs/extensions/discord.md](docs/extensions/discord.md) ·
+  [source](https://github.com/universaladmin-mc/universaladmin-discord).
 - **UniversalAdmin Placeholders** adds PlaceholderAPI placeholders for
   scoreboards and tab lists:
-  [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md).
+  [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md) ·
+  [source](https://github.com/universaladmin-mc/universaladmin-placeholders).
 - **UniversalAdmin Voice Chat** connects Simple Voice Chat: chat, voice or
   full mutes, vanished staff stay silent, voice status on the profile and a
-  staff voice group: [docs/extensions/voicechat.md](docs/extensions/voicechat.md).
+  staff voice group: [docs/extensions/voicechat.md](docs/extensions/voicechat.md) ·
+  [source](https://github.com/universaladmin-mc/universaladmin-voicechat).
 
 ## Anonymous statistics
 
