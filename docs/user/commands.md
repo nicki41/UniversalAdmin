@@ -28,7 +28,7 @@ permission listed is checked by the action itself, not just by the command.
 | `/admin status` | - | `universaladmin.status` | Version, uptime, modules, database |
 | `/admin modules` | - | `universaladmin.status` | Every module and extension with its state |
 | `/admin reload` | - | `universaladmin.reload` | Reloads `config.yml` and the language files (never Bukkit's `/reload`) |
-| `/admin update` | - | `universaladmin.update.apply` | Downloads the newest release; applied on the next restart |
+| `/admin update` | - | `universaladmin.update.apply` | Downloads the newest release of UniversalAdmin and every official extension; applied on the next restart |
 | `/admin settings [list [section] \| get <path> \| set <path> <value> \| reset <path>]` | - | `universaladmin.settings.manage` | Settings GUI, or read/change settings from chat |
 
 ## Moderation

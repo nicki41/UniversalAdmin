@@ -49,10 +49,18 @@ Optional:
 
 ## Updating
 
-- `/admin update` downloads the newest stable release into
-  `plugins/update/`; the server applies it on the next restart. Staff with
-  `universaladmin.update.notify` are told when a new version is out.
+- **Automatically:** every 6 hours UniversalAdmin checks GitHub for new
+  releases - of itself and of the official extensions - and downloads a new
+  one into `plugins/update/`; the server applies it at the next restart.
+  Only within the same major version (`2.0` waits for you), and only with
+  `update.auto-download: true` (the default). Staff with
+  `universaladmin.update.notify` are told - right away and when they join -
+  and so is the console.
+- `/admin update` downloads every newer release right now, a new major
+  version included.
 - Or replace the jar by hand and restart.
+- The Velocity and BungeeCord plugins only tell their console about a new
+  version - replace their jar yourself and restart the proxy.
 
 Configuration, translations and the database are migrated automatically -
 nothing you configured is overwritten. Read the "Upgrading" notes in the

@@ -164,6 +164,12 @@ public final class TicketsModule implements Module {
   service - then the core offers chat- and voice-only mutes, and the
   extension enforces the voice part. UniversalAdmin Voice Chat is built on
   this ([voicechat.md](voicechat.md)).
+- Updates (1.5): `ua.extensions().updatesFrom(this, "owner/repository",
+  "myextension-")` lets UniversalAdmin's update check cover your plugin -
+  staff hear about a new release, it is downloaded on its own within the
+  same major version, and `/admin update` includes it. Publish your jar as a
+  release asset named `myextension-<version>.jar` (tag `v<version>`), with
+  a `.sha256` next to it if you can.
 - Forms (1.4): `GuiForm` asks for several values in one Paper dialog -
   text fields, sliders, checkboxes, option lists; see
   [gui-framework.md](../development/gui-framework.md#forms).
@@ -171,7 +177,8 @@ public final class TicketsModule implements Module {
   in a later minor version (`network()`, `PlayerDirectory` and
   `withPlayer` are 1.1; the status services and
   `PlayerDirectory#addIfAbsent` are 1.2; `NetworkService#vanished` is 1.3;
-  mute kinds, `VoiceChat` and `GuiForm` are 1.4 - UniversalAdmin 1.5).
+  mute kinds, `VoiceChat` and `GuiForm` are 1.4 - UniversalAdmin 1.5;
+  `updatesFrom` is 1.5 - UniversalAdmin 1.6).
 
 ## Reference
 
