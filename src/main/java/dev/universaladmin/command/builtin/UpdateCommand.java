@@ -41,7 +41,7 @@ public final class UpdateCommand implements AdminCommand {
         invocation.reply("command.update.checking");
         invocation.<Void, List<UpdateApplyResult>>run(ApplyUpdateAction.ID, null, results -> results.forEach(update -> {
             if (update.failed()) {
-                invocation.reply("command.update.error", update.failure(), update.name());
+                invocation.reply("command.update.failed", update.failure(), update.name());
             } else {
                 invocation.reply(update.updateApplied() ? "command.update.applied" : "command.update.up-to-date",
                         update.version(), update.name());

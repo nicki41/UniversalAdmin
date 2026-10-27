@@ -932,7 +932,7 @@ command:
     checking: "<gray>Prüfe GitHub auf eine neuere Version..."
     applied: "<green>{1} {0} heruntergeladen. Starte den Server neu, um es zu aktivieren."
     up-to-date: "<green>{1} ist bereits die neueste Version ({0})."
-    error: "<red>{1} konnte nicht aktualisiert werden: {0}"
+    failed: "<red>{1} konnte nicht aktualisiert werden: {0}"
 
 # Ein Block pro Befehl: "usage" ist die Argument-Übersicht als reiner Text
 # (kein MiniMessage) hinter dem Befehl, "description" die Zeile in
