@@ -81,7 +81,22 @@ welcome as [GitHub issues](https://github.com/universaladmin-mc/UniversalAdmin/i
 - [x] Licensed under **GPL-3.0-or-later**; the extension API stays
       Apache-2.0
 
-## Next - 1.6.0
+## Done - 1.6.0
+
+- [x] **Automatic updates**: new releases of the plugin and the official
+      extensions are downloaded, checked and installed at the next restart
+      (within the same major version, switchable in `config.yml`); a notice
+      for staff who join later; the proxy plugins check too
+      ([ADR 0024](docs/architecture/decisions/0024-updates-and-repositories.md))
+- [x] **A GitHub organization**, [universaladmin-mc](https://github.com/universaladmin-mc):
+      the core and every official extension in their own repositories, each
+      with its own releases, changelog and update check
+- [x] **New logos** for UniversalAdmin, the official extensions and the
+      proxy plugins
+- [x] **Documentation website**:
+      [universaladmin-mc.github.io/UniversalAdmin](https://universaladmin-mc.github.io/UniversalAdmin/)
+
+## Next - 1.7.0
 
 - [ ] **Nick system** (built-in module, for staff): `/nick Notch` - the
       name and skin of an existing account everywhere (chat, tab list,
@@ -93,16 +108,11 @@ welcome as [GitHub issues](https://github.com/universaladmin-mc/UniversalAdmin/i
 
 Additive, no breaking changes.
 
-- [ ] **Update check, finished**: today UniversalAdmin checks GitHub every
-      6 hours, warns in the console and tells the staff online at that
-      moment, and `/admin update` downloads the new plugin jar. Still
-      missing: a notice for staff who join later, **automatic updates**
-      (downloaded into `plugins/update/` and applied at the next restart,
-      switchable in `config.yml`), and the same check and update for the
-      official extensions and the proxy plugins
-- [ ] **Extensions in their own GitHub repositories**, grouped in one
-      GitHub organization next to the core - the counterpart of the Modrinth
-      collection - each with its own releases, changelog and update check
+- [ ] **Menu overhaul**: every menu reworked - a consistent layout, clearer
+      icons and navigation, fewer clicks for what staff do most
+- [ ] **Rework of existing features**: go through the modules and polish
+      what grew step by step - behaviour, texts and settings that should
+      work more alike
 - [ ] **Vault** as an official extension: balance and rank on the player
       profile
 - [ ] **CoreProtect** as an official extension: block lookups and rollbacks
@@ -114,9 +124,6 @@ Additive, no breaking changes.
 - [ ] **MiniMOTD** as an official extension: a maintenance MOTD and a
       player count without vanished players
 - [ ] Forms for whole settings sections (checkboxes, sliders, option lists)
-- [ ] **Documentation website** on GitHub Pages, built from `docs/` with
-      MkDocs Material - navigation and search instead of browsing Markdown
-      files
 - [ ] Ticket/support system as an official extension built on the API
 - [ ] More languages (community translations - `lang/<locale>.yml` is all it
       takes)
