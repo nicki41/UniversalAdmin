@@ -11,9 +11,14 @@ import dev.universaladmin.action.ValidationError;
 import dev.universaladmin.core.PlayerDirectory;
 import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.ServiceRegistry;
+import dev.universaladmin.core.UniversalAdmin;
+import dev.universaladmin.gui.ActionStatusToggle;
+import dev.universaladmin.gui.GuiGlass;
+import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -96,6 +101,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Server;
 import org.bukkit.ban.IpBanList;
 import org.bukkit.ban.ProfileBanList;
@@ -136,6 +142,8 @@ public final class ModerationModule implements Module {
             .icon(new GuiIcon("iron_sword", "Moderation"))
             .menu(ModerationHomePage.ID, ModerationPermissions.USE)
             .menuOrder(20)
+            .menuGroup(MenuGroup.PLAYERS)
+            .color(GuiGlass.RED)
             .build();
 
     @Override
@@ -222,6 +230,7 @@ public final class ModerationModule implements Module {
                 freezeRuntimeState, vanishService, godmodeState, collisionState, staffModeState,
                 context.platform().settings(), staffModeService, context.platform().notifications(), enforcer, network,
                 new TargetNames(network, context.platform().services()));
+        registerStatusToggles(context, vanishService, staffModeState, godmodeState);
         PunishmentTemplateService templates = registerTemplates(context, punishmentService);
         ModerationGuiContext guiContext = registerGui(
                 context, punishmentService, vanishService, godmodeState, collisionState, staffModeState, templates);
@@ -267,6 +276,25 @@ public final class ModerationModule implements Module {
     }
 
     /** Package-private (not {@code private}) so {@code ModerationActionsWiringTest} can exercise it without a full {@link ModuleContext}. */
+    /** Vanish, staff mode and godmode in the main menu's "My status" row. */
+    private static void registerStatusToggles(ModuleContext context, VanishService vanish, StaffModeState staffMode, GodmodeState godmode) {
+        var platform = context.platform();
+        context.registerStatusToggle(new ActionStatusToggle("core:moderation.vanish", 10, ModerationPermissions.VANISH,
+                viewer -> vanish.isVanished(viewer.getUniqueId()), viewer -> text(platform, "moderation.toggle.vanish"),
+                ModerationActionIds.VANISH, ModerationActionIds.VANISH, platform.actionExecutor(), platform.scheduler(), platform.messages()));
+        context.registerStatusToggle(new ActionStatusToggle("core:moderation.staffmode", 20, ModerationPermissions.STAFFMODE,
+                viewer -> staffMode.isActive(viewer.getUniqueId()), viewer -> text(platform, "moderation.toggle.staff-mode"),
+                ModerationActionIds.STAFF_MODE_ENTER, ModerationActionIds.STAFF_MODE_EXIT, platform.actionExecutor(), platform.scheduler(),
+                platform.messages()));
+        context.registerStatusToggle(new ActionStatusToggle("core:moderation.godmode", 30, ModerationPermissions.GODMODE,
+                viewer -> godmode.isEnabled(viewer.getUniqueId()), viewer -> text(platform, "moderation.toggle.godmode"),
+                ModerationActionIds.GODMODE, ModerationActionIds.GODMODE, platform.actionExecutor(), platform.scheduler(), platform.messages()));
+    }
+
+    private static Component text(UniversalAdmin platform, String key) {
+        return ComponentMessages.render(platform.messages().get(MessageKey.of(key)));
+    }
+
     static void registerActions(
             ActionRegistry actions, TaskScheduler scheduler, PunishmentService punishmentService, MessageService messages,
             ModerationPolicy policy, FreezeRuntimeState freezeRuntimeState, VanishService vanishService, GodmodeState godmodeState,

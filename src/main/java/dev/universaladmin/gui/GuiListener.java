@@ -34,7 +34,8 @@ public final class GuiListener implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
-        if (!(event.getView().getTopInventory().getHolder() instanceof GuiView view)) {
+        GuiView view = GuiView.of(event.getView().getTopInventory()).orElse(null);
+        if (view == null) {
             return;
         }
         boolean clickedButtonSlot = event.getClickedInventory() != null
@@ -67,7 +68,8 @@ public final class GuiListener implements Listener {
 
     @EventHandler
     public void onDrag(InventoryDragEvent event) {
-        if (!(event.getView().getTopInventory().getHolder() instanceof GuiView view)) {
+        GuiView view = GuiView.of(event.getView().getTopInventory()).orElse(null);
+        if (view == null) {
             return;
         }
         int topSize = event.getView().getTopInventory().getSize();
@@ -91,7 +93,7 @@ public final class GuiListener implements Listener {
     private void scheduleChange(GuiView view) {
         plugin.getServer().getScheduler().runTask(plugin, () -> {
             Player player = plugin.getServer().getPlayer(view.viewerId());
-            if (player != null && player.getOpenInventory().getTopInventory().getHolder() == view) {
+            if (player != null && view.isOpenFor(player)) {
                 view.handleChange();
             }
         });
@@ -99,7 +101,8 @@ public final class GuiListener implements Listener {
 
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
-        if (!(event.getInventory().getHolder() instanceof GuiView view)) {
+        GuiView view = GuiView.of(event.getInventory()).orElse(null);
+        if (view == null) {
             return;
         }
         if (event.getReason() == InventoryCloseEvent.Reason.OPEN_NEW) {

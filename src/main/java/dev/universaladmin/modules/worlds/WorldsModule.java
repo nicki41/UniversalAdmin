@@ -7,8 +7,10 @@ import dev.universaladmin.action.ActionTarget;
 import dev.universaladmin.action.ActionValidator;
 import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.modules.worlds.command.WorldCommands;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
@@ -59,6 +61,8 @@ public final class WorldsModule implements Module {
             .icon(new GuiIcon("grass_block", "Worlds"))
             .menu(WorldsHomePage.ID, WorldsPermissions.VIEW)
             .menuOrder(40)
+            .menuGroup(MenuGroup.SERVER)
+            .color(GuiGlass.GREEN)
             .build();
 
     @Override

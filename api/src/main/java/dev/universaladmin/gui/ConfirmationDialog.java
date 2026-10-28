@@ -70,8 +70,9 @@ public final class ConfirmationDialog {
 
     /** "Reopen whatever UniversalAdmin page {@code viewer} has open right now", or {@code null} if none. */
     private static Runnable callerReopener(Player viewer) {
-        if (viewer.getOpenInventory().getTopInventory().getHolder() instanceof GuiView view) {
-            GuiPage caller = view.page();
+        java.util.Optional<GuiView> shown = GuiView.of(viewer.getOpenInventory().getTopInventory());
+        if (shown.isPresent()) {
+            GuiPage caller = shown.get().page();
             return () -> caller.open(viewer);
         }
         return null;

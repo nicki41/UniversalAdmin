@@ -213,7 +213,7 @@ public final class StaffModeGuardListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player) || !staffModeState.isActive(player.getUniqueId())) {
             return;
         }
-        if (event.getView().getTopInventory().getHolder() instanceof GuiView) {
+        if (GuiView.of(event.getView().getTopInventory()).isPresent()) {
             return;
         }
         event.setCancelled(true);
@@ -224,7 +224,7 @@ public final class StaffModeGuardListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player) || !staffModeState.isActive(player.getUniqueId())) {
             return;
         }
-        if (event.getView().getTopInventory().getHolder() instanceof GuiView) {
+        if (GuiView.of(event.getView().getTopInventory()).isPresent()) {
             return;
         }
         event.setCancelled(true);

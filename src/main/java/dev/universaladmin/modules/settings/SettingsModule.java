@@ -4,7 +4,9 @@ import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionTarget;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -33,6 +35,8 @@ public final class SettingsModule implements Module {
             .icon(new GuiIcon("anvil", "Settings"))
             .menu(SettingsHomePage.ID, SettingsPermissions.MANAGE)
             .menuOrder(90)
+            .menuGroup(MenuGroup.SYSTEM)
+            .color(GuiGlass.GRAY)
             .build();
 
     @Override

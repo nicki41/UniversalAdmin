@@ -8,8 +8,10 @@ import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.core.PlayerDirectory;
 import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.PlayerRef;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -53,6 +55,8 @@ public final class PlayersModule implements Module {
             .icon(new GuiIcon("player_head", "Players"))
             .menu(PlayerBrowserHomePage.ID, PlayerPermissions.VIEW)
             .menuOrder(10)
+            .menuGroup(MenuGroup.PLAYERS)
+            .color(GuiGlass.LIME)
             .build();
 
     @Override

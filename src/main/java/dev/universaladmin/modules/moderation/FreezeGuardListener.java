@@ -56,7 +56,7 @@ public final class FreezeGuardListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         // A frozen player who is also staff shouldn't be locked out of the
         // UniversalAdmin GUI itself - only vanilla inventories are blocked.
-        if (event.getView().getTopInventory().getHolder() instanceof GuiView) {
+        if (GuiView.of(event.getView().getTopInventory()).isPresent()) {
             return;
         }
         if (event.getWhoClicked() instanceof Player player && frozen(player, ModerationSettings.FREEZE_BLOCK_INVENTORY)) {

@@ -5,21 +5,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
 /**
- * One rendered instance of a {@link GuiPage} for one player - the live
- * Bukkit {@link Inventory} plus the slot-&gt;{@link GuiButton} table
- * {@code GuiListener} dispatches clicks against. Implements
- * {@link InventoryHolder} itself (rather than a separate wrapper) so
- * {@code inventory.getHolder()} is how {@code GuiListener} recognizes "this
- * is one of ours" - no separate {@code Map<Inventory, GuiView>} to leak if
- * cleanup is ever missed; the view lives exactly as long as the
- * {@link Inventory} Bukkit already tracks for the open {@code InventoryView}.
+ * One rendered instance of a {@link GuiPage} for one player - the
+ * slot-&gt;{@link GuiButton} table {@code GuiListener} dispatches clicks
+ * against, drawn into the player's {@link GuiWindow}. Every page switch
+ * renders a new view into the same window; only the newest one is
+ * {@linkplain #isOpenFor shown}, and a view that is no longer shown ignores
+ * every write (ADR 0027). So a page that loads asynchronously checks
+ * {@link #isOpenFor} before it draws - or simply draws, and nothing happens
+ * if the player moved on.
  *
  * <p>Deliberately holds only a {@link UUID}, never a {@link Player}
  * reference - see docs/development/gui-framework.md. {@code GuiListener}
@@ -28,18 +26,29 @@ import org.bukkit.inventory.InventoryHolder;
 public final class GuiView implements InventoryHolder {
 
     private final GuiPage page;
-    private final UUID viewerId;
-    private final Inventory inventory;
+    private final GuiWindow window;
     private final Map<Integer, GuiButton> buttons = new HashMap<>();
     private boolean editable;
     private final ClickThrottle clickThrottle = new ClickThrottle(MIN_BUTTON_CLICK_INTERVAL_NANOS);
     private Consumer<GuiView> onClose;
     private Consumer<GuiView> onChange;
 
-    GuiView(GuiPage page, UUID viewerId, int rows, Component title) {
+    GuiView(GuiPage page, GuiWindow window) {
         this.page = page;
-        this.viewerId = viewerId;
-        this.inventory = Bukkit.createInventory(this, rows * GuiLayout.COLUMNS, title);
+        this.window = window;
+    }
+
+    /** The view shown in {@code inventory}, if it is one of UniversalAdmin's menus. @since 1.7 */
+    public static Optional<GuiView> of(Inventory inventory) {
+        if (inventory != null && inventory.getHolder() instanceof GuiWindow window) {
+            return Optional.ofNullable(window.current());
+        }
+        return Optional.empty();
+    }
+
+    /** Whether {@code viewer} has this exact view open right now - not an earlier or a later page. @since 1.7 */
+    public boolean isOpenFor(Player viewer) {
+        return viewer.isOnline() && viewer.getOpenInventory().getTopInventory().getHolder() == window && isCurrent();
     }
 
     public GuiPage page() {
@@ -68,19 +77,27 @@ public final class GuiView implements InventoryHolder {
     }
 
     public UUID viewerId() {
-        return viewerId;
+        return window.viewerId();
+    }
+
+    GuiWindow window() {
+        return window;
+    }
+
+    boolean isCurrent() {
+        return window.current() == this;
     }
 
     @Override
     public Inventory getInventory() {
-        return inventory;
+        return window.getInventory();
     }
 
     /**
      * Whether clicks/drags outside {@link GuiButton} slots are left alone
-     * instead of cancelled. {@code false} for every page today - this is a
-     * hook for a future editable inventory view (e.g. a bulk item editor),
-     * not a fully worked-out feature yet. See docs/development/gui-framework.md.
+     * instead of cancelled - the inventory editors mirror a real inventory
+     * this way. An editable view gets no filling panes in its empty slots.
+     * See docs/development/gui-framework.md.
      */
     public boolean editable() {
         return editable;
@@ -98,10 +115,15 @@ public final class GuiView implements InventoryHolder {
      * since the close event fires only once every drag/click the player made
      * has already been applied to {@link #getInventory()}. Not called for
      * every {@code editable} view - only a page that registers one gets it;
-     * default is a no-op.
+     * default is a no-op. A view with a close callback is never replaced in
+     * place: the next page opens a new window, so the callback runs.
      */
     public void onClose(Consumer<GuiView> callback) {
         this.onClose = callback;
+    }
+
+    boolean hasCloseCallback() {
+        return onClose != null;
     }
 
     /** Invoked by {@code GuiListener} once this view genuinely closes. */
@@ -138,7 +160,10 @@ public final class GuiView implements InventoryHolder {
 
     /** Places a purely visual item - clears any button previously at {@code slot}. */
     public void place(int slot, GuiItem item) {
-        inventory.setItem(slot, item.itemStack());
+        if (!isCurrent()) {
+            return;
+        }
+        window.getInventory().setItem(slot, item.itemStack());
         buttons.remove(slot);
     }
 
@@ -148,15 +173,19 @@ public final class GuiView implements InventoryHolder {
      * ("hide by default", see {@link GuiButton}) and nothing is placed at all.
      */
     public void place(int slot, GuiButton button, Player viewer) {
-        if (!button.isVisibleTo(viewer)) {
+        if (!isCurrent() || !button.isVisibleTo(viewer)) {
             return;
         }
-        inventory.setItem(slot, button.item().itemStack());
+        window.getInventory().setItem(slot, button.item().itemStack());
         buttons.put(slot, button);
     }
 
+    /** Empties {@code slot} - in a menu that means the black pane of unused space, in an editable view a real empty slot. */
     public void clear(int slot) {
-        inventory.setItem(slot, null);
+        if (!isCurrent()) {
+            return;
+        }
+        window.getInventory().setItem(slot, editable ? null : GuiItem.pane(GuiGlass.BLACK).itemStack());
         buttons.remove(slot);
     }
 
@@ -164,6 +193,19 @@ public final class GuiView implements InventoryHolder {
     public void clearContentArea() {
         for (int slot = GuiLayout.CONTENT_START_SLOT; slot <= GuiLayout.CONTENT_END_SLOT; slot++) {
             clear(slot);
+        }
+    }
+
+    /** Fills every slot nothing was drawn into with the black pane of unused space - not in an editable view. */
+    void fillEmpty() {
+        if (editable || !isCurrent()) {
+            return;
+        }
+        Inventory inventory = window.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            if (inventory.getItem(slot) == null) {
+                inventory.setItem(slot, GuiItem.pane(GuiGlass.BLACK).itemStack());
+            }
         }
     }
 

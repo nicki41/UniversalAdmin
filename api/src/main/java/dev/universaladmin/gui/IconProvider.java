@@ -27,6 +27,11 @@ public interface IconProvider {
         return Material.ARROW;
     }
 
+    /** The "Start" button of every page's header - back to the main menu. @since 1.7 */
+    default Material home() {
+        return Material.NETHER_STAR;
+    }
+
     default Material close() {
         return Material.BARRIER;
     }

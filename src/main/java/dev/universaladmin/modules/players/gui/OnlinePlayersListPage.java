@@ -45,11 +45,11 @@ public final class OnlinePlayersListPage extends AbstractGuiPage {
 
     public static final GuiPageId ID = GuiPageId.core("players.online");
 
-    private static final int WORLD_FILTER_SLOT = 1;
-    private static final int GAMEMODE_FILTER_SLOT = 2;
-    private static final int SEARCH_SLOT = 3;
-    private static final int SERVER_FILTER_SLOT = 5;
-    private static final int SORT_SLOT = 6;
+    private static final int WORLD_FILTER_SLOT = GuiLayout.TOOL_LEFT_1;
+    private static final int GAMEMODE_FILTER_SLOT = GuiLayout.TOOL_LEFT_2;
+    private static final int SEARCH_SLOT = GuiLayout.TOOL_RIGHT_3;
+    private static final int SERVER_FILTER_SLOT = GuiLayout.TOOL_LEFT_3;
+    private static final int SORT_SLOT = GuiLayout.TOOL_RIGHT_2;
 
     private final PlayerGuiContext ctx;
 

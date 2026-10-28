@@ -31,8 +31,8 @@ public final class OfflinePlayersListPage extends AbstractGuiPage {
 
     public static final GuiPageId ID = GuiPageId.core("players.offline");
 
-    private static final int SEARCH_SLOT = 2;
-    private static final int SORT_SLOT = 6;
+    private static final int SEARCH_SLOT = GuiLayout.TOOL_RIGHT_3;
+    private static final int SORT_SLOT = GuiLayout.TOOL_RIGHT_2;
 
     private final PlayerGuiContext ctx;
 
@@ -153,7 +153,7 @@ public final class OfflinePlayersListPage extends AbstractGuiPage {
 
     private boolean stillOpen(GuiRenderContext context) {
         Player viewer = context.viewer();
-        return viewer.isOnline() && viewer.getOpenInventory().getTopInventory().getHolder() == context.view();
+        return context.view().isOpenFor(viewer);
     }
 
     private void renderPlaceholder(GuiView view, Material material, Component label) {

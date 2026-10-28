@@ -198,6 +198,10 @@ players:
     spectator: "Zuschauer"
 
 moderation:
+  toggle:
+    vanish: "Vanish"
+    staff-mode: "Staff-Modus"
+    godmode: "Godmode"
   notify:
     kick: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <yellow>hat</yellow> <white>{1}</white> <yellow>gekickt</yellow><gray>: {2}"
     ban: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <red>hat</red> <white>{1}</white> <red>gebannt</red> <gray>({3}): {2}"
@@ -841,6 +845,9 @@ audit:
       failure: "<red>Fehlschlag"
 
 gui:
+  hint:
+    open: "<dark_gray>Klicken zum Öffnen"
+  home: "<gold>Hauptmenü"
   back: "<gray>« Zurück"
   close: "<red>Schließen"
   refresh: "<green>Aktualisieren"
@@ -853,6 +860,31 @@ gui:
   confirm: "<green>Bestätigen"
   cancel: "<red>Abbrechen"
   main-menu:
+    status:
+      players: "<green>{0} online"
+      players-vanished: "<gray>+ {0} im Vanish"
+      reports: "<gold>{0} offene Meldung(en)"
+      reports-none: "<green>Keine offenen Meldungen"
+      tps: "<white>TPS {0}"
+      tps-hint: "<gray>Ticks pro Sekunde - 20 ist volle Geschwindigkeit"
+      maintenance-on: "<red>Wartung ist an"
+      maintenance-off: "<green>Wartung ist aus"
+      network: "<aqua>{0} Server · {1} Spieler"
+      me: "<white>{0}"
+      me-vanished: "<gray>Im Vanish"
+      me-staff-mode: "<gray>Im Staff-Modus"
+      me-godmode: "<gray>Godmode"
+      me-nick: "<gray>Genickt als <white>{0}"
+      me-plain: "<gray>Nichts eingeschaltet"
+    group:
+      players: "<white>Spieler & Moderation"
+      server: "<white>Server & Welten"
+      system: "<white>System & Erweiterungen"
+    my-status: "<white>Mein Status"
+    toggle-on: "<green>{0}: an"
+    toggle-off: "<red>{0}: aus"
+    toggle-on-hint: "<dark_gray>Klicken zum Ausschalten"
+    toggle-off-hint: "<dark_gray>Klicken zum Einschalten"
     title: "<gold><bold>UniversalAdmin"
   placeholder:
     body: "<gray>{0} ist noch nicht fertig - kommt in einem zukünftigen Update."
@@ -1338,6 +1370,9 @@ reports:
   teleported-remote: "<gray>Du wirst für Meldung <white>#{0}</white> über <white>{1}</white> zu <aqua>{2}</aqua> geschickt..."
 
 nick:
+  toggle:
+    nicked: "Nick {0}"
+    plain: "Nick"
   set-skin: "<green>Du wirst jetzt als <white>{0}</white> angezeigt, mit dem Skin von <white>{1}</white>."
   set-own-skin: "<green>Du wirst jetzt als <white>{0}</white> angezeigt, mit deinem eigenen Skin."
   cleared: "<green>Dein Nick <white>{0}</white> ist beendet - du wirst wieder als du selbst angezeigt."
@@ -1391,6 +1426,8 @@ nick:
       skin-account: "Skin des Accounts unten"
       account: "Account für den Skin"
 chat:
+  toggle:
+    staff-chat: "Staff-Chat"
   locked-broadcast: "<red>Der Chat wurde von <white>{0}</white> gesperrt."
   unlocked-broadcast: "<green>Der Chat wurde von <white>{0}</white> wieder freigegeben."
   slowmode-broadcast: "<yellow>Slowmode ist an: eine Nachricht alle <white>{0}</white> <gray>(gesetzt von {1})"

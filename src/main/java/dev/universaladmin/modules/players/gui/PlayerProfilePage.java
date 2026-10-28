@@ -229,7 +229,7 @@ public final class PlayerProfilePage extends AbstractGuiPage {
 
     private boolean stillOpen(GuiRenderContext context) {
         Player viewer = context.viewer();
-        return viewer.isOnline() && viewer.getOpenInventory().getTopInventory().getHolder() == context.view();
+        return context.view().isOpenFor(viewer);
     }
 
     private record Result(Optional<PlayerSnapshot> snapshot, String ip) {

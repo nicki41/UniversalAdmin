@@ -5,8 +5,10 @@ import dev.universaladmin.action.ActionRegistry;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.modules.performance.command.PerformanceCommands;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
@@ -48,6 +50,8 @@ public final class PerformanceModule implements Module {
             .icon(new GuiIcon("comparator", "Performance"))
             .menu(PerformanceHomePage.ID, PerformancePermissions.VIEW)
             .menuOrder(60)
+            .menuGroup(MenuGroup.SERVER)
+            .color(GuiGlass.YELLOW)
             .build();
 
     @Override

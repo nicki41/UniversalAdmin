@@ -5,8 +5,12 @@ import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ValidationError;
 import dev.universaladmin.chat.StaffChat;
 import dev.universaladmin.core.time.DurationParser;
+import dev.universaladmin.gui.ActionStatusToggle;
+import dev.universaladmin.gui.GuiGlass;
+import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -33,6 +37,8 @@ public final class ChatModule implements Module {
             .icon(new GuiIcon("writable_book", "Chat"))
             .menu(ChatHomePage.ID, ChatPermissions.MANAGE)
             .menuOrder(35)
+            .menuGroup(MenuGroup.PLAYERS)
+            .color(GuiGlass.LIGHT_BLUE)
             .build();
 
     @Override
@@ -82,6 +88,11 @@ public final class ChatModule implements Module {
         context.resources().closeable(() -> platform.network().unsubscribe(ChatActions.StaffMessage.NETWORK_TOPIC, remoteStaffChat));
         context.registerAction(ActionDefinition.builder(new ChatActions.ToggleStaffChat(chat))
                 .permission(ChatPermissions.STAFF_CHAT).module(module).notAudited().build());
+
+        context.registerStatusToggle(new ActionStatusToggle("core:chat.staff", 50, ChatPermissions.STAFF_CHAT,
+                viewer -> chat.staffChatToggled(viewer.getUniqueId()),
+                viewer -> ComponentMessages.render(platform.messages().get(MessageKey.of("chat.toggle.staff-chat"))),
+                ChatActions.STAFF_TOGGLE, ChatActions.STAFF_TOGGLE, platform.actionExecutor(), platform.scheduler(), platform.messages()));
 
         context.registerListener(new ChatListener(chat, platform.actionExecutor(), platform.settings(), platform.messages()));
         context.registerPage(new ChatHomePage(platform.guiFramework(), platform.messages(), chat, platform.actionExecutor(), platform.scheduler()));

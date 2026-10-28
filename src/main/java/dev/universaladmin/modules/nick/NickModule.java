@@ -7,8 +7,10 @@ import dev.universaladmin.action.Actor;
 import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
 import dev.universaladmin.core.PlayerDirectory;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -44,6 +46,8 @@ public final class NickModule implements Module {
             .icon(new GuiIcon("name_tag", "Nick"))
             .menu(NickHomePage.ID, NickPermissions.USE)
             .menuOrder(38)
+            .menuGroup(MenuGroup.PLAYERS)
+            .color(GuiGlass.MAGENTA)
             .build();
 
     @Override
@@ -113,6 +117,7 @@ public final class NickModule implements Module {
         context.registerPlayerMenuEntry(new NickProfileEntry(view, platform.guiFramework(), platform.messages(),
                 platform.actionExecutor(), platform.scheduler()));
         NickCommands.all(view, platform.settings()).forEach(context::registerCommand);
+        context.registerStatusToggle(new NickStatusToggle(view, platform));
 
         // Players who are online while the module starts (a reload of UniversalAdmin) get their nick back -
         // a tick later, once the migrations of this start have run. When it stops, everyone is shown as

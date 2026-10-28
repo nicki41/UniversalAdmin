@@ -12,6 +12,7 @@ import dev.universaladmin.extension.ExtensionManager;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.PlayerMenuRegistry;
+import dev.universaladmin.gui.StatusToggleRegistry;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.module.ModuleId;
 import dev.universaladmin.module.ModuleRegistry;
@@ -49,6 +50,7 @@ public record UniversalAdminPlatform(
         GuiRegistry guiPages,
         GuiFramework guiFramework,
         PlayerMenuRegistry playerMenu,
+        StatusToggleRegistry statusToggles,
         CommandRegistry commands,
         ExtensionManager extensions,
         PermissionRegistry permissions,
@@ -73,6 +75,7 @@ public record UniversalAdminPlatform(
         Objects.requireNonNull(guiPages, "guiPages");
         Objects.requireNonNull(guiFramework, "guiFramework");
         Objects.requireNonNull(playerMenu, "playerMenu");
+        Objects.requireNonNull(statusToggles, "statusToggles");
         Objects.requireNonNull(commands, "commands");
         Objects.requireNonNull(extensions, "extensions");
         Objects.requireNonNull(permissions, "permissions");

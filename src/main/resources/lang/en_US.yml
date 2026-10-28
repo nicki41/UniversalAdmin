@@ -201,6 +201,10 @@ players:
     spectator: "Spectator"
 
 moderation:
+  toggle:
+    vanish: "Vanish"
+    staff-mode: "Staff mode"
+    godmode: "Godmode"
   notify:
     kick: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <yellow>kicked</yellow> <white>{1}</white><gray>: {2}"
     ban: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <red>banned</red> <white>{1}</white> <gray>({3}): {2}"
@@ -844,6 +848,9 @@ audit:
       failure: "<red>Failure"
 
 gui:
+  hint:
+    open: "<dark_gray>Click to open"
+  home: "<gold>Main menu"
   back: "<gray>« Back"
   close: "<red>Close"
   refresh: "<green>Refresh"
@@ -856,6 +863,31 @@ gui:
   confirm: "<green>Confirm"
   cancel: "<red>Cancel"
   main-menu:
+    status:
+      players: "<green>{0} online"
+      players-vanished: "<gray>+ {0} vanished"
+      reports: "<gold>{0} open report(s)"
+      reports-none: "<green>No open reports"
+      tps: "<white>TPS {0}"
+      tps-hint: "<gray>Ticks per second - 20 is full speed"
+      maintenance-on: "<red>Maintenance is on"
+      maintenance-off: "<green>Maintenance is off"
+      network: "<aqua>{0} server(s) · {1} player(s)"
+      me: "<white>{0}"
+      me-vanished: "<gray>Vanished"
+      me-staff-mode: "<gray>In staff mode"
+      me-godmode: "<gray>Godmode"
+      me-nick: "<gray>Nicked as <white>{0}"
+      me-plain: "<gray>Nothing switched on"
+    group:
+      players: "<white>Players & moderation"
+      server: "<white>Server & worlds"
+      system: "<white>System & extensions"
+    my-status: "<white>My status"
+    toggle-on: "<green>{0}: on"
+    toggle-off: "<red>{0}: off"
+    toggle-on-hint: "<dark_gray>Click to switch off"
+    toggle-off-hint: "<dark_gray>Click to switch on"
     title: "<gold><bold>UniversalAdmin"
   placeholder:
     body: "<gray>{0} isn''t built yet - coming in a future update."
@@ -1341,6 +1373,9 @@ reports:
   teleported-remote: "<gray>Sending you to <aqua>{2}</aqua> for report <white>#{0}</white> about <white>{1}</white>..."
 
 nick:
+  toggle:
+    nicked: "Nick {0}"
+    plain: "Nick"
   set-skin: "<green>You are now shown as <white>{0}</white>, with the skin of <white>{1}</white>."
   set-own-skin: "<green>You are now shown as <white>{0}</white>, with your own skin."
   cleared: "<green>Your nick <white>{0}</white> has ended - you are shown as yourself again."
@@ -1394,6 +1429,8 @@ nick:
       skin-account: "Skin of the account below"
       account: "Account for the skin"
 chat:
+  toggle:
+    staff-chat: "Staff chat"
   locked-broadcast: "<red>The chat has been locked by <white>{0}</white>."
   unlocked-broadcast: "<green>The chat has been unlocked by <white>{0}</white>."
   slowmode-broadcast: "<yellow>Slow mode is on: one message every <white>{0}</white> <gray>(set by {1})"

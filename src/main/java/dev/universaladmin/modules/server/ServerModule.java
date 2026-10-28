@@ -6,8 +6,10 @@ import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionValidator;
 import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -62,6 +64,8 @@ public final class ServerModule implements Module {
             .icon(new GuiIcon("command_block", "Server"))
             .menu(ServerHomePage.ID, ServerPermissions.VIEW)
             .menuOrder(30)
+            .menuGroup(MenuGroup.SERVER)
+            .color(GuiGlass.CYAN)
             .build();
 
     @Override

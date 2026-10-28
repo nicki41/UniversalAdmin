@@ -35,8 +35,8 @@ public final class NetworkHomePage extends AbstractListGuiPage<NetworkServer> {
 
     public static final GuiPageId ID = GuiPageId.core("network.home");
 
-    private static final int SUMMARY_SLOT = GuiLayout.BACK_SLOT + 2;
-    private static final int ALERT_SLOT = GuiLayout.REFRESH_SLOT + 2;
+    private static final int SUMMARY_SLOT = GuiLayout.TOOL_LEFT_1;
+    private static final int ALERT_SLOT = GuiLayout.TOOL_RIGHT_3;
 
     private final NetworkGuiContext ctx;
 

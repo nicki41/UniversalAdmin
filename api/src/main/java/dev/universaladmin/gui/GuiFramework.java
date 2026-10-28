@@ -12,6 +12,17 @@ package dev.universaladmin.gui;
  *
  * <p>One instance is built once in {@code UniversalAdminPlugin#bootstrapCore}
  * and lives on {@link dev.universaladmin.core.UniversalAdmin#guiFramework()}.
+ *
+ * @param style the frame's colours and the main menu ({@code @since 1.7})
  */
-public record GuiFramework(GuiSessionManager sessions, IconProvider icons) {
+public record GuiFramework(GuiSessionManager sessions, IconProvider icons, GuiStyle style) {
+
+    public GuiFramework {
+        style = style == null ? GuiStyle.plain() : style;
+    }
+
+    /** Before 1.7: grey headers and no "Start" button. */
+    public GuiFramework(GuiSessionManager sessions, IconProvider icons) {
+        this(sessions, icons, GuiStyle.plain());
+    }
 }

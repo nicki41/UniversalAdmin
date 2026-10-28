@@ -31,7 +31,9 @@ import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.GuiSessionManager;
 import dev.universaladmin.gui.MainMenuPage;
 import dev.universaladmin.gui.MaterialIconProvider;
+import dev.universaladmin.gui.ModuleGuiStyle;
 import dev.universaladmin.gui.PlayerMenuRegistry;
+import dev.universaladmin.gui.StatusToggleRegistry;
 import dev.universaladmin.localization.LanguageFiles;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
@@ -286,11 +288,12 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         ActionRegistry actions = new ActionRegistry();
         GuiRegistry guiPages = new GuiRegistry();
         GuiSessionManager guiSessions = new GuiSessionManager();
-        GuiFramework guiFramework = new GuiFramework(guiSessions, new MaterialIconProvider(getLogger()));
+        ModuleRegistry moduleRegistry = new ModuleRegistry();
+        MaterialIconProvider icons = new MaterialIconProvider(getLogger());
+        GuiFramework guiFramework = new GuiFramework(guiSessions, icons, new ModuleGuiStyle(moduleRegistry, icons, guiPages));
         // The one GuiListener for the whole plugin - see docs/development/gui-framework.md.
         getServer().getPluginManager().registerEvents(new GuiListener(guiSessions, this), this);
         PermissionRegistry permissions = new PermissionRegistry();
-        ModuleRegistry moduleRegistry = new ModuleRegistry();
         permissionSync = new BukkitPermissionSync(getServer().getPluginManager(), permissions);
         updateTargets = new UpdateTargets();
         updateTargets.add(new UpdateTarget("UniversalAdmin", UpdateTargets.CORE_REPOSITORY, UpdateTargets.CORE_ASSET_PREFIX,
@@ -309,7 +312,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
 
         UniversalAdmin platform = new UniversalAdminPlatform(
                 this, getPluginMeta().getVersion(), startedAt, getLogger(), settingRegistry, settingsService,
-                scheduler, storage, services, actions, actionExecutor, guiPages, guiFramework, new PlayerMenuRegistry(),
+                scheduler, storage, services, actions, actionExecutor, guiPages, guiFramework, new PlayerMenuRegistry(), new StatusToggleRegistry(),
                 new CommandRegistry(), extensions, permissions, moduleRegistry, auditService, messages, notifications, network);
 
         // First of two runPending() calls (see the second one in onEnable(),
@@ -359,7 +362,8 @@ public final class UniversalAdminPlugin extends JavaPlugin {
                         }, getLogger()))
                 .permission(PermissionNode.core("update.apply"))
                 .build());
-        guiPages.register(new MainMenuPage(guiFramework, messages, moduleRegistry, guiPages));
+        guiPages.register(new MainMenuPage(guiFramework, messages, moduleRegistry, guiPages, platform.statusToggles(),
+                services, platform.network()));
         registerCoreCommands(platform);
 
         return platform;
