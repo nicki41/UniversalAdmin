@@ -7,6 +7,17 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-10-28
+
+### Fixed
+
+- **Godmode showed as "on" after every join** on Paper 26, and the first
+  click only switched it off. 1.7.1 read the player's invulnerability, which
+  Paper also reports for the few seconds of protection after joining or a
+  hit. Godmode is now kept as a mark in the player's data. A player with
+  the godmode permission who still has godmode from an older version is
+  recognised a few seconds after joining, once that protection is over.
+
 ## [1.7.1] - 2026-10-28
 
 ### Fixed

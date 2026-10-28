@@ -133,7 +133,11 @@ listener anywhere. This is deliberate: cancelling damage events per-hit
 carries side effects (knockback still applying, fire-tick visuals lingering,
 per-cause edge cases) that `setInvulnerable` avoids entirely by blocking
 damage at the source. Status shown on the Moderation home page's Godmode
-button; not persisted (nothing requires it to survive a restart).
+button. Godmode stays on across leaving and restarts: it is kept as a mark
+(`universaladmin:godmode`) in the player's own data, not in the database.
+The invulnerability itself is not read to decide whether godmode is on,
+because Minecraft also reports the few seconds of protection after joining
+or a hit as invulnerable.
 
 ## No-Collision
 
