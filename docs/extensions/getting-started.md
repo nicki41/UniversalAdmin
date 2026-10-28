@@ -173,12 +173,18 @@ public final class TicketsModule implements Module {
 - Forms (1.4): `GuiForm` asks for several values in one Paper dialog -
   text fields, sliders, checkboxes, option lists; see
   [gui-framework.md](../development/gui-framework.md#forms).
+- Menus (1.7): your module's colour and main menu group
+  (`ModuleDescriptor#color`/`#menuGroup`), a switch in "My status" and the
+  status line (`ModuleContext#registerStatusToggle`), and the row of the
+  player's profile your button goes in (`PlayerMenuEntry#group()`); see
+  [gui-framework.md](../development/gui-framework.md#added-in-18).
 - `UniversalAdminProvider.API_VERSION` - check before relying on API added
   in a later minor version (`network()`, `PlayerDirectory` and
   `withPlayer` are 1.1; the status services and
   `PlayerDirectory#addIfAbsent` are 1.2; `NetworkService#vanished` is 1.3;
   mute kinds, `VoiceChat` and `GuiForm` are 1.4 - UniversalAdmin 1.5;
-  `updatesFrom` is 1.5 - UniversalAdmin 1.6).
+  `updatesFrom` is 1.5 - UniversalAdmin 1.6; `Nicks` and `PlayerNames` are
+  1.6 - UniversalAdmin 1.7; the menu additions are 1.7 - UniversalAdmin 1.8).
 
 ## Reference
 
