@@ -48,6 +48,8 @@ public final class ModerationSettings {
     public static final SettingKey<Boolean> FREEZE_BLOCK_INTERACTION = SettingKey.of("moderation", "moderation.freeze.block-interaction");
     public static final SettingKey<Boolean> FREEZE_BLOCK_INVENTORY = SettingKey.of("moderation", "moderation.freeze.block-inventory");
     public static final SettingKey<Boolean> FREEZE_BLOCK_COMMANDS = SettingKey.of("moderation", "moderation.freeze.block-commands");
+    public static final SettingKey<Boolean> FREEZE_SHOW_TITLE = SettingKey.of("moderation", "moderation.freeze.show-title");
+    public static final SettingKey<Boolean> FREEZE_STAFF_MARKER = SettingKey.of("moderation", "moderation.freeze.staff-marker");
 
     public static final SettingKey<Boolean> STAFFMODE_AUTO_FLY = SettingKey.of("moderation", "moderation.staffmode.auto-fly");
     public static final SettingKey<Boolean> STAFFMODE_AUTO_VANISH = SettingKey.of("moderation", "moderation.staffmode.auto-vanish");
@@ -109,6 +111,8 @@ public final class ModerationSettings {
         registry.register(bool(FREEZE_BLOCK_INTERACTION, true, "Block world interaction for a frozen player."));
         registry.register(bool(FREEZE_BLOCK_INVENTORY, true, "Block inventory clicks for a frozen player."));
         registry.register(bool(FREEZE_BLOCK_COMMANDS, true, "Block command usage for a frozen player."));
+        registry.register(bool(FREEZE_SHOW_TITLE, true, "Show a frozen player a title until they are unfrozen."));
+        registry.register(bool(FREEZE_STAFF_MARKER, true, "Show staff a marker above a frozen player's head."));
 
         registry.register(bool(STAFFMODE_AUTO_FLY, true, "Grant flight automatically when entering staff mode."));
         registry.register(bool(STAFFMODE_AUTO_VANISH, true, "Vanish automatically when entering staff mode."));

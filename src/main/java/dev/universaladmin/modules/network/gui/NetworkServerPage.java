@@ -25,7 +25,7 @@ public final class NetworkServerPage extends AbstractListGuiPage<NetworkPlayer> 
 
     public static final GuiPageId ID = GuiPageId.core("network.server");
 
-    private static final int CONNECT_SLOT = GuiLayout.REFRESH_SLOT + 2;
+    private static final int CONNECT_SLOT = GuiLayout.TOOL_RIGHT_3;
 
     private final NetworkGuiContext ctx;
     private final String server;

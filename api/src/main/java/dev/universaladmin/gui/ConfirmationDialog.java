@@ -70,8 +70,9 @@ public final class ConfirmationDialog {
 
     /** "Reopen whatever UniversalAdmin page {@code viewer} has open right now", or {@code null} if none. */
     private static Runnable callerReopener(Player viewer) {
-        if (viewer.getOpenInventory().getTopInventory().getHolder() instanceof GuiView view) {
-            GuiPage caller = view.page();
+        java.util.Optional<GuiView> shown = GuiView.of(viewer.getOpenInventory().getTopInventory());
+        if (shown.isPresent()) {
+            GuiPage caller = shown.get().page();
             return () -> caller.open(viewer);
         }
         return null;
@@ -132,17 +133,40 @@ public final class ConfirmationDialog {
             return false;
         }
 
+        /** The frame says how much is at stake: red for a dangerous action, orange for a warning. */
+        @Override
+        protected GuiGlass accent() {
+            return switch (dangerLevel) {
+                case DANGEROUS -> GuiGlass.RED;
+                case WARNING -> GuiGlass.ORANGE;
+                case NORMAL -> super.accent();
+            };
+        }
+
         @Override
         protected void renderContent(GuiRenderContext context) {
             GuiView view = context.view();
             Player viewer = context.viewer();
-            view.place(DESCRIPTION_SLOT, GuiItem.of(framework.icons().pageIndicator(), Component.empty(), description));
+            GuiItem frame = GuiItem.pane(accent());
+            view.place(GuiLayout.COLUMNS, frame);
+            view.place(2 * GuiLayout.COLUMNS - 1, frame);
+            for (int slot = 2 * GuiLayout.COLUMNS; slot < ROWS * GuiLayout.COLUMNS; slot++) {
+                view.place(slot, frame);
+            }
+            view.place(DESCRIPTION_SLOT, GuiItem.of(framework.icons().pageIndicator(), title, description));
+            // The panes either side of a choice are part of it - a bigger target to click.
+            GuiButton confirmPane = GuiButton.of(GuiItem.glass(GuiGlass.LIME, text("gui.confirm"), description), onConfirm);
+            GuiButton cancelPane = GuiButton.of(GuiItem.glass(GuiGlass.GRAY, text("gui.cancel"), List.of()), onCancel);
+            view.place(CONFIRM_SLOT - 1, confirmPane, viewer);
             view.place(CONFIRM_SLOT,
-                    GuiButton.of(GuiItem.of(framework.icons().confirm(dangerLevel), text("gui.confirm")), onConfirm),
+                    GuiButton.of(GuiItem.of(framework.icons().confirm(dangerLevel), text("gui.confirm"), description), onConfirm),
                     viewer);
+            view.place(CONFIRM_SLOT + 1, confirmPane, viewer);
+            view.place(CANCEL_SLOT - 1, cancelPane, viewer);
             view.place(CANCEL_SLOT,
                     GuiButton.of(GuiItem.of(framework.icons().cancel(), text("gui.cancel")), onCancel),
                     viewer);
+            view.place(CANCEL_SLOT + 1, cancelPane, viewer);
         }
     }
 }

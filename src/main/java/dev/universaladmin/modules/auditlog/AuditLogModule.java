@@ -1,7 +1,9 @@
 package dev.universaladmin.modules.auditlog;
 
 import dev.universaladmin.audit.AuditService;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.modules.auditlog.command.AuditCommand;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
@@ -35,6 +37,8 @@ public final class AuditLogModule implements Module {
             .icon(new GuiIcon("written_book", "Audit Log"))
             .menu(AuditLogListPage.ID, PermissionNode.core("audit.view"))
             .menuOrder(70)
+            .menuGroup(MenuGroup.SYSTEM)
+            .color(GuiGlass.PURPLE)
             .build();
 
     @Override

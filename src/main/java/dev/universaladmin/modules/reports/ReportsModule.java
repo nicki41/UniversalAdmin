@@ -6,8 +6,10 @@ import dev.universaladmin.action.ActionTarget;
 import dev.universaladmin.action.ActionValidator;
 import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -49,6 +51,8 @@ public final class ReportsModule implements Module {
             .icon(new GuiIcon("bell", "Reports"))
             .menu(ReportListPage.ID, ReportsPermissions.VIEW)
             .menuOrder(25)
+            .menuGroup(MenuGroup.PLAYERS)
+            .color(GuiGlass.ORANGE)
             .build();
 
     @Override

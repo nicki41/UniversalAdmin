@@ -73,7 +73,7 @@ public final class LiveInventoryService {
             LiveInventorySession session = iterator.next();
             Player viewer = Bukkit.getPlayer(session.viewerId());
             Player target = Bukkit.getPlayer(session.targetId());
-            boolean open = viewer != null && viewer.getOpenInventory().getTopInventory().getHolder() == session.view();
+            boolean open = viewer != null && session.view().isOpenFor(viewer);
             if (target != null) {
                 // Also once more after the view closed: a click in the same
                 // tick as the close is already in the view's inventory.
@@ -107,7 +107,7 @@ public final class LiveInventoryService {
             if (target != null) {
                 session.sync(target);
             }
-            if (viewer != null && viewer.getOpenInventory().getTopInventory().getHolder() == session.view()) {
+            if (viewer != null && session.view().isOpenFor(viewer)) {
                 viewer.closeInventory();
             }
             finish(session, viewer);

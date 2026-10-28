@@ -31,7 +31,7 @@ public final class NotesPage extends AbstractListGuiPage<PlayerNote> {
 
     private static final GuiPageId ID = GuiPageId.core("moderation.notes");
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
-    private static final int ADD_SLOT = GuiLayout.REFRESH_SLOT + 2;
+    private static final int ADD_SLOT = GuiLayout.TOOL_RIGHT_3;
 
     private final PlayerNoteRepository notes;
     private final ActionExecutor actions;

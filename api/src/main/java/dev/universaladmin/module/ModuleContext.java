@@ -7,6 +7,7 @@ import dev.universaladmin.command.AdminCommand;
 import dev.universaladmin.core.UniversalAdmin;
 import dev.universaladmin.gui.GuiPage;
 import dev.universaladmin.gui.PlayerMenuEntry;
+import dev.universaladmin.gui.StatusToggle;
 import dev.universaladmin.permission.PermissionDefinition;
 import dev.universaladmin.settings.SettingDefinition;
 import dev.universaladmin.storage.Migration;
@@ -61,6 +62,12 @@ public record ModuleContext(ModuleId moduleId, UniversalAdmin platform, Logger l
     public void registerPlayerMenuEntry(PlayerMenuEntry entry) {
         platform.playerMenu().register(entry);
         resources.closeable(() -> platform.playerMenu().unregister(entry.id()));
+    }
+
+    /** Adds a switch to the main menu's "My status" row. @since 1.7 */
+    public void registerStatusToggle(StatusToggle toggle) {
+        platform.statusToggles().register(toggle);
+        resources.closeable(() -> platform.statusToggles().unregister(toggle.id()));
     }
 
     /**

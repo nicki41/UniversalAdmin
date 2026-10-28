@@ -4,7 +4,9 @@ import dev.universaladmin.action.ActionDefinition;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionTarget;
 import dev.universaladmin.action.AuditDetails;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -38,6 +40,8 @@ public final class NetworkModule implements Module {
             .icon(new GuiIcon("ender_eye", "Network"))
             .menu(NetworkHomePage.ID, NetworkPermissions.VIEW)
             .menuOrder(15)
+            .menuGroup(MenuGroup.SERVER)
+            .color(GuiGlass.BLUE)
             .build();
 
     @Override

@@ -8,8 +8,10 @@ import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.core.PlayerDirectory;
 import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.PlayerRef;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -25,6 +27,7 @@ import dev.universaladmin.modules.players.action.RecordInventoryEditAction;
 import dev.universaladmin.modules.players.action.TeleportInput;
 import dev.universaladmin.modules.players.action.TeleportPlayerAction;
 import dev.universaladmin.modules.players.command.PlayerCommands;
+import dev.universaladmin.modules.players.gui.OnlinePlayersListPage;
 import dev.universaladmin.modules.players.gui.PlayerBrowserHomePage;
 import dev.universaladmin.modules.players.gui.PlayersGui;
 import dev.universaladmin.modules.players.inventory.LiveInventoryService;
@@ -51,8 +54,10 @@ public final class PlayersModule implements Module {
     private static final ModuleDescriptor DESCRIPTOR = ModuleDescriptor.builder(ID, "Players")
             .description("Player browser (online/offline/recently seen/search), profile, and admin actions.")
             .icon(new GuiIcon("player_head", "Players"))
-            .menu(PlayerBrowserHomePage.ID, PlayerPermissions.VIEW)
+            .menu(OnlinePlayersListPage.ID, PlayerPermissions.VIEW)
             .menuOrder(10)
+            .menuGroup(MenuGroup.PLAYERS)
+            .color(GuiGlass.LIME)
             .build();
 
     @Override
@@ -208,6 +213,7 @@ public final class PlayersModule implements Module {
                 playerService, context.platform().actionExecutor(), context.platform().settings(), context.platform().playerMenu(),
                 liveInventory, context.platform().network());
         context.registerPage(homePage);
+        context.registerPage(homePage.onlineList());
         return homePage;
     }
 }

@@ -8,8 +8,10 @@ import dev.universaladmin.action.ActionValidator;
 import dev.universaladmin.action.AuditDetails;
 import dev.universaladmin.action.ValidationError;
 import dev.universaladmin.core.PlayerNames;
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.module.GuiIcon;
+import dev.universaladmin.module.MenuGroup;
 import dev.universaladmin.module.Module;
 import dev.universaladmin.module.ModuleContext;
 import dev.universaladmin.module.ModuleDescriptor;
@@ -61,6 +63,8 @@ public final class WhitelistModule implements Module {
             .icon(new GuiIcon("name_tag", "Whitelist"))
             .menu(WhitelistHomePage.ID, WhitelistPermissions.VIEW)
             .menuOrder(50)
+            .menuGroup(MenuGroup.SERVER)
+            .color(GuiGlass.WHITE)
             .build();
 
     @Override

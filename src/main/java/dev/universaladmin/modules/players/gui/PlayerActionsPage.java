@@ -6,6 +6,7 @@ import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiForm;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
+import dev.universaladmin.gui.GuiPage;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiTextInput;
@@ -54,6 +55,7 @@ public final class PlayerActionsPage extends AbstractGuiPage {
     private final PlayerGuiContext ctx;
     private final UUID targetId;
     private final String targetName;
+    private GuiPage returnTo;
 
     public PlayerActionsPage(PlayerGuiContext ctx, UUID targetId, String targetName) {
         super(ID, ctx.framework(), ctx.messages());
@@ -146,6 +148,27 @@ public final class PlayerActionsPage extends AbstractGuiPage {
         for (GuiButton button : buttons) {
             view.place(slot++, button, viewer);
         }
+    }
+
+    /**
+     * The profile's quick help row: teleport there, bring here, heal, feed,
+     * flight - {@code target} online here. After a click {@code returnTo} is
+     * shown again, not this page.
+     */
+    List<GuiButton> quickButtons(Player target, GuiPage returnTo) {
+        this.returnTo = returnTo;
+        return List.of(
+                button(Material.ENDER_PEARL, "players.gui.actions.teleport-to-player", PlayerPermissions.TELEPORT,
+                        clickCtx -> runAction(clickCtx.viewer(), PlayerActionIds.TELEPORT, TeleportInput.of(TeleportKind.ADMIN_TO_PLAYER, targetId))),
+                button(Material.FISHING_ROD, "players.gui.actions.bring", PlayerPermissions.TELEPORT,
+                        clickCtx -> runAction(clickCtx.viewer(), PlayerActionIds.TELEPORT, TeleportInput.of(TeleportKind.BRING_TO_ADMIN, targetId))),
+                button(Material.GOLDEN_APPLE, "players.gui.actions.heal", PlayerPermissions.HEAL,
+                        clickCtx -> runAction(clickCtx.viewer(), PlayerActionIds.HEAL, new PlayerTargetInput(targetId))),
+                button(Material.COOKED_BEEF, "players.gui.actions.feed", PlayerPermissions.FEED,
+                        clickCtx -> runAction(clickCtx.viewer(), PlayerActionIds.FEED, new PlayerTargetInput(targetId))),
+                toggleButton(Material.FEATHER, "players.gui.actions.toggle-fly", PlayerPermissions.FLY_TOGGLE,
+                        target == null ? null : target.getAllowFlight(),
+                        clickCtx -> runAction(clickCtx.viewer(), PlayerActionIds.FLY_TOGGLE, new PlayerTargetInput(targetId))));
     }
 
     private GuiButton gamemodeButton(Material material, GameMode gamemode) {
@@ -254,7 +277,7 @@ public final class PlayerActionsPage extends AbstractGuiPage {
                     } else {
                         PlayerGuiActions.notifyResult(viewer, messages, result);
                     }
-                    this.open(viewer);
+                    (returnTo != null ? returnTo : this).open(viewer);
                 }));
     }
 }

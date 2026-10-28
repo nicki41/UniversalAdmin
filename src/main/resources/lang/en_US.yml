@@ -96,7 +96,26 @@ players:
       sort-last-seen: "<white>Sort: Last Seen"
     recently-seen:
       title: "<gold>Recently Seen"
+    tabs:
+      online: "<white>Online"
+      offline: "<white>Offline"
+      recent: "<white>Recently seen"
+      hint: "<dark_gray>Click to switch"
     profile:
+      group:
+        moderate: "<red><bold>Moderate"
+        view: "<blue><bold>View"
+        help: "<green><bold>Help & teleport"
+        more: "<light_purple><bold>More"
+      info:
+        location: "<aqua>Where"
+        playtime: "<yellow>Playtime"
+        condition: "<green>Condition"
+      uuid: "<white>UUID"
+      uuid-hint: "<dark_gray>Click to copy"
+      uuid-chat: "<gray>UUID of the player: "
+      previous: "<white>Previous player"
+      next: "<white>Next player"
       moderate: "<red>Moderate"
       actions: "<gold>Actions"
       effects: "<light_purple>Effects"
@@ -201,6 +220,15 @@ players:
     spectator: "Spectator"
 
 moderation:
+  freeze:
+    title: "<aqua><bold>❄ Frozen"
+    subtitle: "<white>Stay where you are - a staff member is taking care of you."
+    marker: "<aqua>❄ FROZEN</aqua> <gray>· by <white>{0}</white> · for {1}"
+    marker-unknown: "<aqua>❄ FROZEN</aqua> <gray>· for {0}"
+  toggle:
+    vanish: "Vanish"
+    staff-mode: "Staff mode"
+    godmode: "Godmode"
   notify:
     kick: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <yellow>kicked</yellow> <white>{1}</white><gray>: {2}"
     ban: "<dark_gray>[Staff]</dark_gray> <white>{0}</white> <red>banned</red> <white>{1}</white> <gray>({3}): {2}"
@@ -844,6 +872,9 @@ audit:
       failure: "<red>Failure"
 
 gui:
+  hint:
+    open: "<dark_gray>Click to open"
+  home: "<gold>Main menu"
   back: "<gray>« Back"
   close: "<red>Close"
   refresh: "<green>Refresh"
@@ -856,6 +887,31 @@ gui:
   confirm: "<green>Confirm"
   cancel: "<red>Cancel"
   main-menu:
+    status:
+      players: "<green>{0} online"
+      players-vanished: "<gray>+ {0} vanished"
+      reports: "<gold>{0} open report(s)"
+      reports-none: "<green>No open reports"
+      tps: "<white>TPS {0}"
+      tps-hint: "<gray>Ticks per second - 20 is full speed"
+      maintenance-on: "<red>Maintenance is on"
+      maintenance-off: "<green>Maintenance is off"
+      network: "<aqua>{0} server(s) · {1} player(s)"
+      me: "<white>{0}"
+      me-vanished: "<gray>Vanished"
+      me-staff-mode: "<gray>In staff mode"
+      me-godmode: "<gray>Godmode"
+      me-nick: "<gray>Nicked as <white>{0}"
+      me-plain: "<gray>Nothing switched on"
+    group:
+      players: "<white>Players & moderation"
+      server: "<white>Server & worlds"
+      system: "<white>System & extensions"
+    my-status: "<white>My status"
+    toggle-on: "<green>{0}: on"
+    toggle-off: "<red>{0}: off"
+    toggle-on-hint: "<dark_gray>Click to switch off"
+    toggle-off-hint: "<dark_gray>Click to switch on"
     title: "<gold><bold>UniversalAdmin"
   placeholder:
     body: "<gray>{0} isn''t built yet - coming in a future update."
@@ -1252,6 +1308,314 @@ menu:
       description: "<gray>All servers, where players are, moving players between servers."
 
 settings:
+  entry:
+    audit:
+      enabled:
+        name: "Audit log"
+        description: "Record who did what."
+      retention-days:
+        name: "Keep audit log for"
+        description: "Days of audit log to keep. 0: forever."
+    chat:
+      clear-lines:
+        name: "Lines when clearing chat"
+        description: "How many empty lines clearing the chat sends."
+      staff-chat:
+        log-to-console:
+          name: "Staff chat in the console"
+          description: "Also write staff chat messages to the server log."
+        prefix:
+          name: "Staff chat prefix"
+          description: "A message starting with this goes to the staff chat. Empty: off."
+    commands:
+      shortcuts:
+        disabled:
+          name: "Skipped short commands"
+          description: "Short commands to leave to another plugin, e.g. [ban, mute]."
+        enabled:
+          name: "Short commands"
+          description: "Commands like /kick or /vanish next to /admin kick."
+    database:
+      database:
+        name: "Database name"
+        description: "The database UniversalAdmin uses on that server."
+      file:
+        name: "SQLite file"
+        description: "The database file in the plugin folder."
+      host:
+        name: "Database host"
+        description: "Address of the MySQL/MariaDB server."
+      password:
+        name: "Database password"
+        description: "The password of that user."
+      pool-size:
+        name: "Database connections"
+        description: "How many connections to the database are kept open."
+      port:
+        name: "Database port"
+        description: "Port of the MySQL/MariaDB server, usually 3306."
+      ssl:
+        name: "Database SSL"
+        description: "Connect to the database encrypted."
+      type:
+        name: "Database"
+        description: "sqlite (a file, nothing to set up) or mysql (also MariaDB, needed for networks)."
+      username:
+        name: "Database user"
+        description: "The user UniversalAdmin logs in with."
+    general:
+      language:
+        name: "Language"
+        description: "The language of all texts, e.g. en_US or de_DE."
+    gui:
+      confirmations:
+        name: "Ask before risky clicks"
+        description: "Ask before bans and other risky actions in menus."
+      page-size:
+        name: "Menu size"
+        description: "Slots of a menu page, a multiple of 9 up to 54."
+      status-line:
+        name: "Status line"
+        description: "Staff see what they have switched on (vanish, godmode, nick ...) in the action bar."
+    maintenance:
+      enabled:
+        name: "Maintenance"
+        description: "Only players allowed to may join."
+      kick-message:
+        name: "Maintenance message"
+        description: "What others see when they try to join during maintenance."
+    moderation:
+      alts:
+        enabled:
+          name: "Alt detection"
+          description: "Find accounts that log in from the same address (only a keyed hash is kept)."
+        notify-staff:
+          name: "Report alts of banned players"
+          description: "Tell staff when a player joins who shares an address with a banned account."
+        refuse-banned-alts:
+          name: "Refuse alts of banned players"
+          description: "Players who share an address with a banned account cannot join."
+        retention:
+          name: "Keep addresses for"
+          description: "How long a login address is remembered for alt detection."
+      durations:
+        presets:
+          name: "Duration presets"
+          description: "Durations offered for temporary punishments, next to your own."
+      expiry:
+        date-pattern:
+          name: "Date format"
+          description: "How dates of punishments are written, e.g. 'yyyy-MM-dd HH:mm' or 'dd.MM.yyyy HH:mm'."
+        show-timezone:
+          name: "Show time zone"
+          description: "Add the server's time zone after every date."
+      freeze:
+        block-commands:
+          name: "Frozen: no commands"
+          description: "Frozen players cannot use commands."
+        block-interaction:
+          name: "Frozen: no interaction"
+          description: "Frozen players cannot use blocks or items."
+        block-inventory:
+          name: "Frozen: no inventory"
+          description: "Frozen players cannot move items in their inventory."
+        block-movement:
+          name: "Frozen: no moving"
+          description: "Frozen players cannot move (looking around still works)."
+        block-teleport:
+          name: "Frozen: no teleports"
+          description: "Frozen players cannot be teleported."
+        show-title:
+          name: "Frozen: title"
+          description: "Frozen players see a title until they are free."
+        staff-marker:
+          name: "Frozen: marker for staff"
+          description: "Staff see who froze a player and since when above their head."
+      notes:
+        join-alert:
+          name: "Notes on join"
+          description: "Tell staff when a player with staff notes joins."
+      notify-staff:
+        name: "Tell staff about punishments"
+        description: "Online staff learn when someone is punished or pardoned."
+      reasons:
+        presets:
+          name: "Reason presets"
+          description: "Reasons offered when punishing, next to your own text."
+      staffmode:
+        auto-fly:
+          name: "Staff mode: flying"
+          description: "Flying is switched on with staff mode."
+        auto-nocollision:
+          name: "Staff mode: no collision"
+          description: "Collision is switched off with staff mode."
+        auto-vanish:
+          name: "Staff mode: vanish"
+          description: "Vanish is switched on with staff mode."
+        target-range-blocks:
+          name: "Staff mode: tool range"
+          description: "How far (in blocks, through walls) the staff mode tools reach."
+      vanish:
+        block-item-pickup:
+          name: "Vanish: no item pickup"
+          description: "Vanished players do not pick up items."
+        fake-join-on-unvanish:
+          name: "Vanish: fake join message"
+          description: "Show others a join message when someone becomes visible."
+        fake-leave-on-vanish:
+          name: "Vanish: fake quit message"
+          description: "Show others a quit message when someone vanishes."
+        hide-join-message:
+          name: "Vanish: hide join message"
+          description: "No join message when a vanished player comes back."
+        hide-quit-message:
+          name: "Vanish: hide quit message"
+          description: "No quit message when a vanished player leaves."
+        restore-on-reconnect:
+          name: "Vanish after rejoining"
+          description: "A vanished player stays vanished after leaving and coming back."
+    modules:
+      audit:
+        name: "Module: Audit log"
+        description: "Switch the module on or off (takes effect after a restart)."
+      chat:
+        name: "Module: Chat"
+        description: "Switch the module on or off (takes effect after a restart)."
+      moderation:
+        name: "Module: Moderation"
+        description: "Switch the module on or off (takes effect after a restart)."
+      nick:
+        name: "Module: Nick"
+        description: "Switch the module on or off (takes effect after a restart)."
+      performance:
+        name: "Module: Performance"
+        description: "Switch the module on or off (takes effect after a restart)."
+      players:
+        name: "Module: Players"
+        description: "Switch the module on or off (takes effect after a restart)."
+      reports:
+        name: "Module: Reports"
+        description: "Switch the module on or off (takes effect after a restart)."
+      server:
+        name: "Module: Server"
+        description: "Switch the module on or off (takes effect after a restart)."
+      settings:
+        name: "Module: Settings"
+        description: "Switch the module on or off (takes effect after a restart)."
+      whitelist:
+        name: "Module: Whitelist"
+        description: "Switch the module on or off (takes effect after a restart)."
+      worlds:
+        name: "Module: Worlds"
+        description: "Switch the module on or off (takes effect after a restart)."
+    network:
+      enabled:
+        name: "Network"
+        description: "Connect this server with the others of the proxy network (needs mysql)."
+      list-other-servers:
+        name: "List other servers"
+        description: "Also list servers without UniversalAdmin and their players."
+      poll-interval:
+        name: "Network refresh"
+        description: "How often messages from the other servers are fetched."
+      server-name:
+        name: "Server name"
+        description: "This server's name as in the proxy config. Empty: ask the proxy."
+    nick:
+      allow-known-names:
+        name: "Allow names of known players"
+        description: "Nicks may use the name of someone who has played here."
+      random-names:
+        name: "Random names"
+        description: "Names /nick random picks from. Empty: made-up names."
+      random-skins:
+        name: "Random skins"
+        description: "Accounts whose skins /nick random picks from. Empty: own skin."
+      restore-on-rejoin:
+        name: "Keep nick after rejoining"
+        description: "A nick stays when its player leaves and comes back."
+      skin-of-name:
+        name: "Skin of the name"
+        description: "/nick <name> wears the skin of the account with that name, if there is one."
+    performance:
+      alerts:
+        cooldown:
+          name: "Time between alerts"
+          description: "At least this long between two alerts of the same kind."
+        memory-threshold-percent:
+          name: "Alert above memory %"
+          description: "Alert staff once this much of the memory is in use."
+        mspt-threshold-ms:
+          name: "Alert above MSPT"
+          description: "Alert staff once a tick takes longer than this (50 ms is the limit for 20 TPS)."
+        tps-threshold:
+          name: "Alert below TPS"
+          description: "Alert staff once the TPS drop below this."
+      entity-clear:
+        protected-types:
+          name: "Never cleared"
+          description: "Entity types clearing entities never removes. Players are never removed."
+      refresh-interval:
+        name: "Performance refresh"
+        description: "How often TPS and MSPT are measured."
+    players:
+      gui:
+        max-results:
+          name: "Players per search"
+          description: "At most this many players per search or list of offline players."
+    reports:
+      cooldown:
+        name: "Time between reports"
+        description: "At least this long between two reports by the same player (0s: no limit)."
+      max-open-per-player:
+        name: "Open reports per player"
+        description: "How many open reports one player may have (0: no limit)."
+      min-reason-length:
+        name: "Shortest reason"
+        description: "A report reason needs at least this many characters."
+      notify-reporter:
+        name: "Tell the reporter"
+        description: "The reporter learns when their report was resolved or rejected."
+      notify-sound:
+        name: "Sound on new reports"
+        description: "Staff hear a sound when a report comes in."
+      remind-staff-on-join:
+        name: "Open reports on join"
+        description: "Staff learn how many reports are open when they join."
+    server:
+      countdown:
+        broadcast-steps:
+          name: "Countdown steps"
+          description: "At how many seconds left the countdown warns."
+        enabled:
+          name: "Countdown before stopping"
+          description: "Count down in the chat before the server stops or restarts."
+    telemetry:
+      enabled:
+        name: "Anonymous statistics"
+        description: "Send anonymous usage statistics. Off: nothing is sent."
+      interval:
+        name: "Statistics interval"
+        description: "Time between two statistics reports."
+    update:
+      auto-download:
+        name: "Download updates"
+        description: "Download new versions on their own; they are used after the next restart."
+      check-for-updates:
+        name: "Look for updates"
+        description: "Check for a new UniversalAdmin release and tell staff."
+      check-interval:
+        name: "Update check interval"
+        description: "Time between two update checks."
+    web:
+      enabled:
+        name: "Web app"
+        description: "Reserved for a later web app; has no effect yet."
+    whitelist:
+      gui:
+        search-max-results:
+          name: "Players per whitelist search"
+          description: "At most this many players per whitelist search."
   changed: "<gray>Setting <white>{0}</white> changed: <dark_gray>{1}</dark_gray> → <aqua>{2}</aqua>"
   action:
     unknown: "<red>There is no setting called <white>{0}</white>."
@@ -1341,6 +1705,9 @@ reports:
   teleported-remote: "<gray>Sending you to <aqua>{2}</aqua> for report <white>#{0}</white> about <white>{1}</white>..."
 
 nick:
+  toggle:
+    nicked: "Nick {0}"
+    plain: "Nick"
   set-skin: "<green>You are now shown as <white>{0}</white>, with the skin of <white>{1}</white>."
   set-own-skin: "<green>You are now shown as <white>{0}</white>, with your own skin."
   cleared: "<green>Your nick <white>{0}</white> has ended - you are shown as yourself again."
@@ -1394,6 +1761,8 @@ nick:
       skin-account: "Skin of the account below"
       account: "Account for the skin"
 chat:
+  toggle:
+    staff-chat: "Staff chat"
   locked-broadcast: "<red>The chat has been locked by <white>{0}</white>."
   unlocked-broadcast: "<green>The chat has been unlocked by <white>{0}</white>."
   slowmode-broadcast: "<yellow>Slow mode is on: one message every <white>{0}</white> <gray>(set by {1})"

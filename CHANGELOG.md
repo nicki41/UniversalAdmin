@@ -7,6 +7,57 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-28
+
+The menus got a new look: a frame in every module's colour, glass panes
+that always mean the same, and hubs instead of long lists of buttons. See
+[ADR 0027](docs/architecture/decisions/0027-menu-design-system.md).
+
+### Added
+
+- **Main menu as a dashboard:** players online, open reports, TPS,
+  maintenance and the network at a glance, the modules in three groups,
+  and a "My status" row to switch vanish, staff mode, godmode, staff chat
+  and your nick on and off.
+- **Status line:** staff see what they have switched on in the action bar,
+  e.g. `Vanish · Godmode · Nick Notch`, while something is on. In staff
+  mode the target display keeps the action bar. Off with
+  `gui.status-line: false`.
+- **A player's profile is the place for everything about them:** who,
+  where, playtime and condition on the left, then rows to moderate (warn,
+  temp mute, kick, temp ban, freeze/unfreeze right there), view (inventory,
+  ender chest, effects, history, reports, notes, alts), help (teleport,
+  bring, heal, feed, flight, all actions) and more. The previous and next
+  online player are one click away, the UUID can be copied.
+- **Player lists as tabs:** the Players button opens the online players;
+  Online, Offline and Recently seen switch in the header.
+- **A freeze is visible:** the frozen player sees a title until they are
+  free (`moderation.freeze.show-title`), and staff who may freeze see a
+  marker above their head with who froze them and for how long
+  (`moderation.freeze.staff-marker`).
+- **Settings with readable names and descriptions** in English and German;
+  the config path is still shown below.
+
+### Changed
+
+- Every page has the same frame: the header in the module's colour with
+  back, main menu, the page's icon, refresh and close; tools and paging at
+  the bottom; empty slots are black. Glass colours mean the same on every
+  page - green on/confirm, red off/danger, orange warning, white "nothing
+  here".
+- Switching pages no longer closes and reopens the inventory - no flicker,
+  the mouse stays where it is.
+- Confirmations have a frame in the colour of what is at stake: red for a
+  ban, orange for a kick or mute.
+
+### For extension developers
+
+- API 1.7: `GuiGlass`, `MenuGroup`, `GuiWindow`, `GuiStyle`,
+  `StatusToggle`/`StatusToggleRegistry`/`ActionStatusToggle`,
+  `PlayerMenuGroup`, `PlayerMenuEntry#group()`, `GuiClickContext#page()`,
+  `ModuleDescriptor#menuGroup`/`#color`. Everything has a default -
+  extensions built against API 1.6 keep working unchanged.
+
 ## [1.7.2] - 2026-10-28
 
 ### Fixed

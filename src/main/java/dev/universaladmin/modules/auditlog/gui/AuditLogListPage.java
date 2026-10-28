@@ -48,8 +48,8 @@ public final class AuditLogListPage extends AbstractGuiPage {
 
     public static final GuiPageId ID = GuiPageId.core("audit-log.home");
 
-    private static final int FILTER_SLOT = 2;
-    private static final int FILTER_MENU_SLOT = 3;
+    private static final int FILTER_SLOT = GuiLayout.TOOL_LEFT_1;
+    private static final int FILTER_MENU_SLOT = GuiLayout.TOOL_LEFT_2;
     private static final int BATCH_LIMIT = 200;
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.ROOT).withZone(ZoneId.systemDefault());
@@ -187,7 +187,7 @@ public final class AuditLogListPage extends AbstractGuiPage {
 
     private boolean stillOpen(GuiRenderContext context) {
         Player viewer = context.viewer();
-        return viewer.isOnline() && viewer.getOpenInventory().getTopInventory().getHolder() == context.view();
+        return context.view().isOpenFor(viewer);
     }
 
     private void renderPlaceholder(GuiView view, Material material, Component label) {

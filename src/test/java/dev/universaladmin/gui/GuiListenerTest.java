@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -107,7 +108,7 @@ class GuiListenerTest {
         when(view.acceptButtonClick(org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
 
         Inventory topInventory = mock(Inventory.class);
-        when(topInventory.getHolder()).thenReturn(view);
+        doReturn(windowShowing(view)).when(topInventory).getHolder();
         InventoryView invView = mock(InventoryView.class);
         when(invView.getTopInventory()).thenReturn(topInventory);
 
@@ -130,7 +131,7 @@ class GuiListenerTest {
         when(view.editable()).thenReturn(true);
 
         Inventory topInventory = mock(Inventory.class);
-        when(topInventory.getHolder()).thenReturn(view);
+        doReturn(windowShowing(view)).when(topInventory).getHolder();
         InventoryView invView = mock(InventoryView.class);
         when(invView.getTopInventory()).thenReturn(topInventory);
 
@@ -148,7 +149,7 @@ class GuiListenerTest {
         GuiView view = mock(GuiView.class);
         when(view.editable()).thenReturn(false);
         Inventory topInventory = mock(Inventory.class);
-        when(topInventory.getHolder()).thenReturn(view);
+        doReturn(windowShowing(view)).when(topInventory).getHolder();
         InventoryView invView = mock(InventoryView.class);
         when(invView.getTopInventory()).thenReturn(topInventory);
 
@@ -178,7 +179,7 @@ class GuiListenerTest {
         when(view.acceptButtonClick(org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
 
         Inventory topInventory = mock(Inventory.class);
-        when(topInventory.getHolder()).thenReturn(view);
+        doReturn(windowShowing(view)).when(topInventory).getHolder();
         InventoryView invView = mock(InventoryView.class);
         when(invView.getTopInventory()).thenReturn(topInventory);
 
@@ -202,7 +203,7 @@ class GuiListenerTest {
         when(view.buttonAt(20)).thenReturn(java.util.Optional.empty());
 
         Inventory topInventory = mock(Inventory.class);
-        when(topInventory.getHolder()).thenReturn(view);
+        doReturn(windowShowing(view)).when(topInventory).getHolder();
         InventoryView invView = mock(InventoryView.class);
         when(invView.getTopInventory()).thenReturn(topInventory);
 
@@ -223,7 +224,7 @@ class GuiListenerTest {
         when(view.buttonAt(4)).thenReturn(java.util.Optional.of(GuiButton.of(null, ctx -> { })));
 
         Inventory topInventory = mock(Inventory.class);
-        when(topInventory.getHolder()).thenReturn(view);
+        doReturn(windowShowing(view)).when(topInventory).getHolder();
         when(topInventory.getSize()).thenReturn(54);
         InventoryView invView = mock(InventoryView.class);
         when(invView.getTopInventory()).thenReturn(topInventory);
@@ -244,7 +245,7 @@ class GuiListenerTest {
         when(view.buttonAt(org.mockito.ArgumentMatchers.anyInt())).thenReturn(java.util.Optional.empty());
 
         Inventory topInventory = mock(Inventory.class);
-        when(topInventory.getHolder()).thenReturn(view);
+        doReturn(windowShowing(view)).when(topInventory).getHolder();
         when(topInventory.getSize()).thenReturn(54);
         InventoryView invView = mock(InventoryView.class);
         when(invView.getTopInventory()).thenReturn(topInventory);
@@ -262,10 +263,17 @@ class GuiListenerTest {
         GuiView view = mock(GuiView.class);
         when(view.viewerId()).thenReturn(playerId);
         Inventory inventory = mock(Inventory.class);
-        when(inventory.getHolder()).thenReturn(view);
+        doReturn(windowShowing(view)).when(inventory).getHolder();
         InventoryCloseEvent event = mock(InventoryCloseEvent.class);
         when(event.getInventory()).thenReturn(inventory);
         when(event.getReason()).thenReturn(reason);
         return event;
     }
+    /** The window the GUI listener sees as an inventory's holder, showing {@code view}. */
+    private static GuiWindow windowShowing(GuiView view) {
+        GuiWindow window = mock(GuiWindow.class);
+        when(window.current()).thenReturn(view);
+        return window;
+    }
+
 }

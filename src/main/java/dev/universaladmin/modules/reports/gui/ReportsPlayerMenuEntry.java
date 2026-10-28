@@ -4,6 +4,7 @@ import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.PlayerMenuEntry;
+import dev.universaladmin.gui.PlayerMenuGroup;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.reports.ReportsPermissions;
@@ -23,6 +24,11 @@ public final class ReportsPlayerMenuEntry implements PlayerMenuEntry {
     @Override
     public String id() {
         return "core:reports.about";
+    }
+
+    @Override
+    public PlayerMenuGroup group() {
+        return PlayerMenuGroup.VIEW;
     }
 
     @Override

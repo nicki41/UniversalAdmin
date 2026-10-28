@@ -46,10 +46,9 @@ public abstract class AbstractListGuiPage<T> extends AbstractGuiPage {
 
     /**
      * Places page-specific controls (filter toggles, an "add" button, ...)
-     * outside the content area - the free top-row slots
-     * ({@link GuiLayout#BACK_SLOT}+1..3 and {@link GuiLayout#REFRESH_SLOT}+1..3)
-     * or the bottom row beside the pagination controls. Runs once per
-     * {@link #open}, before the items load. No-op by default.
+     * in the toolbar row beside the paging controls - the
+     * {@code GuiLayout.TOOL_LEFT_*} and {@code TOOL_RIGHT_*} slots. Runs once
+     * per {@link #open}, before the items load. No-op by default.
      */
     protected void renderControls(GuiRenderContext context) {
     }
@@ -73,7 +72,7 @@ public abstract class AbstractListGuiPage<T> extends AbstractGuiPage {
 
     private boolean stillOpen(GuiRenderContext context) {
         Player viewer = context.viewer();
-        return viewer.isOnline() && viewer.getOpenInventory().getTopInventory().getHolder() == context.view();
+        return context.view().isOpenFor(viewer);
     }
 
     private void renderList(GuiRenderContext context, List<T> items) {

@@ -43,6 +43,10 @@ gui:
   page-size: 45
   # Ask for confirmation before destructive GUI actions.
   confirmations: true
+  # Show staff what they have switched on in the action bar, e.g.
+  # "Vanish · Godmode · Nick Notch" - the same switches as "My status" in
+  # /admin. Only while something is on.
+  status-line: true
 
 # Network mode for proxy networks (Velocity, BungeeCord). Every server with
 # UniversalAdmin shares the MySQL/MariaDB database (database.type: mysql)
@@ -143,6 +147,11 @@ moderation:
     block-interaction: true
     block-inventory: true
     block-commands: true
+    # A title for the frozen player until they are free.
+    show-title: true
+    # A marker above a frozen player's head, only for staff who may freeze:
+    # who froze them and since when.
+    staff-marker: true
   staffmode:
     auto-fly: true
     auto-vanish: true

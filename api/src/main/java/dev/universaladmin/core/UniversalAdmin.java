@@ -8,6 +8,7 @@ import dev.universaladmin.extension.ExtensionManager;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.PlayerMenuRegistry;
+import dev.universaladmin.gui.StatusToggleRegistry;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.module.ModuleRegistry;
 import dev.universaladmin.network.NetworkService;
@@ -82,6 +83,13 @@ public interface UniversalAdmin {
 
     /** Buttons other modules contribute to a player's profile page - see {@link PlayerMenuRegistry}. */
     PlayerMenuRegistry playerMenu();
+
+    /**
+     * The switches of the main menu's "My status" row - see {@link StatusToggleRegistry}.
+     *
+     * @since 1.7
+     */
+    StatusToggleRegistry statusToggles();
 
     /** Every {@code /admin} subcommand - see {@link CommandRegistry}. */
     CommandRegistry commands();

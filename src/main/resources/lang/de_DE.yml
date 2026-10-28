@@ -93,7 +93,26 @@ players:
       sort-last-seen: "<white>Sortierung: Zuletzt gesehen"
     recently-seen:
       title: "<gold>Zuletzt gesehen"
+    tabs:
+      online: "<white>Online"
+      offline: "<white>Offline"
+      recent: "<white>Zuletzt gesehen"
+      hint: "<dark_gray>Klicken zum Wechseln"
     profile:
+      group:
+        moderate: "<red><bold>Moderieren"
+        view: "<blue><bold>Ansehen"
+        help: "<green><bold>Helfen & TP"
+        more: "<light_purple><bold>Mehr"
+      info:
+        location: "<aqua>Wo"
+        playtime: "<yellow>Spielzeit"
+        condition: "<green>Zustand"
+      uuid: "<white>UUID"
+      uuid-hint: "<dark_gray>Klicken zum Kopieren"
+      uuid-chat: "<gray>UUID des Spielers: "
+      previous: "<white>Vorheriger Spieler"
+      next: "<white>Nächster Spieler"
       moderate: "<red>Moderieren"
       actions: "<gold>Aktionen"
       effects: "<light_purple>Effekte"
@@ -198,6 +217,15 @@ players:
     spectator: "Zuschauer"
 
 moderation:
+  freeze:
+    title: "<aqua><bold>❄ Eingefroren"
+    subtitle: "<white>Bleib stehen - ein Teammitglied kümmert sich um dich."
+    marker: "<aqua>❄ EINGEFROREN</aqua> <gray>· von <white>{0}</white> · seit {1}"
+    marker-unknown: "<aqua>❄ EINGEFROREN</aqua> <gray>· seit {0}"
+  toggle:
+    vanish: "Vanish"
+    staff-mode: "Staff-Modus"
+    godmode: "Godmode"
   notify:
     kick: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <yellow>hat</yellow> <white>{1}</white> <yellow>gekickt</yellow><gray>: {2}"
     ban: "<dark_gray>[Team]</dark_gray> <white>{0}</white> <red>hat</red> <white>{1}</white> <red>gebannt</red> <gray>({3}): {2}"
@@ -841,6 +869,9 @@ audit:
       failure: "<red>Fehlschlag"
 
 gui:
+  hint:
+    open: "<dark_gray>Klicken zum Öffnen"
+  home: "<gold>Hauptmenü"
   back: "<gray>« Zurück"
   close: "<red>Schließen"
   refresh: "<green>Aktualisieren"
@@ -853,6 +884,31 @@ gui:
   confirm: "<green>Bestätigen"
   cancel: "<red>Abbrechen"
   main-menu:
+    status:
+      players: "<green>{0} online"
+      players-vanished: "<gray>+ {0} im Vanish"
+      reports: "<gold>{0} offene Meldung(en)"
+      reports-none: "<green>Keine offenen Meldungen"
+      tps: "<white>TPS {0}"
+      tps-hint: "<gray>Ticks pro Sekunde - 20 ist volle Geschwindigkeit"
+      maintenance-on: "<red>Wartung ist an"
+      maintenance-off: "<green>Wartung ist aus"
+      network: "<aqua>{0} Server · {1} Spieler"
+      me: "<white>{0}"
+      me-vanished: "<gray>Im Vanish"
+      me-staff-mode: "<gray>Im Staff-Modus"
+      me-godmode: "<gray>Godmode"
+      me-nick: "<gray>Genickt als <white>{0}"
+      me-plain: "<gray>Nichts eingeschaltet"
+    group:
+      players: "<white>Spieler & Moderation"
+      server: "<white>Server & Welten"
+      system: "<white>System & Erweiterungen"
+    my-status: "<white>Mein Status"
+    toggle-on: "<green>{0}: an"
+    toggle-off: "<red>{0}: aus"
+    toggle-on-hint: "<dark_gray>Klicken zum Ausschalten"
+    toggle-off-hint: "<dark_gray>Klicken zum Einschalten"
     title: "<gold><bold>UniversalAdmin"
   placeholder:
     body: "<gray>{0} ist noch nicht fertig - kommt in einem zukünftigen Update."
@@ -1249,6 +1305,314 @@ menu:
       description: "<gray>Alle Server, wo Spieler sind, Spieler zwischen Servern verschieben."
 
 settings:
+  entry:
+    audit:
+      enabled:
+        name: "Audit-Log"
+        description: "Aufzeichnen, wer was gemacht hat."
+      retention-days:
+        name: "Audit-Log behalten"
+        description: "Tage, die das Audit-Log behält. 0: für immer."
+    chat:
+      clear-lines:
+        name: "Zeilen beim Chat leeren"
+        description: "Wie viele Leerzeilen das Leeren des Chats schickt."
+      staff-chat:
+        log-to-console:
+          name: "Staff-Chat in der Konsole"
+          description: "Staff-Chat-Nachrichten auch ins Server-Log schreiben."
+        prefix:
+          name: "Präfix für Staff-Chat"
+          description: "Eine Nachricht, die damit beginnt, geht in den Staff-Chat. Leer: aus."
+    commands:
+      shortcuts:
+        disabled:
+          name: "Ausgelassene Kurzbefehle"
+          description: "Kurzbefehle, die einem anderen Plugin bleiben, z. B. [ban, mute]."
+        enabled:
+          name: "Kurzbefehle"
+          description: "Befehle wie /kick oder /vanish neben /admin kick."
+    database:
+      database:
+        name: "Datenbank-Name"
+        description: "Die Datenbank, die UniversalAdmin auf dem Server nutzt."
+      file:
+        name: "SQLite-Datei"
+        description: "Die Datenbank-Datei im Plugin-Ordner."
+      host:
+        name: "Datenbank-Host"
+        description: "Adresse des MySQL-/MariaDB-Servers."
+      password:
+        name: "Datenbank-Passwort"
+        description: "Das Passwort dieses Benutzers."
+      pool-size:
+        name: "Datenbank-Verbindungen"
+        description: "Wie viele Verbindungen zur Datenbank offen bleiben."
+      port:
+        name: "Datenbank-Port"
+        description: "Port des MySQL-/MariaDB-Servers, meist 3306."
+      ssl:
+        name: "Datenbank-SSL"
+        description: "Verschlüsselt mit der Datenbank verbinden."
+      type:
+        name: "Datenbank"
+        description: "sqlite (eine Datei, nichts einzurichten) oder mysql (auch MariaDB, nötig fürs Netzwerk)."
+      username:
+        name: "Datenbank-Benutzer"
+        description: "Der Benutzer, mit dem sich UniversalAdmin anmeldet."
+    general:
+      language:
+        name: "Sprache"
+        description: "Die Sprache aller Texte, z. B. de_DE oder en_US."
+    gui:
+      confirmations:
+        name: "Vor riskanten Klicks fragen"
+        description: "Vor Bans und anderen riskanten Aktionen in Menüs nachfragen."
+      page-size:
+        name: "Menügröße"
+        description: "Plätze einer Menüseite, ein Vielfaches von 9 bis 54."
+      status-line:
+        name: "Statuszeile"
+        description: "Das Team sieht in der Actionbar, was es eingeschaltet hat (Vanish, Godmode, Nick ...)."
+    maintenance:
+      enabled:
+        name: "Wartung"
+        description: "Nur Berechtigte können joinen."
+      kick-message:
+        name: "Wartungs-Nachricht"
+        description: "Was andere sehen, wenn sie während der Wartung joinen wollen."
+    moderation:
+      alts:
+        enabled:
+          name: "Zweitaccounts erkennen"
+          description: "Findet Accounts mit derselben Adresse (gespeichert wird nur ein Hash)."
+        notify-staff:
+          name: "Zweitaccounts Gebannter melden"
+          description: "Das Team erfährt, wenn jemand mit der Adresse eines gebannten Accounts joint."
+        refuse-banned-alts:
+          name: "Zweitaccounts Gebannter abweisen"
+          description: "Wer die Adresse eines gebannten Accounts teilt, kommt nicht rein."
+        retention:
+          name: "Adressen merken für"
+          description: "Wie lange eine Login-Adresse für die Erkennung gemerkt wird."
+      durations:
+        presets:
+          name: "Vorgegebene Dauern"
+          description: "Dauern zur Auswahl bei zeitlichen Strafen, neben eigener Angabe."
+      expiry:
+        date-pattern:
+          name: "Datumsformat"
+          description: "Wie Daten von Strafen geschrieben werden, z. B. 'dd.MM.yyyy HH:mm'."
+        show-timezone:
+          name: "Zeitzone anzeigen"
+          description: "Hinter jedem Datum die Zeitzone des Servers zeigen."
+      freeze:
+        block-commands:
+          name: "Eingefroren: keine Befehle"
+          description: "Eingefrorene können keine Befehle benutzen."
+        block-interaction:
+          name: "Eingefroren: nicht interagieren"
+          description: "Eingefrorene können keine Blöcke oder Items benutzen."
+        block-inventory:
+          name: "Eingefroren: kein Inventar"
+          description: "Eingefrorene können keine Items im Inventar verschieben."
+        block-movement:
+          name: "Eingefroren: nicht bewegen"
+          description: "Eingefrorene können sich nicht bewegen (umsehen geht)."
+        block-teleport:
+          name: "Eingefroren: keine Teleports"
+          description: "Eingefrorene können nicht teleportiert werden."
+        show-title:
+          name: "Eingefroren: Titel"
+          description: "Eingefrorene sehen einen Titel, bis sie frei sind."
+        staff-marker:
+          name: "Eingefroren: Marker fürs Team"
+          description: "Das Team sieht über dem Kopf, wer eingefroren hat und seit wann."
+      notes:
+        join-alert:
+          name: "Notizen beim Joinen"
+          description: "Das Team erfährt, wenn ein Spieler mit Notizen joint."
+      notify-staff:
+        name: "Team über Strafen informieren"
+        description: "Das Team erfährt, wenn jemand bestraft oder begnadigt wird."
+      reasons:
+        presets:
+          name: "Vorgegebene Gründe"
+          description: "Gründe zur Auswahl beim Bestrafen, neben eigenem Text."
+      staffmode:
+        auto-fly:
+          name: "Staff-Modus: Fliegen"
+          description: "Mit dem Staff-Modus wird Fliegen eingeschaltet."
+        auto-nocollision:
+          name: "Staff-Modus: keine Kollision"
+          description: "Mit dem Staff-Modus wird die Kollision ausgeschaltet."
+        auto-vanish:
+          name: "Staff-Modus: Vanish"
+          description: "Mit dem Staff-Modus wird Vanish eingeschaltet."
+        target-range-blocks:
+          name: "Staff-Modus: Reichweite"
+          description: "Wie weit (in Blöcken, durch Wände) die Werkzeuge reichen."
+      vanish:
+        block-item-pickup:
+          name: "Vanish: keine Items aufheben"
+          description: "Unsichtbare Spieler heben keine Items auf."
+        fake-join-on-unvanish:
+          name: "Vanish: falsche Join-Nachricht"
+          description: "Anderen eine Join-Nachricht zeigen, wenn jemand sichtbar wird."
+        fake-leave-on-vanish:
+          name: "Vanish: falsche Quit-Nachricht"
+          description: "Anderen eine Quit-Nachricht zeigen, wenn jemand unsichtbar wird."
+        hide-join-message:
+          name: "Vanish: Join-Nachricht verbergen"
+          description: "Keine Join-Nachricht, wenn ein unsichtbarer Spieler zurückkommt."
+        hide-quit-message:
+          name: "Vanish: Quit-Nachricht verbergen"
+          description: "Keine Quit-Nachricht, wenn ein unsichtbarer Spieler geht."
+        restore-on-reconnect:
+          name: "Vanish nach Rejoin"
+          description: "Ein unsichtbarer Spieler bleibt nach dem Rejoin unsichtbar."
+    modules:
+      audit:
+        name: "Modul: Audit-Log"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+      chat:
+        name: "Modul: Chat"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+      moderation:
+        name: "Modul: Moderation"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+      nick:
+        name: "Modul: Nick"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+      performance:
+        name: "Modul: Performance"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+      players:
+        name: "Modul: Spieler"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+      reports:
+        name: "Modul: Meldungen"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+      server:
+        name: "Modul: Server"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+      settings:
+        name: "Modul: Einstellungen"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+      whitelist:
+        name: "Modul: Whitelist"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+      worlds:
+        name: "Modul: Welten"
+        description: "Das Modul ein- oder ausschalten (gilt nach einem Neustart)."
+    network:
+      enabled:
+        name: "Netzwerk"
+        description: "Diesen Server mit den anderen des Proxy-Netzwerks verbinden (braucht mysql)."
+      list-other-servers:
+        name: "Andere Server zeigen"
+        description: "Auch Server ohne UniversalAdmin und ihre Spieler zeigen."
+      poll-interval:
+        name: "Netzwerk aktualisieren"
+        description: "Wie oft Nachrichten der anderen Server abgeholt werden."
+      server-name:
+        name: "Server-Name"
+        description: "Name dieses Servers wie in der Proxy-Config. Leer: den Proxy fragen."
+    nick:
+      allow-known-names:
+        name: "Namen bekannter Spieler erlauben"
+        description: "Nicks dürfen Namen von Spielern haben, die hier schon gespielt haben."
+      random-names:
+        name: "Zufällige Namen"
+        description: "Namen für /nick random. Leer: ausgedachte Namen."
+      random-skins:
+        name: "Zufällige Skins"
+        description: "Accounts, deren Skins /nick random nimmt. Leer: eigener Skin."
+      restore-on-rejoin:
+        name: "Nick nach Rejoin behalten"
+        description: "Ein Nick bleibt, wenn der Spieler geht und wiederkommt."
+      skin-of-name:
+        name: "Skin zum Namen"
+        description: "/nick <name> trägt den Skin des Accounts mit diesem Namen, falls es ihn gibt."
+    performance:
+      alerts:
+        cooldown:
+          name: "Abstand zwischen Warnungen"
+          description: "Mindestens so lange zwischen zwei gleichen Warnungen."
+        memory-threshold-percent:
+          name: "Warnung über Speicher %"
+          description: "Das Team warnen, wenn so viel Arbeitsspeicher belegt ist."
+        mspt-threshold-ms:
+          name: "Warnung über MSPT"
+          description: "Das Team warnen, wenn ein Tick länger dauert (50 ms ist die Grenze für 20 TPS)."
+        tps-threshold:
+          name: "Warnung unter TPS"
+          description: "Das Team warnen, wenn die TPS darunter fallen."
+      entity-clear:
+        protected-types:
+          name: "Nie entfernt"
+          description: "Entity-Typen, die beim Aufräumen nie entfernt werden. Spieler nie."
+      refresh-interval:
+        name: "Performance aktualisieren"
+        description: "Wie oft TPS und MSPT gemessen werden."
+    players:
+      gui:
+        max-results:
+          name: "Spieler pro Suche"
+          description: "Höchstens so viele Spieler pro Suche oder Offline-Liste."
+    reports:
+      cooldown:
+        name: "Abstand zwischen Meldungen"
+        description: "Mindestens so lange zwischen zwei Meldungen eines Spielers (0s: egal)."
+      max-open-per-player:
+        name: "Offene Meldungen pro Spieler"
+        description: "Wie viele offene Meldungen ein Spieler haben darf (0: beliebig)."
+      min-reason-length:
+        name: "Kürzester Grund"
+        description: "Ein Meldungsgrund braucht mindestens so viele Zeichen."
+      notify-reporter:
+        name: "Meldenden informieren"
+        description: "Wer gemeldet hat, erfährt, ob die Meldung erledigt oder abgelehnt wurde."
+      notify-sound:
+        name: "Ton bei neuen Meldungen"
+        description: "Das Team hört einen Ton, wenn eine Meldung kommt."
+      remind-staff-on-join:
+        name: "Offene Meldungen beim Joinen"
+        description: "Das Team erfährt beim Joinen, wie viele Meldungen offen sind."
+    server:
+      countdown:
+        broadcast-steps:
+          name: "Countdown-Schritte"
+          description: "Bei wie vielen Sekunden Rest der Countdown warnt."
+        enabled:
+          name: "Countdown vor dem Stoppen"
+          description: "Im Chat herunterzählen, bevor der Server stoppt oder neu startet."
+    telemetry:
+      enabled:
+        name: "Anonyme Statistik"
+        description: "Anonyme Nutzungsstatistik senden. Aus: nichts wird gesendet."
+      interval:
+        name: "Statistik-Abstand"
+        description: "Zeit zwischen zwei Statistik-Meldungen."
+    update:
+      auto-download:
+        name: "Updates herunterladen"
+        description: "Neue Versionen selbst laden; sie gelten nach dem nächsten Neustart."
+      check-for-updates:
+        name: "Nach Updates suchen"
+        description: "Nach neuen UniversalAdmin-Versionen suchen und das Team informieren."
+      check-interval:
+        name: "Update-Abstand"
+        description: "Zeit zwischen zwei Update-Prüfungen."
+    web:
+      enabled:
+        name: "Web-App"
+        description: "Für eine spätere Web-App reserviert; wirkt noch nicht."
+    whitelist:
+      gui:
+        search-max-results:
+          name: "Spieler pro Whitelist-Suche"
+          description: "Höchstens so viele Spieler pro Whitelist-Suche."
   changed: "<gray>Einstellung <white>{0}</white> geändert: <dark_gray>{1}</dark_gray> → <aqua>{2}</aqua>"
   action:
     unknown: "<red>Es gibt keine Einstellung namens <white>{0}</white>."
@@ -1338,6 +1702,9 @@ reports:
   teleported-remote: "<gray>Du wirst für Meldung <white>#{0}</white> über <white>{1}</white> zu <aqua>{2}</aqua> geschickt..."
 
 nick:
+  toggle:
+    nicked: "Nick {0}"
+    plain: "Nick"
   set-skin: "<green>Du wirst jetzt als <white>{0}</white> angezeigt, mit dem Skin von <white>{1}</white>."
   set-own-skin: "<green>Du wirst jetzt als <white>{0}</white> angezeigt, mit deinem eigenen Skin."
   cleared: "<green>Dein Nick <white>{0}</white> ist beendet - du wirst wieder als du selbst angezeigt."
@@ -1391,6 +1758,8 @@ nick:
       skin-account: "Skin des Accounts unten"
       account: "Account für den Skin"
 chat:
+  toggle:
+    staff-chat: "Staff-Chat"
   locked-broadcast: "<red>Der Chat wurde von <white>{0}</white> gesperrt."
   unlocked-broadcast: "<green>Der Chat wurde von <white>{0}</white> wieder freigegeben."
   slowmode-broadcast: "<yellow>Slowmode ist an: eine Nachricht alle <white>{0}</white> <gray>(gesetzt von {1})"

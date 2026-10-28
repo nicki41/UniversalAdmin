@@ -12,7 +12,9 @@ Open via `/admin` → **Players** (needs `universaladmin.players.view`).
 
 ## Player Browser
 
-Four entry points from the Players home page:
+The **Players** button of the main menu opens the online players. The
+three lists are tabs in the header - **Online**, **Offline** and
+**Recently seen**; the open one is white:
 
 - **Online Players** - currently connected players, with cycling **World**
   and **Gamemode** filter buttons (only meaningful for online players - an
@@ -32,8 +34,6 @@ Four entry points from the Players home page:
   slow) `getOfflinePlayers()` scan. Has a name-search box and a sort toggle
   (name / last seen).
 - **Recently Seen** - the same offline list, fixed to last-seen-first.
-- **Search** - the same page as Offline Players, opened with the search box
-  focused.
 
 Every list is capped at `players.gui.max-results` (default 200, see
 "Settings" below) profiles per query - a deliberate bound, not a bug: the
@@ -43,13 +43,34 @@ rows one unfiltered browse shows at once.
 
 ## Player Profile
 
-Clicking a player opens their profile: Name, UUID, Online Status, First
-Join, Last Join, Total Playtime, and (if online) Session Duration, World,
-Coordinates, Gamemode, Health, Food, Saturation, XP Progress, Level, Ping,
-Locale, Active Effects, and Respawn Location, plus IP Address if the viewer
-holds `universaladmin.players.ip`. A field that genuinely isn't available
+Clicking a player opens their profile - the place for everything about
+them.
+
+**On the left**, what is known about them, in four items (hover for the
+details): the player (online status, UUID), **where** (server, world,
+coordinates, respawn location), **playtime** (first and last join, session,
+total) and **condition** (gamemode, health, food and saturation, level and
+XP, ping, locale, active effects, and the IP address if the viewer holds
+`universaladmin.players.ip`). A field that genuinely isn't available
 (everything live-state-only, for an offline target) is **omitted**, not
 shown blank - see "Offline limitations".
+
+**On the right**, one row per purpose, each behind a coloured label:
+
+| Row | Buttons |
+|---|---|
+| **Moderate** (red) | the Moderate page, warn, temp mute, kick, temp ban, freeze (unfreeze while frozen) |
+| **View** (blue) | inventory, ender chest, effects, punishment history, reports, staff notes, alts |
+| **Help & teleport** (green) | teleport to them, bring them, heal, feed, flight, all actions |
+| **More** (purple) | the nick, voice chat and other extensions - and what did not fit into its row |
+
+Buttons appear only with their permission, and only while the player is
+online when they need the live player. A punishment started here asks the
+same questions as on the Moderate page and comes back to the profile.
+
+**At the bottom**, the previous and next online player (by name) open
+their profile in place of this one - "back" still leads to the list - and
+the UUID can be copied into the chat.
 
 IP address is never attached to the profile data at all (not just hidden in
 the GUI) unless the viewer holds the permission - see

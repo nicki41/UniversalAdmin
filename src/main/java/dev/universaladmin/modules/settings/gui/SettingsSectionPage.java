@@ -59,8 +59,9 @@ final class SettingsSectionPage extends AbstractListGuiPage<SettingDefinition<?>
 
     @Override
     protected GuiItem render(SettingDefinition<?> definition) {
+        String path = definition.key().configPath();
         List<Component> lore = new ArrayList<>();
-        for (String line : wrap(definition.description())) {
+        for (String line : wrap(localizedOr("settings.entry." + path + ".description", definition.description()))) {
             lore.add(Component.text(line, NamedTextColor.GRAY));
         }
         lore.add(Component.empty());
@@ -80,9 +81,22 @@ final class SettingsSectionPage extends AbstractListGuiPage<SettingDefinition<?>
                 lore.add(text("settings.gui.section.right-click-reset"));
             }
         }
-        String path = definition.key().configPath();
-        String name = path.startsWith(section + ".") ? path.substring(section.length() + 1) : path;
+        // Where it is in config.yml, for those who edit the file.
+        lore.add(Component.text(path, NamedTextColor.DARK_GRAY));
+        String shortPath = path.startsWith(section + ".") ? path.substring(section.length() + 1) : path;
+        String name = localizedOr("settings.entry." + path + ".name", shortPath);
         return GuiItem.of(iconFor(definition), Component.text(name, NamedTextColor.GOLD), lore);
+    }
+
+    /**
+     * The readable name or description from {@code settings.entry.<path>}
+     * when the language has one, otherwise {@code fallback} - the config path
+     * or the setting's own (English) description, e.g. for an extension's
+     * settings.
+     */
+    private String localizedOr(String key, String fallback) {
+        MessageKey messageKey = MessageKey.of(key);
+        return messages.has(messageKey) ? messages.get(messageKey) : fallback;
     }
 
     @Override

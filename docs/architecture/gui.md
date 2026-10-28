@@ -22,6 +22,13 @@ filtering, pagination, and async loading for free. The complete framework
 dialog API for text input) is in
 [docs/development/gui-framework.md](../development/gui-framework.md).
 
+Every page has the same frame - the header in the module's colour with
+back, main menu, the page's icon, refresh and close, the tools and paging
+at the bottom - and glass colours with one meaning on every page; a page
+switch redraws the open window instead of opening a new one. The main menu
+and a player's profile are hubs: grouped rows behind coloured label panes.
+See [ADR 0027](decisions/0027-menu-design-system.md).
+
 ## The One Rule
 
 A click handler in a `GuiPage` implementation calls a service or an

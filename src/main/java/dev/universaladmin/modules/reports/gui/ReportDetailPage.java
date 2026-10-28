@@ -58,7 +58,7 @@ final class ReportDetailPage extends AbstractGuiPage {
         view.place(GuiLayout.contentSlot(GuiLayout.contentSize() / 2), GuiItem.of(framework.icons().loading(), text("gui.loading")));
         ctx.reports().find(reportId).whenComplete((found, error) -> ctx.scheduler().runOnMainThread(() -> {
             Player viewer = context.viewer();
-            if (!viewer.isOnline() || viewer.getOpenInventory().getTopInventory().getHolder() != view) {
+            if (!view.isOpenFor(viewer)) {
                 return;
             }
             view.clearContentArea();

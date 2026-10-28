@@ -35,6 +35,33 @@ public record GuiItem(ItemStack itemStack) {
         return new GuiItem(stack);
     }
 
+    /**
+     * A pane of {@code glass} without a name and without a tooltip - the
+     * frame, dividers and unused space of a menu (ADR 0027).
+     *
+     * @since 1.7
+     */
+    public static GuiItem pane(GuiGlass glass) {
+        ItemStack stack = new ItemStack(material(glass));
+        stack.editMeta(meta -> meta.setHideTooltip(true));
+        return new GuiItem(stack);
+    }
+
+    /**
+     * A named pane of {@code glass} - a state (on/off), a group label or a
+     * tab, where the colour itself carries the meaning.
+     *
+     * @since 1.7
+     */
+    public static GuiItem glass(GuiGlass glass, Component name, List<Component> lore) {
+        return of(material(glass), name, lore);
+    }
+
+    private static Material material(GuiGlass glass) {
+        Material material = Material.matchMaterial(glass.paneKey());
+        return material != null ? material : Material.BLACK_STAINED_GLASS_PANE;
+    }
+
     /** An unnamed filler item - decorative border/spacer slots. */
     public static GuiItem filler(Material material) {
         return of(material, Component.empty());

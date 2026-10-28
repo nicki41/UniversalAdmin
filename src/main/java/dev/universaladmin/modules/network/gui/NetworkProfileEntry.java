@@ -5,6 +5,7 @@ import dev.universaladmin.gui.GuiActions;
 import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.PlayerMenuEntry;
+import dev.universaladmin.gui.PlayerMenuGroup;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.network.NetworkPermissions;
@@ -32,6 +33,11 @@ public final class NetworkProfileEntry implements PlayerMenuEntry {
     @Override
     public String id() {
         return "core:network.location";
+    }
+
+    @Override
+    public PlayerMenuGroup group() {
+        return PlayerMenuGroup.HELP;
     }
 
     @Override

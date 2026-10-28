@@ -10,7 +10,7 @@ group = "dev.universaladmin"
 // breaking change without a major version - see
 // docs/architecture/decisions/0010-extension-api.md. The api/ and extension
 // projects take this same version.
-version = "1.7.2"
+version = "1.8.0"
 description = "UniversalAdmin - a universal admin platform for Paper servers"
 
 java {

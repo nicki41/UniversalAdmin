@@ -10,6 +10,7 @@ import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiForm;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiLayout;
+import dev.universaladmin.gui.GuiPage;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.gui.GuiTextInput;
@@ -78,12 +79,32 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
     private final ModerationGuiContext ctx;
     private final UUID targetId;
     private final String targetName;
+    /** Where a punishment started elsewhere comes back to; {@code null} for this page. */
+    private final GuiPage returnTo;
 
     public ModeratePlayerPage(ModerationGuiContext ctx, UUID targetId, String targetName) {
+        this(ctx, targetId, targetName, null);
+    }
+
+    private ModeratePlayerPage(ModerationGuiContext ctx, UUID targetId, String targetName, GuiPage returnTo) {
         super(ID, ctx.framework(), ctx.messages());
         this.ctx = ctx;
         this.targetId = targetId;
         this.targetName = targetName;
+        this.returnTo = returnTo;
+    }
+
+    /**
+     * Starts one punishment (or lifts one) for {@code targetId} straight from
+     * another page - the moderation row of a player's profile - and comes back
+     * to that page afterwards.
+     */
+    static void start(ModerationGuiContext ctx, GuiClickContext clickCtx, UUID targetId, String targetName, WizardType type) {
+        new ModeratePlayerPage(ctx, targetId, targetName, clickCtx.page()).onTypeSelected(clickCtx, type);
+    }
+
+    private void back(Player viewer) {
+        (returnTo != null ? returnTo : this).open(viewer);
     }
 
     @Override
@@ -122,9 +143,9 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
     private void onTypeSelected(GuiClickContext clickCtx, WizardType type) {
         Player viewer = clickCtx.viewer();
         switch (type) {
-            case UNBAN -> ModerationGuiActions.runAction(ctx, viewer, ModerationActionIds.UNBAN, new UnbanInput(targetId), () -> this.open(viewer));
-            case UNMUTE -> ModerationGuiActions.runAction(ctx, viewer, ModerationActionIds.UNMUTE, new UnmuteInput(targetId), () -> this.open(viewer));
-            case UNFREEZE -> ModerationGuiActions.runAction(ctx, viewer, ModerationActionIds.UNFREEZE, new UnfreezeInput(targetId), () -> this.open(viewer));
+            case UNBAN -> ModerationGuiActions.runAction(ctx, viewer, ModerationActionIds.UNBAN, new UnbanInput(targetId), () -> back(viewer));
+            case UNMUTE -> ModerationGuiActions.runAction(ctx, viewer, ModerationActionIds.UNMUTE, new UnmuteInput(targetId), () -> back(viewer));
+            case UNFREEZE -> ModerationGuiActions.runAction(ctx, viewer, ModerationActionIds.UNFREEZE, new UnfreezeInput(targetId), () -> back(viewer));
             // REMOVE_WARN removes one specific warning at a time - route to
             // the target's warnings list, where PunishmentDetailPage's own
             // revoke button (gated on the same permission) does the removal.
@@ -138,7 +159,7 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
         ctx.templates().preview(targetId).whenComplete((choices, error) -> ctx.scheduler().runOnMainThread(() -> {
             if (error != null || choices.isEmpty()) {
                 ModerationGuiActions.notifyError(viewer, messages);
-                this.open(viewer);
+                back(viewer);
                 return;
             }
             SelectionDialog.open(viewer, framework, messages, ctx.scheduler(), text("moderation.gui.moderate.select-template"), choices,
@@ -152,7 +173,7 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
 
     private void confirmTemplate(Player viewer, PunishmentTemplateService.Choice choice) {
         Runnable apply = () -> ModerationGuiActions.runAction(ctx, viewer, ModerationActionIds.PUNISH,
-                new TemplateInput(targetId, choice.template().id(), null), () -> this.open(viewer));
+                new TemplateInput(targetId, choice.template().id(), null), () -> back(viewer));
         if (!ctx.settings().get(CoreSettings.GUI_CONFIRMATIONS)) {
             apply.run();
             return;
@@ -168,7 +189,7 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
             case WARN -> ConfirmationDialog.DangerLevel.NORMAL;
         };
         ConfirmationDialog.open(viewer, framework, messages, text("moderation.gui.moderate.template"), description, danger,
-                confirmCtx -> apply.run(), confirmCtx -> confirmCtx.back());
+                confirmCtx -> apply.run(), confirmCtx -> back(confirmCtx.viewer()));
     }
 
     private static Material templateMaterial(TemplateStep step) {
@@ -210,14 +231,14 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
         }
         form.open(viewer, text("moderation.gui.moderate.form-continue"), text("gui.cancel"),
                 response -> onDetails(viewer, type, reasons, durations, response),
-                () -> this.open(viewer));
+                () -> back(viewer));
     }
 
     private void onDetails(Player viewer, WizardType type, List<String> reasons, List<String> durations, GuiForm.Response response) {
         String reason = Optional.ofNullable(response.textOrNull(OWN_REASON)).orElseGet(() -> preset(reasons, response.choice(REASON)));
         if (reason == null) {
             ModerationGuiActions.notifyError(viewer, messages);
-            this.open(viewer);
+            back(viewer);
             return;
         }
         Instant expiresAt = null;
@@ -227,7 +248,7 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
                 expiresAt = duration == null ? null : DurationParser.parse(duration).map(Instant.now()::plus).orElse(null);
             } catch (DurationParseException e) {
                 ModerationGuiActions.notifyError(viewer, messages);
-                this.open(viewer);
+                back(viewer);
                 return;
             }
         }
@@ -274,7 +295,7 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
         }
         ConfirmationDialog.open(viewer, framework, messages, text(type.labelKey), description, type.dangerLevel,
                 confirmCtx -> apply(confirmCtx.viewer(), type, reason, expiresAt, kind),
-                confirmCtx -> confirmCtx.back());
+                confirmCtx -> back(confirmCtx.viewer()));
     }
 
     private void apply(Player viewer, WizardType type, String reason, Instant expiresAt, MuteKind kind) {
@@ -290,11 +311,11 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
             case FREEZE -> new FreezeInput(targetId, reason);
             case UNBAN, UNMUTE, UNFREEZE, REMOVE_WARN -> throw new IllegalStateException("Unreachable: " + type);
         };
-        ModerationGuiActions.runAction(ctx, viewer, actionId, input, () -> this.open(viewer));
+        ModerationGuiActions.runAction(ctx, viewer, actionId, input, () -> back(viewer));
     }
 
     /** One entry per wizard type; REMOVE_WARN is handled entirely by {@link #onTypeSelected} routing to a picker instead. */
-    private enum WizardType {
+    enum WizardType {
         KICK(Material.LEATHER_BOOTS, "moderation.gui.moderate.kick", ModerationPermissions.KICK, ModerationActionIds.KICK,
                 false, ConfirmationDialog.DangerLevel.WARNING),
         BAN(Material.BARRIER, "moderation.gui.moderate.ban", ModerationPermissions.BAN, ModerationActionIds.BAN,
@@ -339,6 +360,18 @@ public final class ModeratePlayerPage extends AbstractGuiPage {
 
         boolean mutes() {
             return this == MUTE || this == TEMP_MUTE;
+        }
+
+        Material material() {
+            return material;
+        }
+
+        String labelKey() {
+            return labelKey;
+        }
+
+        PermissionNode permission() {
+            return permission;
         }
     }
 }

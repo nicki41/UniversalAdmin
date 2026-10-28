@@ -19,6 +19,7 @@ import dev.universaladmin.gui.GuiRegistry;
 import dev.universaladmin.gui.GuiSessionManager;
 import dev.universaladmin.gui.MaterialIconProvider;
 import dev.universaladmin.gui.PlayerMenuRegistry;
+import dev.universaladmin.gui.StatusToggleRegistry;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.network.NetworkService;
 import dev.universaladmin.notification.NotificationService;
@@ -58,7 +59,7 @@ class ModuleManagerTest {
                 mock(ActionExecutor.class),
                 new GuiRegistry(),
                 new GuiFramework(new GuiSessionManager(), new MaterialIconProvider(Logger.getLogger("ModuleManagerTest"))),
-                new PlayerMenuRegistry(),
+                new PlayerMenuRegistry(), new StatusToggleRegistry(),
                 new CommandRegistry(),
                 mock(ExtensionManager.class),
                 new PermissionRegistry(),

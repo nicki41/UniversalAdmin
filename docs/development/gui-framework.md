@@ -52,10 +52,20 @@ No magic numbers per feature - every page renders into the same six-row
 layout, defined once in `GuiLayout`:
 
 ```
-Row 0: Back (slot 0) · Refresh (slot 4) · Close (slot 8)
+Row 0: Back (0) · Main menu (1) · page icon (4) · Refresh (7) · Close (8)
+       - the rest in the module's colour (ModuleDescriptor#color)
 Rows 1-4: content area, 36 slots - GuiLayout.contentSlot(0..35)
-Row 5: Previous (48) · page indicator (49) · Next (50)
+Row 5: tools (45-47 TOOL_LEFT_*, 51-53 TOOL_RIGHT_*) · Previous (48) ·
+       page indicator (49) · Next (50)
 ```
+
+Every slot a page leaves empty becomes a black pane without a tooltip.
+Glass colours keep one meaning on every page (`GuiGlass`, see
+[ADR 0027](../architecture/decisions/0027-menu-design-system.md)): black
+frame and empty space, light grey divider, the module colour for "where
+am I", green on/confirm, red off/danger, orange warning, white "nothing
+here". `GuiItem.pane(glass)` is a plain pane, `GuiItem.glass(glass, name,
+lore)` one with a text, e.g. a section label.
 
 A page rendering its own content exclusively uses
 `GuiLayout.contentSlot(index)` instead of a raw number - so "where is the
@@ -409,6 +419,29 @@ hopping - `AbstractListGuiPage` provides all of that. The click handler
 (`onSelect`) only calls navigation and (indirectly, through the service)
 domain logic, never SQL or computation directly - see "The One
 Architecture Rule Still Holds" above.
+
+## Added in 1.8
+
+- **The frame** (see "Slots"): `AbstractGuiPage` draws the header in the
+  module's colour and the main menu button; override `accent()` or
+  `header(viewer)` for a page of its own colour or icon.
+- **The window stays open** between pages of the same size: `open` redraws
+  into the `GuiWindow` the viewer has open and changes its title. A late
+  async render checks `GuiView#isOpenFor(viewer)`, which is only true for
+  the view that is current in that window.
+- **`ModuleDescriptor#menuGroup`/`#color`** (API 1.7): the main menu
+  groups modules (`MenuGroup`) and colours each page's header.
+- **`StatusToggle`** (`ModuleContext#registerStatusToggle`, API 1.7): a
+  switch in the main menu's "My status" row and, while on, in the status
+  line in the action bar. `ActionStatusToggle` runs an action per click.
+  Before sending your own action bar, call
+  `StatusToggleRegistry#pauseStatusLine` so it stays readable.
+- **`PlayerMenuEntry#group()`** (API 1.7): the row of the player's profile
+  a button goes in - `MODERATE`, `VIEW`, `HELP` or `MORE` (the default).
+- **`GuiClickContext#page()`** (API 1.7): the page a click happened on, to
+  come back to it after a dialog.
+- **`ConfirmationDialog`** has a frame in its danger level's colour and
+  clickable panes either side of "confirm" and "cancel".
 
 ## Added in 1.5
 

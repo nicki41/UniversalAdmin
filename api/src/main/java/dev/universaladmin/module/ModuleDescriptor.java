@@ -1,5 +1,6 @@
 package dev.universaladmin.module;
 
+import dev.universaladmin.gui.GuiGlass;
 import dev.universaladmin.gui.GuiPageId;
 import dev.universaladmin.permission.PermissionNode;
 import java.util.LinkedHashSet;
@@ -23,6 +24,8 @@ import java.util.Set;
  * @param homePage            the page the main-menu button opens; {@code null} if the module has no main-menu entry
  * @param menuPermission      required to see the main-menu button; {@code null} if anyone with menu access may
  * @param menuOrder           position in the main menu, ascending - built-ins use multiples of 10 below 1000
+ * @param menuGroup           the main-menu row the button sits in ({@code @since 1.7})
+ * @param color               the module's accent - the header of its pages ({@code @since 1.7})
  */
 public record ModuleDescriptor(
         ModuleId id,
@@ -34,10 +37,22 @@ public record ModuleDescriptor(
         GuiIcon icon,
         GuiPageId homePage,
         PermissionNode menuPermission,
-        int menuOrder) {
+        int menuOrder,
+        MenuGroup menuGroup,
+        GuiGlass color) {
 
     public ModuleDescriptor {
         dependencies = Set.copyOf(dependencies);
+        menuGroup = menuGroup == null ? MenuGroup.SYSTEM : menuGroup;
+        color = color == null ? GuiGlass.GRAY : color;
+    }
+
+    /** The shape before 1.7 - in the {@link MenuGroup#SYSTEM} row, with a grey accent. */
+    public ModuleDescriptor(ModuleId id, String displayName, String description, Set<ModuleId> dependencies,
+            String settingsNamespace, String permissionNamespace, GuiIcon icon, GuiPageId homePage,
+            PermissionNode menuPermission, int menuOrder) {
+        this(id, displayName, description, dependencies, settingsNamespace, permissionNamespace, icon, homePage,
+                menuPermission, menuOrder, MenuGroup.SYSTEM, GuiGlass.GRAY);
     }
 
     public static Builder builder(ModuleId id, String displayName) {
@@ -61,6 +76,8 @@ public record ModuleDescriptor(
         private GuiPageId homePage;
         private PermissionNode menuPermission;
         private int menuOrder = 1000;
+        private MenuGroup menuGroup = MenuGroup.SYSTEM;
+        private GuiGlass color = GuiGlass.GRAY;
 
         private Builder(ModuleId id, String displayName) {
             this.id = id;
@@ -113,9 +130,21 @@ public record ModuleDescriptor(
             return this;
         }
 
+        /** @since 1.7 */
+        public Builder menuGroup(MenuGroup menuGroup) {
+            this.menuGroup = menuGroup;
+            return this;
+        }
+
+        /** The module's accent colour - the header of its pages. @since 1.7 */
+        public Builder color(GuiGlass color) {
+            this.color = color;
+            return this;
+        }
+
         public ModuleDescriptor build() {
             return new ModuleDescriptor(id, displayName, description, dependencies, settingsNamespace,
-                    permissionNamespace, icon, homePage, menuPermission, menuOrder);
+                    permissionNamespace, icon, homePage, menuPermission, menuOrder, menuGroup, color);
         }
     }
 }

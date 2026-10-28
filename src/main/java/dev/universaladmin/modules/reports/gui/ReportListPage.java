@@ -29,7 +29,7 @@ public final class ReportListPage extends AbstractListGuiPage<Report> {
     public static final GuiPageId ID = GuiPageId.core("reports.home");
 
     private static final int LIMIT = 500;
-    private static final int FILTER_SLOT = GuiLayout.BACK_SLOT + 2;
+    private static final int FILTER_SLOT = GuiLayout.TOOL_LEFT_1;
 
     private final ReportsGuiContext ctx;
     private final PlayerRef target;

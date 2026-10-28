@@ -32,6 +32,7 @@ public final class CoreSettings {
 
     public static final SettingKey<Integer> GUI_PAGE_SIZE = SettingKey.of("core", "gui.page-size");
     public static final SettingKey<Boolean> GUI_CONFIRMATIONS = SettingKey.of("core", "gui.confirmations");
+    public static final SettingKey<Boolean> GUI_STATUS_LINE = SettingKey.of("core", "gui.status-line");
 
     public static final SettingKey<Boolean> AUDIT_ENABLED = SettingKey.of("core", "audit.enabled");
     public static final SettingKey<Integer> AUDIT_RETENTION_DAYS = SettingKey.of("core", "audit.retention-days");
@@ -88,6 +89,9 @@ public final class CoreSettings {
                 .build());
         registry.register(SettingDefinition.builder(GUI_CONFIRMATIONS, SettingTypes.BOOLEAN, true)
                 .description("Ask for confirmation before destructive GUI actions.")
+                .build());
+        registry.register(SettingDefinition.builder(GUI_STATUS_LINE, SettingTypes.BOOLEAN, true)
+                .description("Show staff what they have switched on (vanish, staff mode, godmode, nick, ...) in the action bar.")
                 .build());
 
         registry.register(SettingDefinition.builder(AUDIT_ENABLED, SettingTypes.BOOLEAN, true)
