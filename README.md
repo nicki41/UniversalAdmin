@@ -148,7 +148,8 @@ extension: `%universaladmin_online%` (without vanished players),
 `%universaladmin_muted%`, `%universaladmin_open_reports%` and more -
 [docs/extensions/placeholderapi.md](docs/extensions/placeholderapi.md).
 
-**How do I change the messages?** Edit `plugins/UniversalAdmin/lang/<language>.yml`,
+**How do I change the messages?** Copy the keys you want to change from
+`plugins/UniversalAdmin/lang/reference/<language>.yml` into `lang/<language>.yml`,
 then `/admin reload`. Only keep the keys you changed - everything else
 updates with the plugin.
 

@@ -851,7 +851,7 @@ gui:
   previous-page: "<gray>« Previous Page"
   page-indicator: "<gray>Page {0}/{1}"
   loading: "<yellow>Loading..."
-  empty: "<gray>Nothing here."
+  empty: "<white>Nothing here."
   error: "<red>Something went wrong. Click Refresh to try again."
   confirm: "<green>Confirm"
   cancel: "<red>Cancel"

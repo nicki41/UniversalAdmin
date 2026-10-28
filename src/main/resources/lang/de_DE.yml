@@ -848,7 +848,7 @@ gui:
   previous-page: "<gray>« Vorherige Seite"
   page-indicator: "<gray>Seite {0}/{1}"
   loading: "<yellow>Lädt..."
-  empty: "<gray>Nichts vorhanden."
+  empty: "<white>Hier ist nichts."
   error: "<red>Etwas ist schiefgelaufen. Klicke auf Aktualisieren, um es erneut zu versuchen."
   confirm: "<green>Bestätigen"
   cancel: "<red>Abbrechen"

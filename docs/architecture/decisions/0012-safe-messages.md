@@ -25,7 +25,8 @@ file aborted plugin startup.
   `plugins/UniversalAdmin/lang/<locale>.yml` overrides the copy bundled in
   the jar (plus defaults registered by extensions), then `en_US` in the same
   order, then a visible marker. A broken override file is logged and
-  skipped. `/admin reload` re-reads the override files.
+  skipped. `/admin reload` re-reads the override files. (Since 1.7.1 the
+  override files hold only the owner's texts - [ADR 0026](0026-language-files-hold-only-overrides.md).)
 
 ## Consequences
 

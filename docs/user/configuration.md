@@ -3,7 +3,7 @@
 Two files, generated on first start:
 
 - `plugins/UniversalAdmin/config.yml` - all settings
-- `plugins/UniversalAdmin/lang/en_US.yml`, `plugins/UniversalAdmin/lang/de_DE.yml` - translations (see [Localization](#localization))
+- `plugins/UniversalAdmin/lang/en_US.yml`, `plugins/UniversalAdmin/lang/de_DE.yml` - your own texts (see [Localization](#localization))
 - `plugins/UniversalAdmin/punishment-templates.yml` - punishment templates (see [moderation.md](modules/moderation.md#punishment-templates))
 
 Every value below is a registered, typed, validated setting (see
@@ -205,11 +205,18 @@ blocks if you still had the old default. See
 `lang/de_DE.yml` ships alongside it. `general.language` selects the active
 one.
 
-**Your files override, the plugin fills the gaps.** The files in
-`plugins/UniversalAdmin/lang/` are yours - change any text there. Every key
-you don't have (or deleted) comes from the copy built into the plugin, so
-texts added by an update show up automatically. You can delete every key
-you did not change.
+**Your files hold only your texts.** `plugins/UniversalAdmin/lang/<locale>.yml`
+starts out with nothing but an explanation. To change a text, copy its key
+from `lang/reference/<locale>.yml` - every built-in text, rewritten on every
+start - into your file, keep the nesting, and `/admin reload`. Every text
+you don't have comes from the plugin, so new and corrected texts arrive with
+every update.
+
+Up to 1.7.0 the whole built-in file was copied into `lang/` once and then
+hid every later correction. 1.7.1 cleans such a copy once: texts that are
+UniversalAdmin's own (of any version) are removed, the texts you changed
+stay. The old file is kept as `lang/<locale>.yml.before-1.7.1`. See
+[ADR 0026](../architecture/decisions/0026-language-files-hold-only-overrides.md).
 
 **Fallback chain** for any single message key: your file for the active
 locale → the built-in copy of that locale → your `en_US.yml` → the built-in
