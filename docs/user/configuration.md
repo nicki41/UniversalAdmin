@@ -54,6 +54,7 @@ is unreachable at startup, and backups.
 |---|---|---|---|
 | `gui.page-size` | integer, multiple of 9, 9-54 | `45` | Reloadable live. |
 | `gui.confirmations` | boolean | `true` | Ask before destructive GUI actions. Reloadable live. |
+| `gui.status-line` | boolean | `true` | Show staff what they have switched on (vanish, staff mode, godmode, staff chat, nick, and switches of extensions) in the action bar, e.g. `Vanish · Godmode`, while something is on. Reloadable live. |
 
 `gui.confirmations` applies to every confirmation dialog of every module.
 

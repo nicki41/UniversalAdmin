@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -310,10 +311,8 @@ public final class PlayerProfilePage extends AbstractGuiPage {
 
     /** {@code Label: value} - the label from the language file, the value as it is. */
     private Component line(String labelKey, String value) {
-        return Component.text().append(text(labelKey).colorIfAbsent(NamedTextColor.GRAY))
-                .append(Component.text(": ", NamedTextColor.DARK_GRAY))
-                .append(Component.text(value, NamedTextColor.WHITE))
-                .build();
+        return Component.join(JoinConfiguration.noSeparators(), text(labelKey).colorIfAbsent(NamedTextColor.GRAY),
+                Component.text(": ", NamedTextColor.DARK_GRAY), Component.text(value, NamedTextColor.WHITE));
     }
 
     private void renderPlaceholder(GuiView view, Material material, Component label) {

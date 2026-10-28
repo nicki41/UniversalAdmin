@@ -107,12 +107,23 @@ welcome as [GitHub issues](https://github.com/universaladmin-mc/UniversalAdmin/i
 - [x] **TAB** (by NEZNAMY) as an official extension: tab list and name tags
       follow vanish, staff mode and nicks
 
+## Done - 1.8.0
+
+- [x] **Menu overhaul**: a frame in every module's colour, glass colours
+      with one meaning, no flicker between pages; the main menu as a
+      dashboard with "My status"; the player profile as the hub for
+      everything about a player; player lists as tabs; readable settings
+      ([ADR 0027](docs/architecture/decisions/0027-menu-design-system.md))
+- [x] **Staff status in the action bar** and a **visible freeze** (a title
+      for the frozen player, a marker above their head for staff)
+
 ## Later - 1.x
 
 Additive, no breaking changes.
 
-- [ ] **Menu overhaul**: every menu reworked - a consistent layout, clearer
-      icons and navigation, fewer clicks for what staff do most
+- [ ] **Menu overhaul, part 2**: the server, worlds, performance and audit
+      log pages as hubs - what you see apart from what you do, live values,
+      readable audit entries
 - [ ] **Rework of existing features**: go through the modules and polish
       what grew step by step - behaviour, texts and settings that should
       work more alike

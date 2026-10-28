@@ -10,11 +10,12 @@ import dev.universaladmin.localization.MessageKey;
 import java.util.List;
 import java.util.function.Function;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.entity.Player;
 
 /**
  * The three player lists as tabs in the header row, either side of the
- * page's own icon: the open one green, the others grey. A tab opens its list
+ * page's own icon: the open one white, the others grey. A tab opens its list
  * in place of the current one, so "back" still leads to where the lists were
  * opened from.
  */
@@ -43,7 +44,9 @@ final class PlayerListTabs {
         for (Tab tab : Tab.values()) {
             Component label = text(ctx, tab.labelKey);
             if (tab == current) {
-                view.place(tab.slot, GuiItem.glass(GuiGlass.LIME, label, List.of()));
+                // White, not green: the Players header itself is green.
+                view.place(tab.slot, GuiItem.glass(GuiGlass.WHITE,
+                        Component.join(JoinConfiguration.noSeparators(), Component.text("● "), label), List.of()));
             } else {
                 view.place(tab.slot, GuiButton.of(GuiItem.glass(GuiGlass.GRAY, label, List.of(text(ctx, "players.gui.tabs.hint"))),
                         clickCtx -> tab.page.apply(ctx).open(clickCtx.viewer())), viewer);

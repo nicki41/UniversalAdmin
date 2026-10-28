@@ -10,6 +10,7 @@ import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiFramework;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.PlayerMenuEntry;
+import dev.universaladmin.gui.PlayerMenuGroup;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
@@ -54,6 +55,11 @@ public final class NotesSupport {
             @Override
             public String id() {
                 return "core:moderation.notes";
+            }
+
+            @Override
+            public PlayerMenuGroup group() {
+                return PlayerMenuGroup.VIEW;
             }
 
             @Override
