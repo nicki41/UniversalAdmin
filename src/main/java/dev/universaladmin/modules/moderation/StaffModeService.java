@@ -197,6 +197,7 @@ public final class StaffModeService {
 
         godmodeState.setEnabled(id, false);
         player.setInvulnerable(false);
+        GodmodeMarker.mark(player, false);
 
         if (settings.get(ModerationSettings.STAFFMODE_AUTO_VANISH) && vanishService.isVanished(id)) {
             vanishService.apply(player, false);
