@@ -7,7 +7,7 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
-## [1.7.0] - Unreleased
+## [1.7.0] - 2026-10-28
 
 Staff can play incognito now.
 
