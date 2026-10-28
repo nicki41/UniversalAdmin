@@ -109,6 +109,18 @@ played on another server.
 Staff can also start a chat message with `#` to send it to staff chat
 (`chat.staff-chat.prefix`).
 
+## Nick
+
+| Command | Shortcut | Permission | What it does |
+|---|---|---|---|
+| `/admin nick <name> [account\|own\|random]` | `/nick` | `nick.use` | Play under another name - with the skin of that account, another account's, your own or a random one |
+| `/admin nick random` | `/nick` | `nick.use` | A random name and skin |
+| `/admin nick off [player]` | `/nick` | `nick.use`; `nick.others` for another player | Be yourself again |
+| `/admin unnick [player]` | `/unnick` | `nick.use`; `nick.others` for another player | The same |
+| `/admin nick list` | `/nick` | `nick.see` | Every nick shown right now, with the real name |
+
+Details: [Nick](modules/nick.md).
+
 ## Server
 
 | Command | Shortcut | Permission | What it does |

@@ -5,6 +5,7 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionResult.FailureReason;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
@@ -93,14 +94,15 @@ public final class CreateReportAction implements Action<CreateReportAction.Input
                         announce(report.reporterName(), report.targetName(), report.reason(), report.id(), null);
                         network.publish(NETWORK_TOPIC, Map.of("id", Long.toString(report.id()), "reporter", report.reporterName(),
                                 "target", report.targetName(), "reason", report.reason()));
-                        yield ActionResult.success(created.report(), MessageKey.of("reports.filed"), created.report().targetName());
+                        // The reporter sees the name they reported - the nick, if the target is nicked.
+                        yield ActionResult.success(created.report(), MessageKey.of("reports.filed"), input.targetName());
                     }
                     case CreateResult.Rejected rejected -> rejection(rejected);
                 });
     }
 
     private Report draft(UUID reporterId, String reporterName, Input input, Location location) {
-        return Report.open(reporterId, reporterName, input.targetId(), input.targetName(), input.reason().trim(),
+        return Report.open(reporterId, reporterName, input.targetId(), PlayerNames.real(input.targetId(), input.targetName()), input.reason().trim(),
                 location == null || location.getWorld() == null ? null : location.getWorld().getName(),
                 location == null ? null : location.getX(),
                 location == null ? null : location.getY(),

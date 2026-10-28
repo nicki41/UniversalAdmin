@@ -68,6 +68,7 @@ nav:
           - user/modules/players.md
           - user/modules/reports.md
           - user/modules/chat.md
+          - user/modules/nick.md
           - user/modules/server.md
           - user/modules/worlds.md
           - user/modules/whitelist.md
@@ -82,6 +83,7 @@ nav:
       - extensions/discord.md
       - extensions/placeholderapi.md
       - extensions/voicechat.md
+      - extensions/tab.md
       - extensions/getting-started.md
   - Development:
       - development/setup.md
@@ -126,6 +128,7 @@ nav:
           - architecture/decisions/0022-mute-kinds-and-voice-chat.md
           - architecture/decisions/0023-dialog-forms.md
           - architecture/decisions/0024-updates-and-repositories.md
+          - architecture/decisions/0025-nick-system.md
   - Releases:
       - release/releasing.md
       - release/licensing.md

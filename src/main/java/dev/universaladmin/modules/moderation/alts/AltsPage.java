@@ -5,6 +5,7 @@ import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.Actor;
 import dev.universaladmin.action.Source;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.gui.AbstractListGuiPage;
 import dev.universaladmin.gui.GuiClickContext;
@@ -47,7 +48,7 @@ public final class AltsPage extends AbstractListGuiPage<AltMatch> {
 
     @Override
     protected CompletableFuture<List<AltMatch>> loadItems(Player viewer) {
-        Actor actor = Actor.player(viewer.getUniqueId(), viewer.getName(), new PermissiblePermissionEvaluator(viewer));
+        Actor actor = Actor.player(viewer.getUniqueId(), PlayerNames.real(viewer), new PermissiblePermissionEvaluator(viewer));
         return actions.<AltActions.Target, List<AltMatch>>execute(AltActions.VIEW, new ActionContext(actor, Source.GUI),
                         new AltActions.Target(target.id(), target.name()))
                 .thenApply(result -> result instanceof ActionResult.Success<List<AltMatch>> success ? success.value() : List.of());

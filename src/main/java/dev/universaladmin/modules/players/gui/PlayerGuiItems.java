@@ -20,12 +20,18 @@ final class PlayerGuiItems {
     }
 
     static GuiItem onlinePlayerItem(MessageService messages, Player player) {
-        return onlinePlayerItem(messages, player, null);
+        return onlinePlayerItem(messages, player, null, null);
     }
 
-    /** @param server this server's name in network mode, {@code null} otherwise */
-    static GuiItem onlinePlayerItem(MessageService messages, Player player, String server) {
+    /**
+     * @param server   this server's name in network mode, {@code null} otherwise
+     * @param realName the real name behind the player's nick, if the viewer may see it
+     */
+    static GuiItem onlinePlayerItem(MessageService messages, Player player, String server, String realName) {
         List<Component> lore = new ArrayList<>();
+        if (realName != null) {
+            lore.add(line(messages, "players.gui.row.nick", realName));
+        }
         if (server != null) {
             lore.add(line(messages, "players.gui.row.server", server));
         }
@@ -35,11 +41,14 @@ final class PlayerGuiItems {
         return GuiItem.playerHead(player, Component.text(player.getName(), NamedTextColor.GREEN), lore);
     }
 
-    /** A player on another server of the network. */
-    static GuiItem networkPlayerItem(MessageService messages, UUID id, String name, String server) {
-        List<Component> lore = List.of(
-                line(messages, "players.gui.row.server", server),
-                line(messages, "players.gui.row.elsewhere", server));
+    /** A player on another server of the network - {@code realName} as for {@link #onlinePlayerItem}. */
+    static GuiItem networkPlayerItem(MessageService messages, UUID id, String name, String server, String realName) {
+        List<Component> lore = new ArrayList<>();
+        if (realName != null) {
+            lore.add(line(messages, "players.gui.row.nick", realName));
+        }
+        lore.add(line(messages, "players.gui.row.server", server));
+        lore.add(line(messages, "players.gui.row.elsewhere", server));
         return GuiItem.playerHead(Bukkit.getOfflinePlayer(id), Component.text(name, NamedTextColor.AQUA), lore);
     }
 

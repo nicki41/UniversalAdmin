@@ -1,6 +1,7 @@
 package dev.universaladmin.modules.server;
 
 import dev.universaladmin.action.Actor;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.network.NetworkListener;
 import dev.universaladmin.network.NetworkMessage;
@@ -174,10 +175,10 @@ public final class DefaultMaintenanceService implements MaintenanceService, Netw
         if (player.hasPermission(ServerPermissions.BYPASS_MAINTENANCE.value())) {
             return Optional.empty();
         }
-        if (networkNow.enabled() && !networkNow.isAllowedByName(player.getName())) {
+        if (networkNow.enabled() && !networkNow.isAllowedByName(PlayerNames.real(player))) {
             return Optional.of(MaintenanceScope.NETWORK);
         }
-        if (serverNow.enabled() && !serverNow.isAllowedByName(player.getName())) {
+        if (serverNow.enabled() && !serverNow.isAllowedByName(PlayerNames.real(player))) {
             return Optional.of(MaintenanceScope.SERVER);
         }
         return Optional.empty();

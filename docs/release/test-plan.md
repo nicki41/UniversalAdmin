@@ -418,3 +418,41 @@ survival.
       group; a click takes Player out of the group (audit entry).
 - [ ] Network: `/voicemute` on lobby → Player on survival is silenced at
       once.
+
+## 27. Nick
+
+- [ ] `/nick Notch` → Player sees Notch in the tab list, above Admin's head,
+      with Notch's skin, and `<Notch>` in the chat; tab completion offers
+      Notch, not Admin. Admin's own tab entry and skin (F5) show Notch.
+- [ ] `/nick Bob Notch` → name Bob, Notch's skin. `/nick Bob own` → own
+      skin. `/nick random` → a made-up name and a skin from
+      `nick.random-skins`.
+- [ ] Refused: the name of an online player, of another nick, of a player
+      who has played here (unless `nick.allow-known-names`), your own name,
+      `ab`, `no spaces`.
+- [ ] Admin leaves and rejoins → Player sees "Notch left the game" and
+      "Notch joined the game", never Admin. With
+      `nick.restore-on-rejoin: false` Admin comes back as Admin.
+- [ ] Admin (nicked) dies → "Notch was ..." without the UUID hover.
+- [ ] `/nick list` (with `nick.see`) lists Notch with the real name; the
+      player list shows "Nick of Admin" and finds Admin by the real name;
+      Notch's profile has the **Nick** button, a click ends the nick.
+- [ ] Admin (nicked) bans Player → the ban and the audit log name Admin;
+      the audit entry has `actor-nick: Notch`.
+- [ ] Player joins whose real name is someone's nick → that nick ends.
+- [ ] Network: Admin nicked on lobby switches to survival → still Notch;
+      `/nick list` on survival lists Notch on lobby; `/unnick Admin` on
+      lobby ends the nick on survival.
+
+## 28. TAB extension
+
+- [ ] With TAB and `universaladmin-tab-<v>.jar`: `/admin modules` lists
+      "TAB".
+- [ ] Admin with a rank prefix `/nick Notch` → in the tab list and above
+      the head Notch has the prefix and sorting of `tab.nick-group`.
+      `/unnick` → the rank comes back.
+- [ ] Admin joins nicked, then `/unnick` → listed as Admin again.
+- [ ] `/vanish` → staff see " [V]" after Admin; Player does not see Admin
+      at all; `%online%` of TAB counts Admin out.
+- [ ] Staff mode → " [Staff]" after the name (tab list and name tag).
+- [ ] `/tab reload` → markers and the nick group come back within a second.

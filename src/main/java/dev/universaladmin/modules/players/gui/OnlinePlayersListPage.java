@@ -1,5 +1,6 @@
 package dev.universaladmin.modules.players.gui;
 
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.gui.AbstractGuiPage;
 import dev.universaladmin.gui.GuiButton;
 import dev.universaladmin.gui.GuiItem;
@@ -108,7 +109,8 @@ public final class OnlinePlayersListPage extends AbstractGuiPage {
                 .filter(row -> worldFilter == null || row.local() != null && worldFilter.equals(row.local().getWorld().getName()))
                 .filter(row -> gamemodeFilter == null || row.local() != null && gamemodeFilter == row.local().getGameMode())
                 .filter(row -> serverFilter == null || serverFilter.equalsIgnoreCase(row.server()))
-                .filter(row -> needle.isEmpty() || row.name().toLowerCase(Locale.ROOT).contains(needle))
+                .filter(row -> needle.isEmpty() || row.name().toLowerCase(Locale.ROOT).contains(needle)
+                        || PlayerNames.revealedTo(viewer, row.id()).filter(real -> real.toLowerCase(Locale.ROOT).contains(needle)).isPresent())
                 .sorted(order)
                 .toList();
 
@@ -126,9 +128,10 @@ public final class OnlinePlayersListPage extends AbstractGuiPage {
         List<Row> pageItems = pagination.currentPageItems();
         for (int i = 0; i < pageItems.size(); i++) {
             Row target = pageItems.get(i);
+            String realName = PlayerNames.revealedTo(viewer, target.id()).orElse(null);
             GuiItem item = target.local() != null
-                    ? PlayerGuiItems.onlinePlayerItem(messages, target.local(), target.server())
-                    : PlayerGuiItems.networkPlayerItem(messages, target.id(), target.name(), target.server());
+                    ? PlayerGuiItems.onlinePlayerItem(messages, target.local(), target.server(), realName)
+                    : PlayerGuiItems.networkPlayerItem(messages, target.id(), target.name(), target.server(), realName);
             view.place(GuiLayout.contentSlot(i),
                     GuiButton.of(item, clickCtx -> clickCtx.open(new PlayerProfilePage(ctx, target.id(), target.name()))),
                     viewer);

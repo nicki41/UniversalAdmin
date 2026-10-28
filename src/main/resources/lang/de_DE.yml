@@ -39,6 +39,7 @@ players:
       elsewhere: "<aqua>Auf {0} - im Profil: schicken und teleportieren"
       last-seen: "Zuletzt gesehen: {0}"
       first-join: "Erster Beitritt: {0}"
+      nick: "<light_purple>Nick von {0}"
     field:
       first-join: "Erster Beitritt"
       last-join: "Letzter Beitritt"
@@ -1199,6 +1200,12 @@ commands:
   alert:
     usage: "<nachricht>"
     description: "Sendet eine Nachricht auf allen Servern des Netzwerks."
+  nick:
+    usage: "<name|random> [skin|own|random] | off [spieler] | list"
+    description: "Unter einem anderen Namen und Skin spielen."
+  unnick:
+    usage: "[spieler]"
+    description: "Beendet einen Nick - deinen oder, mit Berechtigung, den eines anderen Spielers."
 
 # Hauptmenü-Beschriftungen der Module. Erweiterungen können eigene unter
 # menu.<namespace>.<modul>.name/description ergänzen.
@@ -1210,6 +1217,9 @@ menu:
     chat:
       name: "<aqua>Chat"
       description: "<gray>Team-Chat, Chat sperren, Slowmode, Chat leeren."
+    nick:
+      name: "<light_purple>Nick"
+      description: "<gray>Unter einem anderen Namen und Skin spielen."
     players:
       name: "<gold>Spieler"
       description: "<gray>Spieler, Profile, Inventare und Aktionen."
@@ -1327,6 +1337,59 @@ reports:
   teleported-location: "<gray>Zum Ort von Report <white>#{0}</white> über <white>{1}</white> teleportiert <dark_gray>({2})</dark_gray>."
   teleported-remote: "<gray>Du wirst für Meldung <white>#{0}</white> über <white>{1}</white> zu <aqua>{2}</aqua> geschickt..."
 
+nick:
+  set-skin: "<green>Du wirst jetzt als <white>{0}</white> angezeigt, mit dem Skin von <white>{1}</white>."
+  set-own-skin: "<green>Du wirst jetzt als <white>{0}</white> angezeigt, mit deinem eigenen Skin."
+  cleared: "<green>Dein Nick <white>{0}</white> ist beendet - du wirst wieder als du selbst angezeigt."
+  cleared-other: "<green>Der Nick <white>{0}</white> von <white>{1}</white> ist beendet."
+  not-nicked: "<yellow>Du bist nicht genickt."
+  not-nicked-other: "<yellow><white>{0}</white> ist nicht genickt."
+  not-online: "<red><white>{0}</white> muss auf diesem Server online sein, um einen Nick zu bekommen."
+  invalid-name: "<red><white>{0}</white> ist kein gültiger Name - 3 bis 16 Buchstaben, Ziffern oder _."
+  own-name: "<yellow>Das ist dein eigener Name - mit <white>/unnick</white> wirst du als du selbst angezeigt."
+  name-in-use: "<red>Gerade wird jemand als <white>{0}</white> angezeigt - wähle einen anderen Namen."
+  name-known: "<red><white>{0}</white> hat hier schon gespielt - ein Nick kann nicht den Namen eines Spielers tragen."
+  name-reserved: "<red><white>{0}</white> ist für einen Spieler reserviert, der gerade offline ist und den Nick beim nächsten Join zurückbekommt."
+  no-free-name: "<red>Kein freier Zufallsname gefunden - versuch es noch einmal oder wähle einen."
+  skin-not-found: "<red>Es gibt keinen Account namens <white>{0}</white>, dessen Skin du tragen könntest."
+  others-denied: "<red>Du darfst nur deinen eigenen Nick ändern."
+  removed-by-staff: "<yellow>Dein Nick wurde beendet - du wirst wieder als du selbst angezeigt."
+  lost-name: "<yellow>Dein Nick <white>{0}</white> gehört jemandem, der jetzt online ist - du wirst als du selbst angezeigt."
+  skin-own: "eigener Skin"
+  list-empty: "<gray>Gerade ist niemand genickt."
+  list-header: "<gold>Aktive Nicks ({0}):"
+  list-entry: "<white>{0}</white> <gray>ist {1}</gray> <dark_gray>({2})</dark_gray>"
+  list-entry-server: "<white>{0}</white> <gray>ist {1}</gray> <dark_gray>({2}, auf {3})</dark_gray>"
+  gui:
+    title: "<light_purple><bold>Nick"
+    status-nicked: "<green>Du wirst als <white>{0}</white> angezeigt"
+    status-plain: "<gray>Du wirst als du selbst angezeigt"
+    status-plain-hint: "<dark_gray>Mit einem Nick spielst du unter anderem Namen und Skin."
+    random: "<light_purple>Zufälliger Nick"
+    random-hint: "<gray>Ein ausgedachter Name und ein zufälliger Skin."
+    choose: "<yellow>Nick wählen"
+    choose-hint: "<gray>Name wählen und woher der Skin kommt."
+    remove: "<red>Meinen Nick entfernen"
+    remove-hint: "<gray>Wieder als <white>{0}</white> angezeigt werden."
+    none-active: "<gray>Gerade ist niemand genickt."
+    entry: "<white>{0}"
+    real-name: "<gray>Echter Name: <white>{0}"
+    skin-own: "<gray>Skin: der eigene"
+    skin-of: "<gray>Skin von: <white>{0}"
+    server: "<gray>Server: <white>{0}"
+    remove-other-hint: "<dark_gray>Klick: diesen Nick beenden"
+    remove-other: "<red>Nick {0} beenden?"
+    remove-other-confirm: "<gray><white>{1}</white> wird wieder unter dem eigenen Namen angezeigt statt als <white>{0}</white>."
+    more: "<gray>{0} weitere - /admin nick list"
+    profile: "<light_purple>Genickt als <white>{0}"
+    form:
+      name: "Name"
+      skin: "Skin"
+      skin-name: "Skin des Accounts mit diesem Namen"
+      skin-own: "Mein eigener Skin"
+      skin-random: "Ein zufälliger Skin"
+      skin-account: "Skin des Accounts unten"
+      account: "Account für den Skin"
 chat:
   locked-broadcast: "<red>Der Chat wurde von <white>{0}</white> gesperrt."
   unlocked-broadcast: "<green>Der Chat wurde von <white>{0}</white> wieder freigegeben."

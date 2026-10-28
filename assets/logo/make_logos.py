@@ -27,6 +27,11 @@ FAMILY = {
         <path d="M166 236 v18 a90 90 0 0 0 180 0 v-18" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round"/>
         <path d="M256 344 v52 M210 400 h92" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round"/>
         <path d="M120 190 a150 150 0 0 0 0 118 M392 190 a150 150 0 0 1 0 118" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="18" stroke-linecap="round"/>"""),
+    "universaladmin-tab": ("#9D174D", "#EC4899", """
+        <rect x="118" y="132" width="276" height="248" rx="30" fill="#fff"/>
+        <rect x="146" y="162" width="46" height="46" rx="8" fill="{dark}"/><rect x="208" y="174" width="156" height="22" rx="11" fill="{dark}" fill-opacity=".55"/>
+        <rect x="146" y="233" width="46" height="46" rx="8" fill="{dark}"/><rect x="208" y="245" width="126" height="22" rx="11" fill="{dark}" fill-opacity=".55"/>
+        <rect x="146" y="304" width="46" height="46" rx="8" fill="{dark}"/><rect x="208" y="316" width="96" height="22" rx="11" fill="{dark}" fill-opacity=".55"/>"""),
     "universaladmin-proxy": ("#075985", "#06B6D4", """
         <path d="M256 168 L160 330 M256 168 L352 330 M160 330 L352 330 M256 168 L256 268 M160 330 L256 268 M352 330 L256 268" stroke="#fff" stroke-width="16" stroke-linecap="round" stroke-opacity=".8"/>
         <circle cx="256" cy="168" r="42" fill="#fff"/><circle cx="160" cy="330" r="42" fill="#fff"/>

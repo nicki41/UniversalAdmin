@@ -42,6 +42,7 @@ players:
       elsewhere: "<aqua>On {0} - the profile has send and teleport"
       last-seen: "Last seen: {0}"
       first-join: "First join: {0}"
+      nick: "<light_purple>Nick of {0}"
     field:
       first-join: "First Join"
       last-join: "Last Join"
@@ -1202,6 +1203,12 @@ commands:
   alert:
     usage: "<message>"
     description: "Broadcasts a message on every server of the network."
+  nick:
+    usage: "<name|random> [skin|own|random] | off [player] | list"
+    description: "Play under another name and skin."
+  unnick:
+    usage: "[player]"
+    description: "Ends a nick - yours or, with permission, another player's."
 
 # Main menu labels for each module. Extensions may add their own under
 # menu.<namespace>.<module>.name/description.
@@ -1213,6 +1220,9 @@ menu:
     chat:
       name: "<aqua>Chat"
       description: "<gray>Staff chat, chat lock, slow mode, clear chat."
+    nick:
+      name: "<light_purple>Nick"
+      description: "<gray>Play under another name and skin."
     players:
       name: "<gold>Players"
       description: "<gray>Browse players, profiles, inventories and actions."
@@ -1330,6 +1340,59 @@ reports:
   teleported-location: "<gray>Teleported to where report <white>#{0}</white> about <white>{1}</white> was made <dark_gray>({2})</dark_gray>."
   teleported-remote: "<gray>Sending you to <aqua>{2}</aqua> for report <white>#{0}</white> about <white>{1}</white>..."
 
+nick:
+  set-skin: "<green>You are now shown as <white>{0}</white>, with the skin of <white>{1}</white>."
+  set-own-skin: "<green>You are now shown as <white>{0}</white>, with your own skin."
+  cleared: "<green>Your nick <white>{0}</white> has ended - you are shown as yourself again."
+  cleared-other: "<green>The nick <white>{0}</white> of <white>{1}</white> has ended."
+  not-nicked: "<yellow>You are not nicked."
+  not-nicked-other: "<yellow><white>{0}</white> is not nicked."
+  not-online: "<red><white>{0}</white> must be online on this server to get a nick."
+  invalid-name: "<red><white>{0}</white> is not a valid name - 3 to 16 letters, digits or _."
+  own-name: "<yellow>That is your own name - <white>/unnick</white> shows you as yourself."
+  name-in-use: "<red>Someone is shown as <white>{0}</white> right now - choose another name."
+  name-known: "<red><white>{0}</white> has played here - a nick cannot take the name of a player."
+  name-reserved: "<red><white>{0}</white> is the nick of a player who is offline - they get it back when they return."
+  no-free-name: "<red>No free random name was found - try again, or choose one."
+  skin-not-found: "<red>There is no account named <white>{0}</white> to take the skin from."
+  others-denied: "<red>You may only change your own nick."
+  removed-by-staff: "<yellow>Your nick was ended - you are shown as yourself again."
+  lost-name: "<yellow>Your nick <white>{0}</white> belongs to someone who is online now - you are shown as yourself."
+  skin-own: "own skin"
+  list-empty: "<gray>Nobody is nicked right now."
+  list-header: "<gold>Nicks shown right now ({0}):"
+  list-entry: "<white>{0}</white> <gray>is {1}</gray> <dark_gray>({2})</dark_gray>"
+  list-entry-server: "<white>{0}</white> <gray>is {1}</gray> <dark_gray>({2}, on {3})</dark_gray>"
+  gui:
+    title: "<light_purple><bold>Nick"
+    status-nicked: "<green>You are shown as <white>{0}"
+    status-plain: "<gray>You are shown as yourself"
+    status-plain-hint: "<dark_gray>Take a nick to play under another name and skin."
+    random: "<light_purple>Random nick"
+    random-hint: "<gray>A made-up name and a random skin."
+    choose: "<yellow>Choose a nick"
+    choose-hint: "<gray>Pick a name and where the skin comes from."
+    remove: "<red>Remove my nick"
+    remove-hint: "<gray>Be shown as <white>{0}</white> again."
+    none-active: "<gray>Nobody is nicked right now."
+    entry: "<white>{0}"
+    real-name: "<gray>Real name: <white>{0}"
+    skin-own: "<gray>Skin: their own"
+    skin-of: "<gray>Skin of: <white>{0}"
+    server: "<gray>Server: <white>{0}"
+    remove-other-hint: "<dark_gray>Click: end this nick"
+    remove-other: "<red>End the nick {0}?"
+    remove-other-confirm: "<gray><white>{1}</white> is shown as themselves again instead of <white>{0}</white>."
+    more: "<gray>{0} more - /admin nick list"
+    profile: "<light_purple>Nicked as <white>{0}"
+    form:
+      name: "Name"
+      skin: "Skin"
+      skin-name: "Skin of the account with that name"
+      skin-own: "My own skin"
+      skin-random: "A random skin"
+      skin-account: "Skin of the account below"
+      account: "Account for the skin"
 chat:
   locked-broadcast: "<red>The chat has been locked by <white>{0}</white>."
   unlocked-broadcast: "<green>The chat has been unlocked by <white>{0}</white>."

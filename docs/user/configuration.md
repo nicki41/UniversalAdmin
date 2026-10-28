@@ -72,6 +72,7 @@ is unreachable at startup, and backups.
 | `modules.moderation` | boolean | `true` | yes |
 | `modules.reports` | boolean | `true` | yes |
 | `modules.chat` | boolean | `true` | yes |
+| `modules.nick` | boolean | `true` | yes |
 | `modules.server` | boolean | `true` | yes |
 | `modules.worlds` | boolean | `true` | yes |
 | `modules.whitelist` | boolean | `true` | yes |
@@ -108,12 +109,13 @@ database - the setup is in [network.md](network.md).
 ## Module sections
 
 Each module keeps its settings in its own section - `players.*`,
-`moderation.*`, `reports.*`, `chat.*`, `server.*`, `whitelist.*`,
+`moderation.*`, `reports.*`, `chat.*`, `nick.*`, `server.*`, `whitelist.*`,
 `performance.*` - documented in the module pages:
 [players](modules/players.md#settings),
 [moderation](modules/moderation.md#settings),
 [staff tools](modules/staff-tools.md),
 [reports](modules/reports.md#settings), [chat](modules/chat.md#settings),
+[nick](modules/nick.md#settings),
 [server](modules/server.md), [whitelist](modules/whitelist.md),
 [performance](modules/performance.md#settings).
 

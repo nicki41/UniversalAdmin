@@ -87,6 +87,7 @@ modules:
   moderation: true
   reports: true
   chat: true
+  nick: true
   server: true
   worlds: true
   whitelist: true
@@ -172,6 +173,21 @@ chat:
     log-to-console: true
   # Empty lines /admin chat clear sends.
   clear-lines: 100
+
+nick:
+  # A nick stays when its player leaves and comes back. false: it ends when
+  # they leave (switching servers in a network keeps it).
+  restore-on-rejoin: true
+  # Allow nicks with the name of a player who has played here before.
+  allow-known-names: false
+  # /nick <name> without a skin wears the skin of the account with that
+  # name, if there is one.
+  skin-of-name: true
+  # Names /nick random picks from. Empty: made-up names.
+  random-names: []
+  # Accounts whose skins /nick random picks from. Empty: players keep their
+  # own skin.
+  random-skins: [MHF_Steve, MHF_Alex]
 
 server:
   countdown:

@@ -65,6 +65,9 @@ public final class VanishReconnectListener implements Listener {
             if (vanishService.hideJoinMessageEnabled()) {
                 event.joinMessage(null);
             }
+        } else if (!player.isVisibleByDefault()) {
+            // Left vanished and not restored: Paper saved "hidden by default" with the player's data.
+            vanishService.apply(player, false);
         }
     }
 
@@ -74,6 +77,6 @@ public final class VanishReconnectListener implements Listener {
         if (runtimeState.isVanished(player.getUniqueId()) && vanishService.hideQuitMessageEnabled()) {
             event.quitMessage(null);
         }
-        vanishService.clearRuntimeState(player.getUniqueId());
+        vanishService.clearRuntimeState(player);
     }
 }

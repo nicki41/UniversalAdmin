@@ -1,6 +1,7 @@
 package dev.universaladmin.modules.moderation;
 
 import dev.universaladmin.action.Actor;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
@@ -12,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 
 /**
@@ -74,9 +76,20 @@ public final class VanishService {
         return repository.deleteById(player.getUniqueId()).thenApply(ignored -> false);
     }
 
+    /**
+     * The metadata other plugins look for to tell that a player is vanished
+     * (TAB, map plugins, chat plugins) - the convention vanish plugins share.
+     */
+    static final String VANISHED_METADATA = "vanished";
+
     /** Hides/shows {@code player} for every currently-online viewer without the bypass permission. Main thread only. */
     public void apply(Player player, boolean vanished) {
         runtimeState.setVanished(player.getUniqueId(), vanished);
+        if (vanished) {
+            player.setMetadata(VANISHED_METADATA, new FixedMetadataValue(plugin, true));
+        } else {
+            player.removeMetadata(VANISHED_METADATA, plugin);
+        }
         player.setVisibleByDefault(!vanished);
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             if (viewer.getUniqueId().equals(player.getUniqueId())) {
@@ -111,9 +124,14 @@ public final class VanishService {
         }
     }
 
-    /** Clears the runtime (online-only) flag - called on quit, since a disconnected player is trivially "not currently vanished". */
-    public void clearRuntimeState(UUID playerId) {
-        runtimeState.setVanished(playerId, false);
+    /**
+     * Clears the runtime (online-only) flag - called on quit, since a
+     * disconnected player is trivially "not currently vanished". Bukkit keeps
+     * a player's metadata after they leave, so it goes too.
+     */
+    public void clearRuntimeState(Player player) {
+        runtimeState.setVanished(player.getUniqueId(), false);
+        player.removeMetadata(VANISHED_METADATA, plugin);
     }
 
     public CompletableFuture<Boolean> hasPersistedVanish(UUID playerId) {
@@ -133,7 +151,7 @@ public final class VanishService {
     }
 
     private boolean canSee(Player viewer, Player vanishedPlayer) {
-        Actor viewerActor = Actor.player(viewer.getUniqueId(), viewer.getName(), new PermissiblePermissionEvaluator(viewer));
+        Actor viewerActor = Actor.player(viewer.getUniqueId(), PlayerNames.real(viewer), new PermissiblePermissionEvaluator(viewer));
         return policy.canSee(viewerActor, vanishedPlayer.getUniqueId(), VanishLevel.STANDARD);
     }
 

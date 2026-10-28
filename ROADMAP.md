@@ -96,13 +96,16 @@ welcome as [GitHub issues](https://github.com/universaladmin-mc/UniversalAdmin/i
 - [x] **Documentation website**:
       [universaladmin-mc.github.io/UniversalAdmin](https://universaladmin-mc.github.io/UniversalAdmin/)
 
-## Next - 1.7.0
+## Done - 1.7.0
 
-- [ ] **Nick system** (built-in module, for staff): `/nick Notch` - the
+- [x] **Nick system** (built-in module, for staff): `/nick Notch` - the
       name and skin of an existing account everywhere (chat, tab list,
       name tag); or name and skin chosen separately, or both at random.
       Staff with the permission see the real name in menus, punishments and
       the audit log; a nick survives rejoining and works across a network
+      ([ADR 0025](docs/architecture/decisions/0025-nick-system.md))
+- [x] **TAB** (by NEZNAMY) as an official extension: tab list and name tags
+      follow vanish, staff mode and nicks
 
 ## Later - 1.x
 
@@ -119,8 +122,6 @@ Additive, no breaking changes.
       from the player profile, e.g. together with a griefing ban
 - [ ] **WorldGuard** as an official extension: the regions at a player's
       position on the profile, regions and their flags in the menu
-- [ ] **TAB** (by NEZNAMY) as an official extension: tab list and name tags
-      follow vanish, staff mode and nicks
 - [ ] **MiniMOTD** as an official extension: a maintenance MOTD and a
       player count without vanished players
 - [ ] Forms for whole settings sections (checkboxes, sliders, option lists)

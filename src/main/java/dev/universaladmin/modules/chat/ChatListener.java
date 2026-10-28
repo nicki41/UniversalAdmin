@@ -4,6 +4,7 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.action.Actor;
 import dev.universaladmin.action.Source;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
@@ -80,7 +81,7 @@ public final class ChatListener implements Listener {
     }
 
     private static ActionContext contextFor(Player player) {
-        return new ActionContext(Actor.player(player.getUniqueId(), player.getName(), new PermissiblePermissionEvaluator(player)),
+        return new ActionContext(Actor.player(player.getUniqueId(), PlayerNames.real(player), new PermissiblePermissionEvaluator(player)),
                 Source.COMMAND);
     }
 }

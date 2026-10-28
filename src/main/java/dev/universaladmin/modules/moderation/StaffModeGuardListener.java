@@ -5,6 +5,7 @@ import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.Actor;
 import dev.universaladmin.action.Source;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.gui.SelectionDialog;
@@ -148,13 +149,13 @@ public final class StaffModeGuardListener implements Listener {
             return;
         }
         lastToolUse.put(staff.getUniqueId(), now);
-        PlayerRef ref = new PlayerRef(target.getUniqueId(), target.getName());
+        PlayerRef ref = new PlayerRef(target.getUniqueId(), PlayerNames.real(target));
         switch (tool) {
             case PLAYER_INSPECTOR -> PunishmentListPage.forTarget(guiContext, target.getUniqueId()).open(staff);
             case INVENTORY_INSPECTOR -> playersGui(staff).ifPresent(gui -> gui.openInventory(staff, ref));
             case ENDERCHEST_INSPECTOR -> playersGui(staff).ifPresent(gui -> gui.openEnderChest(staff, ref));
             case FREEZE_TOOL -> toggleFreeze(staff, target);
-            case MODERATE_TOOL -> new ModeratePlayerPage(guiContext, target.getUniqueId(), target.getName()).open(staff);
+            case MODERATE_TOOL -> new ModeratePlayerPage(guiContext, target.getUniqueId(), PlayerNames.real(target)).open(staff);
             case TELEPORT_TOOL -> actionExecutor.<TeleportInput, Object>execute(PlayerActionIds.TELEPORT, contextFor(staff),
                     TeleportInput.of(TeleportKind.ADMIN_TO_PLAYER, target.getUniqueId()));
             default -> {
@@ -283,6 +284,6 @@ public final class StaffModeGuardListener implements Listener {
     }
 
     private ActionContext contextFor(Player player) {
-        return new ActionContext(Actor.player(player.getUniqueId(), player.getName(), new PermissiblePermissionEvaluator(player)), Source.GUI);
+        return new ActionContext(Actor.player(player.getUniqueId(), PlayerNames.real(player), new PermissiblePermissionEvaluator(player)), Source.GUI);
     }
 }

@@ -53,6 +53,7 @@ to be the one admin plugin your server needs.
 | **Staff tools** | Vanish (with fake join/leave), godmode, no-collision, and a crash-safe **staff mode** with a toolbar: player inspector, freeze stick, live inventory/ender chest inspectors, teleport picker. |
 | **Staff notes** | Private notes about players, with a heads-up when such a player joins. |
 | **Chat** | Staff chat (`/sc` or `#message`), chat lock, slow mode, clear chat. |
+| **Nick** | `/nick Notch` - play under another name and skin, in the chat, the tab list and above your head; a random nick in one click. Staff with the permission see the real name, punishments and the audit log keep it, and a nick survives rejoining and follows you through a network. |
 | **Players** | Online/offline browser with search - in a network every player on every server, with server filter, send and bring - profile pages, heal/feed/fly/gamemode/speed/effects with sliders, teleports, and a **live** inventory and ender chest editor. |
 | **Server** | Dashboard, broadcasts (chat, title, action bar), maintenance mode with allow-list, shutdown/restart with countdown. |
 | **Worlds** | Time, weather, difficulty, spawn, world border and a full gamerule editor - per world. |
@@ -62,7 +63,7 @@ to be the one admin plugin your server needs.
 | **Switching** | `/admin import` brings bans, mutes, warnings and kicks over from LiteBans, AdvancedBan, the vanilla ban lists and EssentialsX - preview first, repeatable. |
 | **Network** | Velocity/BungeeCord: every server and its players in one menu, `/admin find`, cross-server teleports and `/admin send`, network-wide bans, staff chat, alerts and audit log. Optional Velocity plugin that keeps banned players out at the proxy. |
 | **Settings** | Edit every setting in-game - validated, saved with comments intact. |
-| **Extensions** | A public API for other plugins - see below. Official: **Discord** (log, two-way staff chat, moderation from Discord, report buttons), **PlaceholderAPI placeholders**. |
+| **Extensions** | A public API for other plugins - see below. Official: **Discord** (log, two-way staff chat, moderation from Discord, report buttons), **PlaceholderAPI placeholders**, **Simple Voice Chat**, **TAB**. |
 
 ## Requirements
 
@@ -138,6 +139,10 @@ extension: `/voicemute`, `/chatmute`, full mutes that also reach the voice
 chat, silent vanish and a staff voice group -
 [docs/extensions/voicechat.md](docs/extensions/voicechat.md).
 
+**TAB?** Yes, with the official UniversalAdmin TAB extension: nicked
+players show up in an ordinary group, vanished staff and staff mode get a
+marker - [docs/extensions/tab.md](docs/extensions/tab.md).
+
 **PlaceholderAPI?** Yes, with the official UniversalAdmin Placeholders
 extension: `%universaladmin_online%` (without vanished players),
 `%universaladmin_muted%`, `%universaladmin_open_reports%` and more -
@@ -179,6 +184,9 @@ UniversalAdminProvider.get().extensions().register(this, new MyModule());
   full mutes, vanished staff stay silent, voice status on the profile and a
   staff voice group: [docs/extensions/voicechat.md](docs/extensions/voicechat.md) ·
   [source](https://github.com/universaladmin-mc/universaladmin-voicechat).
+- **UniversalAdmin TAB** makes TAB's tab list and name tags follow nicks,
+  vanish and staff mode: [docs/extensions/tab.md](docs/extensions/tab.md) ·
+  [source](https://github.com/universaladmin-mc/universaladmin-tab).
 
 ## Anonymous statistics
 

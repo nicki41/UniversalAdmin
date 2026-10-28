@@ -17,7 +17,8 @@ and publishes:
 - the official extensions are released from their own repositories
   ([Discord](https://github.com/universaladmin-mc/universaladmin-discord),
   [Placeholders](https://github.com/universaladmin-mc/universaladmin-placeholders),
-  [Voice Chat](https://github.com/universaladmin-mc/universaladmin-voicechat)): a `v*` tag there builds
+  [Voice Chat](https://github.com/universaladmin-mc/universaladmin-voicechat),
+  [TAB](https://github.com/universaladmin-mc/universaladmin-tab)): a `v*` tag there builds
   the extension, attaches its jar (+ `.sha256`) to a GitHub release - where
   UniversalAdmin's update check finds it - and uploads it to its Modrinth
   project. Each needs the `MODRINTH_TOKEN` secret (an organization secret

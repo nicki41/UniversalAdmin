@@ -1,5 +1,6 @@
 package dev.universaladmin.modules.players;
 
+import dev.universaladmin.core.PlayerNames;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -24,7 +25,7 @@ public final class PlayerActivityListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         sessionTracker.recordLogin(event.getPlayer().getUniqueId());
-        playerService.getOrCreateProfile(event.getPlayer().getUniqueId(), event.getPlayer().getName());
+        playerService.getOrCreateProfile(event.getPlayer().getUniqueId(), PlayerNames.real(event.getPlayer()));
     }
 
     @EventHandler

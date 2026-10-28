@@ -42,6 +42,7 @@ import dev.universaladmin.modules.auditlog.AuditLogModule;
 import dev.universaladmin.modules.chat.ChatModule;
 import dev.universaladmin.modules.moderation.ModerationModule;
 import dev.universaladmin.modules.network.NetworkModule;
+import dev.universaladmin.modules.nick.NickModule;
 import dev.universaladmin.modules.performance.PerformanceModule;
 import dev.universaladmin.modules.players.PlayersModule;
 import dev.universaladmin.modules.reports.ReportsModule;
@@ -82,6 +83,7 @@ import dev.universaladmin.update.UpdateTarget;
 import dev.universaladmin.update.UpdateTargets;
 import java.time.Instant;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.random.RandomGenerator;
@@ -409,6 +411,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_SETTINGS_ENABLED, SettingsModule::new);
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_REPORTS_ENABLED, ReportsModule::new);
         registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_CHAT_ENABLED, ChatModule::new);
+        registerIfEnabled(moduleManager, settings, CoreSettings.MODULE_NICK_ENABLED, NickModule::new);
         // Network mode on (network.enabled + a shared MySQL database): the
         // network menu and commands. Off: nothing to show.
         if (network.enabled()) {
@@ -469,13 +472,22 @@ public final class UniversalAdminPlugin extends JavaPlugin {
                     // Read on the main thread by TelemetryService - counts only,
                     // never player identities.
                     () -> new PlayerCounts(getServer().getOnlinePlayers().size(), getServer().getMaxPlayers()),
-                    RandomGenerator.getDefault(),
+                    randomGenerator(),
                     getLogger());
         } catch (RuntimeException e) {
             getLogger().log(Level.WARNING,
                     "Anonymous usage statistics could not be started. The server is unaffected; "
                             + "set telemetry.enabled: false in config.yml to stop trying.", e);
         }
+    }
+
+    /**
+     * Not {@code RandomGenerator.getDefault()}: on Java 21 it looks the
+     * algorithm up through a service loader that cannot see it from inside
+     * Paper, and throws.
+     */
+    private static RandomGenerator randomGenerator() {
+        return new Random();
     }
 
     /**
@@ -491,7 +503,7 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         try {
             updateChecks = UpdateCheckBootstrap.start(
                     platform.settings(), platform.scheduler(), updateTargets, releaseClients, updateDownloader,
-                    platform.notifications(), platform.messages(), UPDATE_NOTIFY_PERMISSION, RandomGenerator.getDefault(),
+                    platform.notifications(), platform.messages(), UPDATE_NOTIFY_PERMISSION, randomGenerator(),
                     getLogger());
             getServer().getPluginManager().registerEvents(new UpdateJoinListener(this,
                     () -> updateChecks == null ? null : updateChecks.service(), UPDATE_NOTIFY_PERMISSION), this);
