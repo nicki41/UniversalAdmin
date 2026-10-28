@@ -5,6 +5,7 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.localization.MessageKey;
+import dev.universaladmin.modules.moderation.GodmodeMarker;
 import dev.universaladmin.modules.moderation.GodmodeState;
 import dev.universaladmin.scheduler.TaskScheduler;
 import java.util.concurrent.CompletableFuture;
@@ -43,10 +44,11 @@ public final class GodmodeAction implements Action<Void, Boolean> {
                 future.complete(ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.offline")));
                 return;
             }
-            // The player's own invulnerability is the truth - Minecraft keeps it across restarts.
-            boolean newState = !player.isInvulnerable();
+            boolean newState = !state.isEnabled(player.getUniqueId());
             state.setEnabled(player.getUniqueId(), newState);
             player.setInvulnerable(newState);
+            // The mark in the player's data is what brings godmode back after a rejoin or restart.
+            GodmodeMarker.mark(player, newState);
             future.complete(ActionResult.success(newState, MessageKey.of("moderation.result.godmode"), ModerationResults.status(newState)));
         });
         return future;

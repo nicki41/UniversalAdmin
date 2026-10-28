@@ -215,7 +215,7 @@ public final class ModerationModule implements Module {
         PunishmentEnforcer enforcer = new PunishmentEnforcer(messages, context.platform().settings(), network, freezeRuntimeState);
 
         context.resources().listener(new ModerationJoinListener(punishmentService, freezeRuntimeState, enforcer));
-        context.resources().listener(new GodmodeSyncListener(godmodeState));
+        context.resources().listener(new GodmodeSyncListener(godmodeState, plugin));
         context.resources().listener(new ModerationChatListener(punishmentService, enforcer));
         context.resources().listener(new VanishReconnectListener(vanishService, vanishRuntimeState, network));
         context.resources().listener(new VanishEnforcementListener(vanishRuntimeState, context.platform().settings()));
