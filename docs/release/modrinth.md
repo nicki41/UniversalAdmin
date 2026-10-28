@@ -23,7 +23,7 @@ everything on this page (texts, gallery, links) is maintained by hand.
 | Icon | `assets/icon.png` |
 | Source | https://github.com/universaladmin-mc/UniversalAdmin |
 | Issues | https://github.com/universaladmin-mc/UniversalAdmin/issues |
-| Wiki | https://github.com/universaladmin-mc/UniversalAdmin/tree/main/docs |
+| Wiki | https://universaladmin-mc.github.io/UniversalAdmin/ |
 | Discord | none - only list one once it exists |
 
 ## Summary

@@ -18,7 +18,7 @@ Modrinth collection "UniversalAdmin".
 | Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
 | License | GPL-3.0-or-later (from 1.5.0; up to 1.4.0 Apache-2.0) |
 | Icon | `assets/icon-discord.png` |
-| Links | Source and issues: `universaladmin-mc/universaladmin-discord`; wiki: `docs/extensions/discord.md` |
+| Links | Source and issues: `universaladmin-mc/universaladmin-discord`; wiki: https://universaladmin-mc.github.io/UniversalAdmin/extensions/discord/ |
 
 ### Summary
 
@@ -87,7 +87,7 @@ embeds.
 | Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
 | License | GPL-3.0-or-later (from 1.5.0; up to 1.4.0 Apache-2.0) |
 | Icon | `assets/icon-placeholders.png` |
-| Links | Source and issues: `universaladmin-mc/universaladmin-placeholders`; wiki: `docs/extensions/placeholderapi.md` |
+| Links | Source and issues: `universaladmin-mc/universaladmin-placeholders`; wiki: https://universaladmin-mc.github.io/UniversalAdmin/extensions/placeholderapi/ |
 
 ### Summary
 
@@ -146,7 +146,7 @@ the core's `compatibility.yml` adds new game versions through that variable.
 | Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
 | License | GPL-3.0-or-later |
 | Icon | `assets/icon-voicechat.png` |
-| Links | Source and issues: `universaladmin-mc/universaladmin-voicechat`; wiki: `docs/extensions/voicechat.md` |
+| Links | Source and issues: `universaladmin-mc/universaladmin-voicechat`; wiki: https://universaladmin-mc.github.io/UniversalAdmin/extensions/voicechat/ |
 | Dependencies | UniversalAdmin (required), Simple Voice Chat (required) - set by `release.yml` |
 
 ### Summary
