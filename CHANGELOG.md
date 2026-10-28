@@ -7,6 +7,24 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-10-28
+
+### Fixed
+
+- **Corrected texts now reach every server.** `lang/<locale>.yml` holds only
+  your own texts; every other text comes from the plugin and follows its
+  updates. Up to 1.7.0 the whole built-in file was copied there once and hid
+  every later correction - such a copy is cleaned once (your changes stay,
+  the original is kept as `lang/<locale>.yml.before-1.7.1`). Every built-in
+  text is in `lang/reference/` to copy from. See
+  [ADR 0026](docs/architecture/decisions/0026-language-files-hold-only-overrides.md).
+- **Godmode after a restart:** a player who still had godmode on when the
+  server restarted stayed invulnerable while the menu said "off", and needed
+  two clicks to turn it off. Godmode now follows the player's real
+  invulnerability.
+- **Empty lists** show a white "Nothing here." instead of a grey pane that
+  looked like filling.
+
 ## [1.7.0] - 2026-10-28
 
 Staff can play incognito now.

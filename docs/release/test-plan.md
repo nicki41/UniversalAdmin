@@ -25,7 +25,8 @@ the console.
 
 - [ ] Server starts without a stack trace; the startup banner lists 10 modules.
 - [ ] `plugins/UniversalAdmin/` contains `config.yml` (config-version 3),
-      `lang/en_US.yml`, `lang/de_DE.yml`, `data.db`.
+      `lang/en_US.yml` and `lang/de_DE.yml` (only an explanation),
+      `lang/reference/` (every text), `data.db`.
 - [ ] [C] `/admin` prints the status report; `/admin modules` lists all
       modules as enabled.
 - [ ] [A] `/admin` opens the main menu with 10 buttons in this order:
@@ -44,8 +45,9 @@ settings, issue some bans, then upgrade):
       under `moderation:` / `server:`; your changed values survived;
       `commands:` and `modules.reports/chat` were added; comments intact.
 - [ ] Old bans/mutes/warnings still in `/history`; still enforced on join/chat.
-- [ ] The old `lang/*.yml` files are kept and new texts (e.g. `/admin help`)
-      still show properly - no `[missing: ...]` anywhere.
+- [ ] An old full copy in `lang/*.yml` is cleaned once: only texts you
+      changed remain, the original is kept as `<locale>.yml.before-1.7.1`,
+      and corrected texts show - no `[missing: ...]` anywhere.
 
 ## 3. Commands and shortcuts
 

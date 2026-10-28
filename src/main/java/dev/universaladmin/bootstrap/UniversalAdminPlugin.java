@@ -32,6 +32,7 @@ import dev.universaladmin.gui.GuiSessionManager;
 import dev.universaladmin.gui.MainMenuPage;
 import dev.universaladmin.gui.MaterialIconProvider;
 import dev.universaladmin.gui.PlayerMenuRegistry;
+import dev.universaladmin.localization.LanguageFiles;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.localization.YamlLocaleMessageService;
@@ -255,14 +256,9 @@ public final class UniversalAdminPlugin extends JavaPlugin {
      */
     private UniversalAdmin bootstrapCore(Instant startedAt) {
         saveDefaultConfig();
-        for (String locale : BUNDLED_LOCALES) {
-            // Only ever written once - an editable copy for the server owner.
-            // New keys in later versions still resolve from the jar's own
-            // copy, see YamlLocaleMessageService.
-            if (!getDataFolder().toPath().resolve("lang").resolve(locale + ".yml").toFile().exists()) {
-                saveResource("lang/" + locale + ".yml", false);
-            }
-        }
+        // lang/<locale>.yml holds only the server owner's own texts; an old
+        // full copy is cleaned once - see LanguageFiles and ADR 0026.
+        LanguageFiles.prepare(getDataFolder().toPath().resolve("lang"), BUNDLED_LOCALES, this::getResource, getLogger());
 
         // config-version migration runs before anything reads the file, so
         // an old user config.yml is upgraded in place rather than silently

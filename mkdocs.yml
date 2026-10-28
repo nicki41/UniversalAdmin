@@ -129,6 +129,7 @@ nav:
           - architecture/decisions/0023-dialog-forms.md
           - architecture/decisions/0024-updates-and-repositories.md
           - architecture/decisions/0025-nick-system.md
+          - architecture/decisions/0026-language-files-hold-only-overrides.md
   - Releases:
       - release/releasing.md
       - release/licensing.md

@@ -43,7 +43,8 @@ public final class GodmodeAction implements Action<Void, Boolean> {
                 future.complete(ActionResult.failure(ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.offline")));
                 return;
             }
-            boolean newState = !state.isEnabled(player.getUniqueId());
+            // The player's own invulnerability is the truth - Minecraft keeps it across restarts.
+            boolean newState = !player.isInvulnerable();
             state.setEnabled(player.getUniqueId(), newState);
             player.setInvulnerable(newState);
             future.complete(ActionResult.success(newState, MessageKey.of("moderation.result.godmode"), ModerationResults.status(newState)));

@@ -5,12 +5,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * In-memory "who currently has godmode on" - not persisted (nothing
- * requires it to survive a restart, unlike Vanish's explicit
- * reconnect-restore requirement), purely for GUI status display and
- * {@code GodmodeService}'s own toggle bookkeeping. The actual damage
- * blocking is {@link org.bukkit.entity.Entity#setInvulnerable(boolean)}
- * itself, not anything this class enforces.
+ * In-memory "who online has godmode on" - for GUI status display and
+ * {@code PlayerStatus}, which answer from any thread. The truth is the
+ * player's invulnerability ({@link org.bukkit.entity.Entity#setInvulnerable(boolean)}),
+ * which Minecraft saves with the player's data: {@link GodmodeSyncListener}
+ * reads it back on join, so godmode left on before a restart shows as on.
  */
 public final class GodmodeState {
 

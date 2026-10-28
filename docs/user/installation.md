@@ -34,7 +34,8 @@ see [network.md](network.md).
 2. Put it into the server's `plugins/` folder and start (or restart) the
    server - never use `/reload`.
 3. On first start UniversalAdmin creates `plugins/UniversalAdmin/` with
-   `config.yml`, `lang/en_US.yml`, `lang/de_DE.yml` and the SQLite database.
+   `config.yml`, `lang/` (for your own texts, with every built-in text in
+   `lang/reference/`) and the SQLite database.
 4. Join as an operator and run `/admin`. Hand out permissions to your team -
    templates: [permissions.md](permissions.md#role-templates).
 

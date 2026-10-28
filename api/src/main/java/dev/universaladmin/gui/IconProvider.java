@@ -51,8 +51,9 @@ public interface IconProvider {
         return Material.YELLOW_STAINED_GLASS_PANE;
     }
 
+    /** "Nothing here" - white, so it does not look like the grey panes that only fill space. */
     default Material empty() {
-        return Material.GRAY_STAINED_GLASS_PANE;
+        return Material.WHITE_STAINED_GLASS_PANE;
     }
 
     default Material error() {
