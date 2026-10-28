@@ -1,9 +1,11 @@
 package dev.universaladmin.modules.moderation;
 
+import dev.universaladmin.gui.StatusToggleRegistry;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
 import dev.universaladmin.settings.SettingsService;
+import java.time.Duration;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -29,6 +31,10 @@ import org.bukkit.entity.Player;
  */
 final class StaffModeTargetTracker {
 
+    /** A little longer than the tracker's period, so the status line never slips in between. */
+    private static final Duration STATUS_LINE_PAUSE = Duration.ofSeconds(1);
+
+    private final StatusToggleRegistry statusLine;
     private final StaffModeState staffModeState;
     private final StaffToolItems toolItems;
     private final FreezeRuntimeState freezeState;
@@ -38,7 +44,8 @@ final class StaffModeTargetTracker {
 
     StaffModeTargetTracker(
             StaffModeState staffModeState, StaffToolItems toolItems, FreezeRuntimeState freezeState,
-            VanishService vanishService, SettingsService settings, MessageService messages) {
+            VanishService vanishService, SettingsService settings, MessageService messages, StatusToggleRegistry statusLine) {
+        this.statusLine = statusLine;
         this.staffModeState = staffModeState;
         this.toolItems = toolItems;
         this.freezeState = freezeState;
@@ -59,6 +66,8 @@ final class StaffModeTargetTracker {
             boolean vanished = target != null && vanishService.isVanished(target.getUniqueId());
             StaffToolItems.Tool held = toolItems.toolOf(player.getInventory().getItemInMainHand()).orElse(null);
             toolItems.updateHeldTool(player, held, target, frozen, vanished);
+            // In staff mode the action bar shows who is in sight, in place of the status line.
+            statusLine.pauseStatusLine(player.getUniqueId(), STATUS_LINE_PAUSE);
             player.sendActionBar(actionbarFor(target));
         }
     }

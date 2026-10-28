@@ -24,6 +24,16 @@ public interface PlayerMenuEntry {
         return 1000;
     }
 
+    /**
+     * The profile row the button goes in - {@link PlayerMenuGroup#MORE} by
+     * default.
+     *
+     * @since 1.7
+     */
+    default PlayerMenuGroup group() {
+        return PlayerMenuGroup.MORE;
+    }
+
     /** Required to see the button, or {@code null} if anyone who can open the profile may. */
     PermissionNode permission();
 

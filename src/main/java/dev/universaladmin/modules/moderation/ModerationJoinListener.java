@@ -46,8 +46,7 @@ public final class ModerationJoinListener implements Listener {
         // FreezeGuardListener's hot-path checks never need to query the
         // database themselves - see that class's javadoc. Also how a freeze
         // follows a player who switches servers in network mode.
-        if (punishmentService.activeFreeze(event.getUniqueId()).join().isPresent()) {
-            freezeRuntimeState.setFrozen(event.getUniqueId(), true);
-        }
+        punishmentService.activeFreeze(event.getUniqueId()).join().ifPresent(freeze ->
+                freezeRuntimeState.freeze(event.getUniqueId(), freeze.actorName(), freeze.createdAt()));
     }
 }

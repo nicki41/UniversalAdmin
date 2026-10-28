@@ -4,6 +4,7 @@ import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.PlayerMenuEntry;
+import dev.universaladmin.gui.PlayerMenuGroup;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.network.NetworkPermissions;
@@ -28,6 +29,11 @@ public final class NetworkSendEntry implements PlayerMenuEntry {
     @Override
     public String id() {
         return "core:network.send";
+    }
+
+    @Override
+    public PlayerMenuGroup group() {
+        return PlayerMenuGroup.HELP;
     }
 
     @Override

@@ -50,6 +50,7 @@ public final class OfflinePlayersListPage extends AbstractGuiPage {
     protected void renderContent(GuiRenderContext context) {
         String query = queryFor(context.session());
         PlayerSort sort = sortFor(context.session());
+        PlayerListTabs.place(context.view(), context.viewer(), ctx, PlayerListTabs.Tab.OFFLINE);
         placeSearchButton(context.view(), context.viewer(), query);
         placeSortButton(context.view(), context.viewer(), sort);
         renderPlaceholder(context.view(), framework.icons().loading(), text("gui.loading"));

@@ -54,6 +54,7 @@ import dev.universaladmin.modules.moderation.alts.AltSupport;
 import dev.universaladmin.modules.moderation.alts.AltsMigration;
 import dev.universaladmin.modules.moderation.command.ModerationCommands;
 import dev.universaladmin.modules.moderation.gui.ModeratePlayerMenuEntry;
+import dev.universaladmin.modules.moderation.gui.ModerationQuickEntry;
 import dev.universaladmin.modules.moderation.gui.ModerationGuiContext;
 import dev.universaladmin.modules.moderation.gui.ModerationHomePage;
 import dev.universaladmin.modules.moderation.importing.AdvancedBanImporter;
@@ -234,6 +235,8 @@ public final class ModerationModule implements Module {
         PunishmentTemplateService templates = registerTemplates(context, punishmentService);
         ModerationGuiContext guiContext = registerGui(
                 context, punishmentService, vanishService, godmodeState, collisionState, staffModeState, templates);
+        ModerationQuickEntry.all(guiContext, freezeRuntimeState::isFrozen).forEach(context::registerPlayerMenuEntry);
+        context.registerPlayerMenuEntry(ModerationQuickEntry.history(guiContext));
 
         // StaffModeGuardListener needs the GUI context (Player Inspector/
         // Inventory Inspector open GUI pages) - registered after the context exists.
@@ -271,11 +274,14 @@ public final class ModerationModule implements Module {
         context.resources().task(plugin.getServer().getScheduler().runTaskTimer(
                 plugin, status::refreshAll, STATUS_REFRESH_TICKS, STATUS_REFRESH_TICKS));
 
+        FreezeDisplay freezeDisplay = new FreezeDisplay(plugin, freezeRuntimeState, context.platform().settings(), messages);
+        context.resources().task(plugin.getServer().getScheduler().runTaskTimer(plugin, freezeDisplay, 20L, 20L));
+        context.resources().closeable(freezeDisplay);
+
         scheduleExpirySweep(context, punishmentService);
         scheduleStaffModeTracker(context, staffModeState, toolItems, freezeRuntimeState, vanishService, context.platform().settings(), messages);
     }
 
-    /** Package-private (not {@code private}) so {@code ModerationActionsWiringTest} can exercise it without a full {@link ModuleContext}. */
     /** Vanish, staff mode and godmode in the main menu's "My status" row. */
     private static void registerStatusToggles(ModuleContext context, VanishService vanish, StaffModeState staffMode, GodmodeState godmode) {
         var platform = context.platform();
@@ -295,6 +301,7 @@ public final class ModerationModule implements Module {
         return ComponentMessages.render(platform.messages().get(MessageKey.of(key)));
     }
 
+    /** Package-private (not {@code private}) so {@code ModerationActionsWiringTest} can exercise it without a full {@link ModuleContext}. */
     static void registerActions(
             ActionRegistry actions, TaskScheduler scheduler, PunishmentService punishmentService, MessageService messages,
             ModerationPolicy policy, FreezeRuntimeState freezeRuntimeState, VanishService vanishService, GodmodeState godmodeState,
@@ -716,7 +723,8 @@ public final class ModerationModule implements Module {
             ModuleContext context, StaffModeState staffModeState, StaffToolItems toolItems,
             FreezeRuntimeState freezeRuntimeState, VanishService vanishService, SettingsService settings, MessageService messages) {
         StaffModeTargetTracker tracker =
-                new StaffModeTargetTracker(staffModeState, toolItems, freezeRuntimeState, vanishService, settings, messages);
+                new StaffModeTargetTracker(staffModeState, toolItems, freezeRuntimeState, vanishService, settings, messages,
+                        context.platform().statusToggles());
         Plugin plugin = context.platform().plugin();
         BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(
                 plugin, tracker::tick, STAFF_MODE_TRACKER_PERIOD_TICKS, STAFF_MODE_TRACKER_PERIOD_TICKS);

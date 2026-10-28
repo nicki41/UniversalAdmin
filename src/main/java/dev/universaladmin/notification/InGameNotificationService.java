@@ -1,5 +1,6 @@
 package dev.universaladmin.notification;
 
+import dev.universaladmin.gui.StatusToggleRegistry;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.permission.PermissionNode;
 import java.time.Duration;
@@ -17,6 +18,15 @@ import org.bukkit.entity.Player;
  * escaped when the message was resolved.
  */
 public final class InGameNotificationService implements NotificationService {
+
+    /** Long enough to read an action bar message before the status line comes back. */
+    private static final Duration ACTION_BAR_PAUSE = Duration.ofSeconds(3);
+
+    private final StatusToggleRegistry statusLine;
+
+    public InGameNotificationService(StatusToggleRegistry statusLine) {
+        this.statusLine = statusLine;
+    }
 
     @Override
     public void notifyPlayer(UUID playerId, Notification notification) {
@@ -54,6 +64,7 @@ public final class InGameNotificationService implements NotificationService {
     @Override
     public void broadcastActionBar(Component message) {
         for (Player player : Bukkit.getOnlinePlayers()) {
+            statusLine.pauseStatusLine(player.getUniqueId(), ACTION_BAR_PAUSE);
             player.sendActionBar(message);
         }
     }

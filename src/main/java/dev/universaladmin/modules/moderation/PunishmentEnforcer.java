@@ -37,7 +37,7 @@ public final class PunishmentEnforcer {
     /** Applies {@code punishment} to its target if they are online here. */
     public void enforce(Punishment punishment) {
         if (punishment.type() == PunishmentType.FREEZE) {
-            freezeState.setFrozen(punishment.targetId(), true);
+            freezeState.freeze(punishment.targetId(), punishment.actorName(), punishment.createdAt());
         }
         Player target = Bukkit.getPlayer(punishment.targetId());
         if (target == null) {

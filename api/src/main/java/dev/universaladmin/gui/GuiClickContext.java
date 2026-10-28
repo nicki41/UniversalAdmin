@@ -42,6 +42,15 @@ public final class GuiClickContext {
         return session;
     }
 
+    /**
+     * The page the click happened on - to come back to it after a dialog.
+     *
+     * @since 1.7
+     */
+    public GuiPage page() {
+        return view.page();
+    }
+
     /** Navigates forward: remembers how to redraw the current page, then opens {@code next}. */
     public void open(GuiPage next) {
         GuiPage current = view.page();

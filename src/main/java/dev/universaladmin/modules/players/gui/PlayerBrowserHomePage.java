@@ -76,6 +76,11 @@ public final class PlayerBrowserHomePage extends AbstractGuiPage {
                 clickCtx -> clickCtx.open(new OfflinePlayersListPage(ctx))), viewer);
     }
 
+    /** The online players - what the main menu's Players button opens. */
+    public OnlinePlayersListPage onlineList() {
+        return new OnlinePlayersListPage(ctx);
+    }
+
     /** Opens pages of this module for a specific player - used by the Players commands. */
     public PlayersGui gui() {
         return new PlayersGui(ctx);

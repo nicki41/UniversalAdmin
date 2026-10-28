@@ -111,6 +111,15 @@ Five independently configurable blocks, all default **on**:
 | `moderation.freeze.block-inventory` | `InventoryClickEvent` in vanilla inventories - clicks inside a UniversalAdmin GUI page are never blocked, so a frozen staff member isn't locked out of the plugin's own menus |
 | `moderation.freeze.block-commands` | `PlayerCommandPreprocessEvent` |
 
+**What a freeze looks like.** The frozen player sees a title ("Frozen -
+stay where you are") until they are unfrozen
+(`moderation.freeze.show-title`). Staff with
+`universaladmin.moderation.freeze` see a marker above the frozen player's
+head with who froze them and for how long
+(`moderation.freeze.staff-marker`). The marker is a text display that is
+hidden from everyone else and never saved with the world. Both default
+**on**.
+
 Every check reads an in-memory cache (`FreezeRuntimeState`), never the
 database - `PlayerMoveEvent` fires on every tick a player moves, so a
 per-event DB query would be a real performance problem, not just a style

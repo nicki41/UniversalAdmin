@@ -33,6 +33,7 @@ import dev.universaladmin.gui.MainMenuPage;
 import dev.universaladmin.gui.MaterialIconProvider;
 import dev.universaladmin.gui.ModuleGuiStyle;
 import dev.universaladmin.gui.PlayerMenuRegistry;
+import dev.universaladmin.gui.StatusLine;
 import dev.universaladmin.gui.StatusToggleRegistry;
 import dev.universaladmin.localization.LanguageFiles;
 import dev.universaladmin.localization.MessageKey;
@@ -217,6 +218,8 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         registerCommand(platform);
         getServer().getPluginManager().registerEvents(new StartupSummaryListener(platform), this);
 
+        getServer().getScheduler().runTaskTimer(this,
+                new StatusLine(getServer(), platform.statusToggles(), platform.settings(), getLogger()), 20L, 20L);
         startTelemetry(platform);
         startUpdateChecks(platform);
         logStartupSummary(platform);
@@ -308,11 +311,12 @@ public final class UniversalAdminPlugin extends JavaPlugin {
         ActionExecutor actionExecutor = new ActionExecutor(actions, auditService, getLogger());
         MessageService messages = new YamlLocaleMessageService(
                 getDataFolder().toPath().resolve("lang"), this::getResource, BUNDLED_LOCALES, settingsService, getLogger());
-        NotificationService notifications = new InGameNotificationService();
+        StatusToggleRegistry statusToggles = new StatusToggleRegistry();
+        NotificationService notifications = new InGameNotificationService(statusToggles);
 
         UniversalAdmin platform = new UniversalAdminPlatform(
                 this, getPluginMeta().getVersion(), startedAt, getLogger(), settingRegistry, settingsService,
-                scheduler, storage, services, actions, actionExecutor, guiPages, guiFramework, new PlayerMenuRegistry(), new StatusToggleRegistry(),
+                scheduler, storage, services, actions, actionExecutor, guiPages, guiFramework, new PlayerMenuRegistry(), statusToggles,
                 new CommandRegistry(), extensions, permissions, moduleRegistry, auditService, messages, notifications, network);
 
         // First of two runPending() calls (see the second one in onEnable(),

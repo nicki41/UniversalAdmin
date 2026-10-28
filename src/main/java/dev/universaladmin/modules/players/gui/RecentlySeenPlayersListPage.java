@@ -4,6 +4,7 @@ import dev.universaladmin.gui.AbstractListGuiPage;
 import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiItem;
 import dev.universaladmin.gui.GuiPageId;
+import dev.universaladmin.gui.GuiRenderContext;
 import dev.universaladmin.modules.players.PlayerProfile;
 import dev.universaladmin.modules.players.PlayerSearchQuery;
 import dev.universaladmin.modules.players.PlayerSort;
@@ -28,6 +29,11 @@ public final class RecentlySeenPlayersListPage extends AbstractListGuiPage<Playe
     @Override
     protected Component title(Player viewer) {
         return text("players.gui.recently-seen.title");
+    }
+
+    @Override
+    protected void renderControls(GuiRenderContext context) {
+        PlayerListTabs.place(context.view(), context.viewer(), ctx, PlayerListTabs.Tab.RECENT);
     }
 
     @Override

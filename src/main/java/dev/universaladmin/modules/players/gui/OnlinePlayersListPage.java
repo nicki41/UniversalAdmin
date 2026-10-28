@@ -73,6 +73,7 @@ public final class OnlinePlayersListPage extends AbstractGuiPage {
         boolean network = ctx.network().enabled();
         String serverFilter = network ? serverFilterFor(context.session()) : null;
         boolean byServer = network && sortByServer(context.session());
+        PlayerListTabs.place(view, viewer, ctx, PlayerListTabs.Tab.ONLINE);
         placeWorldFilterButton(view, viewer, worldFilter);
         placeGamemodeFilterButton(view, viewer, gamemodeFilter);
         placeSearchButton(view, viewer, query);
