@@ -46,6 +46,7 @@ public final class CoreSettings {
     public static final SettingKey<Boolean> MODULE_SETTINGS_ENABLED = SettingKey.of("core", "modules.settings");
     public static final SettingKey<Boolean> MODULE_REPORTS_ENABLED = SettingKey.of("core", "modules.reports");
     public static final SettingKey<Boolean> MODULE_CHAT_ENABLED = SettingKey.of("core", "modules.chat");
+    public static final SettingKey<Boolean> MODULE_NICK_ENABLED = SettingKey.of("core", "modules.nick");
 
     public static final SettingKey<Duration> PERFORMANCE_REFRESH_INTERVAL =
             SettingKey.of("core", "performance.refresh-interval");
@@ -107,6 +108,7 @@ public final class CoreSettings {
         registerModuleToggle(registry, MODULE_SETTINGS_ENABLED, "Settings");
         registerModuleToggle(registry, MODULE_REPORTS_ENABLED, "Reports");
         registerModuleToggle(registry, MODULE_CHAT_ENABLED, "Chat");
+        registerModuleToggle(registry, MODULE_NICK_ENABLED, "Nick");
 
         registry.register(SettingDefinition.builder(PERFORMANCE_REFRESH_INTERVAL, SettingTypes.DURATION, Duration.ofSeconds(5))
                 .description("How often the Performance module refreshes its TPS/MSPT snapshot.")

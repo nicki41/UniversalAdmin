@@ -5,6 +5,7 @@ import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.ActionResult.FailureReason;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.MessageKey;
 import java.time.Instant;
 import java.util.UUID;
@@ -42,7 +43,7 @@ public final class NoteActions {
 
         @Override
         public CompletableFuture<ActionResult<PlayerNote>> execute(ActionContext context, AddInput input) {
-            PlayerNote note = new PlayerNote(0, input.targetId(), input.targetName(), context.actor().playerId(),
+            PlayerNote note = new PlayerNote(0, input.targetId(), PlayerNames.real(input.targetId(), input.targetName()), context.actor().playerId(),
                     context.actor().displayName(), input.text().trim(), Instant.now());
             return notes.save(note).thenApply(saved -> ActionResult.success(saved, MessageKey.of("moderation.notes.added"),
                     saved.targetName(), Long.toString(saved.id())));

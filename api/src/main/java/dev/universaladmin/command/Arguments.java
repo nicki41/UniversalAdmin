@@ -4,6 +4,7 @@ import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.core.UniversalAdminProvider;
 import dev.universaladmin.core.time.DurationParseException;
 import dev.universaladmin.core.time.DurationParser;
+import dev.universaladmin.status.Nicks;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,9 +31,20 @@ public final class Arguments {
     private Arguments() {
     }
 
-    /** An online player by exact name (case-insensitive). */
+    /**
+     * An online player by exact name (case-insensitive) - their own name, or
+     * the nick they are shown under ({@link Nicks}).
+     */
     public static Optional<Player> onlinePlayer(String name) {
-        return Optional.ofNullable(Bukkit.getPlayerExact(name));
+        Player exact = Bukkit.getPlayerExact(name);
+        if (exact != null && exact.isOnline()) {
+            return Optional.of(exact);
+        }
+        // Paper finds players by the name they joined with - a nick is only their profile's name.
+        return UniversalAdminProvider.find()
+                .flatMap(platform -> platform.services().get(Nicks.class))
+                .flatMap(nicks -> nicks.byName(name))
+                .map(nick -> Bukkit.getPlayer(nick.playerId()));
     }
 
     /**
@@ -41,9 +53,9 @@ public final class Arguments {
      * a name the server has never seen resolves to empty.
      */
     public static Optional<PlayerRef> knownPlayer(String name) {
-        Player online = Bukkit.getPlayerExact(name);
-        if (online != null) {
-            return Optional.of(new PlayerRef(online.getUniqueId(), online.getName()));
+        Optional<Player> online = onlinePlayer(name);
+        if (online.isPresent()) {
+            return Optional.of(new PlayerRef(online.get().getUniqueId(), online.get().getName()));
         }
         OfflinePlayer cached = Bukkit.getOfflinePlayerIfCached(name);
         if (cached != null && (cached.hasPlayedBefore() || cached.isOnline())) {

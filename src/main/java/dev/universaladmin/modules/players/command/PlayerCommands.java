@@ -5,6 +5,7 @@ import dev.universaladmin.command.AdminCommand;
 import dev.universaladmin.command.Arguments;
 import dev.universaladmin.command.BaseAdminCommand;
 import dev.universaladmin.command.CommandInvocation;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.core.time.DurationParser;
 import dev.universaladmin.localization.MessageKey;
@@ -393,7 +394,7 @@ public final class PlayerCommands {
             }
             Player viewer = invocation.player().orElseThrow();
             invocation.onlinePlayer(0).ifPresent(target -> {
-                PlayerRef ref = new PlayerRef(target.getUniqueId(), target.getName());
+                PlayerRef ref = new PlayerRef(target.getUniqueId(), PlayerNames.real(target));
                 if (enderChest) {
                     gui.get().openEnderChest(viewer, ref);
                 } else {

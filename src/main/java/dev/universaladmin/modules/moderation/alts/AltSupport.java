@@ -4,6 +4,7 @@ import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.command.Arguments;
 import dev.universaladmin.command.BaseAdminCommand;
 import dev.universaladmin.command.CommandInvocation;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiFramework;
@@ -191,14 +192,14 @@ public final class AltSupport {
             pending.remove(player.getUniqueId());
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED,
                     ComponentMessages.render(ctx.messages().get(MessageKey.of("moderation.alts.refused"))));
-            announce(player.getName(), banned);
+            announce(PlayerNames.real(player), banned);
         }
 
         @EventHandler(priority = EventPriority.MONITOR)
         public void onJoin(PlayerJoinEvent event) {
             List<AltMatch> banned = pending.remove(event.getPlayer().getUniqueId());
             if (banned != null) {
-                announce(event.getPlayer().getName(), banned);
+                announce(PlayerNames.real(event.getPlayer()), banned);
             }
         }
 

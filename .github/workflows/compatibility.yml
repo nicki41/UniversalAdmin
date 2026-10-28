@@ -126,7 +126,7 @@ jobs:
               -d "{\"game_versions\": $UPDATED}" "https://api.modrinth.com/v2/version/$ID"
             echo "Modrinth version $ID ($LOADER): $UPDATED"
           done
-          for PROJECT in Lq5Ihyzr 229V0zwE ${{ vars.MODRINTH_VOICECHAT_ID }}; do
+          for PROJECT in Lq5Ihyzr 229V0zwE ${{ vars.MODRINTH_VOICECHAT_ID }} ${{ vars.MODRINTH_TAB_ID }}; do
             EXTENSION="$(curl -fsS -A "$UA" "https://api.modrinth.com/v2/project/$PROJECT/version" || echo '[]')"
             ID="$(jq -r '[.[] | select(.version_type == "release")][0].id // empty' <<< "$EXTENSION")"
             [ -z "$ID" ] && continue

@@ -189,3 +189,62 @@ mutes that reach the voice chat, and a voice group for your staff.
 [Issues](https://github.com/universaladmin-mc/universaladmin-voicechat/issues)
 
 ---
+
+## UniversalAdmin TAB
+
+Project id: set as the repository variable `MODRINTH_PROJECT_ID` of
+`universaladmin-mc/universaladmin-tab` (its `release.yml` reads it) and as
+`MODRINTH_TAB_ID` of the core repository (`compatibility.yml` adds new game
+versions through it).
+
+| Field | Value |
+|---|---|
+| Name | UniversalAdmin TAB |
+| Slug | `universaladmin-tab` |
+| Categories | Management, Utility |
+| Environment | Server-side only |
+| Loaders / game versions | Paper, Purpur · same as UniversalAdmin (set by `release.yml`) |
+| License | GPL-3.0-or-later |
+| Icon | `assets/icon-tab.png` |
+| Links | Source and issues: `universaladmin-mc/universaladmin-tab`; wiki: https://universaladmin-mc.github.io/UniversalAdmin/extensions/tab/ |
+| Dependencies | UniversalAdmin (required), TAB (required) - set by `release.yml` |
+
+### Summary
+
+> TAB for UniversalAdmin: the tab list and name tags follow nicks, vanish and staff mode.
+
+### Description
+
+---
+
+# UniversalAdmin TAB
+
+The official [TAB](https://modrinth.com/plugin/tab-was-taken) extension for
+[UniversalAdmin](https://modrinth.com/plugin/universaladmin) - so the tab
+list never gives your staff away.
+
+## Highlights
+
+- **Nicks that hold up.** A nicked admin would still carry their rank's
+  prefix and sit at the top of the list. With the extension a nicked player
+  shows up in an ordinary TAB group, under the nick, with the name tag to
+  match.
+- **Vanish.** TAB recognises UniversalAdmin's vanish (player counts,
+  layouts, name tags), and staff who see vanished players get a ` [V]`
+  marker after their name.
+- **Staff mode.** A ` [Staff]` marker after the name of players in staff
+  mode.
+- Markers, colours and the nick group are settings - in-game under
+  `/admin` → Settings.
+
+## Requirements
+
+- [UniversalAdmin](https://modrinth.com/plugin/universaladmin) 1.7 or newer.
+- [TAB](https://modrinth.com/plugin/tab-was-taken) 6 or newer on the server.
+
+[Documentation](https://universaladmin-mc.github.io/UniversalAdmin/extensions/tab/) ·
+[Source](https://github.com/universaladmin-mc/universaladmin-tab) ·
+[Issues](https://github.com/universaladmin-mc/UniversalAdmin/issues)
+
+---
+

@@ -4,6 +4,7 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.moderation.ModerationPolicy;
 import dev.universaladmin.modules.moderation.Punishment;
@@ -72,7 +73,7 @@ public final class IpBanAction implements Action<IpBanInput, Punishment> {
                 return;
             }
             String ip = address.getAddress().getHostAddress();
-            String targetName = target.getName();
+            String targetName = PlayerNames.real(target);
 
             punishmentService.issue(PunishmentType.IP_BAN, input.targetId(), targetName, ip,
                             context.actor().playerId(), context.actor().displayName(), input.reason(), input.expiresAt())

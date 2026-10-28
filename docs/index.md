@@ -3,7 +3,7 @@
 ![UniversalAdmin](assets/logo.svg){ width="96" align=right }
 
 **The free, all-in-one admin plugin for Paper.** Moderation, reports, staff
-chat, vanish, staff mode, player tools, inventories, worlds, whitelist,
+chat, vanish, staff mode, nicks, player tools, inventories, worlds, whitelist,
 maintenance, performance and a full audit log - in clean in-game menus *and*
 commands, on a single server or a whole Velocity/BungeeCord network, with no
 dependencies and no paywall.
@@ -23,8 +23,8 @@ from the [GitHub releases](https://github.com/universaladmin-mc/UniversalAdmin/r
 - **Coming from another plugin?** [Import](user/import.md) bans, mutes and
   warnings from LiteBans, AdvancedBan, the vanilla ban lists and EssentialsX.
 - **Extensions:** [Discord](extensions/discord.md),
-  [PlaceholderAPI](extensions/placeholderapi.md) and
-  [Simple Voice Chat](extensions/voicechat.md) - or
+  [PlaceholderAPI](extensions/placeholderapi.md),
+  [Simple Voice Chat](extensions/voicechat.md) and [TAB](extensions/tab.md) - or
   [write your own](extensions/getting-started.md).
 - **Contributing?** [Development setup](development/setup.md) and the
   [rules every change follows](development/architecture-rules.md).

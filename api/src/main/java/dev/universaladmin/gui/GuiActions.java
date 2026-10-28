@@ -6,6 +6,7 @@ import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
 import dev.universaladmin.action.Actor;
 import dev.universaladmin.action.Source;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.localization.MessageService;
@@ -36,7 +37,7 @@ public final class GuiActions {
 
     /** The {@link ActionContext} for an action a player triggered from a GUI. */
     public static ActionContext contextFor(Player viewer) {
-        Actor actor = Actor.player(viewer.getUniqueId(), viewer.getName(), new PermissiblePermissionEvaluator(viewer));
+        Actor actor = Actor.player(viewer.getUniqueId(), PlayerNames.real(viewer), new PermissiblePermissionEvaluator(viewer));
         return new ActionContext(actor, Source.GUI);
     }
 

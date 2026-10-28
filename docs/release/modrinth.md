@@ -66,6 +66,9 @@ all of them, and new Minecraft versions are tested and added automatically.
   EssentialsX? Turn off any shortcut you want to keep there.
 - **Every action is logged** - who banned whom, who changed which gamerule,
   who opened whose inventory. Searchable in-game.
+- **Nicks for staff** - `/nick Notch`: play under another name and skin,
+  in the chat, the tab list and above your head. The real name stays in
+  punishments and the audit log, and staff with the permission see it.
 - **Fine-grained permissions** - give helpers kick and mute, but not ban.
   LuckPerms role templates included.
 - **Safe** - confirmations for dangerous actions, no double clicks, player
@@ -185,6 +188,8 @@ like the built-ins. The official extensions - all in the
 - **UniversalAdmin Voice Chat** - Simple Voice Chat: chat, voice or full
   mutes, vanished staff stay silent, voice status on the profile and a
   staff voice group.
+- **UniversalAdmin TAB** - TAB's tab list and name tags follow nicks, vanish
+  and staff mode.
 
 Developers: see the
 [extension guide](https://github.com/universaladmin-mc/UniversalAdmin/blob/main/docs/extensions/getting-started.md).

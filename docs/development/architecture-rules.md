@@ -14,7 +14,7 @@ of those.
 ## Project Goal
 
 UniversalAdmin is a universal admin platform for Paper servers - **not** a
-collection of GUI commands. It consists of the core plugin with ten built-in
+collection of GUI commands. It consists of the core plugin with eleven built-in
 modules, a public, versioned extension API (`universaladmin-api`), official
 and community extensions; an optional web app with REST API and WebSockets
 is planned (see [ROADMAP.md](../../ROADMAP.md)).

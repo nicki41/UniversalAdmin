@@ -121,6 +121,10 @@ universaladmin.*
 | `universaladmin.chat.staff` | op | Read and write staff chat |
 | `universaladmin.chat.manage` | op | Lock, slow mode, clear chat |
 | `universaladmin.chat.bypass` | op | Chat while locked/slowed; history survives a clear |
+| **Nick** | | |
+| `universaladmin.nick.use` | op | Nick yourself |
+| `universaladmin.nick.others` | op | End other players' nicks |
+| `universaladmin.nick.see` | op | See the real name behind a nick (player list, profile, `/nick list`) |
 | **Server** | | |
 | `universaladmin.server.view` | op | Server dashboard, `/admin server status` |
 | `universaladmin.server.broadcast` | op | Broadcasts, titles, action bars |

@@ -4,6 +4,7 @@ import dev.universaladmin.action.Action;
 import dev.universaladmin.action.ActionContext;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.ActionResult;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.MessageKey;
 import dev.universaladmin.modules.moderation.ModerationPolicy;
 import dev.universaladmin.modules.moderation.Punishment;
@@ -63,7 +64,7 @@ public final class KickAction implements Action<KickInput, Punishment> {
                         ActionResult.FailureReason.NOT_FOUND, MessageKey.of("moderation.action.offline")));
                 return;
             }
-            String targetName = local != null ? local.getName() : elsewhere.get().name();
+            String targetName = local != null ? PlayerNames.real(local) : PlayerNames.real(input.targetId(), elsewhere.get().name());
             punishmentService.recordKick(
                             input.targetId(), targetName, context.actor().playerId(), context.actor().displayName(), input.reason(),
                             input.template())

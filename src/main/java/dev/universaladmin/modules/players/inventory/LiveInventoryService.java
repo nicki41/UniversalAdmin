@@ -5,6 +5,7 @@ import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.action.ActionId;
 import dev.universaladmin.action.Actor;
 import dev.universaladmin.action.Source;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.gui.GuiActions;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.localization.ComponentMessages;
@@ -137,7 +138,7 @@ public final class LiveInventoryService {
         PermissionEvaluator permissions = viewer != null && viewer.isOnline()
                 ? new PermissiblePermissionEvaluator(viewer)
                 : node -> session.editable();
-        String name = viewer != null ? viewer.getName() : Bukkit.getOfflinePlayer(session.viewerId()).getName();
+        String name = viewer != null ? PlayerNames.real(viewer) : Bukkit.getOfflinePlayer(session.viewerId()).getName();
         return new ActionContext(Actor.player(session.viewerId(), name == null ? session.viewerId().toString() : name, permissions), Source.GUI);
     }
 }

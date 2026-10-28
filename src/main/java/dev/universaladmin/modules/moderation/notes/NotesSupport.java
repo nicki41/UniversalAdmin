@@ -4,6 +4,7 @@ import dev.universaladmin.action.ActionExecutor;
 import dev.universaladmin.command.Arguments;
 import dev.universaladmin.command.BaseAdminCommand;
 import dev.universaladmin.command.CommandInvocation;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.core.PlayerRef;
 import dev.universaladmin.gui.GuiClickContext;
 import dev.universaladmin.gui.GuiFramework;
@@ -154,7 +155,7 @@ public final class NotesSupport {
             Player player = event.getPlayer();
             ctx.notes().countByTarget(player.getUniqueId()).thenAccept(count -> {
                 if (count > 0) {
-                    String text = ctx.messages().get(MessageKey.of("moderation.notes.join-alert"), player.getName(), count);
+                    String text = ctx.messages().get(MessageKey.of("moderation.notes.join-alert"), PlayerNames.real(player), count);
                     ctx.scheduler().runOnMainThread(() -> ctx.notifications().notifyStaff(ModerationPermissions.NOTES, Notification.info(text)));
                 }
             });

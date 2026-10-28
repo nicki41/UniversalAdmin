@@ -2,6 +2,7 @@ package dev.universaladmin.command;
 
 import dev.universaladmin.action.Actor;
 import dev.universaladmin.command.CommandInvocation.CommandEnvironment;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.localization.ComponentMessages;
 import dev.universaladmin.permission.bukkit.PermissiblePermissionEvaluator;
 import java.util.ArrayList;
@@ -161,7 +162,7 @@ public final class UniversalAdminCommand implements TabExecutor {
 
     public static Actor actorFor(CommandSender sender) {
         if (sender instanceof Player player) {
-            return Actor.player(player.getUniqueId(), player.getName(), new PermissiblePermissionEvaluator(player));
+            return Actor.player(player.getUniqueId(), PlayerNames.real(player), new PermissiblePermissionEvaluator(player));
         }
         return Actor.console();
     }

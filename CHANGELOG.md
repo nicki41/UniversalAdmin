@@ -7,6 +7,41 @@ dated, versioned section below it (see
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-28
+
+Staff can play incognito now.
+
+### Added
+
+- **Nick system**, a new built-in module: `/nick Notch` shows you as Notch,
+  with Notch's skin, in the chat, the tab list, above your head, in join,
+  quit and death messages and to other plugins. Name and skin can be chosen
+  separately (`/nick Bob Notch`), or both at random (`/nick random`);
+  `/unnick` ends it, also from the new **Nick** menu. Names of players who
+  have played here, of online players and of other nicks are refused. Staff
+  with `universaladmin.nick.see` see the real name in the player list, on
+  the profile and in `/nick list`; punishments, notes, reports and the
+  audit log keep the real identity, and actions a nicked staff member takes
+  run under their real name. A nick survives rejoining
+  (`nick.restore-on-rejoin`) and follows its player through a network. See
+  [docs/user/modules/nick.md](docs/user/modules/nick.md) and
+  [ADR 0025](docs/architecture/decisions/0025-nick-system.md).
+- **UniversalAdmin TAB**, an official extension for TAB: nicked players are
+  shown in an ordinary TAB group, vanished staff and players in staff mode
+  get a marker. Its own repository:
+  [universaladmin-mc/universaladmin-tab](https://github.com/universaladmin-mc/universaladmin-tab).
+- **Extension API 1.6**: the `Nicks` service (`dev.universaladmin.status`),
+  `PlayerNames.real(...)` and `PlayerNames.revealedTo(...)`.
+- Vanish sets the `vanished` player metadata vanish plugins share, so TAB,
+  map plugins and others recognise UniversalAdmin's vanish.
+
+### Fixed
+
+- On Java 21 the update check and the anonymous statistics did not start
+  ("No implementation of the random number generator algorithm").
+- A player who left while vanished came back invisible when
+  `moderation.vanish.restore-on-reconnect` was off.
+
 ## [1.6.0] - 2026-10-28
 
 Updates install themselves, the project has a home of its own - and a new

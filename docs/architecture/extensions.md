@@ -89,5 +89,8 @@ API like any third-party extension
 - **UniversalAdmin Voice Chat** ([repository](https://github.com/universaladmin-mc/universaladmin-voicechat)) -
   Simple Voice Chat. User docs:
   [docs/extensions/voicechat.md](../extensions/voicechat.md).
+- **UniversalAdmin TAB** ([repository](https://github.com/universaladmin-mc/universaladmin-tab)) -
+  TAB's tab list and name tags follow nicks, vanish and staff mode. User
+  docs: [docs/extensions/tab.md](../extensions/tab.md).
 - **Example extension** (`examples/example-extension`) - not for production;
   a complete, commented template that uses every extension point above.

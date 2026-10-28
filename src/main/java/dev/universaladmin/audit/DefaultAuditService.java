@@ -1,5 +1,9 @@
 package dev.universaladmin.audit;
 
+import dev.universaladmin.action.ActionTarget;
+import dev.universaladmin.action.Actor;
+import dev.universaladmin.action.ActorType;
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.settings.CoreSettings;
 import dev.universaladmin.settings.SettingsService;
 import java.time.Instant;
@@ -8,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
@@ -44,7 +49,46 @@ public final class DefaultAuditService implements AuditService {
         if (!settings.get(CoreSettings.AUDIT_ENABLED)) {
             return CompletableFuture.completedFuture(null);
         }
-        return repository.save(withServer(entry)).thenAccept(this::publish);
+        return repository.save(withServer(withRealNames(entry))).thenAccept(this::publish);
+    }
+
+    /**
+     * The audit log names nicked players by their real name - whoever built
+     * the entry may only have known the nick. The nick goes into the
+     * metadata ({@code actor-nick}, {@code target-nick}).
+     */
+    private AuditEvent withRealNames(AuditEvent entry) {
+        Actor actor = entry.actor();
+        ActionTarget target = entry.target();
+        Map<String, Object> metadata = new HashMap<>(entry.metadata());
+        if (actor.type() == ActorType.PLAYER && actor.playerId() != null) {
+            String real = PlayerNames.real(actor.playerId(), actor.displayName());
+            if (!real.equals(actor.displayName())) {
+                metadata.put("actor-nick", actor.displayName());
+                actor = new Actor(actor.type(), actor.playerId(), real, actor.permissions());
+            }
+        }
+        if (target != null && ActionTarget.PLAYER_TYPE.equals(target.type()) && target.displayName() != null) {
+            String real = PlayerNames.real(playerId(target.id()), target.displayName());
+            if (!real.equals(target.displayName())) {
+                metadata.put("target-nick", target.displayName());
+                target = new ActionTarget(target.type(), target.id(), real);
+            }
+        }
+        if (actor == entry.actor() && target == entry.target()) {
+            return entry;
+        }
+        return new AuditEvent(entry.id(), entry.timestamp(), actor, entry.type(), entry.module(), target,
+                entry.source(), entry.success(), entry.reason(), entry.oldValue(), entry.newValue(), entry.world(),
+                entry.position(), entry.summary(), metadata, entry.correlationId());
+    }
+
+    private static UUID playerId(String id) {
+        try {
+            return UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private AuditEvent withServer(AuditEvent entry) {

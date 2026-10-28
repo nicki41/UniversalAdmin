@@ -1,5 +1,6 @@
 package dev.universaladmin.modules.players.inventory;
 
+import dev.universaladmin.core.PlayerNames;
 import dev.universaladmin.gui.GuiView;
 import dev.universaladmin.modules.players.action.InventoryChangeSummary;
 import java.util.HashSet;
@@ -34,7 +35,7 @@ final class LiveInventorySession {
         this.view = view;
         this.viewerId = viewerId;
         this.targetId = target.getUniqueId();
-        this.targetName = target.getName();
+        this.targetName = PlayerNames.real(target);
         this.kind = kind;
         this.editable = editable;
         this.slots = List.copyOf(slots);

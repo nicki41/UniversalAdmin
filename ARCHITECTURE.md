@@ -43,8 +43,8 @@ from a single module failing. See
 A [`Module`](src/main/java/dev/universaladmin/module/Module.java) is a
 self-contained unit of functionality that registers actions, GUI pages,
 permissions, and migrations into shared registries, then gets out of the
-way. UniversalAdmin ships ten built-in modules (Players, Moderation,
-Reports, Chat, Server, Worlds, Whitelist, Performance, Audit Log, Settings)
+way. UniversalAdmin ships eleven built-in modules (Players, Moderation,
+Reports, Chat, Nick, Server, Worlds, Whitelist, Performance, Audit Log, Settings)
 that all implement this exact interface - the same one extensions
 implement.
 
@@ -134,8 +134,9 @@ share extensions - [docs/architecture/extension-builder.md](docs/architecture/ex
 The official extensions have repositories of their own in the
 [universaladmin-mc](https://github.com/universaladmin-mc) organization -
 [Discord](https://github.com/universaladmin-mc/universaladmin-discord),
-[Placeholders](https://github.com/universaladmin-mc/universaladmin-placeholders) and
-[Voice Chat](https://github.com/universaladmin-mc/universaladmin-voicechat) - built against the published
+[Placeholders](https://github.com/universaladmin-mc/universaladmin-placeholders),
+[Voice Chat](https://github.com/universaladmin-mc/universaladmin-voicechat) and
+[TAB](https://github.com/universaladmin-mc/universaladmin-tab) - built against the published
 API like any third-party extension
 ([ADR 0024](docs/architecture/decisions/0024-updates-and-repositories.md)).
 

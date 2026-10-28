@@ -30,7 +30,7 @@ public final class TargetNames {
     public CompletableFuture<String> nameOf(UUID playerId) {
         Player online = Bukkit.getPlayer(playerId);
         if (online != null) {
-            return CompletableFuture.completedFuture(online.getName());
+            return CompletableFuture.completedFuture(PlayerNames.real(online));
         }
         String cached = Bukkit.getOfflinePlayer(playerId).getName();
         if (cached != null) {
